@@ -466,14 +466,14 @@ describe('teamSlice actions', () => {
           config: {
             name: 'My Team',
             members: [
-              { name: 'team-lead', agentId: 'lead-agent' },
+              { name: 'lead', agentId: 'lead-agent' },
               { name: 'alice', agentId: 'agent-alice' },
               { name: 'bob', agentId: 'agent-bob' },
               { name: 'tom', agentId: 'agent-tom' },
             ],
           },
           members: [
-            { name: 'team-lead', agentId: 'lead-agent', agentType: 'team-lead' },
+            { name: 'lead', agentId: 'lead-agent', agentType: 'lead' },
             { name: 'alice', agentId: 'agent-alice' },
             { name: 'bob', agentId: 'agent-bob' },
             { name: 'tom', agentId: 'agent-tom' },
@@ -585,7 +585,7 @@ describe('teamSlice actions', () => {
     const store = createSliceStore();
 
     store.getState().ensureTeamGraphSlotAssignments('my-team', [
-      { name: 'team-lead', agentId: 'lead-id' },
+      { name: 'lead', agentId: 'lead-id' },
       { name: 'alice', agentId: 'agent-alice' },
       { name: 'bob', agentId: 'agent-bob' },
       { name: 'tom', agentId: 'agent-tom' },
@@ -875,7 +875,7 @@ describe('teamSlice actions', () => {
     const store = createSliceStore();
     const existingMessages = [
       {
-        from: 'team-lead',
+        from: 'lead',
         text: 'Stable head',
         timestamp: '2026-03-20T08:00:00.000Z',
         read: true,
@@ -925,7 +925,7 @@ describe('teamSlice actions', () => {
     const store = createSliceStore();
     const existingMessages = [
       {
-        from: 'team-lead',
+        from: 'lead',
         text: 'Head 2',
         timestamp: '2026-03-20T08:00:03.000Z',
         read: true,
@@ -977,7 +977,7 @@ describe('teamSlice actions', () => {
     hoisted.getMessagesPage.mockResolvedValueOnce({
       messages: [
         {
-          from: 'team-lead',
+          from: 'lead',
           text: 'Fresh head',
           timestamp: '2026-03-20T08:00:04.000Z',
           read: true,
@@ -1044,7 +1044,7 @@ describe('teamSlice actions', () => {
       .mockResolvedValueOnce({
         messages: [
           {
-            from: 'team-lead',
+            from: 'lead',
             text: 'Newest head',
             timestamp: '2026-03-20T08:00:01.000Z',
             read: true,
@@ -1065,7 +1065,7 @@ describe('teamSlice actions', () => {
     firstRequest.resolve({
       messages: [
         {
-          from: 'team-lead',
+          from: 'lead',
           text: 'Old head',
           timestamp: '2026-03-20T08:00:00.000Z',
           read: true,
@@ -1117,7 +1117,7 @@ describe('teamSlice actions', () => {
         'my-team': {
           canonicalMessages: [
             {
-              from: 'team-lead',
+              from: 'lead',
               text: 'Head 1',
               timestamp: '2026-03-20T08:00:02.000Z',
               read: true,
@@ -1150,7 +1150,7 @@ describe('teamSlice actions', () => {
       .mockResolvedValueOnce({
         messages: [
           {
-            from: 'team-lead',
+            from: 'lead',
             text: 'Fresh head',
             timestamp: '2026-03-20T08:00:03.000Z',
             read: true,
@@ -1158,7 +1158,7 @@ describe('teamSlice actions', () => {
             messageId: 'msg-4',
           },
           {
-            from: 'team-lead',
+            from: 'lead',
             text: 'Head 1',
             timestamp: '2026-03-20T08:00:02.000Z',
             read: true,
@@ -1231,7 +1231,7 @@ describe('teamSlice actions', () => {
         'my-team': {
           canonicalMessages: [
             {
-              from: 'team-lead',
+              from: 'lead',
               text: 'Head 1',
               timestamp: '2026-03-20T08:00:02.000Z',
               read: true,
@@ -1318,7 +1318,7 @@ describe('teamSlice actions', () => {
         'my-team': {
           canonicalMessages: [
             {
-              from: 'team-lead',
+              from: 'lead',
               text: 'Head 1',
               timestamp: '2026-03-20T08:00:02.000Z',
               read: true,
@@ -1352,7 +1352,7 @@ describe('teamSlice actions', () => {
     headRequest.resolve({
       messages: [
         {
-          from: 'team-lead',
+          from: 'lead',
           text: 'Fresh head',
           timestamp: '2026-03-20T08:00:03.000Z',
           read: true,
@@ -1619,7 +1619,7 @@ describe('teamSlice actions', () => {
         'my-team': {
           canonicalMessages: [
             {
-              from: 'team-lead',
+              from: 'lead',
               to: 'alice',
               text: 'Ping Alice',
               summary: 'Ping Alice',
@@ -1628,7 +1628,7 @@ describe('teamSlice actions', () => {
               messageId: 'msg-1',
             },
             {
-              from: 'team-lead',
+              from: 'lead',
               to: 'bob',
               text: 'Ping Bob',
               summary: 'Ping Bob',
@@ -1660,7 +1660,7 @@ describe('teamSlice actions', () => {
         'my-team': {
           canonicalMessages: [
             {
-              from: 'team-lead',
+              from: 'lead',
               to: 'alice',
               text: 'Ping Alice',
               summary: 'Ping Alice',
@@ -1670,7 +1670,7 @@ describe('teamSlice actions', () => {
             },
             {
               from: 'alice',
-              to: 'team-lead',
+              to: 'lead',
               text: 'Reply from Alice',
               summary: 'Reply from Alice',
               timestamp: '2026-03-12T10:00:02.000Z',
@@ -1791,7 +1791,7 @@ describe('teamSlice actions', () => {
     const store = createSliceStore();
     const message = {
       from: 'alice',
-      to: 'team-lead',
+      to: 'lead',
       text: 'hello',
       timestamp: '2026-03-12T10:00:00.000Z',
       messageId: 'm-1',
@@ -4056,9 +4056,9 @@ describe('teamSlice actions', () => {
         },
         activeToolsByTeam: {
           'my-team': {
-            'team-lead': {
+            'lead': {
               'tool-a': {
-                memberName: 'team-lead',
+                memberName: 'lead',
                 toolUseId: 'tool-a',
                 toolName: 'Read',
                 startedAt: '2026-03-12T10:00:00.000Z',
@@ -4070,9 +4070,9 @@ describe('teamSlice actions', () => {
         },
         finishedVisibleByTeam: {
           'my-team': {
-            'team-lead': {
+            'lead': {
               'tool-b': {
-                memberName: 'team-lead',
+                memberName: 'lead',
                 toolUseId: 'tool-b',
                 toolName: 'Bash',
                 startedAt: '2026-03-12T10:00:01.000Z',
@@ -4085,9 +4085,9 @@ describe('teamSlice actions', () => {
         },
         toolHistoryByTeam: {
           'my-team': {
-            'team-lead': [
+            'lead': [
               {
-                memberName: 'team-lead',
+                memberName: 'lead',
                 toolUseId: 'tool-b',
                 toolName: 'Bash',
                 startedAt: '2026-03-12T10:00:01.000Z',

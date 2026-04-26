@@ -128,13 +128,13 @@ function seedConfig(teamName: string): void {
     `/mock/teams/${teamName}/config.json`,
     JSON.stringify({
       name: 'My Team',
-      members: [{ name: 'team-lead', agentType: 'team-lead' }],
+      members: [{ name: 'lead', agentType: 'lead' }],
     })
   );
 }
 
 function seedLeadInbox(teamName: string, messages: unknown[]): void {
-  hoisted.files.set(`/mock/teams/${teamName}/inboxes/team-lead.json`, JSON.stringify(messages));
+  hoisted.files.set(`/mock/teams/${teamName}/inboxes/lead.json`, JSON.stringify(messages));
 }
 
 interface RunLike {
@@ -190,7 +190,7 @@ function attachRun(
     processKilled: false,
     cancelRequested: false,
     provisioningOutputParts: [],
-    request: { members: [{ name: 'team-lead', role: 'Team Lead' }] },
+    request: { members: [{ name: 'lead', role: 'Team Lead' }] },
     activeCrossTeamReplyHints: [],
     memberSpawnStatuses: new Map(),
     pendingApprovals: new Map(),
@@ -419,7 +419,7 @@ describe('TeamProvisioningService pre-ready live messages', () => {
           name: 'SendMessage',
           input: {
             type: 'message',
-            recipient: 'team-lead',
+            recipient: 'lead',
             content: 'Need clarification on #abcd1234',
             summary: 'Clarification request',
           },
@@ -429,7 +429,7 @@ describe('TeamProvisioningService pre-ready live messages', () => {
 
     const live = service.getLiveLeadProcessMessages('my-team');
     expect(live).toHaveLength(1);
-    expect(live[0].to).toBe('team-lead');
+    expect(live[0].to).toBe('lead');
     expect(live[0].text).toBe('Need clarification on #abcd1234');
     expect(live[0].source).toBe('lead_process');
     // Non-user recipient → delivered to inbox, not sentMessages
@@ -483,7 +483,7 @@ describe('TeamProvisioningService pre-ready live messages', () => {
             teamName: 'my-team',
             to: 'user',
             text: 'Task completed through MCP.',
-            from: 'team-lead',
+            from: 'lead',
             summary: 'Done',
           },
         },
@@ -511,7 +511,7 @@ describe('TeamProvisioningService pre-ready live messages', () => {
           input: {
             teamName: 'my-team',
             to: 'user',
-            from: 'team-lead',
+            from: 'lead',
             summary: 'Incomplete',
           },
         },
@@ -655,7 +655,7 @@ describe('TeamProvisioningService pre-ready live messages', () => {
     expect(crossTeamSender).toHaveBeenCalledWith(
       expect.objectContaining({
         fromTeam: 'my-team',
-        fromMember: 'team-lead',
+        fromMember: 'lead',
         toTeam: 'team-best',
         text: 'Привет!',
         conversationId: 'conv-123',
@@ -665,7 +665,7 @@ describe('TeamProvisioningService pre-ready live messages', () => {
 
     const live = service.getLiveLeadProcessMessages('my-team');
     expect(live).toHaveLength(1);
-    expect(live[0].from).toBe('team-lead');
+    expect(live[0].from).toBe('lead');
     expect(live[0].source).toBe('cross_team_sent');
     expect(live[0].to).toBe('team-best.user');
     expect(live[0].text).toBe('Привет!');
@@ -720,7 +720,7 @@ describe('TeamProvisioningService pre-ready live messages', () => {
       detectedSessionId: 'sess-new',
     });
     service.pushLiveLeadProcessMessage('my-team', {
-      from: 'team-lead',
+      from: 'lead',
       text: 'Current run is active.',
       timestamp: '2026-04-17T12:00:10.000Z',
       read: true,
@@ -779,7 +779,7 @@ describe('TeamProvisioningService pre-ready live messages', () => {
     expect(crossTeamSender).toHaveBeenCalledWith(
       expect.objectContaining({
         fromTeam: 'my-team',
-        fromMember: 'team-lead',
+        fromMember: 'lead',
         toTeam: 'team-best',
         text: 'Привет команде!',
       })
@@ -787,7 +787,7 @@ describe('TeamProvisioningService pre-ready live messages', () => {
 
     const live = service.getLiveLeadProcessMessages('my-team');
     expect(live).toHaveLength(1);
-    expect(live[0].from).toBe('team-lead');
+    expect(live[0].from).toBe('lead');
     expect(live[0].source).toBe('cross_team_sent');
     expect(live[0].to).toBe('cross-team:team-best');
     expect(hoisted.sendInboxMessage).not.toHaveBeenCalled();
@@ -812,7 +812,7 @@ describe('TeamProvisioningService pre-ready live messages', () => {
             teamName: 'my-team',
             to: 'cross-team:team-best',
             text: 'Ответ через MCP.',
-            from: 'team-lead',
+            from: 'lead',
             summary: 'MCP reply',
             taskRefs,
           },
@@ -827,7 +827,7 @@ describe('TeamProvisioningService pre-ready live messages', () => {
     expect(crossTeamSender).toHaveBeenCalledWith(
       expect.objectContaining({
         fromTeam: 'my-team',
-        fromMember: 'team-lead',
+        fromMember: 'lead',
         toTeam: 'team-best',
         text: 'Ответ через MCP.',
         conversationId: 'conv-mcp-1',
@@ -838,7 +838,7 @@ describe('TeamProvisioningService pre-ready live messages', () => {
 
     const live = service.getLiveLeadProcessMessages('my-team');
     expect(live).toHaveLength(1);
-    expect(live[0].from).toBe('team-lead');
+    expect(live[0].from).toBe('lead');
     expect(live[0].source).toBe('cross_team_sent');
     expect(live[0].to).toBe('cross-team:team-best');
     expect(live[0].taskRefs).toEqual(taskRefs);
@@ -890,9 +890,9 @@ describe('TeamProvisioningService pre-ready live messages', () => {
     seedConfig('my-team');
     seedLeadInbox('my-team', [
       {
-        from: 'other-team.team-lead',
-        to: 'team-lead',
-        text: '<cross-team from="other-team.team-lead" depth="0" conversationId="conv-native-1" replyToConversationId="conv-native-1" />\nНативная доставка.',
+        from: 'other-team.lead',
+        to: 'lead',
+        text: '<cross-team from="other-team.lead" depth="0" conversationId="conv-native-1" replyToConversationId="conv-native-1" />\nНативная доставка.',
         timestamp: '2026-02-23T10:01:00.000Z',
         read: false,
         source: 'cross_team',
@@ -908,13 +908,13 @@ describe('TeamProvisioningService pre-ready live messages', () => {
       message: {
         role: 'user',
         content:
-          '<teammate-message teammate_id="other-team.team-lead" color="purple" summary="Cross-team reply"><cross-team from="other-team.team-lead" depth="0" conversationId="conv-native-1" replyToConversationId="conv-native-1" />\nНативная доставка.</teammate-message>',
+          '<teammate-message teammate_id="other-team.lead" color="purple" summary="Cross-team reply"><cross-team from="other-team.lead" depth="0" conversationId="conv-native-1" replyToConversationId="conv-native-1" />\nНативная доставка.</teammate-message>',
       },
     });
 
     await vi.waitFor(() => {
       const updatedInbox = JSON.parse(
-        hoisted.files.get('/mock/teams/my-team/inboxes/team-lead.json') ?? '[]'
+        hoisted.files.get('/mock/teams/my-team/inboxes/lead.json') ?? '[]'
       ) as Array<{ read?: boolean }>;
       expect(updatedInbox[0]?.read).toBe(true);
     });
@@ -928,11 +928,11 @@ describe('TeamProvisioningService pre-ready live messages', () => {
     const service = new TeamProvisioningService();
     seedConfig('my-team');
     const content =
-      '<cross-team from="other-team.team-lead" depth="0" conversationId="conv-native-dup" replyToConversationId="conv-native-dup" />\nПовторная доставка.';
+      '<cross-team from="other-team.lead" depth="0" conversationId="conv-native-dup" replyToConversationId="conv-native-dup" />\nПовторная доставка.';
     seedLeadInbox('my-team', [
       {
-        from: 'other-team.team-lead',
-        to: 'team-lead',
+        from: 'other-team.lead',
+        to: 'lead',
         text: content,
         timestamp: '2026-03-10T21:43:00.000Z',
         read: false,
@@ -952,13 +952,13 @@ describe('TeamProvisioningService pre-ready live messages', () => {
       type: 'user',
       message: {
         role: 'user',
-        content: `<teammate-message teammate_id="other-team.team-lead" color="purple" summary="Cross-team reply">${content}</teammate-message>`,
+        content: `<teammate-message teammate_id="other-team.lead" color="purple" summary="Cross-team reply">${content}</teammate-message>`,
       },
     });
 
     await vi.waitFor(() => {
       const updatedInbox = JSON.parse(
-        hoisted.files.get('/mock/teams/my-team/inboxes/team-lead.json') ?? '[]'
+        hoisted.files.get('/mock/teams/my-team/inboxes/lead.json') ?? '[]'
       ) as Array<{ read?: boolean }>;
       expect(updatedInbox[0]?.read).toBe(true);
     });
@@ -984,7 +984,7 @@ describe('TeamProvisioningService pre-ready live messages', () => {
             teamName: 'my-team',
             to: 'cross_team_send',
             text: 'Исправленный ответ.',
-            from: 'team-lead',
+            from: 'lead',
             summary: 'Ответ через tool recipient mistake',
           },
         },
@@ -998,7 +998,7 @@ describe('TeamProvisioningService pre-ready live messages', () => {
     expect(crossTeamSender).toHaveBeenCalledWith(
       expect.objectContaining({
         fromTeam: 'my-team',
-        fromMember: 'team-lead',
+        fromMember: 'lead',
         toTeam: 'team-best',
         text: 'Исправленный ответ.',
         conversationId: 'conv-tool-1',
@@ -1008,9 +1008,9 @@ describe('TeamProvisioningService pre-ready live messages', () => {
 
     const live = service.getLiveLeadProcessMessages('my-team');
     expect(live).toHaveLength(1);
-    expect(live[0].from).toBe('team-lead');
+    expect(live[0].from).toBe('lead');
     expect(live[0].source).toBe('cross_team_sent');
-    expect(live[0].to).toBe('team-best.team-lead');
+    expect(live[0].to).toBe('team-best.lead');
     expect(hoisted.sendInboxMessage).not.toHaveBeenCalled();
   });
 
@@ -1044,7 +1044,7 @@ describe('TeamProvisioningService pre-ready live messages', () => {
     expect(crossTeamSender).toHaveBeenCalledWith(
       expect.objectContaining({
         fromTeam: 'my-team',
-        fromMember: 'team-lead',
+        fromMember: 'lead',
         toTeam: 'team-best',
         text: 'Ответ через fallback pseudo recipient.',
       })
@@ -1053,7 +1053,7 @@ describe('TeamProvisioningService pre-ready live messages', () => {
     const live = service.getLiveLeadProcessMessages('my-team');
     expect(live).toHaveLength(1);
     expect(live[0].source).toBe('cross_team_sent');
-    expect(live[0].to).toBe('team-best.team-lead');
+    expect(live[0].to).toBe('team-best.lead');
     expect(hoisted.sendInboxMessage).not.toHaveBeenCalled();
   });
 
@@ -1075,7 +1075,7 @@ describe('TeamProvisioningService pre-ready live messages', () => {
             type: 'message',
             recipient: 'team-best.user',
             content:
-              '<cross-team from="my-team.team-lead" depth="0" conversationId="conv-legacy" replyToConversationId="conv-legacy" />\nПривет!',
+              '<cross-team from="my-team.lead" depth="0" conversationId="conv-legacy" replyToConversationId="conv-legacy" />\nПривет!',
             summary: 'Ответ',
           },
         },
@@ -1268,7 +1268,7 @@ describe('TeamProvisioningService auto-resume cleanup', () => {
       );
 
       service.pushLiveLeadProcessMessage('my-team', {
-        from: 'team-lead',
+        from: 'lead',
         text: 'Current run is active.',
         timestamp: '2026-04-17T12:00:01.000Z',
         read: true,
@@ -1303,7 +1303,7 @@ describe('TeamProvisioningService auto-resume cleanup', () => {
     });
 
     service.pushLiveLeadProcessMessage('my-team', {
-      from: 'team-lead',
+      from: 'lead',
       text: "You've hit your limit. Resets in 5 minutes.",
       timestamp: '2026-04-17T12:00:00.000Z',
       read: true,
@@ -1319,7 +1319,7 @@ describe('TeamProvisioningService auto-resume cleanup', () => {
     });
 
     service.pushLiveLeadProcessMessage('my-team', {
-      from: 'team-lead',
+      from: 'lead',
       text: 'Current run is active.',
       timestamp: '2026-04-17T12:00:10.000Z',
       read: true,

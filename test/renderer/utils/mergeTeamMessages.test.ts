@@ -38,14 +38,14 @@ describe('mergeTeamMessages', () => {
 
   it('lets later arrays overlay duplicate messages', () => {
     const persisted = makeMessage({
-      from: 'team-lead',
+      from: 'lead',
       text: 'hello',
       timestamp: '2026-01-01T00:00:00.000Z',
       messageId: 'm1',
       summary: 'persisted',
     });
     const live = makeMessage({
-      from: 'team-lead',
+      from: 'lead',
       text: 'hello',
       timestamp: '2026-01-01T00:00:00.000Z',
       messageId: 'm1',

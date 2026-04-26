@@ -28,7 +28,7 @@ import {
   stripEncodedTaskReferenceMetadata,
 } from '@renderer/utils/taskReferenceUtils';
 import { MAX_TEXT_LENGTH } from '@shared/constants';
-import { isLeadMember } from '@shared/utils/leadDetection';
+import { CANONICAL_LEAD_MEMBER_NAME, isLeadMember } from '@shared/utils/leadDetection';
 import { parseStandaloneSlashCommand } from '@shared/utils/slashCommands';
 import {
   inferTeamProviderIdFromModel,
@@ -305,7 +305,7 @@ export const MessageComposer = ({
     }
   }, [actionMode, canDelegate, draftLoaded, setActionMode, shouldAutoDelegate]);
   // NOTE: lead context ring disabled — usage formula is inaccurate
-  // const isLeadAgentRecipient = selectedMember?.agentType === 'team-lead';
+  // const isLeadAgentRecipient = selectedMember?.agentType === 'lead';
   // const leadContext = useStore((s) =>
   //   isLeadAgentRecipient ? s.leadContextByTeam[teamName] : undefined
   // );
@@ -660,7 +660,7 @@ export const MessageComposer = ({
                               )}
                               onClick={() => {
                                 setSelectedTeam(target.teamName);
-                                setRecipient('team-lead');
+                                setRecipient(CANONICAL_LEAD_MEMBER_NAME);
                                 setTeamSelectorOpen(false);
                               }}
                             >

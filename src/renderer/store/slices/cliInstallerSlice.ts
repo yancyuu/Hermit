@@ -216,6 +216,17 @@ function getProviderDisplayName(providerId: CliProviderId): string {
   }
 }
 
+function isRateLimitProviderStatusError(message: string): boolean {
+  const lower = message.toLowerCase();
+  return (
+    lower.includes('429') ||
+    lower.includes('rate limit') ||
+    lower.includes('rate_limit') ||
+    lower.includes('model cooldown') ||
+    lower.includes('cooling down')
+  );
+}
+
 function createProviderStatusErrorSnapshot(params: {
   providerId: CliProviderId;
   message: string;
@@ -226,15 +237,18 @@ function createProviderStatusErrorSnapshot(params: {
     createLoadingMultimodelCliStatus().providers.find(
       (provider) => provider.providerId === params.providerId
     )!;
+  const isRateLimited = isRateLimitProviderStatusError(params.message);
 
   return {
     ...currentProvider,
     providerId: params.providerId,
     displayName: currentProvider.displayName ?? getProviderDisplayName(params.providerId),
-    authenticated: false,
-    authMethod: null,
-    verificationState: 'error',
-    statusMessage: params.message,
+    authenticated: isRateLimited ? currentProvider.authenticated : false,
+    authMethod: isRateLimited ? currentProvider.authMethod : null,
+    verificationState: isRateLimited ? currentProvider.verificationState : 'error',
+    statusMessage: isRateLimited
+      ? '请求过于频繁，状态刷新暂时跳过；已保留上一次可用状态。'
+      : params.message,
     detailMessage: null,
   };
 }
@@ -307,7 +321,7 @@ export const createCliInstallerSlice: StateCreator<AppState, [], [], CliInstalle
 
   bootstrapCliStatus: async (options) => {
     if (!api.cliInstaller) return;
-    const multimodelEnabled = options?.multimodelEnabled ?? true;
+    const multimodelEnabled = options?.multimodelEnabled ?? false;
     if (!multimodelEnabled) {
       return get().fetchCliStatus();
     }

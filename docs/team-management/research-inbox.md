@@ -17,8 +17,8 @@
     "summary": "Cleanup complete"
   },
   {
-    "from": "team-lead",
-    "text": "{\"type\":\"shutdown_request\",\"from\":\"team-lead\",\"timestamp\":\"...\"}",
+    "from": "lead",
+    "text": "{\"type\":\"shutdown_request\",\"from\":\"lead\",\"timestamp\":\"...\"}",
     "timestamp": "2026-02-09T17:25:43.886Z",
     "read": true
   }
@@ -148,7 +148,7 @@ Atomic write предотвращает corrupted JSON, но НЕ предотв
 
 ## from: "user" — подтверждено работает (2026-03-23)
 
-Эмпирически подтверждено: `from: "user"` корректно доставляется тиммейтам. Тиммейт получает сообщение, определяет что оно от юзера, и отвечает в `inboxes/user.json`. Fallback на `from: "team-lead"` не нужен.
+Эмпирически подтверждено: `from: "user"` корректно доставляется тиммейтам. Тиммейт получает сообщение, определяет что оно от юзера, и отвечает в `inboxes/user.json`. Fallback на `from: "lead"` не нужен.
 
 Ранее были опасения что Claude Code валидирует `from` по `config.json` members — это не так.
 

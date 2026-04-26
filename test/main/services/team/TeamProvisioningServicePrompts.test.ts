@@ -225,7 +225,7 @@ describe('TeamProvisioningService prompt content (solo mode discipline)', () => 
       JSON.stringify({
         name: teamName,
         description: 'Solo team for prompt test',
-        members: [{ name: 'team-lead', agentType: 'team-lead' }],
+        members: [{ name: 'lead', agentType: 'lead' }],
       }),
       'utf8'
     );
@@ -593,7 +593,7 @@ describe('TeamProvisioningService prompt content (solo mode discipline)', () => 
   });
 
   it('add-member spawn prompt tells teammates to keep review on the same task', () => {
-    const prompt = buildAddMemberSpawnMessage('my-team', 'My Team', 'team-lead', {
+    const prompt = buildAddMemberSpawnMessage('my-team', 'My Team', 'lead', {
       name: 'alice',
       role: 'developer',
     });
@@ -609,11 +609,11 @@ describe('TeamProvisioningService prompt content (solo mode discipline)', () => 
   });
 
   it('teammate spawn prompts forbid manual task markdown links in visible messages', () => {
-    const addPrompt = buildAddMemberSpawnMessage('my-team', 'My Team', 'team-lead', {
+    const addPrompt = buildAddMemberSpawnMessage('my-team', 'My Team', 'lead', {
       name: 'alice',
       role: 'developer',
     });
-    const restartPrompt = buildRestartMemberSpawnMessage('my-team', 'My Team', 'team-lead', {
+    const restartPrompt = buildRestartMemberSpawnMessage('my-team', 'My Team', 'lead', {
       name: 'alice',
       role: 'developer',
     });
@@ -630,7 +630,7 @@ describe('TeamProvisioningService prompt content (solo mode discipline)', () => 
   });
 
   it('add-member spawn prompt explicitly forbids no-task bootstrap chatter', () => {
-    const prompt = buildAddMemberSpawnMessage('my-team', 'My Team', 'team-lead', {
+    const prompt = buildAddMemberSpawnMessage('my-team', 'My Team', 'lead', {
       name: 'alice',
       role: 'developer',
     });
@@ -664,7 +664,7 @@ describe('TeamProvisioningService prompt content (solo mode discipline)', () => 
         name: teamName,
         description: 'Task comment forwarding live prompt test',
         members: [
-          { name: 'team-lead', agentType: 'team-lead' },
+          { name: 'lead', agentType: 'lead' },
           { name: 'alice', agentType: 'teammate', role: 'developer' },
         ],
       }),
@@ -723,7 +723,7 @@ describe('TeamProvisioningService prompt content (solo mode discipline)', () => 
         name: teamName,
         description: 'Multi team prompt test',
         members: [
-          { name: 'team-lead', agentType: 'team-lead' },
+          { name: 'lead', agentType: 'lead' },
           { name: 'alice', agentType: 'teammate', role: 'developer' },
         ],
       }),
@@ -820,7 +820,7 @@ describe('TeamProvisioningService prompt content (solo mode discipline)', () => 
       JSON.stringify({
         name: teamName,
         members: [
-          { name: 'team-lead', agentType: 'team-lead', providerId: 'codex' },
+          { name: 'lead', agentType: 'lead', providerId: 'codex' },
           { name: 'alice', agentType: 'teammate', role: 'developer', providerId: 'codex' },
         ],
       }),
@@ -884,7 +884,7 @@ describe('TeamProvisioningService prompt content (solo mode discipline)', () => 
       JSON.stringify({
         name: teamName,
         members: [
-          { name: 'team-lead', agentType: 'team-lead', providerId: 'codex' },
+          { name: 'lead', agentType: 'lead', providerId: 'codex' },
           { name: 'alice', agentType: 'teammate', role: 'developer', providerId: 'codex' },
         ],
       }),

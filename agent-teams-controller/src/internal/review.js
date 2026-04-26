@@ -95,7 +95,7 @@ function isLeadActor(context, value) {
   const key = normalizeActorKey(value);
   const resolvedKey = resolveActorIdentityKey(context, value);
   const leadKey = normalizeActorKey(runtimeHelpers.inferLeadName(context.paths));
-  return key === 'lead' || key === 'team-lead' || (leadKey && resolvedKey === leadKey);
+  return key === 'lead' || key === 'lead' || (leadKey && resolvedKey === leadKey);
 }
 
 function assertMatchesAssignedReviewer(context, task, actor, actionName) {
@@ -166,7 +166,7 @@ function getReviewDecisionActor(context, task, flags, actionName) {
   const actor =
     explicit ||
     inferredActor ||
-    resolveKnownActorName(context, 'team-lead', 'review actor');
+    resolveKnownActorName(context, 'lead', 'review actor');
   assertMatchesAssignedReviewer(context, task, actor, actionName);
   return actor;
 }
@@ -301,7 +301,7 @@ function requestReview(context, taskId, flags = {}) {
 
     const nextFrom =
       resolveKnownActorName(context, flags.from, 'review requester') ||
-      resolveKnownActorName(context, 'team-lead', 'review requester');
+      resolveKnownActorName(context, 'lead', 'review requester');
     const rawReviewer = getReviewer(context, flags);
     const nextReviewer = rawReviewer ? resolveKnownActorName(context, rawReviewer, 'reviewer') : null;
     const prevReviewState = getEffectiveReviewState(context, currentTask);

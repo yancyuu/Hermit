@@ -18,7 +18,7 @@ export interface EffectiveCliProviderStatusSnapshot {
 export function useEffectiveCliProviderStatus(
   providerId: CliProviderId | undefined
 ): EffectiveCliProviderStatusSnapshot {
-  const multimodelEnabled = useStore((s) => s.appConfig?.general?.multimodelEnabled ?? true);
+  const multimodelEnabled = useStore((s) => s.appConfig?.general?.multimodelEnabled ?? false);
   const cliStatus = useStore((s) => s.cliStatus);
   const cliStatusLoading = useStore((s) => s.cliStatusLoading);
 

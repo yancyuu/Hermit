@@ -9439,7 +9439,7 @@ describe('Team agent launch matrix safe e2e', () => {
     const run = createPureAnthropicLiveRun({ teamName, projectPath });
     trackLiveRun(svc, run);
 
-    await expect(svc.restartMember(teamName, 'team-lead')).rejects.toThrow(
+    await expect(svc.restartMember(teamName, 'lead')).rejects.toThrow(
       'Lead restart is not supported from member controls'
     );
 
@@ -12233,7 +12233,7 @@ describe('Team agent launch matrix safe e2e', () => {
     expect(staleSnapshot).toMatchObject({
       runId: staleRun.runId,
       members: {
-        'team-lead': { pid: 64101, rssBytes: 64_101_000 },
+        'lead': { pid: 64101, rssBytes: 64_101_000 },
         alice: { pid: 64102, rssBytes: 64_102_000, runtimeModel: 'haiku-stale' },
         bob: { pid: 64103, rssBytes: 64_103_000, runtimeModel: 'sonnet-stale' },
       },
@@ -12253,7 +12253,7 @@ describe('Team agent launch matrix safe e2e', () => {
     expect(currentSnapshot).toMatchObject({
       runId: currentRun.runId,
       members: {
-        'team-lead': { pid: 64201, rssBytes: 64_201_000 },
+        'lead': { pid: 64201, rssBytes: 64_201_000 },
         alice: { pid: 64202, rssBytes: 64_202_000, runtimeModel: 'haiku-current' },
         bob: { pid: 64203, rssBytes: 64_203_000, runtimeModel: 'sonnet-current' },
       },
@@ -12282,7 +12282,7 @@ describe('Team agent launch matrix safe e2e', () => {
     expect(beforeStop).toMatchObject({
       runId: firstRun.runId,
       members: {
-        'team-lead': { pid: 64501, rssBytes: 64_501_000 },
+        'lead': { pid: 64501, rssBytes: 64_501_000 },
         alice: { pid: 64502, rssBytes: 64_502_000, runtimeModel: 'haiku-before-stop' },
       },
     });
@@ -12303,7 +12303,7 @@ describe('Team agent launch matrix safe e2e', () => {
     expect(afterRelaunch).toMatchObject({
       runId: secondRun.runId,
       members: {
-        'team-lead': { pid: 64601, rssBytes: 64_601_000 },
+        'lead': { pid: 64601, rssBytes: 64_601_000 },
         alice: { pid: 64602, rssBytes: 64_602_000, runtimeModel: 'haiku-after-relaunch' },
         bob: { pid: 64603, rssBytes: 64_603_000, runtimeModel: 'sonnet-after-relaunch' },
       },
@@ -12343,7 +12343,7 @@ describe('Team agent launch matrix safe e2e', () => {
     expect(staleSnapshot).toMatchObject({
       runId: staleRun.runId,
       members: {
-        'team-lead': { pid: 64701, rssBytes: 64_701_000 },
+        'lead': { pid: 64701, rssBytes: 64_701_000 },
         alice: { pid: 64702, rssBytes: 64_702_000, runtimeModel: 'haiku-stale' },
         reviewer: { pid: 64703, rssBytes: 64_703_000, runtimeModel: 'gemini-stale' },
         bob: { pid: 64704, rssBytes: 64_704_000, runtimeModel: 'opencode/minimax-stale' },
@@ -12368,7 +12368,7 @@ describe('Team agent launch matrix safe e2e', () => {
     expect(currentSnapshot).toMatchObject({
       runId: currentRun.runId,
       members: {
-        'team-lead': { pid: 64801, rssBytes: 64_801_000 },
+        'lead': { pid: 64801, rssBytes: 64_801_000 },
         alice: { pid: 64802, rssBytes: 64_802_000, runtimeModel: 'haiku-current' },
         reviewer: { pid: 64803, rssBytes: 64_803_000, runtimeModel: 'gemini-current' },
         bob: { pid: 64804, rssBytes: 64_804_000, runtimeModel: 'opencode/minimax-current' },
@@ -12467,7 +12467,7 @@ describe('Team agent launch matrix safe e2e', () => {
     const firstSnapshot = await svc.getTeamAgentRuntimeSnapshot(firstTeamName);
     const secondSnapshot = await svc.getTeamAgentRuntimeSnapshot(secondTeamName);
 
-    expect(firstSnapshot.members['team-lead']).toMatchObject({
+    expect(firstSnapshot.members['lead']).toMatchObject({
       alive: true,
       pid: 50101,
       rssBytes: 50_101_000,
@@ -12487,7 +12487,7 @@ describe('Team agent launch matrix safe e2e', () => {
       providerId: 'anthropic',
       runtimeModel: 'sonnet-runtime',
     });
-    expect(secondSnapshot.members['team-lead']).toMatchObject({
+    expect(secondSnapshot.members['lead']).toMatchObject({
       alive: true,
       pid: 50201,
       rssBytes: 50_201_000,
@@ -12545,7 +12545,7 @@ describe('Team agent launch matrix safe e2e', () => {
       new Map(pids.map((pid) => [pid, pid * 1_000]));
 
     const beforeStop = await svc.getTeamAgentRuntimeSnapshot(stoppedTeamName);
-    expect(beforeStop.members['team-lead']).toMatchObject({
+    expect(beforeStop.members['lead']).toMatchObject({
       alive: true,
       pid: 60101,
       rssBytes: 60_101_000,
@@ -12555,11 +12555,11 @@ describe('Team agent launch matrix safe e2e', () => {
 
     const stoppedSnapshot = await svc.getTeamAgentRuntimeSnapshot(stoppedTeamName);
     const liveSnapshot = await svc.getTeamAgentRuntimeSnapshot(liveTeamName);
-    expect(stoppedSnapshot.members['team-lead']).toMatchObject({ alive: false });
-    expect(stoppedSnapshot.members['team-lead']?.pid).toBeUndefined();
+    expect(stoppedSnapshot.members['lead']).toMatchObject({ alive: false });
+    expect(stoppedSnapshot.members['lead']?.pid).toBeUndefined();
     expect(stoppedSnapshot.members.alice).toMatchObject({ alive: false });
     expect(stoppedSnapshot.members.alice?.pid).toBeUndefined();
-    expect(liveSnapshot.members['team-lead']).toMatchObject({
+    expect(liveSnapshot.members['lead']).toMatchObject({
       alive: true,
       pid: 60201,
       rssBytes: 60_201_000,
@@ -16586,8 +16586,8 @@ async function writeOpenCodeTeamConfig(input: {
         projectPath: input.projectPath,
         members: [
           {
-            name: 'team-lead',
-            agentType: 'team-lead',
+            name: 'lead',
+            agentType: 'lead',
             providerId: 'opencode',
             model: 'opencode/big-pickle',
           },
@@ -16686,8 +16686,8 @@ async function writePureAnthropicTeamConfigWithMembers(input: {
         model: 'sonnet',
         members: [
           {
-            name: 'team-lead',
-            agentType: 'team-lead',
+            name: 'lead',
+            agentType: 'lead',
             providerId: 'anthropic',
             model: 'sonnet',
           },
@@ -16730,8 +16730,8 @@ async function writeMixedTeamConfig(input: {
         model: primary.leadModel,
         members: [
           {
-            name: 'team-lead',
-            agentType: 'team-lead',
+            name: 'lead',
+            agentType: 'lead',
             providerId: primary.providerId,
             ...(primary.providerBackendId ? { providerBackendId: primary.providerBackendId } : {}),
             model: primary.leadModel,
@@ -16802,8 +16802,8 @@ async function writeMixedTeamConfigWithoutOpenCodeProviderMetadata(input: {
         model: 'gpt-5.4',
         members: [
           {
-            name: 'team-lead',
-            agentType: 'team-lead',
+            name: 'lead',
+            agentType: 'lead',
             providerId: 'codex',
             providerBackendId: 'codex-native',
             model: 'gpt-5.4',
@@ -17090,11 +17090,11 @@ async function writeLeadInboxMessages(
   const inboxDir = path.join(getTeamsBasePath(), teamName, 'inboxes');
   await fs.mkdir(inboxDir, { recursive: true });
   await fs.writeFile(
-    path.join(inboxDir, 'team-lead.json'),
+    path.join(inboxDir, 'lead.json'),
     `${JSON.stringify(
       messages.map((message) => ({
         ...message,
-        to: 'team-lead',
+        to: 'lead',
         read: message.read ?? false,
       })),
       null,

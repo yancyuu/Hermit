@@ -6,7 +6,7 @@ import type { InboxMessage } from '@shared/types';
 
 function makeMessage(overrides: Partial<InboxMessage> = {}): InboxMessage {
   return {
-    from: 'team-lead',
+    from: 'lead',
     text: 'Hello',
     timestamp: '2026-03-09T12:00:00.000Z',
     read: true,

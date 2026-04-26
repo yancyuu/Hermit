@@ -95,7 +95,7 @@ vi.mock('@renderer/components/team/members/MembersEditorSection', () => ({
           onClick: () =>
             onChange(
               members.map((member, index) =>
-                index === 0 ? { ...member, name: 'team-lead' } : member
+                index === 0 ? { ...member, name: 'lead' } : member
               )
             ),
         },
@@ -388,14 +388,14 @@ describe('EditTeamDialog', () => {
           currentColor: 'blue',
           currentMembers: [{ name: 'alice', role: 'Reviewer' }] as any,
           leadMember: {
-            name: 'team-lead',
+            name: 'lead',
             role: 'Team Lead',
             providerId: 'codex',
             model: 'gpt-5.4',
             effort: 'medium',
           } as any,
           resolvedMemberColorMap: new Map([
-            ['team-lead', 'forest'],
+            ['lead', 'forest'],
             ['alice', 'blue'],
           ]),
           isTeamAlive: true,
@@ -946,7 +946,7 @@ describe('EditTeamDialog', () => {
 
     expect((saveButton as HTMLButtonElement | undefined)?.disabled).toBe(true);
     expect(host.querySelector('[data-testid="members-field-error"]')?.textContent).toContain(
-      'Member name "team-lead" is reserved'
+      'Member name "lead" is reserved'
     );
     expect(api.teams.updateConfig).not.toHaveBeenCalled();
 

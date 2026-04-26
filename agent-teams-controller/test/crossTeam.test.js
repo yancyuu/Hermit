@@ -35,11 +35,11 @@ describe('crossTeam module', () => {
       const claudeDir = makeClaudeDir({
         'team-a': {
           name: 'team-a',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         },
         'team-b': {
           name: 'team-b',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         },
       });
 
@@ -55,12 +55,12 @@ describe('crossTeam module', () => {
       expect(result.messageId).toBeDefined();
 
       // Verify inbox was written
-      const inboxPath = path.join(claudeDir, 'teams', 'team-b', 'inboxes', 'team-lead.json');
+      const inboxPath = path.join(claudeDir, 'teams', 'team-b', 'inboxes', 'lead.json');
       const inbox = JSON.parse(fs.readFileSync(inboxPath, 'utf8'));
       expect(inbox).toHaveLength(1);
       expect(inbox[0].source).toBe(CROSS_TEAM_SOURCE);
-      expect(inbox[0].from).toBe('team-a.team-lead');
-      expect(inbox[0].text).toContain(`<${CROSS_TEAM_TAG_NAME} from="team-a.team-lead" depth="0"`);
+      expect(inbox[0].from).toBe('team-a.lead');
+      expect(inbox[0].text).toContain(`<${CROSS_TEAM_TAG_NAME} from="team-a.lead" depth="0"`);
       expect(inbox[0].conversationId).toBeTruthy();
       expect(inbox[0].text).toContain(`conversationId="${inbox[0].conversationId}"`);
     });
@@ -69,11 +69,11 @@ describe('crossTeam module', () => {
       const claudeDir = makeClaudeDir({
         'team-a': {
           name: 'team-a',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         },
         'team-b': {
           name: 'team-b',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         },
       });
 
@@ -91,8 +91,8 @@ describe('crossTeam module', () => {
       const sentMessagesPath = path.join(claudeDir, 'teams', 'team-a', 'sentMessages.json');
       const sentMessages = JSON.parse(fs.readFileSync(sentMessagesPath, 'utf8'));
       expect(sentMessages).toHaveLength(1);
-      expect(sentMessages[0].from).toBe('team-lead');
-      expect(sentMessages[0].to).toBe('team-b.team-lead');
+      expect(sentMessages[0].from).toBe('lead');
+      expect(sentMessages[0].to).toBe('team-b.lead');
       expect(sentMessages[0].text).toBe('Hello');
       expect(sentMessages[0].source).toBe('cross_team_sent');
       expect(sentMessages[0].messageId).toBe(outbox[0].messageId);
@@ -102,11 +102,11 @@ describe('crossTeam module', () => {
       const claudeDir = makeClaudeDir({
         'team-a': {
           name: 'team-a',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         },
         'team-b': {
           name: 'team-b',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         },
       });
       const taskRefs = [{ taskId: 'task-1', displayId: 'abcd1234', teamName: 'team-a' }];
@@ -118,7 +118,7 @@ describe('crossTeam module', () => {
         taskRefs,
       });
 
-      const inboxPath = path.join(claudeDir, 'teams', 'team-b', 'inboxes', 'team-lead.json');
+      const inboxPath = path.join(claudeDir, 'teams', 'team-b', 'inboxes', 'lead.json');
       const inbox = JSON.parse(fs.readFileSync(inboxPath, 'utf8'));
       expect(inbox[0].taskRefs).toEqual(taskRefs);
 
@@ -134,11 +134,11 @@ describe('crossTeam module', () => {
       const claudeDir = makeClaudeDir({
         'team-a': {
           name: 'team-a',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         },
         'team-b': {
           name: 'team-b',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         },
       });
 
@@ -156,11 +156,11 @@ describe('crossTeam module', () => {
       const claudeDir = makeClaudeDir({
         'team-a': {
           name: 'team-a',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         },
         'team-b': {
           name: 'team-b',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         },
       });
 
@@ -171,7 +171,7 @@ describe('crossTeam module', () => {
         replyToConversationId: 'conv-123',
       });
 
-      const inboxPath = path.join(claudeDir, 'teams', 'team-b', 'inboxes', 'team-lead.json');
+      const inboxPath = path.join(claudeDir, 'teams', 'team-b', 'inboxes', 'lead.json');
       const inbox = JSON.parse(fs.readFileSync(inboxPath, 'utf8'));
       expect(inbox[0].conversationId).toBe('conv-123');
       expect(inbox[0].replyToConversationId).toBe('conv-123');
@@ -183,11 +183,11 @@ describe('crossTeam module', () => {
       const claudeDir = makeClaudeDir({
         'team-a': {
           name: 'team-a',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         },
         'team-b': {
           name: 'team-b',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         },
       });
 
@@ -209,7 +209,7 @@ describe('crossTeam module', () => {
       expect(second.deduplicated).toBe(true);
       expect(second.messageId).toBe(first.messageId);
 
-      const inboxPath = path.join(claudeDir, 'teams', 'team-b', 'inboxes', 'team-lead.json');
+      const inboxPath = path.join(claudeDir, 'teams', 'team-b', 'inboxes', 'lead.json');
       const inbox = JSON.parse(fs.readFileSync(inboxPath, 'utf8'));
       expect(inbox).toHaveLength(1);
 
@@ -225,11 +225,11 @@ describe('crossTeam module', () => {
       const claudeDir = makeClaudeDir({
         'team-a': {
           name: 'team-a',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         },
         'team-b': {
           name: 'team-b',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         },
       });
 
@@ -255,7 +255,7 @@ describe('crossTeam module', () => {
         expect(second.deduplicated).toBeUndefined();
         expect(second.messageId).not.toBe(first.messageId);
 
-        const inboxPath = path.join(claudeDir, 'teams', 'team-b', 'inboxes', 'team-lead.json');
+        const inboxPath = path.join(claudeDir, 'teams', 'team-b', 'inboxes', 'lead.json');
         const inbox = JSON.parse(fs.readFileSync(inboxPath, 'utf8'));
         expect(inbox).toHaveLength(2);
 
@@ -270,7 +270,7 @@ describe('crossTeam module', () => {
       const claudeDir = makeClaudeDir({
         'team-a': {
           name: 'team-a',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         },
       });
 
@@ -287,7 +287,7 @@ describe('crossTeam module', () => {
       const claudeDir = makeClaudeDir({
         'team-a': {
           name: 'team-a',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         },
       });
 
@@ -304,11 +304,11 @@ describe('crossTeam module', () => {
       const claudeDir = makeClaudeDir({
         'team-a': {
           name: 'team-a',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         },
         'team-b': {
           name: 'team-b',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
           deletedAt: '2024-01-01T00:00:00Z',
         },
       });
@@ -326,11 +326,11 @@ describe('crossTeam module', () => {
       const claudeDir = makeClaudeDir({
         'team-a': {
           name: 'team-a',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         },
         'team-b': {
           name: 'team-b',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         },
       });
 
@@ -350,11 +350,11 @@ describe('crossTeam module', () => {
       const claudeDir = makeClaudeDir({
         'team-a': {
           name: 'team-a',
-          members: [{ name: 'alpha-lead', agentType: 'team-lead' }],
+          members: [{ name: 'alpha-lead', agentType: 'lead' }],
         },
         'team-b': {
           name: 'team-b',
-          members: [{ name: 'beta-lead', agentType: 'team-lead' }],
+          members: [{ name: 'beta-lead', agentType: 'lead' }],
         },
       });
 
@@ -372,7 +372,7 @@ describe('crossTeam module', () => {
       const claudeDir = makeClaudeDir({
         'team-a': {
           name: 'team-a',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         },
         'team-b': {
           name: 'team-b',
@@ -397,7 +397,7 @@ describe('crossTeam module', () => {
       const claudeDir = makeClaudeDir({
         'team-a': {
           name: 'team-a',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         },
         'team-b': {
           name: 'team-b',
@@ -430,7 +430,7 @@ describe('crossTeam module', () => {
       const claudeDir = makeClaudeDir({
         'team-b': {
           name: 'team-b',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         },
       });
 
@@ -443,18 +443,18 @@ describe('crossTeam module', () => {
         })
       ).toThrow('Source team not found: team-a');
       expect(fs.existsSync(path.join(claudeDir, 'teams', 'team-a'))).toBe(false);
-      expect(fs.existsSync(path.join(claudeDir, 'teams', 'team-b', 'inboxes', 'team-lead.json'))).toBe(false);
+      expect(fs.existsSync(path.join(claudeDir, 'teams', 'team-b', 'inboxes', 'lead.json'))).toBe(false);
     });
 
     it('rejects unknown cross-team senders', () => {
       const claudeDir = makeClaudeDir({
         'team-a': {
           name: 'team-a',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         },
         'team-b': {
           name: 'team-b',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         },
       });
 
@@ -467,18 +467,18 @@ describe('crossTeam module', () => {
           text: 'Hello',
         })
       ).toThrow('Unknown cross-team sender: alicce');
-      expect(fs.existsSync(path.join(claudeDir, 'teams', 'team-b', 'inboxes', 'team-lead.json'))).toBe(false);
+      expect(fs.existsSync(path.join(claudeDir, 'teams', 'team-b', 'inboxes', 'lead.json'))).toBe(false);
     });
 
     it('resolves lead by name fallback', () => {
       const claudeDir = makeClaudeDir({
         'team-a': {
           name: 'team-a',
-          members: [{ name: 'team-lead' }],
+          members: [{ name: 'lead' }],
         },
         'team-b': {
           name: 'team-b',
-          members: [{ name: 'team-lead' }],
+          members: [{ name: 'lead' }],
         },
       });
 
@@ -488,7 +488,7 @@ describe('crossTeam module', () => {
         text: 'Hello',
       });
 
-      const inboxPath = path.join(claudeDir, 'teams', 'team-b', 'inboxes', 'team-lead.json');
+      const inboxPath = path.join(claudeDir, 'teams', 'team-b', 'inboxes', 'lead.json');
       expect(fs.existsSync(inboxPath)).toBe(true);
     });
 
@@ -496,7 +496,7 @@ describe('crossTeam module', () => {
       const claudeDir = makeClaudeDir({
         'team-a': {
           name: 'team-a',
-          members: [{ name: 'team-lead' }],
+          members: [{ name: 'lead' }],
         },
         'team-b': {
           name: 'team-b',
@@ -510,8 +510,8 @@ describe('crossTeam module', () => {
         metaPath,
         JSON.stringify({
           members: [
-            { name: '  meta-lead  ', agentType: 'team-lead' },
-            { name: '  meta-lead  ', agentType: 'team-lead' },
+            { name: '  meta-lead  ', agentType: 'lead' },
+            { name: '  meta-lead  ', agentType: 'lead' },
             { name: 'worker', agentType: 'worker' },
           ],
         })

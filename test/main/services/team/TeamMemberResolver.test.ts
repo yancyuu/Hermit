@@ -13,7 +13,7 @@ describe('TeamMemberResolver', () => {
     const resolver = new TeamMemberResolver();
     const config: TeamConfig = {
       name: 'My Team',
-      members: [{ name: 'team-lead', agentType: 'team-lead', role: 'lead' }],
+      members: [{ name: 'lead', agentType: 'lead', role: 'lead' }],
     };
     const metaMembers: TeamConfig['members'] = [
       { name: 'alice', role: 'developer', agentType: 'general-purpose', color: 'blue' },
@@ -28,7 +28,7 @@ describe('TeamMemberResolver', () => {
     const names = members.map((member) => member.name);
 
     expect(names).toHaveLength(3);
-    expect(names).toEqual(expect.arrayContaining(['alice', 'bob', 'team-lead']));
+    expect(names).toEqual(expect.arrayContaining(['alice', 'bob', 'lead']));
     expect(names).not.toContain('stranger');
     expect(names).not.toContain('user');
 
@@ -36,9 +36,9 @@ describe('TeamMemberResolver', () => {
     expect(alice?.role).toBe('developer');
     expect(alice?.color).toBe('blue');
 
-    const lead = members.find((member) => member.name === 'team-lead');
+    const lead = members.find((member) => member.name === 'lead');
     expect(lead?.role).toBe('lead');
-    expect(lead?.agentType).toBe('team-lead');
+    expect(lead?.agentType).toBe('lead');
   });
 
   it('filters out "user" pseudo-member even when present in config, meta, or inboxNames', () => {
@@ -46,7 +46,7 @@ describe('TeamMemberResolver', () => {
     const config: TeamConfig = {
       name: 'Team',
       members: [
-        { name: 'team-lead', agentType: 'team-lead', role: 'lead' },
+        { name: 'lead', agentType: 'lead', role: 'lead' },
         { name: 'user', agentType: 'general-purpose' },
       ],
     };
@@ -61,7 +61,7 @@ describe('TeamMemberResolver', () => {
     const names = members.map((m) => m.name);
 
     expect(names).not.toContain('user');
-    expect(names).toContain('team-lead');
+    expect(names).toContain('lead');
     expect(names).toContain('alice');
   });
 
@@ -69,26 +69,26 @@ describe('TeamMemberResolver', () => {
     const resolver = new TeamMemberResolver();
     const config: TeamConfig = {
       name: 'Team',
-      members: [{ name: 'team-lead', agentType: 'team-lead', role: 'lead' }],
+      members: [{ name: 'lead', agentType: 'lead', role: 'lead' }],
     };
     const metaMembers: TeamConfig['members'] = [{ name: 'alice', agentType: 'general-purpose' }];
-    const inboxNames = ['alice', 'team-best.user', 'dream-team.team-lead'];
+    const inboxNames = ['alice', 'team-best.user', 'dream-team.lead'];
     const tasks: TeamTask[] = [];
 
     const members = resolver.resolveMembers(config, metaMembers, inboxNames, tasks);
     const names = members.map((m) => m.name);
 
     expect(names).toContain('alice');
-    expect(names).toContain('team-lead');
+    expect(names).toContain('lead');
     expect(names).not.toContain('team-best.user');
-    expect(names).not.toContain('dream-team.team-lead');
+    expect(names).not.toContain('dream-team.lead');
   });
 
   it('ignores leaked generated agent ids from inbox file names', () => {
     const resolver = new TeamMemberResolver();
     const config: TeamConfig = {
       name: 'Team',
-      members: [{ name: 'team-lead', agentType: 'team-lead', role: 'lead' }],
+      members: [{ name: 'lead', agentType: 'lead', role: 'lead' }],
     };
     const metaMembers: TeamConfig['members'] = [
       { name: 'alice', agentType: 'general-purpose' },
@@ -101,7 +101,7 @@ describe('TeamMemberResolver', () => {
 
     expect(names).toContain('alice');
     expect(names).toContain('bob');
-    expect(names).toContain('team-lead');
+    expect(names).toContain('lead');
     expect(names).not.toContain('a3975f80d37fbcea1');
     expect(names).not.toContain('a68a8f6a643e59bfd');
   });
@@ -111,7 +111,7 @@ describe('TeamMemberResolver', () => {
     const config: TeamConfig = {
       name: 'Team',
       members: [
-        { name: 'team-lead', agentType: 'team-lead', role: 'lead' },
+        { name: 'lead', agentType: 'lead', role: 'lead' },
         { name: 'ops.bot', agentType: 'general-purpose' },
       ],
     };
@@ -126,7 +126,7 @@ describe('TeamMemberResolver', () => {
     const resolver = new TeamMemberResolver();
     const config: TeamConfig = {
       name: 'Team',
-      members: [{ name: 'team-lead', agentType: 'team-lead', role: 'lead' }],
+      members: [{ name: 'lead', agentType: 'lead', role: 'lead' }],
     };
 
     const members = resolver.resolveMembers(
@@ -138,7 +138,7 @@ describe('TeamMemberResolver', () => {
     const names = members.map((m) => m.name);
 
     expect(names).toContain('alice');
-    expect(names).toContain('team-lead');
+    expect(names).toContain('lead');
     expect(names).not.toContain('cross-team:team-alpha-super');
     expect(names).not.toContain('cross-team-team-alpha-super');
   });
@@ -147,7 +147,7 @@ describe('TeamMemberResolver', () => {
     const resolver = new TeamMemberResolver();
     const config: TeamConfig = {
       name: 'Team',
-      members: [{ name: 'team-lead', agentType: 'team-lead', role: 'lead' }],
+      members: [{ name: 'lead', agentType: 'lead', role: 'lead' }],
     };
 
     const members = resolver.resolveMembers(
@@ -159,7 +159,7 @@ describe('TeamMemberResolver', () => {
     const names = members.map((m) => m.name);
 
     expect(names).toContain('alice');
-    expect(names).toContain('team-lead');
+    expect(names).toContain('lead');
     expect(names).not.toContain('cross_team_send');
     expect(names).not.toContain('cross_team_list_targets');
   });
@@ -168,7 +168,7 @@ describe('TeamMemberResolver', () => {
     const resolver = new TeamMemberResolver();
     const config: TeamConfig = {
       name: 'Team',
-      members: [{ name: 'team-lead', agentType: 'team-lead', role: 'lead' }],
+      members: [{ name: 'lead', agentType: 'lead', role: 'lead' }],
     };
 
     const members = resolver.resolveMembers(
@@ -180,7 +180,7 @@ describe('TeamMemberResolver', () => {
     const names = members.map((m) => m.name);
 
     expect(names).toContain('alice');
-    expect(names).toContain('team-lead');
+    expect(names).toContain('lead');
     expect(names).not.toContain('cross_team::team-alpha-super');
     expect(names).not.toContain('cross_team--team-alpha-super');
   });
@@ -190,7 +190,7 @@ describe('TeamMemberResolver', () => {
     const config: TeamConfig = {
       name: 'Team',
       members: [
-        { name: 'team-lead', agentType: 'team-lead', role: 'lead' },
+        { name: 'lead', agentType: 'lead', role: 'lead' },
         { name: 'Ops.Bot', agentType: 'general-purpose' },
       ],
     };
@@ -207,7 +207,7 @@ describe('TeamMemberResolver', () => {
     const config: TeamConfig = {
       name: 'Team',
       members: [
-        { name: 'team-lead', agentType: 'team-lead', role: 'lead' },
+        { name: 'lead', agentType: 'lead', role: 'lead' },
         { name: 'alice-2', agentType: 'general-purpose' },
       ],
     };
@@ -282,31 +282,31 @@ describe('TeamMemberResolver', () => {
     expect(bob?.currentTaskId).toBeNull();
   });
 
-  it('merges inbox-derived "lead" alias into canonical "team-lead"', () => {
+  it('merges inbox-derived "lead" alias into canonical "lead"', () => {
     const resolver = new TeamMemberResolver();
     const config: TeamConfig = {
       name: 'Team',
       members: [
-        { name: 'team-lead', agentType: 'team-lead', role: 'lead' },
+        { name: 'lead', agentType: 'lead', role: 'lead' },
         { name: 'alice', agentType: 'general-purpose' },
       ],
     };
-    // Teammates sometimes send messages to "lead" instead of "team-lead",
+    // Teammates sometimes send messages to "lead" instead of "lead",
     // creating a separate inbox file that the resolver picks up.
-    const inboxNames = ['team-lead', 'lead', 'alice'];
+    const inboxNames = ['lead', 'lead', 'alice'];
     const members = resolver.resolveMembers(config, [], inboxNames, []);
     const names = members.map((m) => m.name);
 
-    expect(names).toContain('team-lead');
+    expect(names).toContain('lead');
     expect(names).not.toContain('lead');
     expect(names).toContain('alice');
   });
 
-  it('keeps "lead" as a member when "team-lead" is not present', () => {
+  it('keeps "lead" as a member when "lead" is not present', () => {
     const resolver = new TeamMemberResolver();
     const config: TeamConfig = {
       name: 'Team',
-      members: [{ name: 'lead', agentType: 'team-lead', role: 'lead' }],
+      members: [{ name: 'lead', agentType: 'lead', role: 'lead' }],
     };
     const members = resolver.resolveMembers(config, [], ['lead'], []);
     const names = members.map((m) => m.name);

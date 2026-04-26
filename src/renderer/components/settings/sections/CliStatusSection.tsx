@@ -214,7 +214,7 @@ export const CliStatusSection = (): React.JSX.Element | null => {
   } | null>(null);
   const [manageProviderId, setManageProviderId] = useState<CliProviderId>('gemini');
   const [manageDialogOpen, setManageDialogOpen] = useState(false);
-  const multimodelEnabled = appConfig?.general?.multimodelEnabled ?? true;
+  const multimodelEnabled = appConfig?.general?.multimodelEnabled ?? false;
   const selectedProjectPath = useMemo(
     () => resolveProjectPathById(selectedProjectId, projects, repositoryGroups)?.path ?? null,
     [projects, repositoryGroups, selectedProjectId]

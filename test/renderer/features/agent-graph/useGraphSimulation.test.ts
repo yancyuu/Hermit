@@ -1002,7 +1002,7 @@ describe('stable slot layout planner', () => {
   });
 
   it('positions lead-owned tasks inside the lead kanban band instead of unassigned', () => {
-    const teamName = 'team-lead-owned-tasks';
+    const teamName = 'lead-owned-tasks';
     const lead = createLead(teamName);
     const alice = createMember(teamName, 'agent-alice', 'alice');
     const leadTasks = [
@@ -1046,7 +1046,7 @@ describe('stable slot layout planner', () => {
   });
 
   it('builds central collisions from occupied lead sub-rects instead of the full lead slot bounds', () => {
-    const teamName = 'team-lead-central-collision';
+    const teamName = 'lead-central-collision';
     const lead = createLead(teamName);
     const alice = createMember(teamName, 'agent-alice', 'alice');
     const leadTasks = [

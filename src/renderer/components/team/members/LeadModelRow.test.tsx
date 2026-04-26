@@ -117,7 +117,7 @@ describe('LeadModelRow', () => {
     document.body.innerHTML = '';
   });
 
-  it('uses the canonical team-lead color for the preview stripe', () => {
+  it('uses the canonical lead color for the preview stripe', () => {
     const { host, root } = renderLeadModelRow();
 
     const stripe = host.querySelector('[aria-hidden="true"]');

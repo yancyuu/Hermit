@@ -46,8 +46,8 @@ function isSameTaskMember(left, right, leadName) {
         return true;
     }
     return (
-        (normalizedLeft === 'team-lead' && normalizedRight === normalizedLead) ||
-        (normalizedRight === 'team-lead' && normalizedLeft === normalizedLead)
+        (normalizedLeft === 'lead' && normalizedRight === normalizedLead) ||
+        (normalizedRight === 'lead' && normalizedLeft === normalizedLead)
     );
 }
 

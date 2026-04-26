@@ -1,6 +1,6 @@
 import { CUSTOM_ROLE, NO_ROLE, PRESET_ROLES } from '@renderer/constants/teamRoles';
 import { serializeChipsWithText } from '@renderer/types/inlineChip';
-import { normalizeCreateLaunchProviderForUi } from '@renderer/utils/geminiUiFreeze';
+import { normalizeCreateLaunchProviderForUi } from '@renderer/utils/claudeCodeOnlyProviders';
 import { normalizeExplicitTeamModelForUi } from '@renderer/utils/teamModelAvailability';
 import { isTeamEffortLevel } from '@shared/utils/effortLevels';
 import { isLeadMember } from '@shared/utils/leadDetection';

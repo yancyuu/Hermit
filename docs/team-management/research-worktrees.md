@@ -52,7 +52,7 @@ claude  # Новая независимая сессия
 {
   "members": [
     {
-      "name": "team-lead",
+      "name": "lead",
       "cwd": "/Users/belief/dev/projects/modularity"  // Все members имеют ОДИНАКОВЫЙ cwd
     }
   ]

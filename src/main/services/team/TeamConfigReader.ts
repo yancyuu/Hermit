@@ -1,6 +1,10 @@
 import { FileReadTimeoutError, readFileUtf8WithTimeout } from '@main/utils/fsRead';
 import { getTeamsBasePath } from '@main/utils/pathDecoder';
-import { isLeadMember } from '@shared/utils/leadDetection';
+import {
+  CANONICAL_LEAD_MEMBER_NAME,
+  LEGACY_LEAD_MEMBER_NAME,
+  isLeadMember,
+} from '@shared/utils/leadDetection';
 import { createLogger } from '@shared/utils/logger';
 import {
   createCliAutoSuffixNameGuard,
@@ -21,6 +25,7 @@ import {
 } from './TeamLaunchSummaryProjection';
 import { TeamMembersMetaStore } from './TeamMembersMetaStore';
 import { TeamMetaStore } from './TeamMetaStore';
+import { atomicWriteAsync } from './atomicWrite';
 
 import type {
   TeamConfig,
@@ -41,6 +46,8 @@ const MAX_SESSION_HISTORY_IN_SUMMARY = 2000;
 const MAX_PROJECT_PATH_HISTORY_IN_SUMMARY = 200;
 const MAX_LAUNCH_STATE_BYTES = 32 * 1024;
 const TEAM_LAUNCH_STATE_FILE = 'launch-state.json';
+const CANONICAL_LEAD_NAME = CANONICAL_LEAD_MEMBER_NAME;
+const LEGACY_LEAD_NAME = LEGACY_LEAD_MEMBER_NAME;
 
 function normalizeProjectPathCandidate(value: unknown): string | undefined {
   if (typeof value !== 'string') {
@@ -153,6 +160,40 @@ function withReadTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return Promise.race([promise, timeout]).finally(() => {
     if (timer) clearTimeout(timer);
   });
+}
+
+function replaceLegacyLeadValue(value: unknown, key = ''): unknown {
+  const memberNameKeys = new Set([
+    'name',
+    'agentType',
+    'member',
+    'memberName',
+    'to',
+    'from',
+    'owner',
+    'assignee',
+    'reviewer',
+    'leadName',
+  ]);
+  if (value === LEGACY_LEAD_NAME && memberNameKeys.has(key)) return CANONICAL_LEAD_NAME;
+  if (Array.isArray(value)) return value.map((item) => replaceLegacyLeadValue(item, key));
+  if (!value || typeof value !== 'object') return value;
+  return Object.fromEntries(
+    Object.entries(value).map(([entryKey, item]) => [
+      entryKey,
+      replaceLegacyLeadValue(item, entryKey),
+    ])
+  );
+}
+
+async function readJsonFile(filePath: string, maxBytes: number): Promise<unknown | null> {
+  try {
+    const stat = await fs.promises.stat(filePath);
+    if (!stat.isFile() || stat.size > maxBytes) return null;
+    return JSON.parse(await readFileUtf8WithTimeout(filePath, PER_TEAM_READ_TIMEOUT_MS)) as unknown;
+  } catch {
+    return null;
+  }
 }
 
 export class TeamConfigReader {
@@ -524,6 +565,7 @@ export class TeamConfigReader {
       if (typeof config.name !== 'string' || config.name.trim() === '') {
         return null;
       }
+      await this.migrateLeadNameStorage(teamName, config, configPath);
       const resolvedProjectPath = resolveProjectPathFromConfig(config);
       return resolvedProjectPath ? { ...config, projectPath: resolvedProjectPath } : config;
     } catch (error) {
@@ -533,6 +575,74 @@ export class TeamConfigReader {
       }
       return null;
     }
+  }
+
+  private async migrateLeadNameStorage(
+    teamName: string,
+    config: TeamConfig,
+    configPath: string
+  ): Promise<void> {
+    let configChanged = false;
+    const migratedConfig = replaceLegacyLeadValue(config) as TeamConfig;
+    if (JSON.stringify(migratedConfig) !== JSON.stringify(config)) {
+      Object.assign(config, migratedConfig);
+      configChanged = true;
+    }
+    if (configChanged) {
+      await atomicWriteAsync(configPath, JSON.stringify(config, null, 2));
+    }
+
+    const teamDir = path.dirname(configPath);
+    const metaPath = path.join(teamDir, 'members.meta.json');
+    const meta = await readJsonFile(metaPath, 256 * 1024);
+    if (meta) {
+      const migratedMeta = replaceLegacyLeadValue(meta);
+      if (JSON.stringify(migratedMeta) !== JSON.stringify(meta)) {
+        await atomicWriteAsync(metaPath, JSON.stringify(migratedMeta, null, 2));
+      }
+    }
+
+    await this.migrateLeadInboxFile(path.join(teamDir, 'inboxes'));
+  }
+
+  private async migrateLeadInboxFile(inboxDir: string): Promise<void> {
+    const legacyPath = path.join(inboxDir, `${LEGACY_LEAD_NAME}.json`);
+    const leadPath = path.join(inboxDir, `${CANONICAL_LEAD_NAME}.json`);
+    let legacyRaw: string;
+    try {
+      legacyRaw = await readFileUtf8WithTimeout(legacyPath, PER_TEAM_READ_TIMEOUT_MS);
+    } catch {
+      return;
+    }
+
+    let legacyMessages: unknown[] = [];
+    try {
+      const parsed = JSON.parse(legacyRaw) as unknown;
+      legacyMessages = Array.isArray(parsed) ? parsed : [];
+    } catch {
+      legacyMessages = [];
+    }
+
+    let leadMessages: unknown[] = [];
+    try {
+      const parsed = JSON.parse(
+        await readFileUtf8WithTimeout(leadPath, PER_TEAM_READ_TIMEOUT_MS)
+      ) as unknown;
+      leadMessages = Array.isArray(parsed) ? parsed : [];
+    } catch {
+      leadMessages = [];
+    }
+
+    const seen = new Set<string>();
+    const merged = [...leadMessages, ...legacyMessages].filter((message) => {
+      const key = JSON.stringify(message);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    await fs.promises.mkdir(inboxDir, { recursive: true });
+    await atomicWriteAsync(leadPath, JSON.stringify(merged, null, 2));
+    await fs.promises.unlink(legacyPath).catch(() => {});
   }
 
   async updateConfig(

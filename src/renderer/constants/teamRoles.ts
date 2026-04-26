@@ -17,7 +17,7 @@ export const CUSTOM_ROLE = '__custom__';
 export const NO_ROLE = '__none__';
 
 /** Roles that cannot be assigned manually (reserved for system use). */
-export const FORBIDDEN_ROLES = new Set(['lead', 'team-lead', 'orchestrator']);
+export const FORBIDDEN_ROLES = new Set(['lead', 'orchestrator']);
 
 export const ROLE_LABELS: Record<string, string> = {
   architect: '架构师',
@@ -29,7 +29,6 @@ export const ROLE_LABELS: Record<string, string> = {
   auditor: '审计',
   optimizer: '优化',
   lead: '负责人',
-  'team-lead': '团队负责人',
   orchestrator: '编排者',
   'general-purpose': '通用成员',
 };

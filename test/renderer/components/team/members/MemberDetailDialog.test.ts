@@ -149,13 +149,13 @@ describe('MemberDetailDialog activity count', () => {
     };
     const members: ResolvedTeamMember[] = [
       {
-        name: 'team-lead',
+        name: 'lead',
         status: 'active',
         currentTaskId: null,
         taskCount: 0,
         lastActiveAt: null,
         messageCount: 0,
-        agentType: 'team-lead',
+        agentType: 'lead',
       },
       member,
     ];

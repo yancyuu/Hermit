@@ -61,11 +61,11 @@ describe('ipc guards', () => {
     expect(validateTeamName('team-1').valid).toBe(true);
     expect(validateTaskId('123').valid).toBe(true);
     expect(validateMemberName('alice_1').valid).toBe(true);
-    expect(validateFromField('team-lead').valid).toBe(true);
-    expect(validateMemberName('team-lead').valid).toBe(true);
+    expect(validateFromField('lead').valid).toBe(true);
+    expect(validateMemberName('lead').valid).toBe(true);
     expect(validateMemberName('user').valid).toBe(false);
     expect(validateTeammateName('alice_1').valid).toBe(true);
-    expect(validateTeammateName('team-lead').valid).toBe(false);
+    expect(validateTeammateName('lead').valid).toBe(false);
     expect(validateTeammateName('user').valid).toBe(false);
   });
 

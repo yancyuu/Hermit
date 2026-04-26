@@ -26,7 +26,7 @@ describe('computePendingCrossTeamReplies', () => {
         makeMessage({
           conversationId: 'conv-1',
           source: 'cross_team_sent',
-          to: 'team-best.team-lead',
+          to: 'team-best.lead',
           timestamp: sentAt,
         }),
       ],
@@ -48,13 +48,13 @@ describe('computePendingCrossTeamReplies', () => {
         makeMessage({
           conversationId: 'conv-1',
           source: 'cross_team_sent',
-          to: 'team-best.team-lead',
+          to: 'team-best.lead',
           timestamp: '2026-03-09T12:10:00.000Z',
         }),
         makeMessage({
           conversationId: 'conv-1',
           replyToConversationId: 'conv-1',
-          from: 'team-best.team-lead',
+          from: 'team-best.lead',
           source: 'cross_team',
           timestamp: '2026-03-09T12:10:05.000Z',
           messageId: 'msg-2',
@@ -73,7 +73,7 @@ describe('computePendingCrossTeamReplies', () => {
         makeMessage({
           conversationId: 'conv-1',
           replyToConversationId: 'conv-1',
-          from: 'team-best.team-lead',
+          from: 'team-best.lead',
           source: 'cross_team',
           timestamp: '2026-03-09T12:10:00.000Z',
           messageId: 'msg-1-reply',
@@ -81,7 +81,7 @@ describe('computePendingCrossTeamReplies', () => {
         makeMessage({
           conversationId: 'conv-1',
           source: 'cross_team_sent',
-          to: 'team-best.team-lead',
+          to: 'team-best.lead',
           timestamp: sentAt,
           messageId: 'msg-2',
         }),
@@ -105,12 +105,12 @@ describe('computePendingCrossTeamReplies', () => {
         makeMessage({
           conversationId: 'conv-1',
           source: 'cross_team_sent',
-          to: 'team-best.team-lead',
+          to: 'team-best.lead',
           timestamp: sentAt,
         }),
         makeMessage({
           conversationId: 'conv-2',
-          from: 'team-best.team-lead',
+          from: 'team-best.lead',
           source: 'cross_team',
           timestamp: '2026-03-09T12:10:05.000Z',
           messageId: 'msg-2',
@@ -133,7 +133,7 @@ describe('computePendingCrossTeamReplies', () => {
       [
         makeMessage({
           from: 'alice',
-          to: 'team-lead',
+          to: 'lead',
           timestamp: '2026-03-09T12:10:00.000Z',
         }),
       ],
@@ -149,7 +149,7 @@ describe('computePendingCrossTeamReplies', () => {
       [
         makeMessage({
           source: 'cross_team_sent',
-          to: 'team-best.team-lead',
+          to: 'team-best.lead',
           timestamp: sentAt,
         }),
       ],

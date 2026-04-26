@@ -129,7 +129,7 @@ describe('team-fs-worker integration', () => {
       path.join(teamDir, 'config.json'),
       JSON.stringify({
         name: 'Mixed Worker Team',
-        members: [{ name: 'team-lead', agentType: 'team-lead' }],
+        members: [{ name: 'lead', agentType: 'lead' }],
       }),
       'utf8'
     );
@@ -230,7 +230,7 @@ describe('team-fs-worker integration', () => {
       JSON.stringify({
         version: 1,
         members: [
-          { name: 'team-lead', agentType: 'team-lead' },
+          { name: 'lead', agentType: 'lead' },
           { name: 'alice', removedAt: Date.parse('2026-04-22T12:01:00.000Z') },
           { name: 'bob', role: 'developer' },
         ],

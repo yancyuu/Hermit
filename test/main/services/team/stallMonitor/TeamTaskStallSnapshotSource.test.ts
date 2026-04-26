@@ -42,7 +42,7 @@ describe('TeamTaskStallSnapshotSource', () => {
       projectDir: '/tmp/project',
       projectId: 'project-id',
       config: {
-        members: [{ name: 'team-lead', role: 'team lead' }],
+        members: [{ name: 'lead', role: 'team lead' }],
       } as never,
       sessionIds: ['session-a'],
       transcriptFiles: ['/tmp/project/session-a.jsonl', '/tmp/project/session-b.jsonl'],
@@ -132,7 +132,7 @@ describe('TeamTaskStallSnapshotSource', () => {
     expect(exactRowReader.parseFiles).toHaveBeenCalledWith(['/tmp/project/session-a.jsonl', '/tmp/project/session-b.jsonl']);
     expect(snapshot?.inProgressTasks.map((task) => task.id)).toEqual(['task-a']);
     expect(snapshot?.reviewOpenTasks.map((task) => task.id)).toEqual(['task-b']);
-    expect(snapshot?.leadName).toBe('team-lead');
+    expect(snapshot?.leadName).toBe('lead');
     expect(snapshot?.resolvedReviewersByTaskId.get('task-b')).toEqual({
       reviewer: 'alice',
       source: 'kanban_state',

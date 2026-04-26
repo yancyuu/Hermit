@@ -25,7 +25,7 @@ async function writeTeamConfig(claudeDir: string, teamName: string) {
       {
         name: teamName,
         members: [
-          { name: 'team-lead', agentType: 'team-lead' },
+          { name: 'lead', agentType: 'lead' },
           { name: 'alice', agentType: 'teammate', role: 'developer' },
           { name: 'bob', agentType: 'teammate', role: 'reviewer' },
         ],
@@ -311,7 +311,7 @@ describe('agent-teams-mcp stdio e2e', () => {
           claudeDir,
           teamName: 'e2e-team',
           taskId: reviewTask.id,
-          from: 'team-lead',
+          from: 'lead',
           reviewer: 'bob',
         },
         8
@@ -417,7 +417,7 @@ describe('agent-teams-mcp stdio e2e', () => {
         ((leadBriefingResult as { result: { content?: Array<{ text?: string }> } }).result
           ?.content?.[0]?.text as string | undefined) ?? ''
       );
-      expect(leadBriefingText).toContain('Lead queue for team-lead on team "e2e-team":');
+      expect(leadBriefingText).toContain('Lead queue for lead on team "e2e-team":');
       expect(leadBriefingText).toContain(
         'Primary lead queue. Sections below already represent lead-owned actions or watch-only context.'
       );
@@ -490,7 +490,7 @@ describe('agent-teams-mcp stdio e2e', () => {
   it('fails closed for primary queue and inventory tools when team config is missing over stdio', async () => {
     const client = new McpStdIoClient(serverPath, workspaceRoot);
     const expected =
-      'Unknown team "team-lead". Board tools require an existing configured team with config.json.';
+      'Unknown team "lead". Board tools require an existing configured team with config.json.';
 
     try {
       await client.initialize();
@@ -499,7 +499,7 @@ describe('agent-teams-mcp stdio e2e', () => {
         'lead_briefing',
         {
           claudeDir,
-          teamName: 'team-lead',
+          teamName: 'lead',
         },
         40
       )) as { result?: { isError?: boolean; content?: Array<{ text?: string }> } };
@@ -510,7 +510,7 @@ describe('agent-teams-mcp stdio e2e', () => {
         'task_briefing',
         {
           claudeDir,
-          teamName: 'team-lead',
+          teamName: 'lead',
           memberName: 'alice',
         },
         41
@@ -522,7 +522,7 @@ describe('agent-teams-mcp stdio e2e', () => {
         'task_list',
         {
           claudeDir,
-          teamName: 'team-lead',
+          teamName: 'lead',
         },
         42
       )) as { result?: { isError?: boolean; content?: Array<{ text?: string }> } };
@@ -893,7 +893,7 @@ describe('agent-teams-mcp stdio e2e', () => {
         ((leadBriefingResult as { result: { content?: Array<{ text?: string }> } }).result
           ?.content?.[0]?.text as string | undefined) ?? ''
       );
-      expect(leadBriefingText).toContain('Lead queue for team-lead on team "legacy-review-team":');
+      expect(leadBriefingText).toContain('Lead queue for lead on team "legacy-review-team":');
       expect(leadBriefingText).toContain('Watching:');
       expect(leadBriefingText).toContain(`#${createdTask.displayId}`);
       expect(leadBriefingText).not.toContain('review_reviewer_missing');
@@ -959,7 +959,7 @@ describe('agent-teams-mcp stdio e2e', () => {
           claudeDir,
           teamName: 'review-roundtrip-team',
           taskId: noReviewerTask.id,
-          from: 'team-lead',
+          from: 'lead',
         },
         33
       );
@@ -1030,7 +1030,7 @@ describe('agent-teams-mcp stdio e2e', () => {
           claudeDir,
           teamName: 'review-roundtrip-team',
           taskId: roundtripTask.id,
-          from: 'team-lead',
+          from: 'lead',
           reviewer: 'bob',
         },
         38
@@ -1300,7 +1300,7 @@ describe('agent-teams-mcp stdio e2e', () => {
           claudeDir,
           teamName: 'inventory-filters-team',
           taskId: selfReviewTask.id,
-          from: 'team-lead',
+          from: 'lead',
           reviewer: 'alice',
         },
         58
@@ -1524,7 +1524,7 @@ describe('agent-teams-mcp stdio e2e', () => {
           claudeDir,
           teamName: 'terminal-routing-team',
           subject: 'Lead-owned follow-up task',
-          owner: 'team-lead',
+          owner: 'lead',
         },
         81
       );
@@ -1546,7 +1546,7 @@ describe('agent-teams-mcp stdio e2e', () => {
       );
       expect(leadOwnedBriefingText).toContain('Lead-owned follow-up:');
       expect(leadOwnedBriefingText).toContain(`#${leadOwnedTask.displayId}`);
-      expect(leadOwnedBriefingText).toContain('owner=team-lead');
+      expect(leadOwnedBriefingText).toContain('owner=lead');
       expect(leadOwnedBriefingText).toContain('actionOwner=lead');
       expect(leadOwnedBriefingText).toContain('reason=owner_ready');
 
@@ -1596,7 +1596,7 @@ describe('agent-teams-mcp stdio e2e', () => {
           claudeDir,
           teamName: 'terminal-routing-team',
           taskId: approvedTask.id,
-          from: 'team-lead',
+          from: 'lead',
           reviewer: 'bob',
         },
         86
@@ -1859,7 +1859,7 @@ describe('agent-teams-mcp stdio e2e', () => {
           claudeDir,
           teamName: 'stdio-hardening-team',
           taskId: task.id,
-          from: 'team-lead',
+          from: 'lead',
           reviewer: 'bob',
         },
         103
@@ -1899,7 +1899,7 @@ describe('agent-teams-mcp stdio e2e', () => {
           teamName: 'stdio-hardening-team',
           taskId: task.id,
           status: 'pending',
-          actor: 'team-lead',
+          actor: 'lead',
         },
         106
       );
@@ -1930,7 +1930,7 @@ describe('agent-teams-mcp stdio e2e', () => {
           teamName: 'stdio-hardening-team',
           taskId: task.id,
           status: 'deleted',
-          actor: 'team-lead',
+          actor: 'lead',
         },
         108
       );
@@ -1962,7 +1962,7 @@ describe('agent-teams-mcp stdio e2e', () => {
           claudeDir,
           teamName: 'stdio-hardening-team',
           taskId: task.id,
-          actor: 'team-lead',
+          actor: 'lead',
         },
         110
       );
@@ -1976,7 +1976,7 @@ describe('agent-teams-mcp stdio e2e', () => {
           claudeDir,
           teamName: 'stdio-hardening-team',
           taskId: task.id,
-          actor: 'team-lead',
+          actor: 'lead',
         },
         111
       );

@@ -40,6 +40,12 @@ import {
   TEAM_KILL_PROCESS,
   TEAM_LAUNCH,
   TEAM_LEAD_ACTIVITY,
+  TEAM_LEAD_CHANNEL_FEISHU_START,
+  TEAM_LEAD_CHANNEL_FEISHU_STOP,
+  TEAM_LEAD_CHANNEL_GLOBAL_GET,
+  TEAM_LEAD_CHANNEL_GLOBAL_SAVE,
+  TEAM_LEAD_CHANNEL_GET,
+  TEAM_LEAD_CHANNEL_SAVE,
   TEAM_LEAD_CONTEXT,
   TEAM_LIST,
   TEAM_MEMBER_SPAWN_STATUSES,
@@ -95,7 +101,11 @@ import {
   formatEffortLevelListForProvider,
   isTeamEffortLevelForProvider,
 } from '@shared/utils/effortLevels';
-import { isLeadMember } from '@shared/utils/leadDetection';
+import {
+  CANONICAL_LEAD_MEMBER_NAME,
+  isLeadMember,
+  isLeadMemberName,
+} from '@shared/utils/leadDetection';
 import { createLogger } from '@shared/utils/logger';
 import { isTeamProviderBackendId, migrateProviderBackendId } from '@shared/utils/providerBackend';
 import { isRateLimitMessage } from '@shared/utils/rateLimitDetector';
@@ -120,6 +130,7 @@ import {
   getAutoResumeService,
   initializeAutoResumeService,
 } from '../services/team/AutoResumeService';
+import { getLeadChannelListenerService } from '../services/team/LeadChannelListenerService';
 import {
   buildReplaceMembersDiff,
   buildReplaceMembersSummaryMessage,
@@ -173,6 +184,8 @@ import type {
   IpcResult,
   KanbanColumnId,
   LeadActivitySnapshot,
+  GlobalLeadChannelSnapshot,
+  LeadChannelSnapshot,
   LeadContextUsageSnapshot,
   MemberFullStats,
   MemberLogSummary,
@@ -180,6 +193,7 @@ import type {
   MessagesPage,
   SendMessageRequest,
   SendMessageResult,
+  SaveLeadChannelConfigRequest,
   TaskAttachmentMeta,
   TaskChangePresenceState,
   TaskComment,
@@ -260,7 +274,9 @@ async function getDurableLeadTeammateRoster(
 ): Promise<{ name: string; role?: string }[]> {
   const normalize = (name: string | undefined | null): string => name?.trim().toLowerCase() ?? '';
   const leadLower = normalize(leadName);
-  const reserved = new Set(['team-lead', 'user', leadLower].filter((value) => value.length > 0));
+  const reserved = new Set(
+    [CANONICAL_LEAD_MEMBER_NAME, 'lead', 'user', leadLower].filter((value) => value.length > 0)
+  );
 
   try {
     const members = await new TeamMembersMetaStore().getMembers(teamName);
@@ -551,6 +567,26 @@ export function initializeTeamHandlers(
   teamDataService = service;
   teamProvisioningService = provisioningService;
   initializeAutoResumeService(provisioningService);
+  getLeadChannelListenerService().setInboundMessageHandler(async (teamName, message) => {
+    const reply = await provisioningService.deliverExternalChannelMessageToLead(teamName, {
+      channelName: message.channelName,
+      provider: message.provider,
+      text: message.text,
+      from: message.from,
+      chatId: message.chatId,
+      messageId: message.messageId,
+    });
+    if (!reply) {
+      return false;
+    }
+    await getLeadChannelListenerService().sendFeishuReply(
+      teamName,
+      message.channelId,
+      message.chatId,
+      reply
+    );
+    return true;
+  });
   teamMemberLogsFinder = logsFinder ?? null;
   memberStatsComputer = statsComputer ?? null;
   teamBackupService = backupService ?? null;
@@ -619,6 +655,12 @@ export function registerTeamHandlers(ipcMain: IpcMain): void {
   ipcMain.handle(TEAM_KILL_PROCESS, handleKillProcess);
   ipcMain.handle(TEAM_LEAD_ACTIVITY, handleLeadActivity);
   ipcMain.handle(TEAM_LEAD_CONTEXT, handleLeadContext);
+  ipcMain.handle(TEAM_LEAD_CHANNEL_GET, handleLeadChannelGet);
+  ipcMain.handle(TEAM_LEAD_CHANNEL_GLOBAL_GET, handleLeadChannelGlobalGet);
+  ipcMain.handle(TEAM_LEAD_CHANNEL_GLOBAL_SAVE, handleLeadChannelGlobalSave);
+  ipcMain.handle(TEAM_LEAD_CHANNEL_SAVE, handleLeadChannelSave);
+  ipcMain.handle(TEAM_LEAD_CHANNEL_FEISHU_START, handleLeadChannelFeishuStart);
+  ipcMain.handle(TEAM_LEAD_CHANNEL_FEISHU_STOP, handleLeadChannelFeishuStop);
   ipcMain.handle(TEAM_MEMBER_SPAWN_STATUSES, handleMemberSpawnStatuses);
   ipcMain.handle(TEAM_GET_AGENT_RUNTIME, handleGetAgentRuntime);
   ipcMain.handle(TEAM_RESTART_MEMBER, handleRestartMember);
@@ -697,6 +739,12 @@ export function removeTeamHandlers(ipcMain: IpcMain): void {
   ipcMain.removeHandler(TEAM_KILL_PROCESS);
   ipcMain.removeHandler(TEAM_LEAD_ACTIVITY);
   ipcMain.removeHandler(TEAM_LEAD_CONTEXT);
+  ipcMain.removeHandler(TEAM_LEAD_CHANNEL_GET);
+  ipcMain.removeHandler(TEAM_LEAD_CHANNEL_GLOBAL_GET);
+  ipcMain.removeHandler(TEAM_LEAD_CHANNEL_GLOBAL_SAVE);
+  ipcMain.removeHandler(TEAM_LEAD_CHANNEL_SAVE);
+  ipcMain.removeHandler(TEAM_LEAD_CHANNEL_FEISHU_START);
+  ipcMain.removeHandler(TEAM_LEAD_CHANNEL_FEISHU_STOP);
   ipcMain.removeHandler(TEAM_MEMBER_SPAWN_STATUSES);
   ipcMain.removeHandler(TEAM_GET_AGENT_RUNTIME);
   ipcMain.removeHandler(TEAM_RESTART_MEMBER);
@@ -1271,11 +1319,16 @@ function isLeadRosterMutationMember(member: RuntimeRosterMutationMember | undefi
   if (isLeadMember(member)) {
     return true;
   }
-  const normalizedName = member.name.trim().toLowerCase();
-  if (normalizedName === 'lead') {
+  if (isLeadMemberName(member.name)) {
     return true;
   }
   return member.role?.toLowerCase().includes('lead') === true;
+}
+
+function isLeadRecipientAlias(memberName: string, leadName: string | null): boolean {
+  const normalized = memberName.trim().toLowerCase();
+  const normalizedLead = leadName?.trim().toLowerCase();
+  return isLeadMemberName(normalized) || (Boolean(normalizedLead) && normalized === normalizedLead);
 }
 
 function isOpenCodeLedRoster(members: RuntimeRosterMutationMember[]): boolean {
@@ -2435,7 +2488,7 @@ async function handleSendMessage(
       });
     }
     prevalidatedIsLeadRecipient =
-      prevalidatedLeadName !== null && memberName === prevalidatedLeadName;
+      prevalidatedLeadName !== null && isLeadRecipientAlias(memberName, prevalidatedLeadName);
     if (!prevalidatedIsLeadRecipient) {
       return {
         success: false,
@@ -2455,8 +2508,15 @@ async function handleSendMessage(
     const isLeadRecipient =
       prevalidatedIsLeadRecipient !== undefined
         ? prevalidatedIsLeadRecipient
-        : leadName !== null && memberName === leadName;
+        : isLeadRecipientAlias(memberName, leadName);
     const actionMode = payload.actionMode;
+
+    if (isLeadRecipient) {
+      const sendBlockReason = provisioning.getLeadUserSendBlockReason(tn);
+      if (sendBlockReason) {
+        throw new Error(sendBlockReason);
+      }
+    }
 
     // Attachments only supported for live lead (stdin content blocks)
     if (validatedAttachments?.length && (!isLeadRecipient || !isAlive)) {
@@ -2467,7 +2527,7 @@ async function handleSendMessage(
 
     // Smart routing: lead + alive → stdin direct, else → inbox
     if (isLeadRecipient && isAlive) {
-      const resolvedLeadName = leadName ?? memberName;
+      const resolvedLeadName = leadName ?? CANONICAL_LEAD_MEMBER_NAME;
       const teammateRoster = await getDurableLeadTeammateRoster(tn, resolvedLeadName);
       const rosterContextBlock = buildLeadRosterContextBlock(tn, resolvedLeadName, teammateRoster);
       const delegateAckBlock = buildLeadDirectDelegateAckBlock(actionMode);
@@ -2598,8 +2658,11 @@ async function handleSendMessage(
       typeof payload.from === 'string' && payload.from.trim().length > 0
         ? payload.from.trim()
         : 'user';
+    const deliveryMemberName = isLeadRecipient
+      ? (leadName ?? CANONICAL_LEAD_MEMBER_NAME)
+      : memberName;
     const isOpenCodeRecipient =
-      !isLeadRecipient && (await provisioning.isOpenCodeRuntimeRecipient(tn, memberName));
+      !isLeadRecipient && (await provisioning.isOpenCodeRuntimeRecipient(tn, deliveryMemberName));
     const memberDeliveryText = buildMessageDeliveryText(baseText, {
       actionMode,
       isLeadRecipient,
@@ -2607,7 +2670,7 @@ async function handleSendMessage(
     });
     const inboxText = isOpenCodeRecipient ? baseText : memberDeliveryText;
     const result = await getTeamDataService().sendMessage(tn, {
-      member: memberName,
+      member: deliveryMemberName,
       text: inboxText,
       summary: payload.summary,
       from: payload.from,
@@ -3475,6 +3538,122 @@ async function handleLeadContext(
   );
 }
 
+async function handleLeadChannelGet(
+  _event: IpcMainInvokeEvent,
+  teamName: unknown
+): Promise<IpcResult<LeadChannelSnapshot>> {
+  const validated = validateTeamName(teamName);
+  if (!validated.valid) {
+    return { success: false, error: validated.error ?? 'Invalid teamName' };
+  }
+  return wrapTeamHandler('leadChannelGet', async () =>
+    getLeadChannelListenerService().getSnapshot(validated.value!)
+  );
+}
+
+async function handleLeadChannelGlobalGet(
+  _event: IpcMainInvokeEvent
+): Promise<IpcResult<GlobalLeadChannelSnapshot>> {
+  return wrapTeamHandler('leadChannelGlobalGet', async () =>
+    getLeadChannelListenerService().getGlobalSnapshot()
+  );
+}
+
+async function handleLeadChannelGlobalSave(
+  _event: IpcMainInvokeEvent,
+  payload: unknown
+): Promise<IpcResult<GlobalLeadChannelSnapshot>> {
+  if (!payload || typeof payload !== 'object') {
+    return { success: false, error: 'Invalid lead channel payload' };
+  }
+  const feishu = (payload as Partial<SaveLeadChannelConfigRequest>).feishu;
+  if (!feishu || typeof feishu !== 'object') {
+    return { success: false, error: 'feishu config is required' };
+  }
+  if (typeof feishu.appId !== 'string' || typeof feishu.appSecret !== 'string') {
+    return { success: false, error: 'feishu appId/appSecret must be strings' };
+  }
+  return wrapTeamHandler('leadChannelGlobalSave', async () =>
+    getLeadChannelListenerService().saveGlobalConfig({
+      channels: Array.isArray((payload as SaveLeadChannelConfigRequest).channels)
+        ? (payload as SaveLeadChannelConfigRequest).channels
+        : undefined,
+      feishu: {
+        enabled: feishu.enabled === true,
+        appId: feishu.appId,
+        appSecret: feishu.appSecret,
+      },
+    })
+  );
+}
+
+async function handleLeadChannelSave(
+  _event: IpcMainInvokeEvent,
+  teamName: unknown,
+  payload: unknown
+): Promise<IpcResult<LeadChannelSnapshot>> {
+  const validated = validateTeamName(teamName);
+  if (!validated.valid) {
+    return { success: false, error: validated.error ?? 'Invalid teamName' };
+  }
+  if (!payload || typeof payload !== 'object') {
+    return { success: false, error: 'Invalid lead channel payload' };
+  }
+  const feishu = (payload as Partial<SaveLeadChannelConfigRequest>).feishu;
+  if (!feishu || typeof feishu !== 'object') {
+    return { success: false, error: 'feishu config is required' };
+  }
+  if (typeof feishu.appId !== 'string' || typeof feishu.appSecret !== 'string') {
+    return { success: false, error: 'feishu appId/appSecret must be strings' };
+  }
+  return wrapTeamHandler('leadChannelSave', async () =>
+    getLeadChannelListenerService().saveConfig(validated.value!, {
+      channels: Array.isArray((payload as SaveLeadChannelConfigRequest).channels)
+        ? (payload as SaveLeadChannelConfigRequest).channels
+        : undefined,
+      feishu: {
+        enabled: feishu.enabled === true,
+        appId: feishu.appId,
+        appSecret: feishu.appSecret,
+      },
+    })
+  );
+}
+
+async function handleLeadChannelFeishuStart(
+  _event: IpcMainInvokeEvent,
+  teamName: unknown,
+  channelId?: unknown
+): Promise<IpcResult<LeadChannelSnapshot>> {
+  const validated = validateTeamName(teamName);
+  if (!validated.valid) {
+    return { success: false, error: validated.error ?? 'Invalid teamName' };
+  }
+  if (channelId !== undefined && typeof channelId !== 'string') {
+    return { success: false, error: 'channelId must be a string' };
+  }
+  return wrapTeamHandler('leadChannelFeishuStart', async () =>
+    getLeadChannelListenerService().startFeishu(validated.value!, channelId?.trim() || undefined)
+  );
+}
+
+async function handleLeadChannelFeishuStop(
+  _event: IpcMainInvokeEvent,
+  teamName: unknown,
+  channelId?: unknown
+): Promise<IpcResult<LeadChannelSnapshot>> {
+  const validated = validateTeamName(teamName);
+  if (!validated.valid) {
+    return { success: false, error: validated.error ?? 'Invalid teamName' };
+  }
+  if (channelId !== undefined && typeof channelId !== 'string') {
+    return { success: false, error: 'channelId must be a string' };
+  }
+  return wrapTeamHandler('leadChannelFeishuStop', async () =>
+    getLeadChannelListenerService().stopFeishu(validated.value!, channelId?.trim() || undefined)
+  );
+}
+
 async function handleMemberSpawnStatuses(
   _event: IpcMainInvokeEvent,
   teamName: unknown
@@ -3695,14 +3874,14 @@ async function handleAddMember(
         return;
       }
 
-      let leadName = 'team-lead';
+      let leadName = CANONICAL_LEAD_MEMBER_NAME;
       let displayName = tn;
       try {
         const [resolvedLeadName, resolvedDisplayName] = await Promise.all([
           teamDataService.getLeadMemberName(tn),
           teamDataService.getTeamDisplayName(tn),
         ]);
-        leadName = resolvedLeadName || 'team-lead';
+        leadName = resolvedLeadName || CANONICAL_LEAD_MEMBER_NAME;
         displayName = resolvedDisplayName || tn;
       } catch {
         // Best-effort: fall back to default lead and team names
@@ -3897,14 +4076,14 @@ async function handleReplaceMembers(
       return;
     }
 
-    let leadName = 'team-lead';
+    let leadName = CANONICAL_LEAD_MEMBER_NAME;
     let displayName = tn;
     try {
       const [resolvedLeadName, resolvedDisplayName] = await Promise.all([
         teamDataService.getLeadMemberName(tn),
         teamDataService.getTeamDisplayName(tn),
       ]);
-      leadName = resolvedLeadName || 'team-lead';
+      leadName = resolvedLeadName || CANONICAL_LEAD_MEMBER_NAME;
       displayName = resolvedDisplayName || tn;
     } catch {
       // Best-effort: fall back to default lead and team names

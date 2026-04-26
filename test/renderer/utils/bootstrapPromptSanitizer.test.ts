@@ -9,7 +9,7 @@ import type { InboxMessage } from '@shared/types';
 
 function makeMessage(text: string, overrides: Partial<InboxMessage> = {}): InboxMessage {
   return {
-    from: 'team-lead',
+    from: 'lead',
     to: 'alice',
     text,
     timestamp: '2026-04-07T10:00:00.000Z',
@@ -26,8 +26,8 @@ Your FIRST action: call MCP tool member_briefing with:
 { teamName: "forge-labs", memberName: "alice" }
 member_briefing is expected to be available in your initial MCP tool list.
 Do NOT start work, claim tasks, or improvise workflow/task/process rules before member_briefing succeeds.
-If member_briefing fails, send one short natural-language message to your team lead "team-lead".
-IMPORTANT: When sending messages to the team lead, always use the exact name "team-lead".`);
+If member_briefing fails, send one short natural-language message to your team lead "lead".
+IMPORTANT: When sending messages to the team lead, always use the exact name "lead".`);
 
     const display = getBootstrapPromptDisplay(message);
     expect(display?.summary).toBe('Starting alice');
@@ -41,7 +41,7 @@ The team has already been created and you are being attached as a persistent tea
 Your FIRST action: call MCP tool member_briefing with:
 { teamName: "forge-labs", memberName: "alice" }
 Call member_briefing directly yourself. Do NOT use Agent, any subagent, or a delegated helper for this bootstrap step.
-If member_briefing fails, send one short natural-language message to "team-lead" with the exact error text.
+If member_briefing fails, send one short natural-language message to "lead" with the exact error text.
 After member_briefing succeeds, wait for instructions from the lead and use team mailbox/task tools normally.
 Do NOT send acknowledgement-only messages such as "ready" or "online".`);
 
@@ -56,7 +56,7 @@ The team has already been created and you are being attached as a persistent tea
 Your FIRST action: call MCP tool member_briefing with:
 { teamName: "forge-labs", memberName: "alice" }
 Call member_briefing directly yourself. Do NOT use Agent, any subagent, or a delegated helper for this bootstrap step.
-If member_briefing fails, send one short natural-language message to "team-lead" with the exact error text.
+If member_briefing fails, send one short natural-language message to "lead" with the exact error text.
 After member_briefing succeeds, wait for instructions from the lead and use team mailbox/task tools normally.
 Do NOT send acknowledgement-only messages such as "ready" or "online".`);
 

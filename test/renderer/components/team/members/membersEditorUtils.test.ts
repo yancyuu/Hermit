@@ -23,8 +23,8 @@ describe('members editor editable input filtering', () => {
   it('filters the canonical team lead out of editable member inputs', () => {
     const members = [
       {
-        name: 'team-lead',
-        agentType: 'team-lead',
+        name: 'lead',
+        agentType: 'lead',
       },
       {
         name: 'alice',
@@ -45,8 +45,8 @@ describe('members editor editable input filtering', () => {
   it('keeps teammate runtime overrides intact after filtering out the lead', () => {
     const members = [
       {
-        name: 'team-lead',
-        agentType: 'team-lead',
+        name: 'lead',
+        agentType: 'lead',
         providerId: 'codex',
         model: 'gpt-5.4',
       },

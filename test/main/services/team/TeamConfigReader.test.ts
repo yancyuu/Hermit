@@ -44,7 +44,7 @@ describe('TeamConfigReader', () => {
       path.join(teamDir, 'config.json'),
       JSON.stringify({
         name: 'Mixed Team',
-        members: [{ name: 'team-lead', agentType: 'team-lead' }],
+        members: [{ name: 'lead', agentType: 'lead' }],
       }),
       'utf8'
     );
@@ -142,7 +142,7 @@ describe('TeamConfigReader', () => {
       JSON.stringify({
         name: 'Mixed Aware Team',
         leadSessionId: 'lead-session-1',
-        members: [{ name: 'team-lead', agentType: 'team-lead' }],
+        members: [{ name: 'lead', agentType: 'lead' }],
       }),
       'utf8'
     );
@@ -190,7 +190,7 @@ describe('TeamConfigReader', () => {
       path.join(teamDir, 'config.json'),
       JSON.stringify({
         name: 'Suffix Team',
-        members: [{ name: 'team-lead', agentType: 'team-lead' }],
+        members: [{ name: 'lead', agentType: 'lead' }],
       }),
       'utf8'
     );
@@ -236,7 +236,7 @@ describe('TeamConfigReader', () => {
       JSON.stringify({
         version: 1,
         members: [
-          { name: 'team-lead', agentType: 'team-lead' },
+          { name: 'lead', agentType: 'lead' },
           { name: 'alice', removedAt: Date.now() - 60_000 },
           { name: 'bob', role: 'developer' },
         ],

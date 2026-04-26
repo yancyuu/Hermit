@@ -17,13 +17,13 @@ function createBaseTeamData(
   return {
     members: [
       {
-        name: 'team-lead',
+        name: 'lead',
         status: 'active',
         currentTaskId: null,
         taskCount: 0,
         lastActiveAt: null,
         messageCount: 0,
-        agentType: 'team-lead',
+        agentType: 'lead',
       },
       {
         name: 'alice',
@@ -53,7 +53,7 @@ describe('buildInlineActivityEntries', () => {
     const data = createBaseTeamData({
       messages: [
         {
-          from: 'team-lead',
+          from: 'lead',
           to: 'alice',
           text: 'New task assigned',
           timestamp: '2026-03-28T19:00:01.000Z',
@@ -75,12 +75,12 @@ describe('buildInlineActivityEntries', () => {
     expect(aliceEntries[0]?.graphItem).toEqual(
       expect.objectContaining({
         id: 'activity:msg:my-team:msg-1',
-        title: 'team-lead -> alice',
+        title: 'lead -> alice',
         preview: 'New task assigned',
       })
     );
     expect(aliceEntries[0]?.message).toMatchObject({
-      from: 'team-lead',
+      from: 'lead',
       to: 'alice',
       messageId: 'msg-1',
     });
@@ -90,7 +90,7 @@ describe('buildInlineActivityEntries', () => {
     const data = createBaseTeamData({
       messages: [
         {
-          from: 'team-lead',
+          from: 'lead',
           to: 'alice',
           text: 'Second in source order',
           timestamp: '2026-03-28T19:00:01.000Z',
@@ -98,7 +98,7 @@ describe('buildInlineActivityEntries', () => {
           messageId: 'msg-b',
         },
         {
-          from: 'team-lead',
+          from: 'lead',
           to: 'alice',
           text: 'First in source order',
           timestamp: '2026-03-28T19:00:01.000Z',
@@ -146,13 +146,13 @@ describe('buildInlineActivityEntries', () => {
       ],
       members: [
         {
-          name: 'team-lead',
+          name: 'lead',
           status: 'active',
           currentTaskId: null,
           taskCount: 0,
           lastActiveAt: null,
           messageCount: 0,
-          agentType: 'team-lead',
+          agentType: 'lead',
         },
         {
           name: 'jack',
@@ -185,7 +185,7 @@ describe('buildInlineActivityEntries', () => {
     );
     expect(jackEntries[0]?.message).toMatchObject({
       from: 'jack',
-      to: 'team-lead',
+      to: 'lead',
       summary: '#8fdd6803 Короткий отчет по contributor pass',
       messageKind: 'task_comment_notification',
       taskRefs: [{ taskId: 'task-1', displayId: '#8fdd6803', teamName: 'my-team' }],
@@ -204,7 +204,7 @@ describe('buildInlineActivityEntries', () => {
           comments: [
             {
               id: 'comment-stable-owner',
-              author: 'team-lead',
+              author: 'lead',
               text: 'Проверь финальную сводку перед merge',
               createdAt: '2026-03-28T19:00:03.000Z',
               type: 'regular',
@@ -215,13 +215,13 @@ describe('buildInlineActivityEntries', () => {
       ],
       members: [
         {
-          name: 'team-lead',
+          name: 'lead',
           status: 'active',
           currentTaskId: null,
           taskCount: 0,
           lastActiveAt: null,
           messageCount: 0,
-          agentType: 'team-lead',
+          agentType: 'lead',
           agentId: 'lead-agent',
         },
         {

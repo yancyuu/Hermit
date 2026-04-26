@@ -124,7 +124,7 @@ function isLeadRecipient(paths, to) {
   const target = String(to || '').trim().toLowerCase();
   if (!target) return false;
   const lead = runtimeHelpers.inferLeadName(paths).trim().toLowerCase();
-  return target === 'lead' || target === 'team-lead' || (lead && target === lead);
+  return target === 'lead' || target === 'lead' || (lead && target === lead);
 }
 
 function normalizeMessageSendFlags(context, flags) {

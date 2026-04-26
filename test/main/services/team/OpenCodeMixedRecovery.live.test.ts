@@ -350,7 +350,7 @@ async function writeMixedRecoveryFixtures(input: {
         name: input.teamName,
         projectPath: input.projectPath,
         leadSessionId: 'lead-session',
-        members: [{ name: 'team-lead', agentType: 'team-lead' }, { name: 'alice' }],
+        members: [{ name: 'lead', agentType: 'lead' }, { name: 'alice' }],
       },
       null,
       2

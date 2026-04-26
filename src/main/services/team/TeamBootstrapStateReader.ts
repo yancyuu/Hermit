@@ -1,4 +1,5 @@
 import { getTeamsBasePath } from '@main/utils/pathDecoder';
+import { isLeadMemberName } from '@shared/utils/leadDetection';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -630,7 +631,7 @@ export async function readBootstrapLaunchSnapshot(
       if (!item || typeof item !== 'object') continue;
       const rawMember = item as RawBootstrapMemberState;
       const memberName = typeof rawMember.name === 'string' ? rawMember.name.trim() : '';
-      if (!memberName || memberName === 'team-lead' || memberName === 'user') continue;
+      if (!memberName || isLeadMemberName(memberName) || memberName === 'user') continue;
       expectedMembers.push(memberName);
       members[memberName] = normalizeBootstrapMemberState(memberName, rawMember, updatedAt);
     }

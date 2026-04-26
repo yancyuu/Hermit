@@ -138,7 +138,7 @@ Lead → sentMessages.json / liveLeadProcessMessages
 - Тиммейт получает сообщение
 - Тиммейт корректно определяет что это от юзера
 - Тиммейт отвечает в `inboxes/user.json`
-- Fallback на `from: "team-lead"` не нужен
+- Fallback на `from: "lead"` не нужен
 
 ### Почему relay через лида был ОТКЛЮЧЁН (2026-03-23)
 

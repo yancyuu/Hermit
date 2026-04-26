@@ -155,7 +155,7 @@ describe('TeamInboxReader', () => {
       JSON.stringify([
         {
           from: 'bob',
-          to: 'team-lead',
+          to: 'lead',
           text: 'Notification payload',
           timestamp: '2026-01-01T02:00:00.000Z',
           read: false,

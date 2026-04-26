@@ -84,7 +84,7 @@ function createSnapshot(overrides: Partial<TeamTaskStallSnapshot>): TeamTaskStal
     scannedAt: '2026-04-19T12:30:00.000Z',
     projectDir: '/tmp/project',
     projectId: 'project-id',
-    leadName: 'team-lead',
+    leadName: 'lead',
     transcriptFiles: ['/tmp/session.jsonl'],
     activityReadsEnabled: true,
     exactReadsEnabled: true,

@@ -1,332 +1,267 @@
 <p align="center">
-  <a href="docs/screenshots/1.jpg"><img src="docs/screenshots/1.jpg" width="75" alt="Kanban Board" /></a>&nbsp;
-  <a href="docs/screenshots/7.png"><img src="docs/screenshots/7.png" width="75" alt="Code Review" /></a>&nbsp;
-  <a href="docs/screenshots/2.jpg"><img src="docs/screenshots/2.jpg" width="75" alt="Team View" /></a>&nbsp;
-  <a href="docs/screenshots/8.png"><img src="docs/screenshots/8.png" width="75" alt="Task Detail" /></a>&nbsp;
-  <img src="resources/icons/png/1024x1024.png" alt="Agent Teams" width="80" />&nbsp;
-  <a href="docs/screenshots/9.png"><img src="docs/screenshots/9.png" width="75" alt="Execution Logs" /></a>&nbsp;
-  <a href="docs/screenshots/3.jpg"><img src="docs/screenshots/3.png" width="75" alt="Agent Comments" /></a>&nbsp;
-  <a href="docs/screenshots/4.png"><img src="docs/screenshots/4.png" width="75" alt="Create Team" /></a>&nbsp;
-  <a href="docs/screenshots/6.png"><img src="docs/screenshots/6.png" width="65" alt="Settings" /></a>
+  <a href="docs/screenshots/1.jpg"><img src="docs/screenshots/1.jpg" width="75" alt="看板" /></a>&nbsp;
+  <a href="docs/screenshots/7.png"><img src="docs/screenshots/7.png" width="75" alt="代码审查" /></a>&nbsp;
+  <a href="docs/screenshots/2.jpg"><img src="docs/screenshots/2.jpg" width="75" alt="团队视图" /></a>&nbsp;
+  <a href="docs/screenshots/8.png"><img src="docs/screenshots/8.png" width="75" alt="任务详情" /></a>&nbsp;
+  <img src="resources/icons/png/1024x1024.png" alt="Multi Agent Teams" width="80" />&nbsp;
+  <a href="docs/screenshots/9.png"><img src="docs/screenshots/9.png" width="75" alt="执行日志" /></a>&nbsp;
+  <a href="docs/screenshots/3.png"><img src="docs/screenshots/3.png" width="75" alt="智能体评论" /></a>&nbsp;
+  <a href="docs/screenshots/4.png"><img src="docs/screenshots/4.png" width="75" alt="创建团队" /></a>&nbsp;
+  <a href="docs/screenshots/6.png"><img src="docs/screenshots/6.png" width="65" alt="设置" /></a>
 </p>
 
 <h1 align="center"><a href="https://github.com/lazy-agent/multi-agent-workbench">Multi Agent Teams</a></h1>
 
 <p align="center">
-  <strong><code>你负责定方向，智能体团队负责拆任务、协作、执行和互相审查。你只需要看着看板推进。</code></strong>
+  <strong><code>把 Claude Code 从“一个聊天窗口”升级成“一个可协作、可审查、可接入渠道的 AI 团队”。</code></strong>
 </p>
 
 <p align="center">
-  <a href="https://github.com/lazy-agent/multi-agent-workbench/releases/latest"><img src="https://img.shields.io/github/v/release/lazy-agent/multi-agent-workbench?style=flat-square&label=version&color=blue" alt="Latest Release" /></a>&nbsp;
-  <a href="https://github.com/lazy-agent/multi-agent-workbench/actions/workflows/ci.yml"><img src="https://github.com/lazy-agent/multi-agent-workbench/actions/workflows/ci.yml/badge.svg" alt="CI Status" /></a>
+  <a href="https://github.com/lazy-agent/multi-agent-workbench/releases/latest"><img src="https://img.shields.io/github/v/release/lazy-agent/multi-agent-workbench?style=flat-square&label=version&color=blue" alt="最新版本" /></a>&nbsp;
+  <a href="https://github.com/lazy-agent/multi-agent-workbench/actions/workflows/ci.yml"><img src="https://github.com/lazy-agent/multi-agent-workbench/actions/workflows/ci.yml/badge.svg" alt="CI 状态" /></a>
 </p>
 
 <p align="center">
-  <sub>面向 AI 智能体团队的免费桌面应用。默认使用本机 Claude Code/Claude CLI，也可接入 Codex、OpenCode 和远程机器。支持中文界面、中文团队名和成员名。</sub>
+  <sub>中文优先的 Claude Code 团队工作台。默认使用官方 `claude` CLI，支持团队负责人、成员、任务看板、代码审查、外部渠道接入和团队级多机执行。</sub>
 </p>
 
-<img width="1304" height="820" alt="image" src="https://github.com/user-attachments/assets/dea53a01-68b3-4c36-bcf6-e4d1ad4cdb31" />
+<img width="1304" height="820" alt="界面预览" src="https://github.com/user-attachments/assets/dea53a01-68b3-4c36-bcf6-e4d1ad4cdb31" />
 
-<table>
-<tr>
-<td width="50%">
+## 为什么需要它
 
-https://github.com/user-attachments/assets/9cae73cd-7f42-46e5-a8fb-ad6d41737ff8
+Claude Code 很强，但单个会话天然更像“一个聪明的人”。真实软件工程更像团队协作：有人拆任务，有人实现，有人审查，有人同步状态，有人对接外部需求。
 
-</td>
-<td width="50%">
+Multi Agent Teams 做的事情，是把 Claude Code 的能力组织成一个可管理的团队系统：
 
-https://github.com/user-attachments/assets/35e27989-726d-4059-8662-bae610e46b42
+- 你不是反复给一个 agent 喂上下文，而是给一个团队负责人下目标。
+- 负责人把目标拆成任务，分配给成员，并维护任务看板。
+- 成员通过收件箱、任务评论和审查流协作，而不是各自孤立执行。
+- 所有进度、消息、代码改动、审查意见都沉淀到可追踪的团队工作区。
+- 外部渠道消息不是进入混乱网关，而是绑定到明确的团队负责人和上下文。
 
-</td>
-</tr>
-</table>
+它的目标不是替代 Claude Code，而是让 Claude Code 具备“团队操作系统”的外壳。
 
-<br />
+## 核心创新
+
+### 1. 渠道绑定到人，而不是丢给网关
+
+很多多智能体系统会先做一个全局消息网关：飞书、Slack、Webhook、企业微信都进同一个入口，再让网关猜应该转给哪个 agent。这个模式一旦团队变多、任务变多、渠道变多，很容易出现消息归属混乱：这句话属于哪个团队？该谁回复？要不要变成任务？后续上下文在哪里？
+
+Multi Agent Teams 采用相反的设计：**渠道绑定到团队负责人或指定人员**。
+
+- 一个飞书长连接可以绑定到某个团队的负责人。
+- 外部消息进入后，天然携带团队、负责人、渠道和会话上下文。
+- 是否创建任务、分派成员、回复用户，由负责人在当前团队语境里决定。
+- 回复也沿着同一个渠道回去，不需要全局网关再猜一次。
+
+这让外部沟通变成团队协作的一部分，而不是团队外的一层消息转发。
+
+### 2. 复用 Claude Code 的运行时和记忆
+
+项目不重新造一套模型网关、账号系统或“外部记忆数据库”。当前默认直接使用官方 `claude` CLI：
+
+- 账号、模型、权限、MCP、skills、会话能力尽量复用 Claude Code 原生能力。
+- 应用只负责组织团队、任务、消息、看板、审查和状态文件。
+- 团队上下文进入 Claude Code 的真实会话，而不是被复制到另一套系统里。
+
+这样做的价值是状态更少、链路更短，也更贴近用户已经验证可用的 Claude Code 环境。
+
+### 3. 文件驱动的团队协作
+
+团队状态不是只存在内存里，而是落到文件结构中：
+
+- 团队配置：`~/.claude/teams/<team>/config.json`
+- 成员收件箱：`~/.claude/teams/<team>/inboxes/*.json`
+- 任务、评论、审查和运行状态由应用服务读取、更新和索引
+
+文件驱动带来几个好处：
+
+- 易排查：出问题可以直接看文件。
+- 易迁移：本地和远程机器都可以用同一套控制模型。
+- 易扩展：后续可接入 CLI、Web UI、远程 worker 或更多渠道。
+- 少魔法：不依赖复杂中心调度器，也不要求第一期就上集群编排。
+
+### 4. 团队级多机执行
+
+第一期分布式不是做复杂的成员级调度，而是采用更稳的团队级调度：
+
+- 创建或启动团队时选择运行目标：本机或某台 SSH 主机。
+- 本地 UI 通过 SSH/SFTP 操作远程项目目录和 `.claude/teams` 文件。
+- 远程机器上的 Claude Code 负责真实执行。
+- 不做 skills 同步、卷挂载、复杂远程进程编排。
+
+这更接近“把一个团队调度到一台机器上运行”，简单、可控、容易落地。未来再演进到成员级调度也有清晰空间。
+
+### 5. 看板、消息、代码审查是一套闭环
+
+普通聊天工具只记录对话，普通看板只记录任务。Multi Agent Teams 把它们合在一起：
+
+- 用户消息可以转为任务。
+- 成员产出必须回写任务评论。
+- 完成后可以进入审查流。
+- 审查意见对应具体任务和 diff。
+- 负责人可以根据消息、任务和代码状态继续分派。
+
+这让 AI 团队不只是“能聊”，而是真的能按工程流程推进。
+
+## 功能概览
+
+- **中文优先**：界面、创建团队、启动团队、成员管理、设置、删除提示等主流程面向中文用户。
+- **Claude Code only**：当前默认只支持官方 Claude Code / `claude` CLI，减少多 provider 抽象带来的不稳定。
+- **团队负责人**：统一使用 `team-lead` 作为内部负责人身份，UI 展示为“负责人”。
+- **成员协作**：成员有独立收件箱，可以互相发消息、接任务、评论任务和请求审查。
+- **任务看板**：任务支持待办、进行中、审查、完成等状态，工作流可视化。
+- **代码审查**：按任务查看 diff，可对 hunk 接受、拒绝或评论。
+- **执行日志**：查看 Claude CLI 输出、工具调用、会话消息和成员状态。
+- **渠道接入**：负责人可绑定渠道监听，当前重点是飞书长连接，后续可扩展 Slack、企业微信、钉钉、Webhook 等。
+- **远程执行**：通过 SSH 选择远程机器运行团队。
+- **单人团队**：也可以只启动负责人，把它当增强版 Claude Code 工作台使用。
+
+## 快速开始
+
+1. 安装并启动应用。
+2. 确保本机已安装并登录官方 Claude Code / `claude` CLI。
+3. 选择一个项目目录。
+4. 创建团队，填写团队目标、成员、角色和工作方式。
+5. 启动团队，负责人会初始化团队上下文并拉起成员。
+6. 在看板、消息、任务详情和代码审查中观察并介入。
 
 ## 安装
 
-当前中文本地版默认检测普通 `claude`/Claude Code，不再要求预装 `claude-multimodel`。如果从 macOS 图形界面启动后找不到 Claude CLI，请确认 Claude Code 已安装，或在设置中配置可执行文件路径。
+当前版本默认检测官方 `claude` CLI，不再要求预装 `claude-multimodel`。
 
-如果需要最新开发版本，可以 clone 仓库后从 `dev` 分支运行。
+如果 macOS 图形界面启动后找不到 `claude`，请确认 Claude Code 已安装，或在设置里配置 CLI 路径。常见路径包括 Homebrew、npm/nvm、`~/.claude/local/bin` 等。
 
 <table align="center">
 <tr>
 <td align="center">
-  <a href="https://github.com/lazy-agent/multi-agent-workbench/releases/latest/download/Multi-Agent-Teams-arm64.dmg">
-    <img src="https://img.shields.io/badge/macOS_Apple_Silicon-.dmg-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS Apple Silicon" />
-  </a>
-  <br />
-  <a href="https://github.com/lazy-agent/multi-agent-workbench/releases/latest/download/Multi-Agent-Teams-x64.dmg">
-    <img src="https://img.shields.io/badge/macOS_Intel-.dmg-434343?style=for-the-badge&logo=apple&logoColor=white" alt="macOS Intel" />
+  <a href="https://github.com/lazy-agent/multi-agent-workbench/releases/latest">
+    <img src="https://img.shields.io/badge/macOS-下载最新版本-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS" />
   </a>
 </td>
 <td align="center">
-  <a href="https://github.com/lazy-agent/multi-agent-workbench/releases/latest/download/Multi-Agent-Teams-Setup.exe">
-    <img src="https://img.shields.io/badge/Windows-Download_.exe-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Windows" />
+  <a href="https://github.com/lazy-agent/multi-agent-workbench/releases/latest">
+    <img src="https://img.shields.io/badge/Windows-下载最新版本-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Windows" />
   </a>
-  <br />
-  <sub>May trigger SmartScreen — click "More info" → "Run anyway"</sub>
 </td>
 <td align="center">
-  <a href="https://github.com/lazy-agent/multi-agent-workbench/releases/latest/download/Multi-Agent-Teams.AppImage">
-    <img src="https://img.shields.io/badge/Linux-Download_.AppImage-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux AppImage" />
-  </a>
-  <br />
-  <a href="https://github.com/lazy-agent/multi-agent-workbench/releases/latest/download/Multi-Agent-Teams-amd64.deb">
-    <img src="https://img.shields.io/badge/.deb-E95420?style=flat-square&logo=ubuntu&logoColor=white" alt=".deb" />
-  </a>&nbsp;
-  <a href="https://github.com/lazy-agent/multi-agent-workbench/releases/latest/download/Multi-Agent-Teams-x86_64.rpm">
-    <img src="https://img.shields.io/badge/.rpm-294172?style=flat-square&logo=redhat&logoColor=white" alt=".rpm" />
-  </a>&nbsp;
-  <a href="https://github.com/lazy-agent/multi-agent-workbench/releases/latest/download/Claude-Agent-Teams-UI.pacman">
-    <img src="https://img.shields.io/badge/.pacman-1793D1?style=flat-square&logo=archlinux&logoColor=white" alt=".pacman" />
+  <a href="https://github.com/lazy-agent/multi-agent-workbench/releases/latest">
+    <img src="https://img.shields.io/badge/Linux-下载最新版本-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux" />
   </a>
 </td>
 </tr>
 </table>
 
-## 目录
+## 典型使用场景
 
-- [安装](#安装)
-- [这是什么](#这是什么)
-- [快速开始](#快速开始)
-- [多机分布式执行](#多机分布式执行)
-- [开发说明](#开发说明)
-- [FAQ](#faq)
-- [技术栈](#技术栈)
-- [许可证](#license)
+### 软件开发团队
 
-## 这是什么
+你给负责人一个需求，例如“把设置页的渠道配置做完整”。负责人会拆任务，安排前端、后端、测试或审查成员并行推进，最后在看板上沉淀状态。
 
-这是一个 Claude Code / Claude CLI 的智能体团队管理界面。你可以创建一个团队，让负责人拆解任务、分配成员、推进看板、互相审查代码，并在必要时给成员发消息或介入决策。
+### 外部渠道值班
 
-- **中文优先**：主流程、导航栏、团队创建/启动、模型选择、角色选择等界面默认中文；团队名和成员名支持中文输入。
-- **Claude Code 优先**：本地默认使用普通 `claude` CLI，自动检测 Homebrew、npm/nvm、`~/.claude/local` 等常见安装路径。
-- **团队看板**：任务状态实时更新，支持待办、进行中、审查、完成等工作流。
-- **成员协作**：成员可以互相发消息、创建任务、评论任务、请求审查。
-- **代码审查**：按任务查看 diff，逐个 hunk 接受、拒绝或评论，体验接近 Cursor 的 review flow。
-- **会话与日志**：按任务查看运行日志、工具调用、会话消息和执行状态，便于追踪问题。
-- **单人团队**：可以只启动团队负责人，像普通 Claude 会话一样使用，但保留任务看板和后续扩展能力。
-- **多机 MVP**：支持按团队选择本地或 SSH 主机执行，第一期采用文件式控制，不做复杂集群编排。
+把飞书群或应用长连接绑定到团队负责人。外部用户发来的问题会进入该团队上下文，负责人可以直接回答，也可以创建任务交给成员。
 
-<details>
-<summary><strong>More features</strong></summary>
+### 远程机器执行
 
-- **Task creation with attachments** — send a message to the team lead with any attached images. The lead will automatically create a fully described task and attach your files directly to the task for complete context.
+本地电脑只做 UI 和控制台，把团队调度到远程 Mac、Linux 机器或更适合跑任务的开发机上执行。
 
-- **Auto-resume after rate limits** — when the lead hits a Claude rate limit and the reset time is known, the app can automatically nudge the lead to continue once the cooldown has passed
+### 个人增强工作台
 
-- **Deep session analysis** — detailed breakdown of what happened in each agent session: bash commands, reasoning, subprocesses
+不创建多个成员，只使用负责人。你仍然能获得任务看板、消息记录、代码审查和日志追踪能力。
 
-- **Smart task-to-log/changes matching** — automatically links session logs/changes to specific tasks
+## 架构简图
 
-- **Advanced context monitoring system** — comprehensive breakdown of what consumes tokens at every step: user messages, Claude.md instructions, tool outputs, thinking text, and team coordination. Token usage, percentage of context window, and session cost are displayed for each category, with detailed views by category or size.
+```text
+外部渠道（飞书/Slack/Webhook）
+        |
+        v
+渠道实例绑定
+        |
+        v
+团队负责人 team-lead
+        |
+        +--> 任务看板 / 评论 / 审查
+        |
+        +--> 成员 inbox
+        |
+        +--> Claude Code Agent 进程
+        |
+        +--> 本地或 SSH 远程项目目录
+```
 
-- **Recent tasks across projects** — browse the latest completed tasks from all your projects in one place
+关键原则：
 
-- **Zero-setup onboarding** — built-in runtime detection and provider authentication
+- 负责人是团队入口，不是全局网关。
+- 成员是独立执行单元，不让负责人代替成员消费普通成员 inbox。
+- 任务和消息都要落到可追踪状态里。
+- 远程执行先以团队为单位，不提前引入复杂调度。
 
-- **Built-in code editor** — edit project files with Git support without leaving the app
+## 与普通多智能体网关的区别
 
-- **Branch strategy** — choose via prompt: single branch or git worktree per agent
+| 维度 | Multi Agent Teams | 普通网关式方案 |
+|---|---|---|
+| 消息入口 | 渠道绑定负责人/人员 | 全部进入中心网关 |
+| 上下文归属 | 天然属于某个团队 | 需要网关二次判断 |
+| 任务沉淀 | 消息、任务、评论、审查统一 | 常停留在消息转发层 |
+| 运行时 | 复用 Claude Code | 通常再包一层模型网关 |
+| 多机执行 | 团队级 SSH 调度 | 常需要 worker/队列/编排系统 |
+| 排障方式 | 文件状态可直接检查 | 多依赖服务日志 |
+| 第一阶段复杂度 | 低，先可用 | 高，容易过度工程化 |
 
-- **Team member stats** — global performance statistics per member
+## 开发
 
-- **Attach code context** — reference files or snippets in messages, like in Cursor. You can also mention tasks using `#task-id`, or refer to another team with `@team-name` in your messages.
-
-- **Notification system** — configurable alerts when tasks complete, agents need your response, new comments arrive, or errors occur
-
-- **MCP integration** — supports the built-in `mcp-server` (see [mcp-server folder](./mcp-server)) for integrating external tools and extensible agent plugins out of the box
-
-- **Post-compact context recovery** — when the active runtime compacts its context, the app restores the key team-management instructions so kanban/task-board coordination stays consistent and important operational context is not lost
-
-- **Task context is preserved** — thanks to task descriptions, comments, and attachments, all essential information about each task remains available for ongoing work and future reference
-
-- **Workflow history** — see the full timeline of each task: when and how its status changed, which agents were involved, and every action that led to the current state
-
-</details>
-
-## Developer architecture docs
-
-For feature architecture and implementation guidance:
-
-- Canonical standard - [docs/FEATURE_ARCHITECTURE_STANDARD.md](docs/FEATURE_ARCHITECTURE_STANDARD.md)
-- Repo working instructions - [CLAUDE.md](CLAUDE.md)
-- Feature root guidance - [src/features/README.md](src/features/README.md)
-- Reference implementation - `src/features/recent-projects`
-
-## Comparison
-
-| Feature | Agent Teams | Vibe Kanban | Aperant | Cursor | Claude Code CLI |
-|---|---|---|---|---|---|
-| **Cross-team communication** | ✅ | ❌ | ❌ | — | ❌ |
-| **Agent-to-agent messaging** | ✅ Native real-time mailbox | ❌ Agents are independent | ❌ Fixed pipeline | ❌ | ✅⚠️ Built-in (no UI) |
-| **Linked tasks** | ✅ Cross-references in messages | ⚠️ Subtasks only | ❌ | ❌ | ❌ |
-| **Session analysis** | ✅ 6-category token tracking | ❌ | ⚠️ Execution logs | ❌ | ❌ |
-| **Task attachments** | ✅ Auto-attach, agents read & attach files | ❌ | ✅ Images + files | ⚠️ Chat session only | ❌ |
-| **Hunk-level review** | ✅ Accept / reject individual hunks | ❌ | ❌ | ✅ | ❌ |
-| **Built-in code editor** | ✅ With Git support | ❌ | ❌ | ✅ Full IDE | ❌ |
-| **Full autonomy** | ✅ Agents create, assign, review tasks end-to-end | ❌ Human manages tasks | ❌ Fixed pipeline | ⚠️ Isolated tasks only | ✅⚠️ (no UI) |
-| **Task dependencies (blocked by)** | ✅ Guaranteed ordering | ❌ | ⚠️ Within plan only | ❌ | ✅⚠️ (no UI, no notifications) |
-| **Review workflow** | ✅ Agents review each other | ❌ | ⚠️ Auto QA pipeline | ❌ | ✅⚠️ (no UI) |
-| **Zero setup** | ✅ | ❌ Config required | ❌ Config required | ✅ | ⚠️ CLI install required |
-| **Kanban board** | ✅ 5 columns, real-time | ✅ | ✅ 6 columns (pipeline) | ❌ | ❌ |
-| **Execution log viewer** | ✅ Tool calls, reasoning, timeline | ❌ | ✅ Phase-based logs | ✅ | ❌ |
-| **Live processes** | ✅ View, stop, open URLs in browser | ❌ | ❌ | ✅ | ❌ |
-| **Per-task code review** | ✅ Accept / reject / comment | ⚠️ PR-level only | ⚠️ File-level only | ✅ BugBot on PRs | ❌ |
-| **Flexible autonomy** | ✅ Granular settings, per-action approval, notifications | ❌ | ⚠️ Plan approval only | ✅ | ✅ |
-| **Git worktree isolation** | ✅ Optional | ⚠️ Mandatory | ⚠️ Mandatory | ✅ | ✅ |
-| **Multi-agent backend** | ✅ Codex, Claude, and 75+ providers | ✅ 6+ agents | ✅ 11 providers | ✅ Multi-model | — |
-| **Price** | **Free** | Free / $30 user/mo | Free | $0–$200/mo | Provider subscription |
-
----
-
-## 快速开始
-
-1. **安装并启动**：打开应用后会自动检测本机 `claude`。
-2. **选择项目**：从最近项目列表选择，或输入自定义路径。
-3. **创建团队**：填写中文团队名、成员名、角色和启动提示。
-4. **启动执行**：团队负责人会拆任务、分配成员并推进看板。
-5. **随时介入**：你可以在看板、消息、任务详情、代码审查里直接给成员补充指令。
-
-## 多机分布式执行
-
-当前 MVP 是“团队级调度”，不是成员级调度。
-
-- 在机器管理里添加 SSH 主机，配置主机、端口、用户名、认证方式和远程工作目录。
-- 创建或启动团队时选择运行目标：本机或某台 SSH 主机。
-- 本地 UI 通过 SSH/SFTP 读写远程项目目录、`.claude/teams` 和控制文件。
-- 远程机器上的 Claude Code/Claude CLI 负责实际执行；第一期不做 skills 同步、卷挂载、复杂远程进程编排。
-- 所有团队管理都尽量通过文件完成，便于今晚可用、后续再演进为自动调度。
-
----
-
-## FAQ
-
-<details>
-<summary><strong>必须先安装运行时吗？</strong></summary>
-<br />
-需要本机或远程机器能运行 Claude Code/Claude CLI。当前默认查找普通 `claude`，不强制依赖 `claude-multimodel`。
-</details>
-
-<details>
-<summary><strong>会读取或上传我的代码吗？</strong></summary>
-<br />
-应用本身不是云端代码同步服务。它会读取本地或你配置的远程项目目录、Claude 会话数据和团队状态文件来展示 UI。实际模型请求由你选择的 Claude/Codex/OpenCode 等运行时发起。
-</details>
-
-<details>
-<summary><strong>智能体之间能沟通吗？</strong></summary>
-<br />
-可以。成员之间可以发送消息、创建共享任务、评论任务，并通过团队看板协调进度。
-</details>
-
-<details>
-<summary><strong>免费吗？</strong></summary>
-<br />
-应用本身免费开源。运行智能体需要你已有的 Claude Code、Codex、OpenCode 或对应 provider 访问权限。
-</details>
-
-<details>
-<summary><strong>能在应用里审查代码改动吗？</strong></summary>
-<br />
-可以。每个任务都可以查看 diff，并对具体 hunk 接受、拒绝或评论。
-</details>
-
-<details>
-<summary><strong>智能体卡住了怎么办？</strong></summary>
-<br />
-可以直接发消息纠偏，也可以停止并重启团队。需要你输入时，任务和通知区域会提示。
-</details>
-
-<details>
-<summary><strong>支持多个项目和团队吗？</strong></summary>
-<br />
-支持。你可以在一个项目中运行多个团队，也可以跨项目运行。为了减少 Git 冲突，可以启用独立 worktree。
-</details>
-
----
-
-## 开发说明
-
-## 技术栈
-
-Electron 40、React 19、TypeScript 5、Tailwind CSS 3、Zustand 4。数据主要来自 `~/.claude/`、项目目录和应用自有状态目录。
-
-<details>
-<summary><strong>从源码运行</strong></summary>
-
-<br />
-
-**依赖：** Node.js 20+、pnpm 10+
+依赖：Node.js 20+、pnpm 10+。
 
 ```bash
 git clone https://github.com/lazy-agent/multi-agent-workbench.git
-cd claude_agent_teams_ui
+cd multi-agent-workbench
 pnpm install
 pnpm dev
 ```
 
-应用会从 `~/.claude/` 自动发现 Claude Code 项目。
-
-### 打包发布
+常用命令：
 
 ```bash
-pnpm dist:mac:arm64  # macOS Apple Silicon (.dmg)
-pnpm dist:mac:x64    # macOS Intel (.dmg)
-pnpm dist:win        # Windows (.exe)
-pnpm dist:linux      # Linux (AppImage/.deb/.rpm/.pacman)
-pnpm dist            # macOS + Windows + Linux
+pnpm typecheck
+pnpm build
+pnpm test
+pnpm dist:mac:arm64
 ```
 
-### 常用脚本
+项目主要技术栈：
 
-| 命令 | 说明 |
-|---------|-------------|
-| `pnpm dev` | 开发模式，支持热更新 |
-| `pnpm build` | 生产构建 |
-| `pnpm typecheck` | TypeScript 类型检查 |
-| `pnpm lint` | 代码检查，不自动修复 |
-| `pnpm lint:fix` | 代码检查并自动修复 |
-| `pnpm format` | 使用 Prettier 格式化 |
-| `pnpm test` | 运行全部测试 |
-| `pnpm test:watch` | 测试 watch 模式 |
-| `pnpm check` | 完整质量门禁 |
+- Electron 40
+- React 19
+- TypeScript 5
+- Tailwind CSS
+- Zustand
+- Claude Code / `claude` CLI
+- MCP
+- SSH/SFTP
 
-</details>
+## 当前边界
 
----
+- 当前主线优先支持 Claude Code，不再把 Codex/Gemini/OpenCode 作为首页或创建团队主路径。
+- 多机 MVP 是团队级执行，不是成员级调度。
+- 渠道接入当前优先飞书长连接，多渠道结构已预留。
+- 应用不是云端代码托管服务；它读取本地或你配置的远程项目目录，真实模型请求由你的 Claude Code 环境发起。
 
-## Roadmap
+## 路线图
 
-- [ ] Planning mode to organize agent plans before execution
-- [ ] Visual workflow editor ([@xyflow/react](https://github.com/xyflow/xyflow)) for building and orchestrating agent pipelines with drag & drop
-- [ ] Support more models/providers (including local) e.g OpenCode (with many providers)
-- [ ] Remote agent execution via SSH: launch and manage agent teams on remote machines over SSH (stream-json protocol over SSH channel, SFTP-based file monitoring for tasks/inboxes/config)
-- [ ] CLI runtime: Run not only on a local PC but in any headless/console environment (web UI), e.g. VPS, remote server, etc.
-- [ ] 2 modes: current (agent teams), and a new mode: regular subagents (no communication between them)
-- [ ] Curate what context each agent sees (files, docs, MCP servers, skills)
-- [ ] Slash commands
-- [ ] Outgoing message queue — queue user messages while the lead (or agent) is busy; clear agent-busy status in the UI; flush to stdin or relay from inbox when idle (durable queue on disk for the lead inbox path)
-- [ ] `createTasksBatch` — IPC/service API to create many team tasks in one call (playbooks, markdown checklist import, scripts); complements single `createTask`
-- [ ] Command palette — extend Cmd/Ctrl+K beyond project/session search to runnable actions (quick commands, navigation shortcuts, team/task operations) in a keyboard-first flow
-- [ ] Custom kanban columns
-- [ ] Run terminal commands
-- [ ] Monitor agents processes/stats
-- [ ] Reusable agents with SOUL.md
-- [ ] Сommunicate via messenger
+- 多渠道接入：Slack、企业微信、钉钉、Webhook。
+- 团队渠道模板：按团队/负责人快速复用渠道配置。
+- 更稳定的远程执行状态监控。
+- 成员级远程调度。
+- 计划模式：执行前先生成并审查团队计划。
+- 更细粒度的成员上下文权限。
+- CLI / Web 控制台。
+- 自定义看板列和工作流。
 
----
+## 安全
 
-## Contributing
+IPC 和主进程 handler 会校验 ID、路径和 payload 结构。项目编辑和写入操作被限制在当前选择的项目根目录内；只读发现流程会访问 `~/.claude/` 下的 Claude 数据和应用自有状态目录。敏感配置、凭据路径和路径穿越会被阻止。
 
-See [CONTRIBUTING.md](.github/CONTRIBUTING.md) for development guidelines. Please read our [Code of Conduct](.github/CODE_OF_CONDUCT.md).
-
-## Security
-
-IPC and standalone HTTP handlers validate IDs, paths, and payload shape at the boundary. Project editing and write operations are constrained to the selected project root, while read-only discovery also accesses local Claude data under `~/.claude/` and app-owned state paths when required. Path traversal and sensitive config/credential targets are blocked. See [SECURITY.md](.github/SECURITY.md) for details.
-
-## License
+## 许可证
 
 [AGPL-3.0](LICENSE)

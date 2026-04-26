@@ -36,7 +36,7 @@ describe('TeamTranscriptSourceLocator', () => {
           name: teamName,
           leadSessionId,
           members: [
-            { name: 'team-lead', agentType: 'team-lead', cwd: projectPath },
+            { name: 'lead', agentType: 'lead', cwd: projectPath },
             { name: 'bob', agentType: 'general-purpose', cwd: projectPath },
           ],
         },
@@ -55,7 +55,7 @@ describe('TeamTranscriptSourceLocator', () => {
         timestamp: '2026-04-15T14:02:00.000Z',
         type: 'user',
         teamName,
-        agentName: 'team-lead',
+        agentName: 'lead',
         message: { role: 'user', content: `Lead for team "${teamName}" (${teamName})` },
       }) + '\n',
       'utf8'

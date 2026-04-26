@@ -177,7 +177,7 @@ describe('ipc teams handlers', () => {
       projectPath: '/tmp/project',
     })),
     deleteTeam: vi.fn(async () => undefined),
-    getLeadMemberName: vi.fn(async () => 'team-lead'),
+    getLeadMemberName: vi.fn(async () => 'lead'),
     getTeamDisplayName: vi.fn(async () => 'My Team'),
     updateConfig: vi.fn(async () => ({ name: 'My Team' })),
     sendMessage: vi.fn(async () => ({ deliveredToInbox: true, messageId: 'm1' })),
@@ -725,7 +725,7 @@ describe('ipc teams handlers', () => {
     expect(sendHandler).toBeDefined();
 
     const result = (await sendHandler!({} as never, 'my-team', {
-      member: 'team-lead',
+      member: 'lead',
       text: 'Can you review the approach?',
       actionMode: 'ask',
     })) as { success: boolean };
@@ -743,7 +743,7 @@ describe('ipc teams handlers', () => {
     );
     expect(service.sendDirectToLead).toHaveBeenCalledWith(
       'my-team',
-      'team-lead',
+      'lead',
       'Can you review the approach?',
       undefined,
       undefined,
@@ -754,7 +754,7 @@ describe('ipc teams handlers', () => {
 
   it('injects durable teammate roster context into the first live lead direct-message wrapper', async () => {
     mockGetMembersMeta.mockResolvedValueOnce([
-      { name: 'team-lead', role: 'lead' },
+      { name: 'lead', role: 'lead' },
       { name: 'alice', role: 'reviewer' },
       { name: 'jack', role: 'developer' },
     ]);
@@ -762,7 +762,7 @@ describe('ipc teams handlers', () => {
     expect(sendHandler).toBeDefined();
 
     const result = (await sendHandler!({} as never, 'my-team', {
-      member: 'team-lead',
+      member: 'lead',
       text: 'Who is on the team right now?',
     })) as { success: boolean };
 
@@ -789,7 +789,7 @@ describe('ipc teams handlers', () => {
     expect(sendHandler).toBeDefined();
 
     const result = (await sendHandler!({} as never, 'my-team', {
-      member: 'team-lead',
+      member: 'lead',
       text: 'Delegate this work',
       actionMode: 'delegate',
     })) as { success: boolean };
@@ -821,7 +821,7 @@ describe('ipc teams handlers', () => {
     expect(sendHandler).toBeDefined();
 
     const result = (await sendHandler!({} as never, 'my-team', {
-      member: 'team-lead',
+      member: 'lead',
       text: 'Who is on the team right now?',
     })) as { success: boolean };
 
@@ -837,7 +837,7 @@ describe('ipc teams handlers', () => {
     expect(sendHandler).toBeDefined();
 
     const result = (await sendHandler!({} as never, 'my-team', {
-      member: 'team-lead',
+      member: 'lead',
       text: '  /COMPACT keep kanban  ',
     })) as { success: boolean };
 
@@ -853,7 +853,7 @@ describe('ipc teams handlers', () => {
     expect(String(compactCall[0]?.[1] ?? '')).not.toContain('Current durable team context:');
     expect(service.sendDirectToLead).toHaveBeenCalledWith(
       'my-team',
-      'team-lead',
+      'lead',
       '/COMPACT keep kanban',
       undefined,
       undefined,
@@ -867,7 +867,7 @@ describe('ipc teams handlers', () => {
     expect(sendHandler).toBeDefined();
 
     const result = (await sendHandler!({} as never, 'my-team', {
-      member: 'team-lead',
+      member: 'lead',
       text: ' /foo bar ',
     })) as { success: boolean };
 
@@ -885,7 +885,7 @@ describe('ipc teams handlers', () => {
     expect(String(unknownSlashCall[0]?.[1] ?? '')).not.toContain('Current durable team context:');
     expect(service.sendDirectToLead).toHaveBeenCalledWith(
       'my-team',
-      'team-lead',
+      'lead',
       '/foo bar',
       undefined,
       undefined,
@@ -900,7 +900,7 @@ describe('ipc teams handlers', () => {
     vi.stubEnv('HOME', os.tmpdir());
     try {
       const result = (await sendHandler!({} as never, 'my-team', {
-        member: 'team-lead',
+        member: 'lead',
         text: '/compact keep kanban',
         attachments: [
           {
@@ -995,7 +995,7 @@ describe('ipc teams handlers', () => {
   it('keeps TEAM_GET_DATA structural and does not expose message transport', async () => {
     provisioningService.getLiveLeadProcessMessages.mockReturnValueOnce([
       {
-        from: 'team-lead',
+        from: 'lead',
         text: 'Hello there',
         timestamp: '2026-02-23T10:00:01.000Z',
         read: true,
@@ -1061,7 +1061,7 @@ describe('ipc teams handlers', () => {
         members: [],
         messages: [
           {
-            from: 'team-lead',
+            from: 'lead',
             text: "You've hit your limit. Resets in 5 minutes.",
             timestamp: '2026-04-17T12:00:00.000Z',
             read: true,
@@ -1075,7 +1075,7 @@ describe('ipc teams handlers', () => {
       });
       provisioningService.getLiveLeadProcessMessages.mockReturnValueOnce([
         {
-          from: 'team-lead',
+          from: 'lead',
           text: "You've hit your limit. Resets in 5 minutes.",
           timestamp: '2026-04-17T12:00:02.000Z',
           read: true,
@@ -1114,7 +1114,7 @@ describe('ipc teams handlers', () => {
     mockTeamDataWorkerClient.getMessagesPage.mockResolvedValueOnce({
       messages: [
         {
-          from: 'team-lead',
+          from: 'lead',
           text: 'Hello there',
           timestamp: '2026-02-23T10:00:01.000Z',
           read: true,
@@ -1146,7 +1146,7 @@ describe('ipc teams handlers', () => {
     mockTeamDataWorkerClient.getMessagesPage.mockResolvedValueOnce({
       messages: [
         {
-          from: 'team-lead',
+          from: 'lead',
           text: "You've hit your limit. Please wait a bit before retrying.",
           timestamp: '2026-02-23T10:00:01.000Z',
           read: true,
@@ -1171,7 +1171,7 @@ describe('ipc teams handlers', () => {
         teamEventType: 'rate_limit',
         teamName: 'my-team',
         teamDisplayName: 'My Team',
-        from: 'team-lead',
+        from: 'lead',
         dedupeKey: 'rate-limit:my-team:msg-rate-limit-1',
       })
     );
@@ -1273,7 +1273,7 @@ describe('ipc teams handlers', () => {
         members: [],
         messages: [
           {
-            from: 'team-lead',
+            from: 'lead',
             text: "You've hit your limit. Resets in 5 minutes.",
             timestamp: '2026-04-17T12:00:00.000Z',
             read: true,
@@ -1332,7 +1332,7 @@ describe('ipc teams handlers', () => {
         members: [],
         messages: [
           {
-            from: 'team-lead',
+            from: 'lead',
             text: "You've hit your limit. Resets in 5 minutes.",
             timestamp: '2026-04-17T12:00:00.000Z',
             read: true,
@@ -1398,7 +1398,7 @@ describe('ipc teams handlers', () => {
         members: [],
         messages: [
           {
-            from: 'team-lead',
+            from: 'lead',
             text: "You've hit your limit. Resets at 12:20 UTC.",
             timestamp: '2026-04-17T00:00:00.000Z',
             read: true,
@@ -1463,7 +1463,7 @@ describe('ipc teams handlers', () => {
         members: [],
         messages: [
           {
-            from: 'team-lead',
+            from: 'lead',
             text: "You've hit your limit. Resets in 5 minutes.",
             timestamp: '2026-04-17T12:00:00.000Z',
             read: true,
@@ -1519,7 +1519,7 @@ describe('ipc teams handlers', () => {
         members: [],
         messages: [
           {
-            from: 'team-lead',
+            from: 'lead',
             text: "You've hit your limit. Resets in 5 minutes.",
             timestamp: '2026-04-17T12:00:00.000Z',
             read: true,
@@ -1573,7 +1573,7 @@ describe('ipc teams handlers', () => {
         messages: [
           {
             from: 'alice',
-            to: 'team-lead',
+            to: 'lead',
             text: "You've hit your limit. Resets in 5 minutes.",
             timestamp: '2026-04-17T12:00:00.000Z',
             read: false,
@@ -1631,7 +1631,7 @@ describe('ipc teams handlers', () => {
     });
     provisioningService.getLiveLeadProcessMessages.mockReturnValueOnce([
       {
-        from: 'team-lead',
+        from: 'lead',
         text: 'Already persisted thought',
         timestamp: '2026-02-23T11:00:00.000Z',
         read: true,
@@ -1682,7 +1682,7 @@ describe('ipc teams handlers', () => {
     });
     provisioningService.getLiveLeadProcessMessages.mockReturnValueOnce([
       {
-        from: 'team-lead',
+        from: 'lead',
         text: 'Команда поднята, приступаю к раздаче задач.',
         timestamp: '2026-02-23T10:00:01.000Z',
         read: true,
@@ -1723,7 +1723,7 @@ describe('ipc teams handlers', () => {
       return {
         messages: [
           {
-            from: 'team-lead',
+            from: 'lead',
             text: 'Hello there',
             timestamp: '2026-02-23T10:00:00.000Z',
             read: true,
@@ -1739,7 +1739,7 @@ describe('ipc teams handlers', () => {
     });
     provisioningService.getLiveLeadProcessMessages.mockReturnValueOnce([
       {
-        from: 'team-lead',
+        from: 'lead',
         text: 'Hello there',
         timestamp: '2026-02-23T10:00:01.000Z',
         read: true,
@@ -1935,7 +1935,7 @@ describe('ipc teams handlers', () => {
         tasks: [],
         members: [
           {
-            name: 'team-lead',
+            name: 'lead',
             providerId: 'opencode',
             role: 'Team Lead',
             currentTaskId: null,
@@ -1966,11 +1966,11 @@ describe('ipc teams handlers', () => {
         providerBackendId: 'codex-native',
         members: [
           {
-            name: 'team-lead',
+            name: 'lead',
             providerId: 'codex',
             providerBackendId: 'codex-native',
             role: 'Team Lead',
-            agentType: 'team-lead',
+            agentType: 'lead',
           },
           {
             name: 'bob',
@@ -1988,7 +1988,7 @@ describe('ipc teams handlers', () => {
         tasks: [],
         members: [
           {
-            name: 'team-lead',
+            name: 'lead',
             providerId: 'codex',
             role: 'Team Lead',
             currentTaskId: null,
@@ -2032,11 +2032,11 @@ describe('ipc teams handlers', () => {
         'my-team',
         [
           {
-            name: 'team-lead',
+            name: 'lead',
             providerId: 'codex',
             providerBackendId: 'codex-native',
             role: 'Team Lead',
-            agentType: 'team-lead',
+            agentType: 'lead',
           },
           {
             name: 'bob',
@@ -2126,7 +2126,7 @@ describe('ipc teams handlers', () => {
         tasks: [],
         members: [
           {
-            name: 'team-lead',
+            name: 'lead',
             providerId: 'opencode',
             role: 'Team Lead',
             currentTaskId: null,
@@ -2163,10 +2163,10 @@ describe('ipc teams handlers', () => {
         providerBackendId: undefined,
         members: [
           {
-            name: 'team-lead',
+            name: 'lead',
             providerId: 'codex',
             role: 'Team Lead',
-            agentType: 'team-lead',
+            agentType: 'lead',
           },
           {
             name: 'alice',
@@ -2184,7 +2184,7 @@ describe('ipc teams handlers', () => {
         tasks: [],
         members: [
           {
-            name: 'team-lead',
+            name: 'lead',
             providerId: 'codex',
             role: 'Team Lead',
             currentTaskId: null,
@@ -2219,10 +2219,10 @@ describe('ipc teams handlers', () => {
         'my-team',
         [
           {
-            name: 'team-lead',
+            name: 'lead',
             providerId: 'codex',
             role: 'Team Lead',
-            agentType: 'team-lead',
+            agentType: 'lead',
           },
           {
             name: 'alice',
@@ -2253,7 +2253,7 @@ describe('ipc teams handlers', () => {
         tasks: [],
         members: [
           {
-            name: 'team-lead',
+            name: 'lead',
             providerId: 'opencode',
             role: 'Team Lead',
             currentTaskId: null,
@@ -2290,11 +2290,11 @@ describe('ipc teams handlers', () => {
         providerBackendId: 'codex-native',
         members: [
           {
-            name: 'team-lead',
+            name: 'lead',
             providerId: 'codex',
             providerBackendId: 'codex-native',
             role: 'Team Lead',
-            agentType: 'team-lead',
+            agentType: 'lead',
           },
           {
             name: 'alice',
@@ -2320,7 +2320,7 @@ describe('ipc teams handlers', () => {
         tasks: [],
         members: [
           {
-            name: 'team-lead',
+            name: 'lead',
             providerId: 'codex',
             role: 'Team Lead',
             currentTaskId: null,
@@ -2398,11 +2398,11 @@ describe('ipc teams handlers', () => {
         'my-team',
         [
           {
-            name: 'team-lead',
+            name: 'lead',
             providerId: 'codex',
             providerBackendId: 'codex-native',
             role: 'Team Lead',
-            agentType: 'team-lead',
+            agentType: 'lead',
           },
           {
             name: 'alice',
@@ -2446,7 +2446,7 @@ describe('ipc teams handlers', () => {
         tasks: [],
         members: [
           {
-            name: 'team-lead',
+            name: 'lead',
             providerId: 'codex',
             role: 'Team Lead',
             currentTaskId: null,
@@ -2492,7 +2492,7 @@ describe('ipc teams handlers', () => {
         tasks: [],
         members: [
           {
-            name: 'team-lead',
+            name: 'lead',
             providerId: 'codex',
             role: 'Team Lead',
             currentTaskId: null,
@@ -2920,11 +2920,11 @@ describe('ipc teams handlers', () => {
       expect(result.error.toLowerCase()).toContain('reserved');
     });
 
-    it('rejects teammate name "team-lead" in createTeam', async () => {
+    it('rejects teammate name "lead" in createTeam', async () => {
       const handler = handlers.get(TEAM_CREATE)!;
       const result = (await handler({ sender: { send: vi.fn() } } as never, {
         teamName: 'solo-team',
-        members: [{ name: 'team-lead' }],
+        members: [{ name: 'lead' }],
         cwd: os.tmpdir(),
       })) as { success: boolean; error: string };
       expect(result.success).toBe(false);
@@ -2940,10 +2940,10 @@ describe('ipc teams handlers', () => {
       expect(result.error.toLowerCase()).toContain('reserved');
     });
 
-    it('rejects addMember name "team-lead"', async () => {
+    it('rejects addMember name "lead"', async () => {
       const handler = handlers.get(TEAM_ADD_MEMBER)!;
       const result = (await handler({} as never, 'my-team', {
-        name: 'team-lead',
+        name: 'lead',
       })) as { success: boolean; error: string };
       expect(result.success).toBe(false);
       expect(result.error.toLowerCase()).toContain('reserved');

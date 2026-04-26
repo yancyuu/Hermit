@@ -12,6 +12,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { useSettingsConfig, useSettingsHandlers } from './hooks';
 import {
   AdvancedSection,
+  ChannelsSection,
   ConnectionSection,
   GeneralSection,
   NotificationsSection,
@@ -136,6 +137,8 @@ export const SettingsView = (): React.JSX.Element | null => {
           )}
 
           {activeSection === 'connection' && <ConnectionSection />}
+
+          {activeSection === 'channels' && <ChannelsSection />}
 
           {activeSection === 'notifications' && (
             <NotificationsSection

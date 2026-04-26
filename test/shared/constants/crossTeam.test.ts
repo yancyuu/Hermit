@@ -9,11 +9,11 @@ import {
 describe('crossTeam protocol helpers', () => {
   it('parses canonical cross-team prefix metadata', () => {
     const parsed = parseCrossTeamPrefix(
-      '<cross-team from="dream-team.team-lead" depth="0" conversationId="conv-1" replyToConversationId="conv-0" />\nHello'
+      '<cross-team from="dream-team.lead" depth="0" conversationId="conv-1" replyToConversationId="conv-0" />\nHello'
     );
 
     expect(parsed).toEqual({
-      from: 'dream-team.team-lead',
+      from: 'dream-team.lead',
       chainDepth: 0,
       conversationId: 'conv-1',
       replyToConversationId: 'conv-0',

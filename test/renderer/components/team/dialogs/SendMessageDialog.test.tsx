@@ -161,13 +161,13 @@ import { SendMessageDialog } from '@renderer/components/team/dialogs/SendMessage
 
 const members: ResolvedTeamMember[] = [
   {
-    name: 'team-lead',
+    name: 'lead',
     status: 'idle',
     currentTaskId: null,
     taskCount: 0,
     lastActiveAt: null,
     messageCount: 0,
-    agentType: 'team-lead',
+    agentType: 'lead',
     role: 'Team Lead',
   },
   {

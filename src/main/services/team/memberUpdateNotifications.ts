@@ -1,3 +1,5 @@
+import { isLeadMemberName } from '@shared/utils/leadDetection';
+
 import type { EffortLevel, TeamProviderId } from '@shared/types';
 
 export interface MemberDiffInput {
@@ -79,7 +81,10 @@ export function buildReplaceMembersDiff(
 ): ReplaceMembersDiff {
   const previousByName = new Map(
     previousMembers
-      .filter((member) => !member.removedAt && member.name.trim().toLowerCase() !== 'team-lead')
+      .filter((member) => {
+        const name = member.name.trim().toLowerCase();
+        return !member.removedAt && !isLeadMemberName(name);
+      })
       .map((member) => [
         member.name.trim().toLowerCase(),
         {
@@ -95,7 +100,10 @@ export function buildReplaceMembersDiff(
   );
   const nextByName = new Map(
     nextMembers
-      .filter((member) => member.name.trim().toLowerCase() !== 'team-lead')
+      .filter((member) => {
+        const name = member.name.trim().toLowerCase();
+        return !isLeadMemberName(name);
+      })
       .map((member) => [
         member.name.trim().toLowerCase(),
         {

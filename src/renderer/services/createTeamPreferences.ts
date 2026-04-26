@@ -1,4 +1,4 @@
-import { normalizeCreateLaunchProviderForUi } from '@renderer/utils/geminiUiFreeze';
+import { normalizeCreateLaunchProviderForUi } from '@renderer/utils/claudeCodeOnlyProviders';
 import { normalizeExplicitTeamModelForUi } from '@renderer/utils/teamModelAvailability';
 import { isTeamEffortLevel } from '@shared/utils/effortLevels';
 import { normalizeOptionalTeamProviderId } from '@shared/utils/teamProvider';

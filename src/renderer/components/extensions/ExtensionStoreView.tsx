@@ -157,7 +157,7 @@ export const ExtensionStoreView = (): React.JSX.Element => {
       repositoryGroups: s.repositoryGroups,
     }))
   );
-  const multimodelEnabled = appConfig?.general?.multimodelEnabled ?? true;
+  const multimodelEnabled = appConfig?.general?.multimodelEnabled ?? false;
   const loadingCliStatus = useMemo(
     () =>
       !cliStatus && cliStatusLoading && multimodelEnabled

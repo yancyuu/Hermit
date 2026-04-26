@@ -5,16 +5,6 @@ import {
   resolveAnthropicFastMode,
   resolveAnthropicRuntimeSelection,
 } from '@features/anthropic-runtime-profile/renderer';
-import {
-  mergeCodexCliStatusWithSnapshot,
-  useCodexAccountSnapshot,
-} from '@features/codex-account/renderer';
-import {
-  buildCodexFastModeArgs,
-  reconcileCodexRuntimeSelections,
-  resolveCodexFastMode,
-  resolveCodexRuntimeSelection,
-} from '@features/codex-runtime-profile/renderer';
 import { api } from '@renderer/api';
 import {
   buildMemberDraftColorMap,
@@ -71,7 +61,6 @@ import {
 } from '@renderer/services/createTeamPreferences';
 import { useStore } from '@renderer/store';
 import { createLoadingMultimodelCliStatus } from '@renderer/store/slices/cliInstallerSlice';
-import { isGeminiUiFrozen } from '@renderer/utils/geminiUiFreeze';
 import { normalizePath } from '@renderer/utils/pathNormalize';
 import { resolveUiOwnedProviderBackendId } from '@renderer/utils/providerBackendIdentity';
 import { refreshCliStatusForCurrentMode } from '@renderer/utils/refreshCliStatus';
@@ -81,6 +70,7 @@ import {
 } from '@renderer/utils/teamModelAvailability';
 import { getTeamProviderLabel as getCatalogTeamProviderLabel } from '@renderer/utils/teamModelCatalog';
 import { isEphemeralProjectPath } from '@shared/utils/ephemeralProjectPath';
+import { CANONICAL_LEAD_MEMBER_NAME } from '@shared/utils/leadDetection';
 import { DEFAULT_PROVIDER_MODEL_SELECTION } from '@shared/utils/providerModelSelection';
 import { resolveTeamLeadColorName } from '@shared/utils/teamMemberColors';
 import { isTeamProviderId, normalizeOptionalTeamProviderId } from '@shared/utils/teamProvider';
@@ -88,7 +78,6 @@ import { AlertTriangle, CheckCircle2, Info, Loader2, X } from 'lucide-react';
 
 import { AdvancedCliSection } from './AdvancedCliSection';
 import { AnthropicFastModeSelector } from './AnthropicFastModeSelector';
-import { CodexFastModeSelector } from './CodexFastModeSelector';
 import {
   clearInheritedMemberModelsUnavailableForProvider,
   resolveProviderScopedMemberModel,
@@ -381,7 +370,7 @@ export const CreateTeamDialog = ({
   onOpenTeam,
 }: CreateTeamDialogProps): React.JSX.Element => {
   const { isLight } = useTheme();
-  const multimodelEnabled = useStore((s) => s.appConfig?.general?.multimodelEnabled ?? true);
+  const multimodelEnabled = useStore((s) => s.appConfig?.general?.multimodelEnabled ?? false);
   const anthropicProviderFastModeDefault = useStore(
     (s) => s.appConfig?.providerConnections?.anthropic.fastModeDefault ?? false
   );
@@ -397,16 +386,7 @@ export const CreateTeamDialog = ({
         : cliStatus,
     [cliStatus, cliStatusLoading, multimodelEnabled]
   );
-  const codexAccount = useCodexAccountSnapshot({
-    enabled:
-      multimodelEnabled &&
-      loadingCliStatus?.flavor === 'agent_teams_orchestrator' &&
-      Boolean(loadingCliStatus?.providers.some((provider) => provider.providerId === 'codex')),
-  });
-  const effectiveCliStatus = useMemo(
-    () => mergeCodexCliStatusWithSnapshot(loadingCliStatus, codexAccount.snapshot),
-    [loadingCliStatus, codexAccount.snapshot]
-  );
+  const effectiveCliStatus = loadingCliStatus;
 
   // ── Persisted draft state (survives tab navigation) ──────────────────
   const {
@@ -796,9 +776,7 @@ export const CreateTeamDialog = ({
           const next = new Set<string>();
           let hasDefaultSelection = false;
           const supportsProviderDefaultCheck =
-            providerId === 'codex' ||
-            providerId === 'gemini' ||
-            (providerId === 'anthropic' && selectedProviderId === 'anthropic');
+            providerId === 'anthropic' && selectedProviderId === 'anthropic';
           const leadModel = computeEffectiveTeamModel(
             selectedModel,
             limitContext,
@@ -1195,8 +1173,8 @@ export const CreateTeamDialog = ({
       soloTeam
         ? [
             {
-              id: 'team-lead',
-              name: 'team-lead',
+              id: CANONICAL_LEAD_MEMBER_NAME,
+              name: CANONICAL_LEAD_MEMBER_NAME,
               subtitle: '团队负责人',
               color: resolveTeamLeadColorName(),
             },
@@ -1270,75 +1248,27 @@ export const CreateTeamDialog = ({
       selectedProviderId,
     ]
   );
-  const codexRuntimeSelection = useMemo(
-    () =>
-      selectedProviderId === 'codex'
-        ? resolveCodexRuntimeSelection({
-            source: {
-              providerStatus: runtimeProviderStatusById.get('codex'),
-              providerBackendId: resolveUiOwnedProviderBackendId(
-                'codex',
-                runtimeProviderStatusById.get('codex')
-              ),
-            },
-            selectedModel,
-          })
-        : null,
-    [runtimeProviderStatusById, selectedModel, selectedProviderId]
-  );
-  const codexFastModeResolution = useMemo(
-    () =>
-      selectedProviderId === 'codex' && codexRuntimeSelection
-        ? resolveCodexFastMode({
-            selection: codexRuntimeSelection,
-            selectedFastMode,
-          })
-        : null,
-    [codexRuntimeSelection, selectedFastMode, selectedProviderId]
-  );
-
   useEffect(() => {
-    if (selectedProviderId !== 'anthropic' && selectedProviderId !== 'codex') {
+    if (selectedProviderId !== 'anthropic') {
       setAnthropicRuntimeNotice(null);
       return;
     }
 
-    const reconciliation =
-      selectedProviderId === 'anthropic'
-        ? reconcileAnthropicRuntimeSelections({
-            selection:
-              anthropicRuntimeSelection ??
-              resolveAnthropicRuntimeSelection({
-                source: {
-                  modelCatalog: null,
-                  runtimeCapabilities: null,
-                },
-                selectedModel,
-                limitContext,
-              }),
-            selectedEffort,
-            selectedFastMode,
-            providerFastModeDefault: anthropicProviderFastModeDefault,
-          })
-        : {
-            nextEffort: selectedEffort,
-            effortResetReason: null,
-            ...reconcileCodexRuntimeSelections({
-              selection:
-                codexRuntimeSelection ??
-                resolveCodexRuntimeSelection({
-                  source: {
-                    providerStatus: runtimeProviderStatusById.get('codex'),
-                    providerBackendId: resolveUiOwnedProviderBackendId(
-                      'codex',
-                      runtimeProviderStatusById.get('codex')
-                    ),
-                  },
-                  selectedModel,
-                }),
-              selectedFastMode,
-            }),
-          };
+    const reconciliation = reconcileAnthropicRuntimeSelections({
+      selection:
+        anthropicRuntimeSelection ??
+        resolveAnthropicRuntimeSelection({
+          source: {
+            modelCatalog: null,
+            runtimeCapabilities: null,
+          },
+          selectedModel,
+          limitContext,
+        }),
+      selectedEffort,
+      selectedFastMode,
+      providerFastModeDefault: anthropicProviderFastModeDefault,
+    });
 
     const notices: string[] = [];
     if (reconciliation.nextEffort !== selectedEffort) {
@@ -1359,9 +1289,7 @@ export const CreateTeamDialog = ({
   }, [
     anthropicProviderFastModeDefault,
     anthropicRuntimeSelection,
-    codexRuntimeSelection,
     limitContext,
-    runtimeProviderStatusById,
     selectedEffort,
     selectedFastMode,
     selectedModel,
@@ -1395,10 +1323,7 @@ export const CreateTeamDialog = ({
       providerBackendId: selectedProviderBackendId ?? undefined,
       model: effectiveModel,
       effort: (selectedEffort as EffortLevel) || undefined,
-      fastMode:
-        selectedProviderId === 'anthropic' || selectedProviderId === 'codex'
-          ? selectedFastMode
-          : undefined,
+      fastMode: selectedFastMode,
       limitContext,
       skipPermissions,
       worktree: worktreeEnabled && worktreeName.trim() ? worktreeName.trim() : undefined,
@@ -1518,14 +1443,11 @@ export const CreateTeamDialog = ({
         ? { fastMode: true, fastModePerSessionOptIn: false }
         : { fastMode: false };
       args.push('--settings', JSON.stringify(fastSettings));
-    } else if (selectedProviderId === 'codex') {
-      args.push(...buildCodexFastModeArgs(codexFastModeResolution?.resolvedFastMode));
     }
     return args;
   }, [
     anthropicFastModeResolution?.resolvedFastMode,
     anthropicRuntimeSelection?.defaultEffort,
-    codexFastModeResolution?.resolvedFastMode,
     effectiveModel,
     selectedEffort,
     selectedProviderId,
@@ -1536,7 +1458,7 @@ export const CreateTeamDialog = ({
     const summary: string[] = [];
     if (prompt.trim()) summary.push('负责人提示词');
     if (skipPermissions) summary.push('自动批准工具');
-    if (selectedProviderId === 'anthropic' || selectedProviderId === 'codex') {
+    if (selectedProviderId === 'anthropic') {
       if (selectedFastMode === 'on') summary.push('快速模式');
       else if (selectedFastMode === 'off') summary.push('快速模式关闭');
       else if (selectedProviderId === 'anthropic' && anthropicProviderFastModeDefault) {
@@ -1856,8 +1778,9 @@ export const CreateTeamDialog = ({
               showWorktreeIsolationControls={!soloTeam}
               teammateWorktreeDefault={teammateWorktreeDefault}
               onTeammateWorktreeDefaultChange={setTeammateWorktreeDefault}
-              disableGeminiOption={isGeminiUiFrozen()}
+              disableGeminiOption={true}
               leadModelIssueText={leadModelIssueText}
+              teamName={sanitizedTeamName || teamName.trim()}
               memberWarningById={teammateRuntimeCompatibility.memberWarningById}
               memberModelIssueById={memberModelIssueById}
               headerTop={
@@ -1986,29 +1909,6 @@ export const CreateTeamDialog = ({
                         ) : null}
                       </div>
                     ) : null}
-                    {selectedProviderId === 'codex' ? (
-                      <div className="space-y-2">
-                        <CodexFastModeSelector
-                          value={selectedFastMode}
-                          onValueChange={setSelectedFastMode}
-                          model={selectedModel}
-                          providerBackendId={
-                            resolveUiOwnedProviderBackendId(
-                              'codex',
-                              runtimeProviderStatusById.get('codex')
-                            ) ?? undefined
-                          }
-                          id="create-fast-mode"
-                        />
-                        {anthropicRuntimeNotice ? (
-                          <div className="bg-amber-500/8 flex items-start gap-2 rounded-md border border-amber-500/25 px-3 py-2 text-[11px] leading-relaxed text-amber-200">
-                            <Info className="mt-0.5 size-3.5 shrink-0 text-amber-300" />
-                            <p>{anthropicRuntimeNotice}</p>
-                          </div>
-                        ) : null}
-                      </div>
-                    ) : null}
-
                     <div className="space-y-1.5">
                       <Label htmlFor="team-prompt" className="label-optional">
                         团队负责人提示词（可选）

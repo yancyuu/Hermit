@@ -1,6 +1,6 @@
 import { getClaudeBasePath, getTeamsBasePath } from '@main/utils/pathDecoder';
 import { CROSS_TEAM_SENT_SOURCE, CROSS_TEAM_SOURCE, formatCrossTeamText } from '@shared/constants';
-import { isLeadMember } from '@shared/utils/leadDetection';
+import { isLeadMember, isLeadMemberName } from '@shared/utils/leadDetection';
 import { createLogger } from '@shared/utils/logger';
 import * as agentTeamsControllerModule from 'agent-teams-controller';
 import { randomUUID } from 'crypto';
@@ -41,7 +41,7 @@ function resolveCrossTeamFromMember(config: TeamConfig, rawFromMember: string): 
   const lead = members.find((member) => isLeadMember(member)) ?? members[0];
   const leadName = lead?.name?.trim();
   const leadKey = normalizeMemberKey(leadName);
-  if (leadName && (rawKey === 'lead' || rawKey === 'team-lead' || rawKey === leadKey)) {
+  if (leadName && (isLeadMemberName(rawKey) || rawKey === leadKey)) {
     return leadName;
   }
 
@@ -118,7 +118,7 @@ export class CrossTeamService {
     }
 
     // 2. Resolve lead
-    const leadName = (await this.dataService.getLeadMemberName(toTeam)) ?? 'team-lead';
+    const leadName = (await this.dataService.getLeadMemberName(toTeam)) ?? 'lead';
 
     // 3. Format
     const from = `${fromTeam}.${fromMember}`;

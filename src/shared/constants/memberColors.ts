@@ -5,6 +5,8 @@
  * Generated via greedy max-min-distance algorithm over hue angles.
  * Intentionally excludes purple-family tones.
  */
+import { CANONICAL_LEAD_MEMBER_NAME } from '@shared/utils/leadDetection';
+
 export const MEMBER_COLOR_PALETTE = [
   // ── First 12: intentionally distinct visual families for roster readability ──
   'blue',
@@ -75,7 +77,7 @@ export type MemberColorName = (typeof MEMBER_COLOR_PALETTE)[number];
  * UI surfaces should use this exact key when deriving the lead color so
  * previews match the resolved team roster.
  */
-export const TEAM_LEAD_MEMBER_COLOR_ID = 'team-lead' as const;
+export const TEAM_LEAD_MEMBER_COLOR_ID = CANONICAL_LEAD_MEMBER_NAME;
 
 /**
  * Fixed hue angle (0-359) for each palette color name.

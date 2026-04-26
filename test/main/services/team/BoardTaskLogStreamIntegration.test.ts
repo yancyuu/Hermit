@@ -528,7 +528,7 @@ describe('BoardTaskLogStreamService integration', () => {
         ({
           transcriptFiles: [transcriptPath],
           config: {
-            members: [{ name: 'team-lead', agentType: 'team-lead' }],
+            members: [{ name: 'lead', agentType: 'lead' }],
           },
         }) as never,
     };
@@ -738,7 +738,7 @@ describe('BoardTaskLogStreamService integration', () => {
         ({
           transcriptFiles: [transcriptPath],
           config: {
-            members: [{ name: 'team-lead', agentType: 'team-lead' }],
+            members: [{ name: 'lead', agentType: 'lead' }],
           },
         }) as never,
     };
@@ -845,7 +845,7 @@ describe('BoardTaskLogStreamService integration', () => {
             id: 'call-send',
             name: 'SendMessage',
             input: {
-              to: 'team-lead',
+              to: 'lead',
               summary: '#abc done',
               message: 'Detailed body',
             },
@@ -865,9 +865,9 @@ describe('BoardTaskLogStreamService integration', () => {
                 type: 'text',
                 text: JSON.stringify({
                   success: true,
-                  message: "Message sent to team-lead's inbox",
+                  message: "Message sent to lead's inbox",
                   routing: {
-                    target: '@team-lead',
+                    target: '@lead',
                     summary: '#abc done',
                     content: 'Detailed body',
                   },
@@ -878,9 +878,9 @@ describe('BoardTaskLogStreamService integration', () => {
         ],
         toolUseResult: {
           success: true,
-          message: "Message sent to team-lead's inbox",
+          message: "Message sent to lead's inbox",
           routing: {
-            target: '@team-lead',
+            target: '@lead',
             summary: '#abc done',
             content: 'Detailed body',
           },
@@ -906,7 +906,7 @@ describe('BoardTaskLogStreamService integration', () => {
         ({
           transcriptFiles: [transcriptPath],
           config: {
-            members: [{ name: 'team-lead', agentType: 'team-lead' }],
+            members: [{ name: 'lead', agentType: 'lead' }],
           },
         }) as never,
     };
@@ -934,7 +934,7 @@ describe('BoardTaskLogStreamService integration', () => {
     expect(sendResult?.toolResults).toEqual([
       {
         toolUseId: 'call-send',
-        content: "Message sent to team-lead's inbox - #abc done",
+        content: "Message sent to lead's inbox - #abc done",
         isError: false,
       },
     ]);
@@ -942,7 +942,7 @@ describe('BoardTaskLogStreamService integration', () => {
       id: 'call-send',
       type: 'tool_result',
       content: expect.objectContaining({
-        toolResultContent: "Message sent to team-lead's inbox - #abc done",
+        toolResultContent: "Message sent to lead's inbox - #abc done",
       }),
     });
   });
@@ -976,7 +976,7 @@ describe('BoardTaskLogStreamService integration', () => {
         ({
           transcriptFiles: [transcriptPath],
           config: {
-            members: [{ name: 'team-lead', agentType: 'team-lead' }],
+            members: [{ name: 'lead', agentType: 'lead' }],
           },
         }) as never,
     };
@@ -1087,7 +1087,7 @@ describe('BoardTaskLogStreamService integration', () => {
         ({
           transcriptFiles: [transcriptPath],
           config: {
-            members: [{ name: 'team-lead', agentType: 'team-lead' }],
+            members: [{ name: 'lead', agentType: 'lead' }],
           },
         }) as never,
     };
@@ -1146,7 +1146,7 @@ describe('BoardTaskLogStreamService integration', () => {
         ({
           transcriptFiles: [transcriptPath],
           config: {
-            members: [{ name: 'team-lead', agentType: 'team-lead' }],
+            members: [{ name: 'lead', agentType: 'lead' }],
           },
         }) as never,
     };

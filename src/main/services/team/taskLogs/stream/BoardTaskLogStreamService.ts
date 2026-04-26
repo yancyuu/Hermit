@@ -1,5 +1,8 @@
 import { extractToolCalls, extractToolResults } from '@main/utils/toolExtraction';
-import { isLeadMember as isLeadMemberCheck } from '@shared/utils/leadDetection';
+import {
+  CANONICAL_LEAD_MEMBER_NAME,
+  isLeadMember as isLeadMemberCheck,
+} from '@shared/utils/leadDetection';
 import { getTaskDisplayId } from '@shared/utils/taskIdentity';
 
 import { canonicalizeAgentTeamsToolName } from '../../agentTeamsToolNames';
@@ -1473,7 +1476,7 @@ export class BoardTaskLogStreamService {
     const leadName =
       transcriptContext?.config.members
         ?.find((member) => isLeadMemberCheck(member))
-        ?.name?.trim() || 'team-lead';
+        ?.name?.trim() || CANONICAL_LEAD_MEMBER_NAME;
 
     const inferredSlices: StreamSlice[] = [];
     for (const [filePath, messages] of mergedParsedMessagesByFile.entries()) {
@@ -1560,7 +1563,7 @@ export class BoardTaskLogStreamService {
     const leadName =
       transcriptContext?.config.members
         ?.find((member) => isLeadMemberCheck(member))
-        ?.name?.trim() || 'team-lead';
+        ?.name?.trim() || CANONICAL_LEAD_MEMBER_NAME;
 
     const toolCallsByUseIdByFile = new Map<
       string,

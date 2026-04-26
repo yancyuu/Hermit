@@ -16,7 +16,7 @@ describe('TeamProvisioningService (launch roster discovery)', () => {
           'dev-2',
           'dev-3',
           'user',
-          'team-lead',
+          'lead',
           'DEV-2',
         ]),
       } as never,
@@ -83,14 +83,14 @@ describe('TeamProvisioningService (launch roster discovery)', () => {
     expect(result.warning).toContain('best-effort');
   });
 
-  it('members.meta.json fallback never returns reserved names (user/team-lead)', async () => {
+  it('members.meta.json fallback never returns reserved names (user/lead)', async () => {
     const svc = new TeamProvisioningService(
       {} as never,
       { listInboxNames: vi.fn(async () => []) } as never,
       {
         getMembers: vi.fn(async () => [
           { name: 'user', agentType: 'general-purpose' },
-          { name: 'team-lead', agentType: 'team-lead' },
+          { name: 'lead', agentType: 'lead' },
           { name: 'Alice', role: 'dev', agentType: 'general-purpose' },
         ]),
       } as never,
@@ -102,7 +102,7 @@ describe('TeamProvisioningService (launch roster discovery)', () => {
     expect(result.members.map((m: { name: string }) => m.name)).toEqual(['Alice']);
   });
 
-  it('config fallback never returns reserved names (user/team-lead)', async () => {
+  it('config fallback never returns reserved names (user/lead)', async () => {
     const svc = new TeamProvisioningService(
       {} as never,
       { listInboxNames: vi.fn(async () => []) } as never,
@@ -112,7 +112,7 @@ describe('TeamProvisioningService (launch roster discovery)', () => {
 
     const configRaw = JSON.stringify({
       name: 't',
-      members: [{ name: 'team-lead', agentType: 'team-lead' }, { name: 'user' }, { name: 'bob' }],
+      members: [{ name: 'lead', agentType: 'lead' }, { name: 'user' }, { name: 'bob' }],
     });
 
     const result = await (svc as unknown as any).resolveLaunchExpectedMembers('t', configRaw);

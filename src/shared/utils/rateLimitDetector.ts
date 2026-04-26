@@ -4,6 +4,7 @@
 
 const RATE_LIMIT_SUBSTRING = "You've hit your limit";
 const MODEL_COOLDOWN_CODE = 'model_cooldown';
+const RATE_LIMIT_REACHED_CODE = '1302';
 
 interface StructuredRateLimitPayload {
   code: string | null;
@@ -177,14 +178,16 @@ function extractStructuredRateLimitPayload(text: string): StructuredRateLimitPay
 
 function isStructuredRateLimitPayload(payload: StructuredRateLimitPayload): boolean {
   const code = payload.code?.trim().toLowerCase();
-  if (code === MODEL_COOLDOWN_CODE) {
+  if (code === MODEL_COOLDOWN_CODE || code === RATE_LIMIT_REACHED_CODE) {
     return true;
   }
 
   const message = payload.message?.trim().toLowerCase() ?? '';
   return (
-    (message.includes('cooling down') || message.includes('model cooldown')) &&
-    (payload.resetSeconds !== null || payload.resetTime !== null)
+    message.includes('rate limit') ||
+    message.includes('too many requests') ||
+    ((message.includes('cooling down') || message.includes('model cooldown')) &&
+      (payload.resetSeconds !== null || payload.resetTime !== null))
   );
 }
 

@@ -5,11 +5,6 @@ function stripOneMillionSuffix(model: string): string {
   return model.replace(/(?:\[1m\])+$/i, '');
 }
 
-function isAnthropicHaikuModel(model: string): boolean {
-  const baseModel = stripOneMillionSuffix(model);
-  return baseModel === 'haiku' || baseModel.startsWith('claude-haiku-');
-}
-
 function normalizeAvailableLaunchModels(
   availableLaunchModels: Iterable<string> | undefined
 ): Set<string> {
@@ -42,7 +37,7 @@ function chooseAvailableModel(
 
 export function resolveAnthropicLaunchModel(params: {
   selectedModel?: string | null;
-  limitContext: boolean;
+  limitContext?: boolean;
   availableLaunchModels?: Iterable<string>;
   defaultLaunchModel?: string | null;
 }): string | null {
@@ -52,9 +47,7 @@ export function resolveAnthropicLaunchModel(params: {
   if (!selectedModel || isDefaultProviderModelSelection(selectedModel)) {
     const staticDefault = getAnthropicDefaultTeamModel(params.limitContext);
     const runtimeDefault = params.defaultLaunchModel?.trim() || null;
-    const preferredDefault = params.limitContext
-      ? stripOneMillionSuffix(runtimeDefault || staticDefault) || staticDefault
-      : runtimeDefault || staticDefault;
+    const preferredDefault = stripOneMillionSuffix(staticDefault) || staticDefault;
     if (availableModels.size === 0) {
       return preferredDefault;
     }
@@ -74,15 +67,5 @@ export function resolveAnthropicLaunchModel(params: {
     return null;
   }
 
-  if (params.limitContext || isAnthropicHaikuModel(baseModel)) {
-    return baseModel;
-  }
-
-  const preferredLongContextModel = `${baseModel}[1m]`;
-
-  if (availableModels.size === 0) {
-    return preferredLongContextModel;
-  }
-
-  return chooseAvailableModel(availableModels, [preferredLongContextModel, baseModel]) ?? baseModel;
+  return baseModel;
 }

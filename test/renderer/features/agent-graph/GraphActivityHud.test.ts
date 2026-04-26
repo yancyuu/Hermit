@@ -11,7 +11,7 @@ const teamState = {
   selectedTeamName: 'demo-team',
   selectedTeamData: {
     members: [
-      { name: 'team-lead', agentType: 'team-lead' },
+      { name: 'lead', agentType: 'lead' },
       { name: 'jack', agentType: 'developer' },
     ],
     tasks: [],
@@ -24,7 +24,7 @@ const teamState = {
       'demo-team',
       {
         members: [
-          { name: 'team-lead', agentType: 'team-lead' },
+          { name: 'lead', agentType: 'lead' },
           { name: 'jack', agentType: 'developer' },
         ],
         tasks: [],
@@ -99,7 +99,7 @@ vi.mock('@renderer/components/team/activity/activityMessageContext', () => ({
 
 vi.mock('@features/agent-graph/core/domain/buildInlineActivityEntries', () => ({
   buildInlineActivityEntries: (...args: unknown[]) => buildInlineActivityEntries(...args),
-  getGraphLeadMemberName: () => 'team-lead',
+  getGraphLeadMemberName: () => 'lead',
 }));
 
 describe('GraphActivityHud', () => {
@@ -140,7 +140,7 @@ describe('GraphActivityHud', () => {
   it('opens the member profile on the Activity tab when +N more is clicked', async () => {
     const visibleMessages: InboxMessage[] = [
       {
-        from: 'team-lead',
+        from: 'lead',
         to: 'jack',
         text: 'First',
         summary: 'First',
@@ -149,7 +149,7 @@ describe('GraphActivityHud', () => {
         messageId: 'msg-1',
       },
       {
-        from: 'team-lead',
+        from: 'lead',
         to: 'jack',
         text: 'Second',
         summary: 'Second',
@@ -158,7 +158,7 @@ describe('GraphActivityHud', () => {
         messageId: 'msg-2',
       },
       {
-        from: 'team-lead',
+        from: 'lead',
         to: 'jack',
         text: 'Third',
         summary: 'Third',
@@ -272,7 +272,7 @@ describe('GraphActivityHud', () => {
 
   it('pins the activity lane to the provided world rect without post-hoc repositioning', async () => {
     const message: InboxMessage = {
-      from: 'team-lead',
+      from: 'lead',
       to: 'jack',
       text: 'Latest log',
       summary: 'Latest log',

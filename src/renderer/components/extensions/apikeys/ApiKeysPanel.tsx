@@ -52,7 +52,7 @@ export const ApiKeysPanel = ({
       appConfig: s.appConfig,
     }))
   );
-  const multimodelEnabled = appConfig?.general?.multimodelEnabled ?? true;
+  const multimodelEnabled = appConfig?.general?.multimodelEnabled ?? false;
   const loadingCliStatus = useMemo(
     () =>
       !cliStatus && cliStatusLoading && multimodelEnabled

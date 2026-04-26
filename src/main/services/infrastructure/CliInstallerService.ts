@@ -1196,6 +1196,9 @@ export class CliInstallerService {
 
       // --- Phase 5: Done ---
       ClaudeBinaryResolver.clearCache();
+      this.invalidateStatusCache();
+      const freshStatus = await this.getStatus();
+      this.sendProgress({ type: 'status', status: freshStatus });
       logger.info(`CLI v${version} installed successfully`);
       this.sendProgress({ type: 'completed', version });
 

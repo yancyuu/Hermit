@@ -30,7 +30,7 @@ import { ActivityTimeline } from '@renderer/components/team/activity/ActivityTim
 
 function makeMessage(overrides: Partial<InboxMessage> = {}): InboxMessage {
   return {
-    from: 'team-lead',
+    from: 'lead',
     text: 'message',
     timestamp: '2026-04-18T13:00:00.000Z',
     read: true,
@@ -93,7 +93,7 @@ describe('ActivityTimeline session separators', () => {
         messageId: 'thought-newest',
         text: 'lead thought newest',
         leadSessionId: 'lead-session-2',
-        from: 'team-lead',
+        from: 'lead',
         source: 'lead_session',
       }),
       makeMessage({
@@ -107,7 +107,7 @@ describe('ActivityTimeline session separators', () => {
         messageId: 'thought-older',
         text: 'lead thought older',
         leadSessionId: 'lead-session-1',
-        from: 'team-lead',
+        from: 'lead',
         source: 'lead_session',
       }),
     ];
@@ -130,14 +130,14 @@ describe('ActivityTimeline session separators', () => {
         messageId: 'thought-current',
         text: 'current lead thought',
         leadSessionId: 'lead-session-current',
-        from: 'team-lead',
+        from: 'lead',
         source: 'lead_session',
       }),
       makeMessage({
         messageId: 'thought-history',
         text: 'historical lead thought',
         leadSessionId: 'lead-session-history',
-        from: 'team-lead',
+        from: 'lead',
         source: 'lead_session',
       }),
     ];
@@ -166,21 +166,21 @@ describe('ActivityTimeline session separators', () => {
         messageId: 'thought-s3',
         text: 'thought session 3',
         leadSessionId: 'lead-session-3',
-        from: 'team-lead',
+        from: 'lead',
         source: 'lead_session',
       }),
       makeMessage({
         messageId: 'thought-s2',
         text: 'thought session 2',
         leadSessionId: 'lead-session-2',
-        from: 'team-lead',
+        from: 'lead',
         source: 'lead_session',
       }),
       makeMessage({
         messageId: 'thought-s1',
         text: 'thought session 1',
         leadSessionId: 'lead-session-1',
-        from: 'team-lead',
+        from: 'lead',
         source: 'lead_session',
       }),
     ];
@@ -204,7 +204,7 @@ describe('ActivityTimeline session separators', () => {
         messageId: 'thought-newest',
         text: 'newest thought',
         leadSessionId: 'lead-session-newest',
-        from: 'team-lead',
+        from: 'lead',
         source: 'lead_session',
       }),
       ...Array.from({ length: 8 }, (_, i) =>
@@ -220,7 +220,7 @@ describe('ActivityTimeline session separators', () => {
         messageId: 'thought-oldest',
         text: 'oldest thought',
         leadSessionId: 'lead-session-oldest',
-        from: 'team-lead',
+        from: 'lead',
         source: 'lead_session',
       }),
     ];
@@ -243,14 +243,14 @@ describe('ActivityTimeline session separators', () => {
         messageId: 'thought-a',
         text: 'thought a',
         leadSessionId: 'lead-session-shared',
-        from: 'team-lead',
+        from: 'lead',
         source: 'lead_session',
       }),
       makeMessage({
         messageId: 'thought-b',
         text: 'thought b',
         leadSessionId: 'lead-session-shared',
-        from: 'team-lead',
+        from: 'lead',
         source: 'lead_session',
       }),
     ];
@@ -273,7 +273,7 @@ describe('ActivityTimeline session separators', () => {
         messageId: 'only',
         text: 'only message',
         leadSessionId: 'lead-session-1',
-        from: 'team-lead',
+        from: 'lead',
         source: 'lead_session',
       }),
     ];
@@ -298,28 +298,28 @@ describe('ActivityTimeline session separators', () => {
         messageId: 'thought-b-2',
         text: 'b second',
         leadSessionId: 'lead-session-b',
-        from: 'team-lead',
+        from: 'lead',
         source: 'lead_session',
       }),
       makeMessage({
         messageId: 'thought-a-2',
         text: 'a second',
         leadSessionId: 'lead-session-a',
-        from: 'team-lead',
+        from: 'lead',
         source: 'lead_session',
       }),
       makeMessage({
         messageId: 'thought-b-1',
         text: 'b first',
         leadSessionId: 'lead-session-b',
-        from: 'team-lead',
+        from: 'lead',
         source: 'lead_session',
       }),
       makeMessage({
         messageId: 'thought-a-1',
         text: 'a first',
         leadSessionId: 'lead-session-a',
-        from: 'team-lead',
+        from: 'lead',
         source: 'lead_session',
       }),
     ];

@@ -153,6 +153,12 @@ import {
   TEAM_KILL_PROCESS,
   TEAM_LAUNCH,
   TEAM_LEAD_ACTIVITY,
+  TEAM_LEAD_CHANNEL_FEISHU_START,
+  TEAM_LEAD_CHANNEL_FEISHU_STOP,
+  TEAM_LEAD_CHANNEL_GLOBAL_GET,
+  TEAM_LEAD_CHANNEL_GLOBAL_SAVE,
+  TEAM_LEAD_CHANNEL_GET,
+  TEAM_LEAD_CHANNEL_SAVE,
   TEAM_LEAD_CONTEXT,
   TEAM_LIST,
   TEAM_MEMBER_SPAWN_STATUSES,
@@ -271,11 +277,13 @@ import type {
   ElectronAPI,
   FileChangeWithContent,
   GlobalTask,
+  GlobalLeadChannelSnapshot,
   HttpServerStatus,
   HunkDecision,
   IpcResult,
   KanbanColumnId,
   LeadActivitySnapshot,
+  LeadChannelSnapshot,
   LeadContextUsageSnapshot,
   MemberFullStats,
   MemberLogSummary,
@@ -290,6 +298,7 @@ import type {
   Schedule,
   ScheduleChangeEvent,
   ScheduleRun,
+  SaveLeadChannelConfigRequest,
   SendMessageRequest,
   SendMessageResult,
   SessionsByIdsOptions,
@@ -1112,6 +1121,32 @@ const electronAPI: ElectronAPI = {
     },
     getLeadContext: async (teamName: string) => {
       return invokeIpcWithResult<LeadContextUsageSnapshot>(TEAM_LEAD_CONTEXT, teamName);
+    },
+    getLeadChannel: async (teamName: string) => {
+      return invokeIpcWithResult<LeadChannelSnapshot>(TEAM_LEAD_CHANNEL_GET, teamName);
+    },
+    getGlobalLeadChannel: async () => {
+      return invokeIpcWithResult<GlobalLeadChannelSnapshot>(TEAM_LEAD_CHANNEL_GLOBAL_GET);
+    },
+    saveGlobalLeadChannel: async (request: SaveLeadChannelConfigRequest) => {
+      return invokeIpcWithResult<GlobalLeadChannelSnapshot>(TEAM_LEAD_CHANNEL_GLOBAL_SAVE, request);
+    },
+    saveLeadChannel: async (teamName: string, request: SaveLeadChannelConfigRequest) => {
+      return invokeIpcWithResult<LeadChannelSnapshot>(TEAM_LEAD_CHANNEL_SAVE, teamName, request);
+    },
+    startFeishuLeadChannel: async (teamName: string, channelId?: string) => {
+      return invokeIpcWithResult<LeadChannelSnapshot>(
+        TEAM_LEAD_CHANNEL_FEISHU_START,
+        teamName,
+        channelId
+      );
+    },
+    stopFeishuLeadChannel: async (teamName: string, channelId?: string) => {
+      return invokeIpcWithResult<LeadChannelSnapshot>(
+        TEAM_LEAD_CHANNEL_FEISHU_STOP,
+        teamName,
+        channelId
+      );
     },
     getMemberSpawnStatuses: async (teamName: string) => {
       return invokeIpcWithResult<MemberSpawnStatusesSnapshot>(TEAM_MEMBER_SPAWN_STATUSES, teamName);

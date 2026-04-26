@@ -59,6 +59,7 @@ import { isLeadAgentType, isLeadMember } from '@shared/utils/leadDetection';
 import { deriveTaskDisplayId, formatTaskDisplayLabel } from '@shared/utils/taskIdentity';
 import {
   AlertTriangle,
+  BellRing,
   Clock,
   Code,
   Columns3,
@@ -90,6 +91,7 @@ import { UNASSIGNED_OWNER } from './kanban/KanbanFilterPopover';
 import { KanbanSearchInput } from './kanban/KanbanSearchInput';
 import { TrashDialog } from './kanban/TrashDialog';
 import { MemberDetailDialog } from './members/MemberDetailDialog';
+import { LeadChannelPanel } from './members/LeadChannelPanel';
 import { type MemberActivityFilter, type MemberDetailTab } from './members/memberDetailTypes';
 
 import type { AddMemberEntry } from './dialogs/AddMemberDialog';
@@ -955,6 +957,7 @@ export const TeamDetailView = ({
   const [removeMemberConfirm, setRemoveMemberConfirm] = useState<string | null>(null);
   const [updatingRoleLoading, setUpdatingRoleLoading] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [leadChannelDialogOpen, setLeadChannelDialogOpen] = useState(false);
   const [launchDialogState, setLaunchDialogState] = useState<{
     open: boolean;
     mode: TeamLaunchDialogMode;
@@ -2365,6 +2368,23 @@ export const TeamDetailView = ({
                         variant="ghost"
                         size="sm"
                         className={cn(
+                          '-mt-2 h-8 shrink-0 self-start rounded-full border px-3 text-xs font-semibold tracking-[0.02em] transition-all',
+                          'border-sky-500/30 bg-sky-500/10 text-sky-200 hover:border-sky-400/50 hover:bg-sky-500/15'
+                        )}
+                        onClick={() => setLeadChannelDialogOpen(true)}
+                      >
+                        <BellRing size={13} className="shrink-0" />
+                        渠道监听
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">为团队负责人绑定或启动渠道监听</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
                           '-mt-2 h-8 shrink-0 self-start rounded-full border px-3.5 text-xs font-semibold tracking-[0.02em] transition-all',
                           'hover:-translate-y-0.5 hover:brightness-[1.03] active:translate-y-0 active:brightness-[0.98]',
                           isLight
@@ -2862,6 +2882,27 @@ export const TeamDetailView = ({
                   })();
                 }}
               />
+
+              <Dialog open={leadChannelDialogOpen} onOpenChange={setLeadChannelDialogOpen}>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>负责人渠道监听</DialogTitle>
+                    <DialogDescription>
+                      给当前团队负责人绑定并启动已接入的外部渠道。团队创建完成后也可以随时调整。
+                    </DialogDescription>
+                  </DialogHeader>
+                  <LeadChannelPanel teamName={teamName} />
+                  <DialogFooter>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setLeadChannelDialogOpen(false)}
+                    >
+                      关闭
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
 
               <Dialog
                 open={removeMemberConfirm !== null}

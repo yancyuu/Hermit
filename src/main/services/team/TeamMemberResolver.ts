@@ -257,10 +257,10 @@ export class TeamMemberResolver {
     // (recipient of SendMessage to "user"). It's not a real AI teammate.
     names.delete('user');
 
-    // Defense: merge inbox-derived "lead" alias into canonical "team-lead".
-    // Teammates sometimes address messages to "lead" instead of "team-lead",
+    // Defense: merge inbox-derived "lead" alias into canonical "lead".
+    // Teammates sometimes address messages to "lead" instead of "lead",
     // creating a separate inbox file that the resolver picks up as a phantom member.
-    if (names.has('lead') && names.has('team-lead')) {
+    if (names.has('lead') && names.has('lead')) {
       names.delete('lead');
     }
 

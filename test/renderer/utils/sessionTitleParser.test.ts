@@ -19,7 +19,7 @@ describe('parseSessionTitle', () => {
 
   it('parses new team provisioning with straight quotes', () => {
     const msg =
-      'agent_teams_ui [Agent Team: "summit-ops" | Project: "sol_team_proj" | Lead: "team-lead"] — team does NOT exist yet.';
+      'agent_teams_ui [Agent Team: "summit-ops" | Project: "sol_team_proj" | Lead: "lead"] — team does NOT exist yet.';
     const result = parseSessionTitle(msg);
     expect(result).toEqual({
       kind: 'team-new',
@@ -31,7 +31,7 @@ describe('parseSessionTitle', () => {
 
   it('parses new team provisioning with smart quotes', () => {
     const msg =
-      'agent_teams_ui [Agent Team: \u201Csummit-ops\u201D | Project: \u201Csol_team_proj\u201D | Lead: \u201Cteam-lead\u201D] \u2014 team does NOT exist yet.';
+      'agent_teams_ui [Agent Team: \u201Csummit-ops\u201D | Project: \u201Csol_team_proj\u201D | Lead: \u201Clead\u201D] \u2014 team does NOT exist yet.';
     const result = parseSessionTitle(msg);
     expect(result).toEqual({
       kind: 'team-new',
@@ -43,7 +43,7 @@ describe('parseSessionTitle', () => {
 
   it('parses Team Start as resume', () => {
     const msg =
-      'Team Start [Agent Team: "atlas-hq-2" | Project: "sol_team_proj" | Lead: "team-lead"] You are running in a non-interactive CLI session.';
+      'Team Start [Agent Team: "atlas-hq-2" | Project: "sol_team_proj" | Lead: "lead"] You are running in a non-interactive CLI session.';
     const result = parseSessionTitle(msg);
     expect(result).toEqual({
       kind: 'team-resume',
@@ -55,7 +55,7 @@ describe('parseSessionTitle', () => {
 
   it('parses Team Start (resume) as resume', () => {
     const msg =
-      'Team Start (resume) [Agent Team: "atlas-hq-2" | Project: "sol_team_proj" | Lead: "team-lead"] You are running...';
+      'Team Start (resume) [Agent Team: "atlas-hq-2" | Project: "sol_team_proj" | Lead: "lead"] You are running...';
     const result = parseSessionTitle(msg);
     expect(result).toEqual({
       kind: 'team-resume',

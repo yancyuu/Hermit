@@ -123,7 +123,7 @@ async function createResolverBackedLeadFixture(options?: {
         projectPath: staleProjectPath,
         ...(leadSessionId ? { leadSessionId } : {}),
         ...(options?.sessionHistory ? { sessionHistory: options.sessionHistory } : {}),
-        members: [{ name: 'team-lead', agentType: 'team-lead', cwd: actualProjectPath }],
+        members: [{ name: 'lead', agentType: 'lead', cwd: actualProjectPath }],
       },
       null,
       2
@@ -187,7 +187,7 @@ function createLeadSessionCachingService(): TeamDataService {
       listTeams: vi.fn(),
       getConfig: vi.fn(async () => ({
         name: 'My team',
-        members: [{ name: 'team-lead', role: 'Lead' }],
+        members: [{ name: 'lead', role: 'Lead' }],
         leadSessionId: 'lead-1',
       })),
     } as never,
@@ -274,7 +274,7 @@ function createTaskCommentForwardingService(options: {
       listTeams: vi.fn(),
       getConfig: vi.fn(async () => ({
         name: 'My team',
-        members: options.members ?? [{ name: 'team-lead', role: 'Lead' }],
+        members: options.members ?? [{ name: 'lead', role: 'Lead' }],
         leadSessionId: 'lead-1',
       })),
     } as never,
@@ -326,7 +326,7 @@ async function flushMicrotasks(): Promise<void> {
 function buildDefaultTeamConfig(overrides: Partial<TeamConfig> = {}): TeamConfig {
   return {
     name: 'My team',
-    members: [{ name: 'team-lead', role: 'Lead' }],
+    members: [{ name: 'lead', role: 'Lead' }],
     leadSessionId: 'lead-1',
     ...overrides,
   };
@@ -1018,7 +1018,7 @@ describe('TeamDataService', () => {
         listTeams: vi.fn(),
         getConfig: vi.fn(async () => ({
           name: 'My team',
-          members: [{ name: 'team-lead', role: 'Lead' }],
+          members: [{ name: 'lead', role: 'Lead' }],
         })),
       } as never,
       {} as never,
@@ -1140,7 +1140,7 @@ describe('TeamDataService', () => {
         id: 'task-1',
         subject: 'Investigate',
         status: 'pending',
-        owner: 'team-lead',
+        owner: 'lead',
       },
     }));
 
@@ -1149,7 +1149,7 @@ describe('TeamDataService', () => {
         listTeams: vi.fn(),
         getConfig: vi.fn(async () => ({
           name: 'My team',
-          members: [{ name: 'team-lead', role: 'Lead' }],
+          members: [{ name: 'lead', role: 'Lead' }],
         })),
       } as never,
       {
@@ -1525,7 +1525,7 @@ describe('TeamDataService', () => {
           name: 'My team',
           members: [
             { name: 'alice', role: 'tech lead' },
-            { name: 'team-lead', agentType: 'team-lead', role: 'lead' },
+            { name: 'lead', agentType: 'lead', role: 'lead' },
           ],
           leadSessionId: 'lead-1',
         })),
@@ -1550,7 +1550,7 @@ describe('TeamDataService', () => {
     await service.requestReview('my-team', 'task-1');
 
     expect(requestReviewMock).toHaveBeenCalledWith('task-1', {
-      from: 'team-lead',
+      from: 'lead',
       leadSessionId: 'lead-1',
     });
   });
@@ -1835,7 +1835,7 @@ describe('TeamDataService', () => {
           ]),
           getConfig: vi.fn(async () => ({
             name: 'My team',
-            members: [{ name: 'team-lead', role: 'Lead' }],
+            members: [{ name: 'lead', role: 'Lead' }],
             leadSessionId: 'lead-1',
           })),
         } as never,
@@ -1920,7 +1920,7 @@ describe('TeamDataService', () => {
           listTeams: vi.fn(),
           getConfig: vi.fn(async () => ({
             name: 'My team',
-            members: [{ name: 'team-lead', role: 'Lead' }],
+            members: [{ name: 'lead', role: 'Lead' }],
             leadSessionId: 'lead-1',
           })),
         } as never,
@@ -1967,7 +1967,7 @@ describe('TeamDataService', () => {
       expect(inboxWriter.sendMessage).toHaveBeenCalledWith(
         'my-team',
         expect.objectContaining({
-          member: 'team-lead',
+          member: 'lead',
           from: 'alice',
           summary: 'Comment on #abcd1234',
           source: 'system_notification',
@@ -2017,7 +2017,7 @@ describe('TeamDataService', () => {
           listTeams: vi.fn(),
           getConfig: vi.fn(async () => ({
             name: 'My team',
-            members: [{ name: 'team-lead', role: 'Lead' }],
+            members: [{ name: 'lead', role: 'Lead' }],
           })),
         } as never,
         {
@@ -2119,7 +2119,7 @@ describe('TeamDataService', () => {
           getConfig: vi.fn(async () => ({
             name: 'My team',
             deletedAt: '2026-03-14T10:00:00.000Z',
-            members: [{ name: 'team-lead', role: 'Lead' }],
+            members: [{ name: 'lead', role: 'Lead' }],
           })),
         } as never,
         {
@@ -2210,7 +2210,7 @@ describe('TeamDataService', () => {
           ]),
           getConfig: vi.fn(async () => ({
             name: 'My team',
-            members: [{ name: 'team-lead', role: 'Lead' }],
+            members: [{ name: 'lead', role: 'Lead' }],
           })),
         } as never,
         {
@@ -2239,7 +2239,7 @@ describe('TeamDataService', () => {
           getMessagesFor: vi.fn(async () => [
             {
               from: 'alice',
-              to: 'team-lead',
+              to: 'lead',
               text: 'Existing notification',
               timestamp: '2026-03-14T10:00:01.000Z',
               read: false,
@@ -2318,7 +2318,7 @@ describe('TeamDataService', () => {
           ]),
           getConfig: vi.fn(async () => ({
             name: 'My team',
-            members: [{ name: 'team-lead', role: 'Lead' }],
+            members: [{ name: 'lead', role: 'Lead' }],
           })),
         } as never,
         {
@@ -2408,7 +2408,7 @@ describe('TeamDataService', () => {
           listTeams: vi.fn(),
           getConfig: vi.fn(async () => ({
             name: 'My team',
-            members: [{ name: 'team-lead', role: 'Lead' }],
+            members: [{ name: 'lead', role: 'Lead' }],
           })),
         } as never,
         {
@@ -2510,7 +2510,7 @@ describe('TeamDataService', () => {
           listTeams: vi.fn(),
           getConfig: vi.fn(async () => ({
             name: 'My team',
-            members: [{ name: 'team-lead', role: 'Lead' }],
+            members: [{ name: 'lead', role: 'Lead' }],
           })),
         } as never,
         {
@@ -2597,7 +2597,7 @@ describe('TeamDataService', () => {
           listTeams: vi.fn(),
           getConfig: vi.fn(async () => ({
             name: 'My team',
-            members: [{ name: 'team-lead', role: 'Lead' }],
+            members: [{ name: 'lead', role: 'Lead' }],
             leadSessionId: 'lead-1',
           })),
         } as never,
@@ -2680,7 +2680,7 @@ describe('TeamDataService', () => {
               },
               {
                 id: 'comment-lead',
-                author: 'team-lead',
+                author: 'lead',
                 text: 'Lead already knows this.',
                 createdAt: '2026-03-14T10:01:00.000Z',
                 type: 'regular',
@@ -2742,7 +2742,7 @@ describe('TeamDataService', () => {
             displayId: 'abcd1234',
             subject: 'Lead-owned task',
             status: 'pending',
-            owner: 'team-lead',
+            owner: 'lead',
             comments: [
               {
                 id: 'comment-1',
@@ -2861,7 +2861,7 @@ describe('TeamDataService', () => {
           }),
           getConfig: vi.fn(async () => ({
             name: 'My team',
-            members: [{ name: 'team-lead', role: 'Lead' }],
+            members: [{ name: 'lead', role: 'Lead' }],
           })),
         } as never,
         {
@@ -3328,7 +3328,7 @@ describe('TeamDataService', () => {
         listTeams: vi.fn(),
         getConfig: vi.fn(async () => ({
           name: 'My team',
-          members: [{ name: 'team-lead', role: 'Lead' }],
+          members: [{ name: 'lead', role: 'Lead' }],
           leadSessionId: 'lead-1',
         })),
       } as never,
@@ -3351,7 +3351,7 @@ describe('TeamDataService', () => {
 
     const result = await service.sendDirectToLead(
       'my-team',
-      'team-lead',
+      'lead',
       '/compact keep only kanban context'
     );
 
@@ -3375,7 +3375,7 @@ describe('TeamDataService', () => {
         listTeams: vi.fn(),
         getConfig: vi.fn(async () => ({
           name: 'My team',
-          members: [{ name: 'team-lead', role: 'Lead' }],
+          members: [{ name: 'lead', role: 'Lead' }],
           leadSessionId: 'lead-1',
         })),
       } as never,
@@ -3386,7 +3386,7 @@ describe('TeamDataService', () => {
         listInboxNames: vi.fn(async () => []),
         getMessages: vi.fn(async () => [
           {
-            from: 'team-lead',
+            from: 'lead',
             text: 'Total cost: $1.05',
             timestamp: '2026-03-27T22:17:01.000Z',
             read: true,
@@ -3410,7 +3410,7 @@ describe('TeamDataService', () => {
         readMessages: vi.fn(async () => [
           {
             from: 'user',
-            to: 'team-lead',
+            to: 'lead',
             text: '/cost',
             timestamp: '2026-03-27T22:17:00.000Z',
             read: true,
@@ -3440,7 +3440,7 @@ describe('TeamDataService', () => {
         listTeams: vi.fn(),
         getConfig: vi.fn(async () => ({
           name: 'My team',
-          members: [{ name: 'team-lead', role: 'Lead' }],
+          members: [{ name: 'lead', role: 'Lead' }],
           leadSessionId: 'lead-1',
         })),
       } as never,
@@ -3513,7 +3513,7 @@ describe('TeamDataService', () => {
         listTeams: vi.fn(),
         getConfig: vi.fn(async () => ({
           name: 'My team',
-          members: [{ name: 'team-lead', role: 'Lead' }],
+          members: [{ name: 'lead', role: 'Lead' }],
           leadSessionId: 'lead-1',
         })),
       } as never,
@@ -3789,10 +3789,10 @@ describe('TeamDataService', () => {
       }
     ).extractLeadSessionTextsFromJsonl.bind(service);
 
-    const first = await extract(jsonlPath, 'team-lead', 'lead-1', 150);
+    const first = await extract(jsonlPath, 'lead', 'lead-1', 150);
     first[0]!.text = 'mutated locally';
 
-    const second = await extract(jsonlPath, 'team-lead', 'lead-1', 150);
+    const second = await extract(jsonlPath, 'lead', 'lead-1', 150);
 
     expect(assistantSpy).toHaveBeenCalledTimes(1);
     expect(second[0]?.text).toBe(
@@ -3844,8 +3844,8 @@ describe('TeamDataService', () => {
     ).extractLeadSessionTextsFromJsonl.bind(service);
 
     const [first, second] = await Promise.all([
-      extract(jsonlPath, 'team-lead', 'lead-1', 150),
-      extract(jsonlPath, 'team-lead', 'lead-1', 150),
+      extract(jsonlPath, 'lead', 'lead-1', 150),
+      extract(jsonlPath, 'lead', 'lead-1', 150),
     ]);
 
     expect(assistantSpy).toHaveBeenCalledTimes(1);
@@ -3909,8 +3909,8 @@ describe('TeamDataService', () => {
       }
     ).extractLeadSessionTextsFromJsonl.bind(service);
 
-    const first = await extract(jsonlPath, 'team-lead', 'lead-1', 150);
-    const second = await extract(jsonlPath, 'team-lead', 'lead-1', 150);
+    const first = await extract(jsonlPath, 'lead', 'lead-1', 150);
+    const second = await extract(jsonlPath, 'lead', 'lead-1', 150);
 
     expect(assistantSpy).toHaveBeenCalledTimes(2);
     expect(first).toHaveLength(2);
@@ -3970,7 +3970,7 @@ describe('TeamDataService', () => {
       }
     ).extractLeadSessionTextsFromJsonl.bind(service);
 
-    const firstPromise = extract(jsonlPath, 'team-lead', 'lead-1', 150);
+    const firstPromise = extract(jsonlPath, 'lead', 'lead-1', 150);
     await firstInvocationStarted;
     await fs.appendFile(
       jsonlPath,
@@ -3984,7 +3984,7 @@ describe('TeamDataService', () => {
       'utf8'
     );
 
-    const secondPromise = extract(jsonlPath, 'team-lead', 'lead-1', 150);
+    const secondPromise = extract(jsonlPath, 'lead', 'lead-1', 150);
     releaseFirstInvocation();
 
     const [first, second] = await Promise.all([firstPromise, secondPromise]);
@@ -4021,10 +4021,10 @@ describe('TeamDataService', () => {
       }
     ).extractLeadSessionTextsFromJsonl.bind(service);
 
-    const firstLead = await extract(jsonlPath, 'team-lead', 'lead-1', 1);
-    const secondLeadSameKey = await extract(jsonlPath, 'team-lead', 'lead-1', 1);
+    const firstLead = await extract(jsonlPath, 'lead', 'lead-1', 1);
+    const secondLeadSameKey = await extract(jsonlPath, 'lead', 'lead-1', 1);
     const renamedLead = await extract(jsonlPath, 'captain', 'lead-1', 1);
-    const widerSlice = await extract(jsonlPath, 'team-lead', 'lead-1', 2);
+    const widerSlice = await extract(jsonlPath, 'lead', 'lead-1', 2);
 
     expect(firstLead).toHaveLength(1);
     expect(secondLeadSameKey).toHaveLength(1);
@@ -4055,10 +4055,10 @@ describe('TeamDataService', () => {
       }
     ).extractLeadSessionTextsFromJsonl.bind(service);
 
-    const first = await extract(jsonlPath, 'team-lead', 'lead-1', 150);
+    const first = await extract(jsonlPath, 'lead', 'lead-1', 150);
     await fs.rm(jsonlPath, { force: true });
 
-    await expect(extract(jsonlPath, 'team-lead', 'lead-1', 150)).rejects.toThrow();
+    await expect(extract(jsonlPath, 'lead', 'lead-1', 150)).rejects.toThrow();
 
     expect(first).toHaveLength(1);
     expect(assistantSpy).toHaveBeenCalledTimes(2);
@@ -4087,7 +4087,7 @@ describe('TeamDataService', () => {
       }
     ).extractLeadSessionTextsFromJsonl.bind(service);
 
-    const partialRead = await extract(jsonlPath, 'team-lead', 'lead-1', 150);
+    const partialRead = await extract(jsonlPath, 'lead', 'lead-1', 150);
     await fs.writeFile(
       jsonlPath,
       `${JSON.stringify(
@@ -4106,7 +4106,7 @@ describe('TeamDataService', () => {
       'utf8'
     );
 
-    const repairedRead = await extract(jsonlPath, 'team-lead', 'lead-1', 150);
+    const repairedRead = await extract(jsonlPath, 'lead', 'lead-1', 150);
 
     expect(partialRead).toHaveLength(1);
     expect(repairedRead).toHaveLength(2);
@@ -4135,8 +4135,8 @@ describe('TeamDataService', () => {
       }
     ).extractLeadSessionTextsFromJsonl.bind(service);
 
-    const first = await extract(jsonlPath, 'team-lead', 'lead-1', 150);
-    const second = await extract(jsonlPath, 'team-lead', 'lead-1', 150);
+    const first = await extract(jsonlPath, 'lead', 'lead-1', 150);
+    const second = await extract(jsonlPath, 'lead', 'lead-1', 150);
 
     expect(first).toHaveLength(1);
     expect(second).toHaveLength(1);
@@ -4189,12 +4189,12 @@ describe('TeamDataService', () => {
       }
     ).extractLeadSessionTextsFromJsonl.bind(service);
 
-    await expect(extract(jsonlPath, 'team-lead', 'lead-1', 150)).rejects.toThrow(
+    await expect(extract(jsonlPath, 'lead', 'lead-1', 150)).rejects.toThrow(
       'transient parse failure'
     );
 
     shouldFail = false;
-    const retryResult = await extract(jsonlPath, 'team-lead', 'lead-1', 150);
+    const retryResult = await extract(jsonlPath, 'lead', 'lead-1', 150);
 
     expect(retryResult).toHaveLength(1);
     expect(assistantSpy).toHaveBeenCalledTimes(2);
@@ -4237,8 +4237,8 @@ describe('TeamDataService', () => {
       }
     ).extractLeadSessionTextsFromJsonl.bind(secondService);
 
-    await firstExtract(jsonlPath, 'team-lead', 'lead-1', 150);
-    await secondExtract(jsonlPath, 'team-lead', 'lead-1', 150);
+    await firstExtract(jsonlPath, 'lead', 'lead-1', 150);
+    await secondExtract(jsonlPath, 'lead', 'lead-1', 150);
 
     expect(firstSpy).toHaveBeenCalledTimes(1);
     expect(secondSpy).toHaveBeenCalledTimes(1);
@@ -4480,8 +4480,8 @@ describe('TeamDataService', () => {
     const data = await harness.service.getTeamData('my-team');
 
     expect(data.members[0]).toMatchObject({
-      name: 'team-lead',
-      agentType: 'team-lead',
+      name: 'lead',
+      agentType: 'lead',
       role: 'Team Lead',
       providerId: 'codex',
       model: 'gpt-5.4',
@@ -4529,8 +4529,8 @@ describe('TeamDataService', () => {
     const data = await harness.service.getTeamData('my-team');
 
     expect(data.members[0]).toMatchObject({
-      name: 'team-lead',
-      agentType: 'team-lead',
+      name: 'lead',
+      agentType: 'lead',
       providerId: 'codex',
       providerBackendId: 'codex-native',
       model: 'gpt-5.4',
@@ -4635,7 +4635,7 @@ describe('TeamDataService', () => {
       getMessages: async () => [
         {
           from: 'alice',
-          to: 'team-lead',
+          to: 'lead',
           text: 'Inbox update',
           timestamp: '2026-04-08T12:00:01.000Z',
           read: true,
@@ -4646,7 +4646,7 @@ describe('TeamDataService', () => {
       readMessages: async () => [
         {
           from: 'user',
-          to: 'team-lead',
+          to: 'lead',
           text: '/status',
           timestamp: '2026-04-08T12:00:03.000Z',
           read: true,
@@ -4658,7 +4658,7 @@ describe('TeamDataService', () => {
 
     vi.spyOn(harness.service as never, 'extractLeadSessionTexts' as never).mockResolvedValue([
       {
-        from: 'team-lead',
+        from: 'lead',
         text: 'Lead summary',
         timestamp: '2026-04-08T12:00:02.000Z',
         read: true,
@@ -4699,7 +4699,7 @@ describe('TeamDataService', () => {
       readMessages: async () => [
         {
           from: 'user',
-          to: 'team-lead',
+          to: 'lead',
           text: '/status',
           timestamp: '2026-04-08T12:00:03.000Z',
           read: true,
@@ -4712,7 +4712,7 @@ describe('TeamDataService', () => {
 
     vi.spyOn(harness.service as never, 'extractLeadSessionTexts' as never).mockResolvedValue([
       {
-        from: 'team-lead',
+        from: 'lead',
         text: 'Lead summary',
         timestamp: '2026-04-08T12:00:02.000Z',
         read: true,
@@ -4903,7 +4903,7 @@ describe('TeamDataService', () => {
           listTeams: vi.fn(),
           getConfig: vi.fn(async () => ({
             name: 'My team',
-            members: [{ name: 'team-lead', role: 'Lead' }],
+            members: [{ name: 'lead', role: 'Lead' }],
             leadSessionId: 'lead-1',
           })),
         } as never,
@@ -4974,7 +4974,7 @@ describe('TeamDataService', () => {
           leadSessionId: 'lead-1',
         },
         {
-          from: 'team-lead',
+          from: 'lead',
           text: 'Total cost: $1.05',
           timestamp: '2026-01-01T00:00:01.000Z',
           messageId: 'resp1',
@@ -5034,7 +5034,7 @@ describe('TeamDataService', () => {
         source: 'inbox' as const,
       }));
       const durableThought = {
-        from: 'team-lead',
+        from: 'lead',
         text: 'Hello there',
         timestamp: '2026-01-01T00:00:01.000Z',
         messageId: 'durable-thought',
@@ -5047,7 +5047,7 @@ describe('TeamDataService', () => {
         limit: 50,
         liveMessages: [
           {
-            from: 'team-lead',
+            from: 'lead',
             text: 'Hello there',
             timestamp: '2026-01-01T00:01:30.000Z',
             read: true,
@@ -5086,7 +5086,7 @@ describe('TeamDataService', () => {
         limit: 1,
         liveMessages: [
           {
-            from: 'team-lead',
+            from: 'lead',
             text: 'live-thought',
             timestamp: '2026-01-01T00:00:03.000Z',
             read: true,

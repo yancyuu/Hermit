@@ -20,7 +20,7 @@ function makeMessage(overrides: Partial<InboxMessage> = {}): InboxMessage {
 describe('TeamMessageFeedService', () => {
   const config: TeamConfig = {
     name: 'Signal Ops 4',
-    members: [{ name: 'team-lead', role: 'Lead' }],
+    members: [{ name: 'lead', role: 'Lead' }],
   };
 
   beforeEach(() => {

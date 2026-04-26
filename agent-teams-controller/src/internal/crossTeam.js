@@ -73,7 +73,7 @@ function resolveTargetLead(paths, config) {
     if (config.members[0] && config.members[0].name) return String(config.members[0].name).trim();
   }
 
-  return 'team-lead';
+  return 'lead';
 }
 
 function createTargetContext(sourceContext, toTeam) {

@@ -30,7 +30,7 @@
 Единственный способ общаться с **запущенными** тиммейтами. SDK и CLI создают новые сессии, а не подключаются к существующим. Подробности: [research-messaging.md](./research-messaging.md)
 
 ### 1.1 Roster source: members.meta.json + inboxes
-- `config.json` не используется как полный реестр участников (он может содержать только team-lead и служебные поля CLI).
+- `config.json` не используется как полный реестр участников (он может содержать только lead и служебные поля CLI).
 - Источник метаданных участников (role/color/agentType): `members.meta.json`.
 - Источник runtime-состава и адресации сообщений: `inboxes/{member}.json`.
 
@@ -47,7 +47,7 @@ Kanban-позиция (REVIEW, APPROVED) хранится в `kanban-state.json`
 Все записи через tmp + rename для предотвращения corrupted JSON.
 
 ### 5. Sender Identity
-Отправляем `from: "user"`. Fallback на `from: "team-lead"` если не работает.
+Отправляем `from: "user"`. Fallback на `from: "lead"` если не работает.
 
 ## Финальные решения после ревью
 

@@ -94,7 +94,7 @@ describe('TeamMemberRuntimeAdvisoryService', () => {
         projectPath,
         leadSessionId,
         members: [
-          { name: 'team-lead', agentType: 'team-lead' },
+          { name: 'lead', agentType: 'lead' },
           { name: 'alice', agentType: 'general-purpose' },
         ],
       }),
@@ -271,7 +271,7 @@ describe('TeamMemberRuntimeAdvisoryService', () => {
         projectPath,
         leadSessionId,
         members: [
-          { name: 'team-lead', agentType: 'team-lead' },
+          { name: 'lead', agentType: 'lead' },
           { name: 'alice', agentType: 'general-purpose' },
         ],
       }),

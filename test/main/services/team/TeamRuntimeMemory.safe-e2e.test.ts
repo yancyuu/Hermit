@@ -180,8 +180,8 @@ async function writeTeamFixture(params: {
         leadSessionId: 'lead-session',
         members: [
           {
-            name: 'team-lead',
-            agentType: 'team-lead',
+            name: 'lead',
+            agentType: 'lead',
             role: 'Lead',
             providerId: 'anthropic',
           },

@@ -15,7 +15,7 @@ const leadNode: GraphNode = {
   state: 'active',
   x: 0,
   y: 0,
-  domainRef: { kind: 'lead', teamName: 'team-a', memberName: 'team-lead' },
+  domainRef: { kind: 'lead', teamName: 'team-a', memberName: 'lead' },
 };
 
 const aliceNode: GraphNode = {

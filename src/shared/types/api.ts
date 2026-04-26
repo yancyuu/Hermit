@@ -53,6 +53,9 @@ import type {
   GlobalTask,
   KanbanColumnId,
   LeadActivitySnapshot,
+  GlobalLeadChannelSnapshot,
+  LeadChannelSnapshot,
+  SaveLeadChannelConfigRequest,
   LeadContextUsageSnapshot,
   MemberFullStats,
   MemberLogSummary,
@@ -587,6 +590,17 @@ export interface TeamsAPI {
   killProcess: (teamName: string, pid: number) => Promise<void>;
   getLeadActivity: (teamName: string) => Promise<LeadActivitySnapshot>;
   getLeadContext: (teamName: string) => Promise<LeadContextUsageSnapshot>;
+  getLeadChannel: (teamName: string) => Promise<LeadChannelSnapshot>;
+  getGlobalLeadChannel: () => Promise<GlobalLeadChannelSnapshot>;
+  saveGlobalLeadChannel: (
+    request: SaveLeadChannelConfigRequest
+  ) => Promise<GlobalLeadChannelSnapshot>;
+  saveLeadChannel: (
+    teamName: string,
+    request: SaveLeadChannelConfigRequest
+  ) => Promise<LeadChannelSnapshot>;
+  startFeishuLeadChannel: (teamName: string, channelId?: string) => Promise<LeadChannelSnapshot>;
+  stopFeishuLeadChannel: (teamName: string, channelId?: string) => Promise<LeadChannelSnapshot>;
   getMemberSpawnStatuses: (teamName: string) => Promise<MemberSpawnStatusesSnapshot>;
   getTeamAgentRuntime: (teamName: string) => Promise<TeamAgentRuntimeSnapshot>;
   restartMember: (teamName: string, memberName: string) => Promise<void>;

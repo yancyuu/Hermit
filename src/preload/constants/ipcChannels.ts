@@ -394,6 +394,24 @@ export const TEAM_LEAD_ACTIVITY = 'team:leadActivity';
 /** Get lead process context window usage */
 export const TEAM_LEAD_CONTEXT = 'team:leadContext';
 
+/** Get lead channel listener configuration and runtime status */
+export const TEAM_LEAD_CHANNEL_GET = 'team:leadChannel:get';
+
+/** Get global lead channel integrations */
+export const TEAM_LEAD_CHANNEL_GLOBAL_GET = 'team:leadChannel:globalGet';
+
+/** Save global lead channel integrations */
+export const TEAM_LEAD_CHANNEL_GLOBAL_SAVE = 'team:leadChannel:globalSave';
+
+/** Save lead channel listener configuration */
+export const TEAM_LEAD_CHANNEL_SAVE = 'team:leadChannel:save';
+
+/** Start Feishu long-connection listener for team lead */
+export const TEAM_LEAD_CHANNEL_FEISHU_START = 'team:leadChannel:feishuStart';
+
+/** Stop Feishu long-connection listener for team lead */
+export const TEAM_LEAD_CHANNEL_FEISHU_STOP = 'team:leadChannel:feishuStop';
+
 /** Get per-member spawn statuses for a team */
 export const TEAM_MEMBER_SPAWN_STATUSES = 'team:memberSpawnStatuses';
 

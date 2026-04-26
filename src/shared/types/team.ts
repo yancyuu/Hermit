@@ -637,6 +637,13 @@ export interface InboxMessage {
   slashCommand?: SlashCommandMeta;
   /** Structured command-output metadata for session-derived result rows. */
   commandOutput?: CommandOutputMeta;
+  externalChannel?: {
+    provider: 'feishu';
+    channelId: string;
+    channelName?: string;
+    chatId: string;
+    senderId?: string;
+  };
 }
 
 /** Cursor-based paginated messages response. */
@@ -679,6 +686,7 @@ export interface SendMessageRequest {
   messageKind?: InboxMessageKind;
   slashCommand?: SlashCommandMeta;
   commandOutput?: CommandOutputMeta;
+  externalChannel?: InboxMessage['externalChannel'];
 }
 
 export interface SendMessageResult {
@@ -1431,6 +1439,52 @@ export interface AddMemberRequest {
   providerId?: TeamProviderId;
   model?: string;
   effort?: EffortLevel;
+}
+
+export interface LeadChannelFeishuConfig {
+  enabled: boolean;
+  appId: string;
+  appSecret: string;
+}
+
+export type LeadChannelProvider = 'feishu' | 'webhook';
+
+export interface LeadChannelDefinition {
+  id: string;
+  name: string;
+  provider: LeadChannelProvider;
+  enabled: boolean;
+  feishu?: LeadChannelFeishuConfig;
+}
+
+export interface LeadChannelConfig {
+  channels: LeadChannelDefinition[];
+  feishu: LeadChannelFeishuConfig;
+}
+
+export interface LeadChannelStatus {
+  running: boolean;
+  state: 'stopped' | 'connecting' | 'connected' | 'reconnecting' | 'error';
+  message: string | null;
+  startedAt: string | null;
+  lastEventAt: string | null;
+  channelId?: string;
+  channelName?: string;
+}
+
+export interface LeadChannelSnapshot {
+  config: LeadChannelConfig;
+  status: LeadChannelStatus;
+  statusesByChannel: Record<string, LeadChannelStatus>;
+}
+
+export interface SaveLeadChannelConfigRequest {
+  channels?: LeadChannelDefinition[];
+  feishu: LeadChannelFeishuConfig;
+}
+
+export interface GlobalLeadChannelSnapshot {
+  config: LeadChannelConfig;
 }
 
 export interface RemoveMemberRequest {

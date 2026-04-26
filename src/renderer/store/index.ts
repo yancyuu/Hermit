@@ -203,7 +203,8 @@ export function initializeNotificationListeners(): () => void {
       const isWindows = platform.toLowerCase().includes('win');
       const delayMs = isWindows ? 3000 : 0;
       cliStatusTimer = setTimeout(() => {
-        const multimodelEnabled = useStore.getState().appConfig?.general?.multimodelEnabled ?? true;
+        const multimodelEnabled =
+          useStore.getState().appConfig?.general?.multimodelEnabled ?? false;
         if (multimodelEnabled) {
           void useStore.getState().bootstrapCliStatus({ multimodelEnabled: true });
         } else {
@@ -1450,7 +1451,7 @@ export function initializeNotificationListeners(): () => void {
         case 'completed':
           {
             const multimodelEnabled =
-              useStore.getState().appConfig?.general?.multimodelEnabled ?? true;
+              useStore.getState().appConfig?.general?.multimodelEnabled ?? false;
             void refreshCliStatusForCurrentMode({
               multimodelEnabled,
               bootstrapCliStatus: useStore.getState().bootstrapCliStatus,

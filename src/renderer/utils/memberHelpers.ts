@@ -1,4 +1,9 @@
-import { isLeadMember } from '@shared/utils/leadDetection';
+import {
+  CANONICAL_LEAD_MEMBER_NAME,
+  LEAD_DISPLAY_NAME,
+  isLeadMember,
+  isLeadMemberName,
+} from '@shared/utils/leadDetection';
 import { buildTeamMemberColorMap } from '@shared/utils/teamMemberColors';
 
 import {
@@ -23,11 +28,11 @@ import type {
 
 /**
  * UI display name for a team member.
- * "team-lead" → "lead"; everything else passes through unchanged.
+ * Canonical lead id → display label; everything else passes through unchanged.
  * Data layer (store, IPC, backend) must keep the original name untouched.
  */
 export function displayMemberName(name: string): string {
-  return name === 'team-lead' ? 'lead' : name;
+  return name === CANONICAL_LEAD_MEMBER_NAME ? LEAD_DISPLAY_NAME : name;
 }
 
 function hashStringToIndex(str: string): number {
@@ -41,7 +46,7 @@ function hashStringToIndex(str: string): number {
 export function agentAvatarUrl(name: string, size = 64): string {
   void size;
   const normalized = name.trim().toLowerCase();
-  if (normalized === 'team-lead' || normalized === 'lead') {
+  if (isLeadMemberName(normalized)) {
     return LEAD_PARTICIPANT_AVATAR_URL;
   }
 

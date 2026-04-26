@@ -52,7 +52,7 @@ describe('TeamProvisioningService idempotent launch guards', () => {
       JSON.stringify({
         name: teamName,
         projectPath: process.cwd(),
-        members: [{ name: 'team-lead', agentType: 'team-lead' }, { name: 'dev' }],
+        members: [{ name: 'lead', agentType: 'lead' }, { name: 'dev' }],
       })
     );
 
@@ -89,7 +89,7 @@ describe('TeamProvisioningService idempotent launch guards', () => {
       JSON.stringify({
         name: teamName,
         projectPath: currentCwd,
-        members: [{ name: 'team-lead', agentType: 'team-lead' }, { name: 'dev' }],
+        members: [{ name: 'lead', agentType: 'lead' }, { name: 'dev' }],
       })
     );
 
@@ -124,7 +124,7 @@ describe('TeamProvisioningService idempotent launch guards', () => {
       path.join(teamDir, 'config.json'),
       JSON.stringify({
         name: teamName,
-        members: [{ name: 'team-lead', agentType: 'team-lead' }, { name: 'dev' }],
+        members: [{ name: 'lead', agentType: 'lead' }, { name: 'dev' }],
       })
     );
 

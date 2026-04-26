@@ -1,4 +1,5 @@
 import { isTeamEffortLevel } from '@shared/utils/effortLevels';
+import { isLeadMemberName } from '@shared/utils/leadDetection';
 import { normalizeOptionalTeamProviderId } from '@shared/utils/teamProvider';
 
 import type { MemberDraft } from '@renderer/components/team/members/membersEditorTypes';
@@ -91,7 +92,10 @@ export function getLiveRosterIdentityChanges(params: {
 } {
   const previousMembers = params.previousMembers
     .filter((member) => !member.removedAt)
-    .filter((member) => member.name.trim().toLowerCase() !== 'team-lead');
+    .filter((member) => {
+      const name = member.name.trim().toLowerCase();
+      return !isLeadMemberName(name);
+    });
 
   const previousNamesByKey = new Map(
     previousMembers.map((member) => [member.name.trim().toLowerCase(), member.name.trim()] as const)
@@ -144,7 +148,7 @@ function normalizeEditableMemberSnapshot(member: {
     return null;
   }
   const name = member.name.trim();
-  if (!name || name.toLowerCase() === 'team-lead') {
+  if (!name || isLeadMemberName(name)) {
     return null;
   }
   return {

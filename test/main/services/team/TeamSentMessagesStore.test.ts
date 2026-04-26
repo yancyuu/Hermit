@@ -33,7 +33,7 @@ describe('TeamSentMessagesStore', () => {
         [
           {
             from: 'user',
-            to: 'team-lead',
+            to: 'lead',
             text: '/model sonnet',
             timestamp: '2026-03-27T12:00:00.000Z',
             read: true,
@@ -48,7 +48,7 @@ describe('TeamSentMessagesStore', () => {
             },
           },
           {
-            from: 'team-lead',
+            from: 'lead',
             text: 'Model set to sonnet',
             timestamp: '2026-03-27T12:00:01.000Z',
             read: true,

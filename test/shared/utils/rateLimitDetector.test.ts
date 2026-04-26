@@ -12,6 +12,8 @@ const MODEL_COOLDOWN_API_ERROR =
   'API Error: 429 {"error":{"code":"model_cooldown","message":"All credentials for model claude-opus-4-6 are cooling down via provider claude","model":"claude-opus-4-6","provider":"claude","reset_seconds":41,"reset_time":"40s"}}';
 const MODEL_COOLDOWN_NO_SECONDS_API_ERROR =
   'API Error: 429 {"error":{"code":"model_cooldown","message":"All credentials for model claude-opus-4-6 are cooling down via provider claude","model":"claude-opus-4-6","provider":"claude","reset_time":"40s"}}';
+const REQUEST_RATE_LIMIT_API_ERROR =
+  'API Error: 429 {"error":{"code":"1302","message":"Rate limit reached for requests"},"request_id":"2026042711010764a703eeb4404bb6"}';
 
 describe('isRateLimitMessage', () => {
   it('detects the canonical substring', () => {
@@ -29,6 +31,10 @@ describe('isRateLimitMessage', () => {
 
   it('detects structured model_cooldown API errors as rate limits', () => {
     expect(isRateLimitMessage(MODEL_COOLDOWN_API_ERROR)).toBe(true);
+  });
+
+  it('detects request-level 429 API errors as rate limits', () => {
+    expect(isRateLimitMessage(REQUEST_RATE_LIMIT_API_ERROR)).toBe(true);
   });
 });
 

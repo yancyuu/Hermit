@@ -24,7 +24,7 @@ import {
   getIdleGraphLabel,
 } from '@shared/utils/idleNotificationSemantics';
 import { isInboxNoiseMessage } from '@shared/utils/inboxNoise';
-import { isLeadMember } from '@shared/utils/leadDetection';
+import { isLeadMember, isLeadMemberName } from '@shared/utils/leadDetection';
 import { buildOrderedVisibleTeamGraphOwnerIds } from '@shared/utils/teamGraphDefaultLayout';
 
 import {
@@ -1288,7 +1288,7 @@ export class TeamGraphAdapter {
     memberNodeIdByAlias: ReadonlyMap<string, string>
   ): string {
     const normalized = name.trim().toLowerCase();
-    if (normalized === 'user' || normalized === 'team-lead') return leadId;
+    if (normalized === 'user' || isLeadMemberName(normalized)) return leadId;
     if (normalized === leadName?.trim().toLowerCase()) return leadId;
     return memberNodeIdByAlias.get(name) ?? leadId;
   }
@@ -1303,7 +1303,7 @@ export class TeamGraphAdapter {
       return null;
     }
     const normalized = ownerName.trim().toLowerCase();
-    if (normalized === 'user' || normalized === 'team-lead') {
+    if (normalized === 'user' || isLeadMemberName(normalized)) {
       return leadId;
     }
     if (normalized === leadName?.trim().toLowerCase()) {

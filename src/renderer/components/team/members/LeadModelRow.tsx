@@ -6,8 +6,6 @@ import { LimitContextCheckbox } from '@renderer/components/team/dialogs/LimitCon
 import {
   getProviderScopedTeamModelLabel,
   getTeamProviderLabel,
-  OPENCODE_TEAM_LEAD_DISABLED_BADGE_LABEL,
-  OPENCODE_TEAM_LEAD_DISABLED_REASON,
   TeamModelSelector,
 } from '@renderer/components/team/dialogs/TeamModelSelector';
 import { Checkbox } from '@renderer/components/ui/checkbox';
@@ -18,9 +16,10 @@ import { cn } from '@renderer/lib/utils';
 import { agentAvatarUrl } from '@renderer/utils/memberHelpers';
 import { isAnthropicHaikuTeamModel } from '@renderer/utils/teamModelCatalog';
 import { resolveTeamLeadColorName } from '@shared/utils/teamMemberColors';
-import { AlertTriangle, ChevronDown, ChevronRight, Info } from 'lucide-react';
+import { AlertTriangle, BellRing, ChevronDown, ChevronRight, Info } from 'lucide-react';
 
 import { Button } from '../../ui/button';
+import { LeadChannelPanel } from './LeadChannelPanel';
 
 import type { EffortLevel, TeamProviderId } from '@shared/types';
 
@@ -38,6 +37,7 @@ interface LeadModelRowProps {
   warningText?: string | null;
   disableGeminiOption?: boolean;
   modelIssueText?: string | null;
+  teamName?: string;
 }
 
 export const LeadModelRow = ({
@@ -54,9 +54,11 @@ export const LeadModelRow = ({
   warningText,
   disableGeminiOption = false,
   modelIssueText,
+  teamName,
 }: LeadModelRowProps): React.JSX.Element => {
   const { isLight } = useTheme();
   const [modelExpanded, setModelExpanded] = useState(false);
+  const [channelExpanded, setChannelExpanded] = useState(false);
   const leadColorSet = getTeamColorSet(resolveTeamLeadColorName());
   const modelButtonLabel = model.trim()
     ? getProviderScopedTeamModelLabel(providerId, model.trim())
@@ -82,7 +84,7 @@ export const LeadModelRow = ({
       <div className="min-w-0">
         <div className="flex items-center gap-2">
           <img
-            src={agentAvatarUrl('team-lead', 32)}
+            src={agentAvatarUrl('lead', 32)}
             alt=""
             className="size-8 shrink-0 rounded-full bg-[var(--color-surface-raised)]"
             loading="lazy"
@@ -111,7 +113,7 @@ export const LeadModelRow = ({
         </div>
       </div>
       <div className="space-y-1">
-        <div className="w-full min-w-0 space-y-1 sm:w-[150px] sm:min-w-[150px]">
+        <div className="flex w-full min-w-0 gap-1 sm:w-[230px] sm:min-w-[230px]">
           <Button
             variant="outline"
             size="sm"
@@ -132,6 +134,20 @@ export const LeadModelRow = ({
             <span className="min-w-0 flex-1 truncate">{modelButtonLabel}</span>
             {hasModelIssue ? <AlertTriangle className="size-3.5 shrink-0 text-red-300" /> : null}
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              'h-8 shrink-0 gap-1 px-2',
+              channelExpanded && 'border-sky-500/45 bg-sky-500/10 text-sky-100 hover:bg-sky-500/15'
+            )}
+            title="配置负责人渠道监听"
+            aria-label="配置负责人渠道监听"
+            onClick={() => setChannelExpanded((prev) => !prev)}
+          >
+            <BellRing className="size-3.5" />
+            渠道
+          </Button>
         </div>
       </div>
       {warningText ? (
@@ -151,8 +167,6 @@ export const LeadModelRow = ({
             onValueChange={onModelChange}
             id="lead-model"
             disableGeminiOption={disableGeminiOption}
-            providerDisabledReasonById={{ opencode: OPENCODE_TEAM_LEAD_DISABLED_REASON }}
-            providerDisabledBadgeLabelById={{ opencode: OPENCODE_TEAM_LEAD_DISABLED_BADGE_LABEL }}
             modelIssueReasonByValue={model.trim() ? { [model.trim()]: modelIssueText } : undefined}
           />
           <EffortLevelSelector
@@ -176,6 +190,13 @@ export const LeadModelRow = ({
             <p className="text-[11px] leading-relaxed text-sky-300">
               这些设置控制团队负责人，并作为未单独覆盖设置的成员默认运行时。
             </p>
+          </div>
+        </div>
+      ) : null}
+      {channelExpanded ? (
+        <div className="md:col-span-3">
+          <div className="ml-3 rounded-md border border-sky-500/25 bg-sky-500/5 p-3">
+            <LeadChannelPanel teamName={teamName} />
           </div>
         </div>
       ) : null}

@@ -34,10 +34,10 @@ const TIMEZONE_PRESETS = [
 
 const WARMUP_OPTIONS = [
   { value: 0, label: '不预热' },
-  { value: 5, label: '5 min' },
-  { value: 10, label: '10 min' },
-  { value: 15, label: '15 min' },
-  { value: 30, label: '30 min' },
+  { value: 5, label: '5 分钟' },
+  { value: 10, label: '10 分钟' },
+  { value: 15, label: '15 分钟' },
+  { value: 30, label: '30 分钟' },
 ] as const;
 
 // =============================================================================
@@ -45,12 +45,12 @@ const WARMUP_OPTIONS = [
 // =============================================================================
 
 const CRON_PRESETS = [
-  { label: 'Every hour', cron: '0 * * * *' },
-  { label: 'Every 6 hours', cron: '0 */6 * * *' },
-  { label: 'Daily at 9am', cron: '0 9 * * *' },
-  { label: 'Weekdays at 9am', cron: '0 9 * * 1-5' },
-  { label: 'Monday at 9am', cron: '0 9 * * 1' },
-  { label: 'Every 30 min', cron: '*/30 * * * *' },
+  { label: '每小时', cron: '0 * * * *' },
+  { label: '每 6 小时', cron: '0 */6 * * *' },
+  { label: '每天 9 点', cron: '0 9 * * *' },
+  { label: '工作日 9 点', cron: '0 9 * * 1-5' },
+  { label: '每周一 9 点', cron: '0 9 * * 1' },
+  { label: '每 30 分钟', cron: '*/30 * * * *' },
 ] as const;
 
 // =============================================================================
@@ -81,7 +81,7 @@ export const CronScheduleInput = ({
   // Parse and validate cron expression
   const cronInfo = useMemo(() => {
     if (!cronExpression.trim()) {
-      return { valid: false, description: null, nextRuns: [], error: 'Enter a cron expression' };
+      return { valid: false, description: null, nextRuns: [], error: '请输入 Cron 表达式' };
     }
 
     try {
@@ -92,7 +92,7 @@ export const CronScheduleInput = ({
       let description: string;
       try {
         description = cronstrue.toString(cronExpression.trim(), {
-          locale: 'en',
+          locale: 'zh_CN',
           use24HourTimeFormat: true,
         });
       } catch {
@@ -115,13 +115,13 @@ export const CronScheduleInput = ({
         valid: false,
         description: null,
         nextRuns: [],
-        error: err instanceof Error ? err.message : 'Invalid cron expression',
+        error: err instanceof Error ? err.message : 'Cron 表达式无效',
       };
     }
   }, [cronExpression, timezone]);
 
   const formatNextRun = (date: Date): string => {
-    return date.toLocaleString('en-US', {
+    return date.toLocaleString('zh-CN', {
       weekday: 'short',
       month: 'short',
       day: 'numeric',
@@ -138,7 +138,7 @@ export const CronScheduleInput = ({
       <div className="space-y-1.5">
         <Label className="flex items-center gap-1.5">
           <Calendar className="size-3.5" />
-          Cron expression
+          Cron 表达式
         </Label>
 
         <div className="flex items-center gap-2">

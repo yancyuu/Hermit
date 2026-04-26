@@ -13,6 +13,10 @@ export { CrossTeamService } from './CrossTeamService';
 export { FileContentResolver } from './FileContentResolver';
 export { GitDiffFallback } from './GitDiffFallback';
 export { HunkSnippetMatcher } from './HunkSnippetMatcher';
+export {
+  getLeadChannelListenerService,
+  LeadChannelListenerService,
+} from './LeadChannelListenerService';
 export { MemberStatsComputer } from './MemberStatsComputer';
 export type {
   OpenCodeReadinessBridgeCommandBody,

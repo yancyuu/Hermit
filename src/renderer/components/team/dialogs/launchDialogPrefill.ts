@@ -1,4 +1,4 @@
-import { normalizeCreateLaunchProviderForUi } from '@renderer/utils/geminiUiFreeze';
+import { normalizeCreateLaunchProviderForUi } from '@renderer/utils/claudeCodeOnlyProviders';
 import { getDefaultProviderBackendId } from '@renderer/utils/providerBackendIdentity';
 import { normalizeExplicitTeamModelForUi } from '@renderer/utils/teamModelAvailability';
 import { extractProviderScopedBaseModel } from '@renderer/utils/teamModelContext';

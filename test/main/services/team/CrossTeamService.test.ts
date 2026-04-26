@@ -43,7 +43,7 @@ function makeRequest(overrides: Partial<CrossTeamSendRequest> = {}): CrossTeamSe
 function makeConfig(overrides: Partial<TeamConfig> = {}): TeamConfig {
   return {
     name: 'team-b',
-    members: [{ name: 'team-lead', agentType: 'team-lead' }],
+    members: [{ name: 'lead', agentType: 'lead' }],
     ...overrides,
   };
 }
@@ -67,7 +67,7 @@ describe('CrossTeamService', () => {
       getConfig: vi.fn().mockResolvedValue(makeConfig()),
     };
     dataService = {
-      getLeadMemberName: vi.fn().mockResolvedValue('team-lead'),
+      getLeadMemberName: vi.fn().mockResolvedValue('lead'),
     };
     inboxWriter = {
       sendMessage: vi.fn().mockResolvedValue({ deliveredToInbox: true, messageId: 'mock-id' }),
@@ -103,12 +103,12 @@ describe('CrossTeamService', () => {
       // Target team delivery goes through inboxWriter.
       const [teamName, req] = inboxWriter.sendMessage.mock.calls[0];
       expect(teamName).toBe('team-b');
-      expect(req.member).toBe('team-lead');
+      expect(req.member).toBe('lead');
       expect(req.source).toBe(CROSS_TEAM_SOURCE);
-      expect(req.from).toBe('team-a.team-lead');
+      expect(req.from).toBe('team-a.lead');
       expect(req.text).toContain('Hello from team-a');
       const prefix = parseCrossTeamPrefix(req.text);
-      expect(prefix?.from).toBe('team-a.team-lead');
+      expect(prefix?.from).toBe('team-a.lead');
       expect(prefix?.chainDepth).toBe(0);
       expect(prefix?.conversationId).toBeTruthy();
     });
@@ -130,9 +130,9 @@ describe('CrossTeamService', () => {
       const raw = fs.readFileSync(sentMessagesPath, 'utf8');
       const sentRows = JSON.parse(raw) as Array<Record<string, unknown>>;
       expect(sentRows).toHaveLength(1);
-      expect(sentRows[0]?.from).toBe('team-lead');
+      expect(sentRows[0]?.from).toBe('lead');
       expect(sentRows[0]?.source).toBe(CROSS_TEAM_SENT_SOURCE);
-      expect(sentRows[0]?.to).toBe('team-b.team-lead');
+      expect(sentRows[0]?.to).toBe('team-b.lead');
       expect(sentRows[0]?.text).toBe('Hello from team-a');
       expect(sentRows[0]?.messageId).toBe(inboxWriter.sendMessage.mock.calls[0][1].messageId);
       expect(sentRows[0]?.timestamp).toBe(inboxWriter.sendMessage.mock.calls[0][1].timestamp);
@@ -297,13 +297,13 @@ describe('CrossTeamService', () => {
       await expect(service.send(makeRequest({ toTeam: 'team-z' }))).rejects.toThrow('rate limit');
     });
 
-    it('uses "team-lead" as fallback when getLeadMemberName returns null', async () => {
+    it('uses "lead" as fallback when getLeadMemberName returns null', async () => {
       dataService.getLeadMemberName.mockResolvedValue(null);
 
       await service.send(makeRequest());
 
       const [, req] = inboxWriter.sendMessage.mock.calls[0];
-      expect(req.member).toBe('team-lead');
+      expect(req.member).toBe('lead');
     });
 
     it('uses from format "team.member"', async () => {

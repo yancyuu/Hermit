@@ -16,7 +16,7 @@ import type { TeamConfig, TeamTask } from '@shared/types';
 
 function resolveLeadNameFromConfig(config: TeamConfig): string {
   const lead = config.members?.find((member) => member.role?.toLowerCase().includes('lead'));
-  return lead?.name ?? config.members?.[0]?.name ?? 'team-lead';
+  return lead?.name ?? config.members?.[0]?.name ?? 'lead';
 }
 
 export class TeamTaskStallSnapshotSource {

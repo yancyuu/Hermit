@@ -29,7 +29,7 @@ interface ValidationResult<T> {
 }
 
 const RESERVED_MEMBER_NAMES = new Set<string>(['user']);
-const RESERVED_TEAMMATE_NAMES = new Set<string>(['team-lead']);
+const RESERVED_TEAMMATE_NAMES = new Set<string>(['lead']);
 
 function validateString(
   value: unknown,

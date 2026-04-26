@@ -210,7 +210,7 @@ function writeLaunchConfig(
       projectPath,
       leadSessionId,
       members: [
-        { name: 'team-lead', agentType: 'team-lead' },
+        { name: 'lead', agentType: 'lead' },
         ...members.map((name) => ({ name })),
       ],
     }),
@@ -548,7 +548,7 @@ describe('TeamProvisioningService', () => {
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
           members: [
-            { name: 'team-lead', agentType: 'team-lead' },
+            { name: 'lead', agentType: 'lead' },
             { name: 'alice', model: 'gpt-5.4-mini' },
           ],
         })),
@@ -591,7 +591,7 @@ describe('TeamProvisioningService', () => {
       const snapshot = await svc.getTeamAgentRuntimeSnapshot('runtime-team');
 
       expect(pidusage).toHaveBeenCalledWith([111, 222], { maxage: 0 });
-      expect(snapshot.members['team-lead']).toMatchObject({
+      expect(snapshot.members['lead']).toMatchObject({
         pid: 111,
         rssBytes: 123_000_000,
         runtimeModel: 'gpt-5.4',
@@ -607,7 +607,7 @@ describe('TeamProvisioningService', () => {
       const svc = new TeamProvisioningService();
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         })),
       };
       (svc as any).teamMetaStore = {
@@ -635,7 +635,7 @@ describe('TeamProvisioningService', () => {
       const svc = new TeamProvisioningService();
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         })),
       };
       (svc as any).teamMetaStore = {
@@ -652,7 +652,7 @@ describe('TeamProvisioningService', () => {
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
           members: [
-            { name: 'team-lead', agentType: 'team-lead' },
+            { name: 'lead', agentType: 'lead' },
             { name: 'alice', model: 'gpt-5.4-mini' },
           ],
         })),
@@ -697,7 +697,7 @@ describe('TeamProvisioningService', () => {
       expect(pidusage).toHaveBeenNthCalledWith(1, [111, 222], { maxage: 0 });
       expect(pidusage).toHaveBeenNthCalledWith(2, 111, { maxage: 0 });
       expect(pidusage).toHaveBeenNthCalledWith(3, 222, { maxage: 0 });
-      expect(snapshot.members['team-lead']?.rssBytes).toBe(123_000_000);
+      expect(snapshot.members['lead']?.rssBytes).toBe(123_000_000);
       expect(snapshot.members.alice?.rssBytes).toBe(456_000_000);
     });
 
@@ -706,7 +706,7 @@ describe('TeamProvisioningService', () => {
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
           members: [
-            { name: 'team-lead', agentType: 'team-lead' },
+            { name: 'lead', agentType: 'lead' },
             { name: 'alice', model: 'gpt-5.2' },
           ],
         })),
@@ -743,7 +743,7 @@ describe('TeamProvisioningService', () => {
 
       const snapshot = await svc.getTeamAgentRuntimeSnapshot('nice-team');
 
-      expect(snapshot.members['team-lead']).toMatchObject({
+      expect(snapshot.members['lead']).toMatchObject({
         pid: 111,
         rssBytes: 123_000_000,
       });
@@ -759,7 +759,7 @@ describe('TeamProvisioningService', () => {
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
           members: [
-            { name: 'team-lead', agentType: 'team-lead' },
+            { name: 'lead', agentType: 'lead' },
             { name: 'alice', providerId: 'anthropic', model: 'claude-sonnet-4-6' },
           ],
         })),
@@ -824,7 +824,7 @@ describe('TeamProvisioningService', () => {
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
           members: [
-            { name: 'team-lead', agentType: 'team-lead' },
+            { name: 'lead', agentType: 'lead' },
             { name: 'alice', model: 'gpt-5.2' },
           ],
         })),
@@ -878,7 +878,7 @@ describe('TeamProvisioningService', () => {
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
           members: [
-            { name: 'team-lead', agentType: 'team-lead' },
+            { name: 'lead', agentType: 'lead' },
             { name: 'alice', providerId: 'opencode', model: 'minimax-m2.5-free' },
           ],
         })),
@@ -1032,7 +1032,7 @@ describe('TeamProvisioningService', () => {
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
           members: [
-            { name: 'team-lead', agentType: 'team-lead' },
+            { name: 'lead', agentType: 'lead' },
             { name: 'alice', providerId: 'opencode', model: 'minimax-m2.5-free' },
           ],
         })),
@@ -1067,7 +1067,7 @@ describe('TeamProvisioningService', () => {
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
           members: [
-            { name: 'team-lead', agentType: 'team-lead' },
+            { name: 'lead', agentType: 'lead' },
             {
               name: 'alice',
               providerId: 'codex',
@@ -1142,7 +1142,7 @@ describe('TeamProvisioningService', () => {
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
           members: [
-            { name: 'team-lead', agentType: 'team-lead' },
+            { name: 'lead', agentType: 'lead' },
             { name: 'alice-2', providerId: 'codex', model: 'gpt-5.4-mini' },
           ],
         })),
@@ -1175,7 +1175,7 @@ describe('TeamProvisioningService', () => {
       const svc = new TeamProvisioningService();
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         })),
       };
       (svc as any).membersMetaStore = {
@@ -1226,7 +1226,7 @@ describe('TeamProvisioningService', () => {
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
           members: [
-            { name: 'team-lead', agentType: 'team-lead' },
+            { name: 'lead', agentType: 'lead' },
             { name: 'alice', providerId: 'codex', model: 'gpt-5.4-mini' },
           ],
         })),
@@ -1336,7 +1336,7 @@ describe('TeamProvisioningService', () => {
       const svc = new TeamProvisioningService();
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         })),
       };
       (svc as any).membersMetaStore = {
@@ -1439,7 +1439,7 @@ describe('TeamProvisioningService', () => {
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
           name: 'Edited Team',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         })),
       };
       (svc as any).membersMetaStore = {
@@ -1502,7 +1502,7 @@ describe('TeamProvisioningService', () => {
       const sendMessageToRun = vi.fn(async () => {});
       const getConfig = vi.fn().mockResolvedValue({
         name: 'Edited Team',
-        members: [{ name: 'team-lead', agentType: 'team-lead' }],
+        members: [{ name: 'lead', agentType: 'lead' }],
       });
       const getMembers = vi
         .fn()
@@ -1583,7 +1583,7 @@ describe('TeamProvisioningService', () => {
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
           name: 'Codex Team',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         })),
       };
       (svc as any).membersMetaStore = {
@@ -1655,7 +1655,7 @@ describe('TeamProvisioningService', () => {
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
           name: 'Codex Team',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         })),
       };
       (svc as any).membersMetaStore = {
@@ -1723,7 +1723,7 @@ describe('TeamProvisioningService', () => {
         getConfig: vi.fn(async () => ({
           name: 'Codex Team',
           members: [
-            { name: 'team-lead', agentType: 'team-lead' },
+            { name: 'lead', agentType: 'lead' },
             { name: 'bob', role: 'Developer' },
           ],
         })),
@@ -1767,7 +1767,7 @@ describe('TeamProvisioningService', () => {
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
           name: 'Edited Team',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         })),
       };
       (svc as any).membersMetaStore = {
@@ -1837,7 +1837,7 @@ describe('TeamProvisioningService', () => {
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
           name: 'Mixed Team',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         })),
       };
       (svc as any).membersMetaStore = {
@@ -1898,7 +1898,7 @@ describe('TeamProvisioningService', () => {
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
           name: 'Mixed Team',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         })),
       };
       (svc as any).membersMetaStore = {
@@ -1963,7 +1963,7 @@ describe('TeamProvisioningService', () => {
       const sendMessageToRun = vi.fn(async () => {});
       const getConfig = vi.fn().mockResolvedValue({
         name: 'Edited Team',
-        members: [{ name: 'team-lead', agentType: 'team-lead' }],
+        members: [{ name: 'lead', agentType: 'lead' }],
       });
       const getMembers = vi
         .fn()
@@ -2040,7 +2040,7 @@ describe('TeamProvisioningService', () => {
         .fn()
         .mockResolvedValueOnce({
           name: 'Edited Team',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         })
         .mockResolvedValueOnce(null);
       const getMembers = vi.fn(async () => [
@@ -2091,7 +2091,7 @@ describe('TeamProvisioningService', () => {
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
           name: 'Codex Team',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         })),
       };
       (svc as any).membersMetaStore = {
@@ -2171,7 +2171,7 @@ describe('TeamProvisioningService', () => {
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
           name: 'Codex Team',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         })),
       };
       (svc as any).membersMetaStore = {
@@ -2253,7 +2253,7 @@ describe('TeamProvisioningService', () => {
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
           name: 'Codex Team',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         })),
       };
       (svc as any).membersMetaStore = {
@@ -2327,7 +2327,7 @@ describe('TeamProvisioningService', () => {
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
           name: 'Tmux Team',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         })),
       };
       (svc as any).membersMetaStore = {
@@ -3029,7 +3029,7 @@ describe('TeamProvisioningService', () => {
         getConfig: vi.fn(async () => ({
           projectPath: '/repo',
           members: [
-            { name: 'team-lead', providerId: 'codex', model: 'gpt-5.4' },
+            { name: 'lead', providerId: 'codex', model: 'gpt-5.4' },
             { name: 'bob', providerId: 'opencode', model: 'minimax-m2.5-free' },
           ],
         })),
@@ -3100,7 +3100,7 @@ describe('TeamProvisioningService', () => {
         getConfig: vi.fn(async () => ({
           projectPath: '/repo',
           members: [
-            { name: 'team-lead', providerId: 'codex', model: 'gpt-5.4' },
+            { name: 'lead', providerId: 'codex', model: 'gpt-5.4' },
             { name: 'bob', providerId: 'opencode', model: 'minimax-m2.5-free' },
           ],
         })),
@@ -3207,7 +3207,7 @@ describe('TeamProvisioningService', () => {
         getConfig: vi.fn(async () => ({
           projectPath: '/repo',
           members: [
-            { name: 'team-lead', providerId: 'codex', model: 'gpt-5.4' },
+            { name: 'lead', providerId: 'codex', model: 'gpt-5.4' },
             { name: 'bob', providerId: 'opencode', model: 'minimax-m2.5-free' },
           ],
         })),
@@ -3324,7 +3324,7 @@ describe('TeamProvisioningService', () => {
         getConfig: vi.fn(async () => ({
           projectPath: '/repo',
           members: [
-            { name: 'team-lead', providerId: 'codex', model: 'gpt-5.4' },
+            { name: 'lead', providerId: 'codex', model: 'gpt-5.4' },
             { name: 'bob', providerId: 'opencode', model: 'minimax-m2.5-free' },
           ],
         })),
@@ -3412,7 +3412,7 @@ describe('TeamProvisioningService', () => {
         getConfig: vi.fn(async () => ({
           projectPath: '/repo',
           members: [
-            { name: 'team-lead', providerId: 'codex', model: 'gpt-5.4' },
+            { name: 'lead', providerId: 'codex', model: 'gpt-5.4' },
             { name: 'bob', providerId: 'opencode', model: 'minimax-m2.5-free' },
           ],
         })),
@@ -3520,7 +3520,7 @@ describe('TeamProvisioningService', () => {
         getConfig: vi.fn(async () => ({
           projectPath: '/repo',
           members: [
-            { name: 'team-lead', providerId: 'codex', model: 'gpt-5.4' },
+            { name: 'lead', providerId: 'codex', model: 'gpt-5.4' },
             { name: 'bob', providerId: 'opencode', model: 'minimax-m2.5-free' },
           ],
         })),
@@ -3603,7 +3603,7 @@ describe('TeamProvisioningService', () => {
         getConfig: vi.fn(async () => ({
           projectPath: '/repo',
           members: [
-            { name: 'team-lead', providerId: 'codex', model: 'gpt-5.4' },
+            { name: 'lead', providerId: 'codex', model: 'gpt-5.4' },
             { name: 'bob', providerId: 'opencode', model: 'minimax-m2.5-free' },
           ],
         })),
@@ -3626,12 +3626,12 @@ describe('TeamProvisioningService', () => {
       const inboxDir = path.join(tempTeamsBase, 'team-a', 'inboxes');
       await fsPromises.mkdir(inboxDir, { recursive: true });
       await fsPromises.writeFile(
-        path.join(inboxDir, 'team-lead.json'),
+        path.join(inboxDir, 'lead.json'),
         `${JSON.stringify(
           [
             {
               from: 'bob',
-              to: 'team-lead',
+              to: 'lead',
               text: 'Here is the concrete answer.',
               timestamp: '2026-04-25T10:00:03.000Z',
               read: false,
@@ -3717,7 +3717,7 @@ describe('TeamProvisioningService', () => {
           getConfig: vi.fn(async () => ({
             projectPath: '/repo',
             members: [
-              { name: 'team-lead', providerId: 'codex', model: 'gpt-5.4' },
+              { name: 'lead', providerId: 'codex', model: 'gpt-5.4' },
               { name: 'bob', providerId: 'opencode', model: 'minimax-m2.5-free' },
             ],
           })),
@@ -3831,7 +3831,7 @@ describe('TeamProvisioningService', () => {
         getConfig: vi.fn(async () => ({
           projectPath: '/repo',
           members: [
-            { name: 'team-lead', providerId: 'codex', model: 'gpt-5.4' },
+            { name: 'lead', providerId: 'codex', model: 'gpt-5.4' },
             { name: 'bob', providerId: 'opencode', model: 'minimax-m2.5-free' },
           ],
         })),
@@ -3965,7 +3965,7 @@ describe('TeamProvisioningService', () => {
         getConfig: vi.fn(async () => ({
           projectPath: '/repo',
           members: [
-            { name: 'team-lead', providerId: 'codex', model: 'gpt-5.4' },
+            { name: 'lead', providerId: 'codex', model: 'gpt-5.4' },
             { name: 'bob', providerId: 'opencode', model: 'minimax-m2.5-free' },
           ],
         })),
@@ -4112,7 +4112,7 @@ describe('TeamProvisioningService', () => {
         getConfig: vi.fn(async () => ({
           projectPath: '/repo',
           members: [
-            { name: 'team-lead', providerId: 'codex', model: 'gpt-5.4' },
+            { name: 'lead', providerId: 'codex', model: 'gpt-5.4' },
             { name: 'bob', providerId: 'opencode', model: 'minimax-m2.5-free' },
           ],
         })),
@@ -4235,7 +4235,7 @@ describe('TeamProvisioningService', () => {
         getConfig: vi.fn(async () => ({
           projectPath: '/repo',
           members: [
-            { name: 'team-lead', providerId: 'codex', model: 'gpt-5.4' },
+            { name: 'lead', providerId: 'codex', model: 'gpt-5.4' },
             { name: 'bob', providerId: 'opencode', model: 'minimax-m2.5-free' },
           ],
         })),
@@ -4343,7 +4343,7 @@ describe('TeamProvisioningService', () => {
         getConfig: vi.fn(async () => ({
           projectPath: '/repo',
           members: [
-            { name: 'team-lead', providerId: 'codex', model: 'gpt-5.4' },
+            { name: 'lead', providerId: 'codex', model: 'gpt-5.4' },
             { name: 'bob', providerId: 'opencode', model: 'minimax-m2.5-free' },
           ],
         })),
@@ -4438,7 +4438,7 @@ describe('TeamProvisioningService', () => {
         getConfig: vi.fn(async () => ({
           projectPath: '/repo',
           members: [
-            { name: 'team-lead', providerId: 'codex', model: 'gpt-5.4' },
+            { name: 'lead', providerId: 'codex', model: 'gpt-5.4' },
             { name: 'bob', providerId: 'opencode', model: 'minimax-m2.5-free' },
           ],
         })),
@@ -5787,7 +5787,7 @@ describe('TeamProvisioningService', () => {
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
           name: 'Tmux Team',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         })),
       };
       (svc as any).membersMetaStore = {
@@ -5845,7 +5845,7 @@ describe('TeamProvisioningService', () => {
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
           name: 'Tmux Team',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         })),
       };
       (svc as any).membersMetaStore = {
@@ -5906,7 +5906,7 @@ describe('TeamProvisioningService', () => {
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
           name: 'Tmux Team',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         })),
       };
       (svc as any).membersMetaStore = {
@@ -5964,7 +5964,7 @@ describe('TeamProvisioningService', () => {
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
           name: 'Tmux Team',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         })),
       };
       (svc as any).membersMetaStore = {
@@ -6018,7 +6018,7 @@ describe('TeamProvisioningService', () => {
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
           name: 'Process Team',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         })),
       };
       (svc as any).membersMetaStore = {
@@ -6082,7 +6082,7 @@ describe('TeamProvisioningService', () => {
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
           name: 'Process Team',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         })),
       };
       (svc as any).membersMetaStore = {
@@ -6159,7 +6159,7 @@ describe('TeamProvisioningService', () => {
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
           name: 'Process Team',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         })),
       };
       (svc as any).membersMetaStore = {
@@ -6223,7 +6223,7 @@ describe('TeamProvisioningService', () => {
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
           name: 'Codex Team',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         })),
       };
       (svc as any).membersMetaStore = {
@@ -6282,7 +6282,7 @@ describe('TeamProvisioningService', () => {
       (svc as any).configReader = {
         getConfig: vi.fn(async () => ({
           name: 'Codex Team',
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         })),
       };
       (svc as any).membersMetaStore = {
@@ -6862,7 +6862,7 @@ describe('TeamProvisioningService', () => {
       expect(config.members).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            name: 'team-lead',
+            name: 'lead',
             providerId: 'opencode',
             model: 'big-pickle',
           }),
@@ -7253,7 +7253,7 @@ describe('TeamProvisioningService', () => {
       JSON.stringify({
         name: teamName,
         projectPath: tempClaudeRoot,
-        members: [{ name: 'team-lead', agentType: 'team-lead' }, { name: 'alice' }],
+        members: [{ name: 'lead', agentType: 'lead' }, { name: 'alice' }],
       }),
       'utf8'
     );
@@ -7841,7 +7841,7 @@ describe('TeamProvisioningService', () => {
       (svc as any).relayedLeadInboxMessageIds.set(teamName, new Set(['stale-msg']));
       (svc as any).liveLeadProcessMessages.set(teamName, [
         {
-          from: 'team-lead',
+          from: 'lead',
           text: 'Old transient message',
           timestamp: '2026-04-17T12:00:00.000Z',
           read: true,
@@ -8073,7 +8073,7 @@ describe('TeamProvisioningService', () => {
         type: 'user',
         message: {
           role: 'user',
-          content: `You are bootstrapping into team "${teamName}" as member "alice".\nYour first action is to call the MCP tool member_briefing on the agent-teams server with teamName="${teamName}" and memberName="alice".\nIf member_briefing is still unavailable after that one retry, send exactly one short SendMessage to "team-lead" with the exact error text, then stop this turn and wait.`,
+          content: `You are bootstrapping into team "${teamName}" as member "alice".\nYour first action is to call the MCP tool member_briefing on the agent-teams server with teamName="${teamName}" and memberName="alice".\nIf member_briefing is still unavailable after that one retry, send exactly one short SendMessage to "lead" with the exact error text, then stop this turn and wait.`,
         },
       })}\n`,
       'utf8'
@@ -9289,7 +9289,7 @@ describe('TeamProvisioningService', () => {
       getConfig: vi.fn(async () => ({
         name: 'Beacon Desk',
         members: [
-          { name: 'team-lead', agentType: 'team-lead' },
+          { name: 'lead', agentType: 'lead' },
           {
             name: 'bob',
             agentType: 'general-purpose',
@@ -9739,7 +9739,7 @@ describe('TeamProvisioningService', () => {
     };
     fs.mkdirSync(path.join(tempTeamsBase, teamName, 'inboxes'), { recursive: true });
     fs.writeFileSync(
-      path.join(tempTeamsBase, teamName, 'inboxes', 'team-lead.json'),
+      path.join(tempTeamsBase, teamName, 'inboxes', 'lead.json'),
       JSON.stringify(
         [
           {

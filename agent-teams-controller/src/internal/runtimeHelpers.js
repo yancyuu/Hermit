@@ -5,7 +5,7 @@ const crypto = require('crypto');
 const TASK_ATTACHMENTS_DIR = 'task-attachments';
 const MAX_TASK_ATTACHMENT_BYTES = 20 * 1024 * 1024;
 const TEAM_NAME_PATTERN = /^[a-z0-9][a-z0-9-]{0,127}$/;
-const LEAD_AGENT_TYPES = new Set(['team-lead', 'lead', 'orchestrator']);
+const LEAD_AGENT_TYPES = new Set(['lead', 'lead', 'orchestrator']);
 const CROSS_TEAM_TOOL_RECIPIENT_NAMES = new Set([
   'cross_team_send',
   'cross_team_list_targets',
@@ -136,8 +136,8 @@ function isCanonicalLeadMember(member) {
   const name = typeof member.name === 'string' ? member.name.trim().toLowerCase() : '';
   return (
     LEAD_AGENT_TYPES.has(agentType) ||
-    name === 'team-lead' ||
-    role === 'team-lead' ||
+    name === 'lead' ||
+    role === 'lead' ||
     role === 'team lead' ||
     role === 'lead'
   );
@@ -184,11 +184,11 @@ function inferLeadName(paths) {
       const agentType = typeof member?.agentType === 'string' ? member.agentType.trim().toLowerCase() : '';
       return LEAD_AGENT_TYPES.has(agentType);
     }) ||
-    members.find((member) => String((member && member.name) || '').trim().toLowerCase() === 'team-lead') ||
+    members.find((member) => String((member && member.name) || '').trim().toLowerCase() === 'lead') ||
     members.find(
       (member) => {
         const role = typeof member.role === 'string' ? member.role.trim().toLowerCase() : '';
-        return role === 'team-lead' || role === 'team lead' || role === 'lead';
+        return role === 'lead' || role === 'team lead' || role === 'lead';
       }
     );
   if (lead) {
@@ -198,7 +198,7 @@ function inferLeadName(paths) {
   if (config && Array.isArray(config.members) && config.members[0]) {
     return String(config.members[0].name);
   }
-  return 'team-lead';
+  return 'lead';
 }
 
 function resolveExplicitTeamMemberName(paths, candidate, options = {}) {
@@ -216,7 +216,7 @@ function resolveExplicitTeamMemberName(paths, candidate, options = {}) {
   if (options.allowLeadAliases !== false) {
     const leadName = inferLeadName(paths);
     const leadKey = normalizeMemberKey(leadName);
-    if (key === 'lead' || key === 'team-lead' || (leadKey && key === leadKey)) {
+    if (key === 'lead' || key === 'lead' || (leadKey && key === leadKey)) {
       const leadMember = leadKey ? explicit.membersByKey.get(leadKey) : null;
       return leadMember ? leadMember.name : null;
     }
@@ -415,7 +415,7 @@ function resolveCanonicalLeadSessionId(paths, candidate) {
   }
 
   // The team config is the canonical source of the current lead runtime session.
-  // If a caller passes a placeholder like "team-lead" or any other mismatched value,
+  // If a caller passes a placeholder like "lead" or any other mismatched value,
   // prefer the configured session id instead of persisting dirty metadata into inbox rows.
   if (configured) {
     return explicit === configured ? explicit : configured;

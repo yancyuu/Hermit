@@ -8,7 +8,7 @@ const storeState = {
   selectedTeamName: 'northstar-core',
   selectedTeamData: {
     members: [
-      { name: 'team-lead', agentType: 'team-lead' },
+      { name: 'lead', agentType: 'lead' },
       { name: 'alice', agentType: 'reviewer', runtimeAdvisory: undefined },
       { name: 'bob', agentType: 'developer' },
       { name: 'jack', agentType: 'developer' },
@@ -17,7 +17,7 @@ const storeState = {
   teamDataCacheByName: {
     'northstar-core': {
       members: [
-        { name: 'team-lead', agentType: 'team-lead' },
+        { name: 'lead', agentType: 'lead' },
         { name: 'alice', agentType: 'reviewer', runtimeAdvisory: undefined },
         { name: 'bob', agentType: 'developer' },
         { name: 'jack', agentType: 'developer' },
@@ -108,7 +108,7 @@ describe('TeamProvisioningBanner launch-step alignment', () => {
     };
     storeState.memberSpawnStatusesByTeam['northstar-core'] = {};
     storeState.selectedTeamData.members = [
-      { name: 'team-lead', agentType: 'team-lead' },
+      { name: 'lead', agentType: 'lead' },
       { name: 'alice', agentType: 'reviewer', runtimeAdvisory: undefined },
       { name: 'bob', agentType: 'developer', runtimeAdvisory: undefined },
       { name: 'jack', agentType: 'developer', runtimeAdvisory: undefined },
@@ -447,7 +447,7 @@ describe('TeamProvisioningBanner launch-step alignment', () => {
   it('surfaces provider retry wording when pending runtimes are retrying provider capacity', async () => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
     storeState.selectedTeamData.members = [
-      { name: 'team-lead', agentType: 'team-lead' },
+      { name: 'lead', agentType: 'lead' },
       {
         name: 'alice',
         agentType: 'reviewer',
@@ -534,7 +534,7 @@ describe('TeamProvisioningBanner launch-step alignment', () => {
 
   it('trusts persisted snapshot member statuses even when expectedMembers and team cache are stale', async () => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-    storeState.selectedTeamData.members = [{ name: 'team-lead', agentType: 'team-lead' }];
+    storeState.selectedTeamData.members = [{ name: 'lead', agentType: 'lead' }];
     storeState.teamDataCacheByName['northstar-core'] = {
       members: [...storeState.selectedTeamData.members],
     };

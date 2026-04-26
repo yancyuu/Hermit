@@ -42,7 +42,7 @@ import {
 import { useStore } from '@renderer/store';
 import { createLoadingMultimodelCliStatus } from '@renderer/store/slices/cliInstallerSlice';
 import { formatBytes } from '@renderer/utils/formatters';
-import { filterMainScreenCliProviders } from '@renderer/utils/geminiUiFreeze';
+import { filterMainScreenCliProviders } from '@renderer/utils/claudeCodeOnlyProviders';
 import { isMultimodelRuntimeStatus } from '@renderer/utils/multimodelProviderVisibility';
 import { resolveProjectPathById } from '@renderer/utils/projectLookup';
 import { refreshCliStatusForCurrentMode } from '@renderer/utils/refreshCliStatus';
@@ -1057,7 +1057,7 @@ export const CliStatusBanner = (): React.JSX.Element | null => {
   const [providersCollapsed, setProvidersCollapsed] = useState(() =>
     loadDashboardCliStatusBannerCollapsed()
   );
-  const multimodelEnabled = appConfig?.general?.multimodelEnabled ?? true;
+  const multimodelEnabled = appConfig?.general?.multimodelEnabled ?? false;
   const selectedProjectPath = useMemo(
     () => resolveProjectPathById(selectedProjectId, projects, repositoryGroups)?.path ?? null,
     [projects, repositoryGroups, selectedProjectId]

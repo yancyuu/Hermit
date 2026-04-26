@@ -112,14 +112,14 @@ describe('extractLeadSessionMessagesFromJsonl', () => {
 
     const messages = await extractLeadSessionMessagesFromJsonl({
       jsonlPath,
-      leadName: 'team-lead',
+      leadName: 'lead',
       leadSessionId: 'lead-1',
       maxMessages: 20,
     });
 
     expect(messages).toHaveLength(3);
     expect(messages[0]).toMatchObject({
-      from: 'team-lead',
+      from: 'lead',
       messageKind: 'slash_command_result',
       commandOutput: {
         stream: 'stdout',

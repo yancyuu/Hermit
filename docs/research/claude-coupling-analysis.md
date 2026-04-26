@@ -164,7 +164,7 @@ The existing `ParsedMessage` type is actually reasonably generic (it has `toolCa
 4. **Inbox protocol**: File-based message passing — lead reads stdin, teammates read inbox files
 5. **Lead/teammate distinction**: Lead uses stream-json, teammates are independent CLI processes
 6. **Tool blocking**: `--disallowedTools TeamDelete,TodoWrite`
-7. **`agentType` values**: `team-lead`, `lead`, `orchestrator`, `general-purpose` — Claude Code internal values
+7. **`agentType` values**: `lead`, `lead`, `orchestrator`, `general-purpose` — Claude Code internal values
 8. **`teammate_spawned` tool results**: How team member processes are detected
 9. **Cross-team communication**: `cross_team_send`, `cross_team_list_targets`, `cross_team_get_outbox`
 10. **Action mode instructions**: Custom protocol text injected into team prompts

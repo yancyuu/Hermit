@@ -21,14 +21,14 @@ describe('buildTeamMemberColorMap', () => {
 
   it('does not let the lead consume the teammate palette order', () => {
     const members = [
-      { name: 'team-lead', agentType: 'team-lead' as const },
+      { name: 'lead', agentType: 'lead' as const },
       { name: 'alice' },
       { name: 'tom' },
     ];
 
     const colorMap = buildTeamMemberColorMap(members, { preferProvidedColors: false });
 
-    expect(colorMap.get('team-lead')).toBeDefined();
+    expect(colorMap.get('lead')).toBeDefined();
     expect(colorMap.get('alice')).toBe('blue');
     expect(colorMap.get('tom')).toBe('saffron');
   });
@@ -36,7 +36,7 @@ describe('buildTeamMemberColorMap', () => {
   it('resolves standalone lead previews through the same shared roster pipeline', () => {
     expect(resolveTeamLeadColorName()).toBe(
       resolveTeamMemberColorName(
-        { name: TEAM_LEAD_MEMBER_COLOR_ID, agentType: 'team-lead' },
+        { name: TEAM_LEAD_MEMBER_COLOR_ID, agentType: 'lead' },
         { preferProvidedColors: false }
       )
     );

@@ -95,11 +95,11 @@ const ScheduleRow = ({
             {schedule.label ? <span>{getCronDescription(schedule.cronExpression)}</span> : null}
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="cursor-default">Next: {formatNextRun(schedule.nextRunAt)}</span>
+                <span className="cursor-default">下次：{formatNextRun(schedule.nextRunAt)}</span>
               </TooltipTrigger>
               {schedule.nextRunAt ? (
                 <TooltipContent side="top" className="text-xs">
-                  {new Date(schedule.nextRunAt).toLocaleString()}
+                  {new Date(schedule.nextRunAt).toLocaleString('zh-CN')}
                 </TooltipContent>
               ) : null}
             </Tooltip>

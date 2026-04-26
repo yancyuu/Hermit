@@ -49,7 +49,7 @@ import { Agent } from '@mastra/core/agent';
 import { MCPClient } from '@mastra/mcp';
 
 const agent = new Agent({
-  id: 'team-lead',
+  id: 'lead',
   name: 'Team Lead',
   instructions: 'You coordinate the team...',
   model: 'anthropic/claude-sonnet-4-20250514',  // any of 40+ providers
@@ -362,7 +362,7 @@ function createLeadAgent(
 ) {
   return new Agent({
     id: `lead-${request.teamName}`,
-    name: 'team-lead',
+    name: 'lead',
     instructions: buildLeadInstructions(request),  // adapted from buildPersistentLeadContext
     model: request.model || 'anthropic/claude-sonnet-4-20250514',
     agents: teammates,  // Mastra auto-converts to tools

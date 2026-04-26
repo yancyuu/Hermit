@@ -12,8 +12,8 @@ describe('resolveLaunchDialogPrefill', () => {
   it('prefills from the current lead runtime before localStorage defaults', () => {
     const members = [
       {
-        name: 'team-lead',
-        agentType: 'team-lead',
+        name: 'lead',
+        agentType: 'lead',
         providerId: 'codex',
         model: 'gpt-5.4',
         effort: 'medium',
@@ -59,8 +59,8 @@ describe('resolveLaunchDialogPrefill', () => {
   it('prefers the current lead runtime over a stale saved request', () => {
     const members = [
       {
-        name: 'team-lead',
-        agentType: 'team-lead',
+        name: 'lead',
+        agentType: 'lead',
         providerId: 'codex',
         model: 'gpt-5.4',
         effort: 'medium',
@@ -170,8 +170,8 @@ describe('resolveLaunchDialogPrefill', () => {
     const result = resolveLaunchDialogPrefill({
       members: [
         {
-          name: 'team-lead',
-          agentType: 'team-lead',
+          name: 'lead',
+          agentType: 'lead',
           providerId: 'codex',
           model: 'gpt-5.4',
           effort: 'medium',
@@ -202,8 +202,8 @@ describe('resolveLaunchDialogPrefill', () => {
   it('does not carry a frozen Gemini model into an Anthropic fallback', () => {
     const members = [
       {
-        name: 'team-lead',
-        agentType: 'team-lead',
+        name: 'lead',
+        agentType: 'lead',
         providerId: 'gemini',
         model: 'gemini-2.5-flash-lite',
         effort: 'medium',

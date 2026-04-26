@@ -19,7 +19,7 @@ describe('buildTeamProvisioningPresentation', () => {
       },
       members: [
         {
-          name: 'team-lead',
+          name: 'lead',
         },
       ],
       memberSpawnStatuses: {},
@@ -46,8 +46,8 @@ describe('buildTeamProvisioningPresentation', () => {
       },
       members: [
         {
-          name: 'team-lead',
-          agentType: 'team-lead',
+          name: 'lead',
+          agentType: 'lead',
           status: 'active',
           currentTaskId: null,
           taskCount: 0,
@@ -109,8 +109,8 @@ describe('buildTeamProvisioningPresentation', () => {
       },
       members: [
         {
-          name: 'team-lead',
-          agentType: 'team-lead',
+          name: 'lead',
+          agentType: 'lead',
           status: 'active',
           currentTaskId: null,
           taskCount: 0,
@@ -163,8 +163,8 @@ describe('buildTeamProvisioningPresentation', () => {
       },
       members: [
         {
-          name: 'team-lead',
-          agentType: 'team-lead',
+          name: 'lead',
+          agentType: 'lead',
           status: 'active',
           currentTaskId: null,
           taskCount: 0,
@@ -230,8 +230,8 @@ describe('buildTeamProvisioningPresentation', () => {
       },
       members: [
         {
-          name: 'team-lead',
-          agentType: 'team-lead',
+          name: 'lead',
+          agentType: 'lead',
           status: 'active',
           currentTaskId: null,
           taskCount: 0,
@@ -285,8 +285,8 @@ describe('buildTeamProvisioningPresentation', () => {
       },
       members: [
         {
-          name: 'team-lead',
-          agentType: 'team-lead',
+          name: 'lead',
+          agentType: 'lead',
           status: 'active',
           currentTaskId: null,
           taskCount: 0,
@@ -366,8 +366,8 @@ describe('buildTeamProvisioningPresentation', () => {
       },
       members: [
         {
-          name: 'team-lead',
-          agentType: 'team-lead',
+          name: 'lead',
+          agentType: 'lead',
           status: 'active',
           currentTaskId: null,
           taskCount: 0,
@@ -434,8 +434,8 @@ describe('buildTeamProvisioningPresentation', () => {
       },
       members: [
         {
-          name: 'team-lead',
-          agentType: 'team-lead',
+          name: 'lead',
+          agentType: 'lead',
           status: 'active',
           currentTaskId: null,
           taskCount: 0,
@@ -497,8 +497,8 @@ describe('buildTeamProvisioningPresentation', () => {
       },
       members: [
         {
-          name: 'team-lead',
-          agentType: 'team-lead',
+          name: 'lead',
+          agentType: 'lead',
           status: 'active',
           currentTaskId: null,
           taskCount: 0,
@@ -572,8 +572,8 @@ describe('buildTeamProvisioningPresentation', () => {
       },
       members: [
         {
-          name: 'team-lead',
-          agentType: 'team-lead',
+          name: 'lead',
+          agentType: 'lead',
           status: 'active',
           currentTaskId: null,
           taskCount: 0,
@@ -636,8 +636,8 @@ describe('buildTeamProvisioningPresentation', () => {
       },
       members: [
         {
-          name: 'team-lead',
-          agentType: 'team-lead',
+          name: 'lead',
+          agentType: 'lead',
           status: 'active',
           currentTaskId: null,
           taskCount: 0,
@@ -700,8 +700,8 @@ describe('buildTeamProvisioningPresentation', () => {
       },
       members: [
         {
-          name: 'team-lead',
-          agentType: 'team-lead',
+          name: 'lead',
+          agentType: 'lead',
           status: 'active',
           currentTaskId: null,
           taskCount: 0,
@@ -763,8 +763,8 @@ describe('buildTeamProvisioningPresentation', () => {
       },
       members: [
         {
-          name: 'team-lead',
-          agentType: 'team-lead',
+          name: 'lead',
+          agentType: 'lead',
           status: 'active',
           currentTaskId: null,
           taskCount: 0,
@@ -828,8 +828,8 @@ describe('buildTeamProvisioningPresentation', () => {
       },
       members: [
         {
-          name: 'team-lead',
-          agentType: 'team-lead',
+          name: 'lead',
+          agentType: 'lead',
           status: 'active',
           currentTaskId: null,
           taskCount: 0,
@@ -913,8 +913,8 @@ describe('buildTeamProvisioningPresentation', () => {
       },
       members: [
         {
-          name: 'team-lead',
-          agentType: 'team-lead',
+          name: 'lead',
+          agentType: 'lead',
           status: 'active',
           currentTaskId: null,
           taskCount: 0,
@@ -988,8 +988,8 @@ describe('buildTeamProvisioningPresentation', () => {
       },
       members: [
         {
-          name: 'team-lead',
-          agentType: 'team-lead',
+          name: 'lead',
+          agentType: 'lead',
           status: 'active',
           currentTaskId: null,
           taskCount: 0,
@@ -1039,8 +1039,8 @@ describe('buildTeamProvisioningPresentation', () => {
       },
       members: [
         {
-          name: 'team-lead',
-          agentType: 'team-lead',
+          name: 'lead',
+          agentType: 'lead',
           status: 'active',
           currentTaskId: null,
           taskCount: 0,
@@ -1103,8 +1103,8 @@ describe('buildTeamProvisioningPresentation', () => {
       },
       members: [
         {
-          name: 'team-lead',
-          agentType: 'team-lead',
+          name: 'lead',
+          agentType: 'lead',
           status: 'active',
           currentTaskId: null,
           taskCount: 0,
@@ -1168,8 +1168,8 @@ describe('buildTeamProvisioningPresentation', () => {
       },
       members: [
         {
-          name: 'team-lead',
-          agentType: 'team-lead',
+          name: 'lead',
+          agentType: 'lead',
           status: 'active',
           currentTaskId: null,
           taskCount: 0,
@@ -1240,8 +1240,8 @@ describe('buildTeamProvisioningPresentation', () => {
       },
       members: [
         {
-          name: 'team-lead',
-          agentType: 'team-lead',
+          name: 'lead',
+          agentType: 'lead',
           status: 'active',
           currentTaskId: null,
           taskCount: 0,

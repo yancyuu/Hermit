@@ -143,7 +143,7 @@ async function buildStreamResponse(transcriptPath: string, task: TeamTask = crea
       ({
         transcriptFiles: [transcriptPath],
         config: {
-          members: [{ name: 'team-lead', agentType: 'team-lead' }],
+          members: [{ name: 'lead', agentType: 'lead' }],
         },
       }) as never,
   };

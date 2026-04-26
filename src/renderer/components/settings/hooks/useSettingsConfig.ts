@@ -171,7 +171,7 @@ export function useSettingsConfig(): UseSettingsConfigReturn {
         showDockIcon: displayConfig?.general?.showDockIcon ?? true,
         theme: displayConfig?.general?.theme ?? 'dark',
         defaultTab: displayConfig?.general?.defaultTab ?? 'dashboard',
-        multimodelEnabled: displayConfig?.general?.multimodelEnabled ?? true,
+        multimodelEnabled: displayConfig?.general?.multimodelEnabled ?? false,
         claudeRootPath: displayConfig?.general?.claudeRootPath ?? null,
         agentLanguage: displayConfig?.general?.agentLanguage ?? 'system',
         autoExpandAIGroups: displayConfig?.general?.autoExpandAIGroups ?? false,

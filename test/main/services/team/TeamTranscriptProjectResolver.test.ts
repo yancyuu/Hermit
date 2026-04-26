@@ -108,7 +108,7 @@ describe('TeamTranscriptProjectResolver', () => {
                 content: [
                   {
                     type: 'text',
-                    text: `Current durable team context:\n- Team name: ${teamName}\n- You are the live team lead "team-lead"`,
+                    text: `Current durable team context:\n- Team name: ${teamName}\n- You are the live team lead "lead"`,
                   },
                 ],
               },
@@ -155,7 +155,7 @@ describe('TeamTranscriptProjectResolver', () => {
       name: 'My Team',
       projectPath: staleProjectPath,
       leadSessionId,
-      members: [{ name: 'team-lead', agentType: 'team-lead', cwd: repairedProjectPath }],
+      members: [{ name: 'lead', agentType: 'lead', cwd: repairedProjectPath }],
     });
 
     const resolver = new TeamTranscriptProjectResolver();
@@ -184,7 +184,7 @@ describe('TeamTranscriptProjectResolver', () => {
       projectPath: currentProjectPath,
       projectPathHistory: [alternateProjectPath],
       leadSessionId,
-      members: [{ name: 'team-lead', agentType: 'team-lead', cwd: alternateProjectPath }],
+      members: [{ name: 'lead', agentType: 'lead', cwd: alternateProjectPath }],
     });
 
     const resolver = new TeamTranscriptProjectResolver();
@@ -212,7 +212,7 @@ describe('TeamTranscriptProjectResolver', () => {
       projectPath: staleProjectPath,
       leadSessionId: 'lead-missing',
       sessionHistory: [historicalSessionId],
-      members: [{ name: 'team-lead', agentType: 'team-lead', cwd: repairedProjectPath }],
+      members: [{ name: 'lead', agentType: 'lead', cwd: repairedProjectPath }],
     });
 
     const resolver = new TeamTranscriptProjectResolver();
@@ -240,7 +240,7 @@ describe('TeamTranscriptProjectResolver', () => {
       projectPath: staleProjectPath,
       leadSessionId: 'lead-missing',
       sessionHistory: [olderSessionId, newerSessionId],
-      members: [{ name: 'team-lead', agentType: 'team-lead', cwd: repairedProjectPath }],
+      members: [{ name: 'lead', agentType: 'lead', cwd: repairedProjectPath }],
     });
 
     const resolver = new TeamTranscriptProjectResolver();
@@ -266,7 +266,7 @@ describe('TeamTranscriptProjectResolver', () => {
       projectPath: staleProjectPath,
       leadSessionId,
       sessionHistory: [historicalSessionId],
-      members: [{ name: 'team-lead', agentType: 'team-lead', cwd: repairedProjectPath }],
+      members: [{ name: 'lead', agentType: 'lead', cwd: repairedProjectPath }],
     });
 
     const resolver = new TeamTranscriptProjectResolver();
@@ -297,7 +297,7 @@ describe('TeamTranscriptProjectResolver', () => {
       projectPath,
       leadSessionId: currentSessionId,
       sessionHistory: [staleSessionId],
-      members: [{ name: 'team-lead', agentType: 'team-lead', cwd: projectPath }],
+      members: [{ name: 'lead', agentType: 'lead', cwd: projectPath }],
     });
 
     const resolver = new TeamTranscriptProjectResolver();
@@ -324,7 +324,7 @@ describe('TeamTranscriptProjectResolver', () => {
       projectPath: staleProjectPath,
       projectPathHistory: [configuredProjectPath],
       leadSessionId,
-      members: [{ name: 'team-lead', agentType: 'team-lead', cwd: configuredProjectPath }],
+      members: [{ name: 'lead', agentType: 'lead', cwd: configuredProjectPath }],
     });
 
     const resolver = new TeamTranscriptProjectResolver();
@@ -360,7 +360,7 @@ describe('TeamTranscriptProjectResolver', () => {
       name: 'My Team',
       projectPath: staleProjectPath,
       leadSessionId,
-      members: [{ name: 'team-lead', agentType: 'team-lead' }],
+      members: [{ name: 'lead', agentType: 'lead' }],
     });
 
     const resolver = new TeamTranscriptProjectResolver();
@@ -392,7 +392,7 @@ describe('TeamTranscriptProjectResolver', () => {
     await writeTeamConfig(teamName, {
       name: 'My Team',
       projectPath,
-      members: [{ name: 'team-lead', agentType: 'team-lead', cwd: projectPath }],
+      members: [{ name: 'lead', agentType: 'lead', cwd: projectPath }],
     });
 
     const resolver = new TeamTranscriptProjectResolver();
@@ -420,7 +420,7 @@ describe('TeamTranscriptProjectResolver', () => {
     await writeTeamConfig(teamName, {
       name: 'My Team',
       projectPath: staleProjectPath,
-      members: [{ name: 'team-lead', agentType: 'team-lead', cwd: repairedProjectPath }],
+      members: [{ name: 'lead', agentType: 'lead', cwd: repairedProjectPath }],
     });
 
     const resolver = new TeamTranscriptProjectResolver();
@@ -448,7 +448,7 @@ describe('TeamTranscriptProjectResolver', () => {
     await writeTeamConfig(teamName, {
       name: 'My Team',
       projectPath: staleProjectPath,
-      members: [{ name: 'team-lead', agentType: 'team-lead', cwd: repairedProjectPath }],
+      members: [{ name: 'lead', agentType: 'lead', cwd: repairedProjectPath }],
     });
 
     const resolver = new TeamTranscriptProjectResolver();

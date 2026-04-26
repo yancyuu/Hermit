@@ -18,7 +18,7 @@ describe('TeamMemberLogsFinder', () => {
     }
   });
 
-  it('returns subagent logs for a member and lead session for team-lead', async () => {
+  it('returns subagent logs for a member and lead session for lead', async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'claude-team-logs-'));
     setClaudeBasePathOverride(tmpDir);
 
@@ -36,7 +36,7 @@ describe('TeamMemberLogsFinder', () => {
           projectPath,
           leadSessionId,
           members: [
-            { name: 'team-lead', agentType: 'team-lead' },
+            { name: 'lead', agentType: 'lead' },
             { name: 'bob', agentType: 'general-purpose' },
           ],
         },
@@ -90,7 +90,7 @@ describe('TeamMemberLogsFinder', () => {
       expect(bobLogs[0].memberName?.toLowerCase()).toBe('bob');
     }
 
-    const leadLogs = await finder.findMemberLogs(teamName, 'team-lead');
+    const leadLogs = await finder.findMemberLogs(teamName, 'lead');
     expect(leadLogs.some((l) => l.kind === 'lead_session')).toBe(true);
     const lead = leadLogs.find((l) => l.kind === 'lead_session');
     expect(lead?.sessionId).toBe(leadSessionId);
@@ -115,7 +115,7 @@ describe('TeamMemberLogsFinder', () => {
           name: teamName,
           leadSessionId,
           members: [
-            { name: 'team-lead', agentType: 'team-lead', cwd: projectPath },
+            { name: 'lead', agentType: 'lead', cwd: projectPath },
             { name: 'bob', agentType: 'general-purpose', cwd: projectPath },
           ],
         },
@@ -134,7 +134,7 @@ describe('TeamMemberLogsFinder', () => {
         timestamp: '2026-04-15T14:02:00.000Z',
         type: 'user',
         teamName,
-        agentName: 'team-lead',
+        agentName: 'lead',
         message: { role: 'user', content: `Lead for team "${teamName}" (${teamName})` },
       }) + '\n',
       'utf8'
@@ -229,7 +229,7 @@ describe('TeamMemberLogsFinder', () => {
           leadSessionId: currentSessionId,
           sessionHistory: [oldSessionId],
           members: [
-            { name: 'team-lead', agentType: 'team-lead' },
+            { name: 'lead', agentType: 'lead' },
             { name: 'alice', agentType: 'general-purpose' },
           ],
         },
@@ -292,7 +292,7 @@ describe('TeamMemberLogsFinder', () => {
         projectPath,
         leadSessionId,
         members: [
-          { name: 'team-lead', agentType: 'team-lead' },
+          { name: 'lead', agentType: 'lead' },
           { name: 'alice', agentType: 'general-purpose' },
         ],
       }),
@@ -346,7 +346,7 @@ describe('TeamMemberLogsFinder', () => {
     }
   });
 
-  it('routing.sender overrides teammate_id="team-lead" from spawn message', async () => {
+  it('routing.sender overrides teammate_id="lead" from spawn message', async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'claude-team-logs-'));
     setClaudeBasePathOverride(tmpDir);
 
@@ -363,7 +363,7 @@ describe('TeamMemberLogsFinder', () => {
         projectPath,
         leadSessionId,
         members: [
-          { name: 'team-lead', agentType: 'team-lead' },
+          { name: 'lead', agentType: 'lead' },
           { name: 'carol', agentType: 'general-purpose' },
         ],
       }),
@@ -384,7 +384,7 @@ describe('TeamMemberLogsFinder', () => {
       'utf8'
     );
 
-    // Subagent file: first message has teammate_id="team-lead" (sender),
+    // Subagent file: first message has teammate_id="lead" (sender),
     // but routing.sender="carol" (the actual agent) appears later.
     await fs.writeFile(
       path.join(projectRoot, leadSessionId, 'subagents', 'agent-carol01.jsonl'),
@@ -395,7 +395,7 @@ describe('TeamMemberLogsFinder', () => {
           message: {
             role: 'user',
             content:
-              '<teammate-message teammate_id="team-lead" color="yellow" summary="Fix button layout">You are carol, a developer.</teammate-message>',
+              '<teammate-message teammate_id="lead" color="yellow" summary="Fix button layout">You are carol, a developer.</teammate-message>',
           },
         }),
         JSON.stringify({
@@ -439,7 +439,7 @@ describe('TeamMemberLogsFinder', () => {
         projectPath,
         leadSessionId,
         members: [
-          { name: 'team-lead', agentType: 'team-lead' },
+          { name: 'lead', agentType: 'lead' },
           { name: 'alice', agentType: 'general-purpose' },
           { name: 'bob', agentType: 'general-purpose' },
         ],
@@ -514,7 +514,7 @@ describe('TeamMemberLogsFinder', () => {
         projectPath,
         leadSessionId,
         members: [
-          { name: 'team-lead', agentType: 'team-lead' },
+          { name: 'lead', agentType: 'lead' },
           { name: 'carol', agentType: 'general-purpose' },
         ],
       }),
@@ -592,7 +592,7 @@ describe('TeamMemberLogsFinder', () => {
         projectPath,
         leadSessionId,
         members: [
-          { name: 'team-lead', agentType: 'team-lead' },
+          { name: 'lead', agentType: 'lead' },
           { name: 'bob', agentType: 'general-purpose' },
         ],
       }),
@@ -667,7 +667,7 @@ describe('TeamMemberLogsFinder', () => {
         projectPath,
         leadSessionId,
         members: [
-          { name: 'team-lead', agentType: 'team-lead' },
+          { name: 'lead', agentType: 'lead' },
           { name: 'bob', agentType: 'general-purpose' },
           { name: 'alice', agentType: 'general-purpose' },
         ],
@@ -761,7 +761,7 @@ describe('TeamMemberLogsFinder', () => {
     );
   });
 
-  it('findLogsForTask does not auto-include owner sessions when owner is team-lead', async () => {
+  it('findLogsForTask does not auto-include owner sessions when owner is lead', async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'claude-team-task-lead-owner-'));
     setClaudeBasePathOverride(tmpDir);
 
@@ -777,7 +777,7 @@ describe('TeamMemberLogsFinder', () => {
         name: teamName,
         projectPath,
         leadSessionId,
-        members: [{ name: 'team-lead', agentType: 'team-lead' }],
+        members: [{ name: 'lead', agentType: 'lead' }],
       }),
       'utf8'
     );
@@ -798,7 +798,7 @@ describe('TeamMemberLogsFinder', () => {
 
     const finder = new TeamMemberLogsFinder();
     const logs = await finder.findLogsForTask(teamName, '42', {
-      owner: 'team-lead',
+      owner: 'lead',
       status: 'in_progress',
       intervals: [{ startedAt: '2026-01-01T10:00:00.000Z' }],
     });
@@ -828,7 +828,7 @@ describe('TeamMemberLogsFinder', () => {
         name: teamA,
         projectPath,
         members: [
-          { name: 'team-lead', agentType: 'team-lead' },
+          { name: 'lead', agentType: 'lead' },
           { name: 'alice', agentType: 'general-purpose' },
         ],
       }),
@@ -840,7 +840,7 @@ describe('TeamMemberLogsFinder', () => {
         name: teamB,
         projectPath,
         members: [
-          { name: 'team-lead', agentType: 'team-lead' },
+          { name: 'lead', agentType: 'lead' },
           { name: 'bob', agentType: 'general-purpose' },
         ],
       }),
@@ -1023,7 +1023,7 @@ describe('TeamMemberLogsFinder', () => {
         name: teamName,
         projectPath,
         members: [
-          { name: 'team-lead', agentType: 'team-lead' },
+          { name: 'lead', agentType: 'lead' },
           { name: 'dev', agentType: 'general-purpose' },
         ],
       }),
@@ -1085,7 +1085,7 @@ describe('TeamMemberLogsFinder', () => {
         name: teamA,
         projectPath,
         members: [
-          { name: 'team-lead', agentType: 'team-lead' },
+          { name: 'lead', agentType: 'lead' },
           { name: 'alice', agentType: 'general-purpose' },
         ],
       }),
@@ -1097,7 +1097,7 @@ describe('TeamMemberLogsFinder', () => {
         name: teamB,
         projectPath,
         members: [
-          { name: 'team-lead', agentType: 'team-lead' },
+          { name: 'lead', agentType: 'lead' },
           { name: 'bob', agentType: 'general-purpose' },
         ],
       }),
@@ -1176,7 +1176,7 @@ describe('TeamMemberLogsFinder', () => {
         name: teamName,
         projectPath,
         members: [
-          { name: 'team-lead', agentType: 'team-lead' },
+          { name: 'lead', agentType: 'lead' },
           { name: 'dev', agentType: 'general-purpose' },
         ],
       }),
@@ -1241,7 +1241,7 @@ describe('TeamMemberLogsFinder', () => {
         name: teamName,
         projectPath,
         members: [
-          { name: 'team-lead', agentType: 'team-lead' },
+          { name: 'lead', agentType: 'lead' },
           { name: 'dev', agentType: 'general-purpose' },
         ],
       }),

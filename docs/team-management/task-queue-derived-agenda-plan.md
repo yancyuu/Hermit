@@ -238,7 +238,7 @@ LLM хуже работает, когда ему дают 50 карточек и
 
 Почему это остаётся слабее других зон:
 
-- controller-side `inferLeadName(...)` использует ad hoc heuristics: `agentType === "team-lead"`, `role` содержит `lead`, имя `team-lead`, иначе первый config member
+- controller-side `inferLeadName(...)` использует ad hoc heuristics: `agentType === "lead"`, `role` содержит `lead`, имя `lead`, иначе первый config member
 - shared `leadDetection` utilities уже живут по чуть более другому контракту
 - для `lead_briefing` и future ergonomic clarification clear нельзя опираться на "может быть это и есть lead" без явного phase rule
 
@@ -410,7 +410,7 @@ LLM хуже работает, когда ему дают 50 карточек и
 
 - нужно сначала жёстко определить:
   - canonical lead identity
-  - alias policy (`team-lead`, фактическое имя лида, возможный `lead`)
+  - alias policy (`lead`, фактическое имя лида, возможный `lead`)
   - valid actor normalization
 
 **3. Протянуть explicit `canClearClarification` / `leadName` в taskStore API**
@@ -1187,7 +1187,7 @@ Edge cases, которые этот выбор должен переживать
 
 - в конфиге нет ни одного явно резолвимого lead candidate
 - в конфиге несколько lead-like actors и single canonical name не выводится надёжно
-- исторические task payload всё ещё содержат owner/reviewer alias `team-lead`
+- исторические task payload всё ещё содержат owner/reviewer alias `lead`
 
 Во всех этих случаях:
 
@@ -1937,7 +1937,7 @@ Derived layer должен смотреть на:
 - task logs и transcript activity могут быть полезны для диагностики, но не должны становиться required input для queue derivation в Phase 0/1
 - actor identity normalization обязательна:
   - реальное имя лида
-  - `team-lead`
+  - `lead`
   должны считаться одним logical actor там, где речь идёт о valid ownership/reply semantics
 - roster validity должна проверяться по одной канонической queue-side нормализации, а не по смешению controller и UI resolver heuristics
 
@@ -2226,8 +2226,8 @@ Phase 0 guardrail:
 
 Уточнение:
 
-- `owner === "team-lead"` нельзя автоматически считать invalid
-- alias `team-lead` и canonical lead name должны проходить через одну lead-normalization логику
+- `owner === "lead"` нельзя автоматически считать invalid
+- alias `lead` и canonical lead name должны проходить через одну lead-normalization логику
 
 ### 9.5 Review requested, reviewer unresolved
 
@@ -2942,7 +2942,7 @@ Phase 0 exit gates:
 - review/task multi-file operations и agenda snapshot используют один controller lock contract
 - board-state mutations не откатываются частично из-за ошибки inbox/system notification
 - clarification больше не может тихо исчезнуть из queue из-за комментария произвольного teammate
-- queue roster normalization зафиксирован тестами на `team-lead`/`lead`, removed members, external recipients и generated ids
+- queue roster normalization зафиксирован тестами на `lead`/`lead`, removed members, external recipients и generated ids
 - новая `lead` group имеет реальный MCP registration path без duplicate tool registration
 - exported lead bootstrap constant существует и используется как source of truth
 - lead bootstrap permission seed включает `lead_briefing`, если prompt делает его first action
@@ -3126,7 +3126,7 @@ Phase 0 exit gates:
 - self-review
 - removed owner
 - removed reviewer
-- canonical lead name vs `team-lead` alias
+- canonical lead name vs `lead` alias
 - zero explicit lead candidates still yields valid lead queue
 - multiple lead-like members do not make `lead_briefing` fail
 - external inbox recipient does not become valid queue member

@@ -75,13 +75,13 @@ describe('MemberMessagesTab', () => {
   it('shows both messages and comments by default and filters them separately', async () => {
     const members: ResolvedTeamMember[] = [
       {
-        name: 'team-lead',
+        name: 'lead',
         status: 'active',
         currentTaskId: null,
         taskCount: 0,
         lastActiveAt: null,
         messageCount: 0,
-        agentType: 'team-lead',
+        agentType: 'lead',
       },
       {
         name: 'jack',
@@ -94,7 +94,7 @@ describe('MemberMessagesTab', () => {
     ];
     const messages: InboxMessage[] = [
       {
-        from: 'team-lead',
+        from: 'lead',
         to: 'jack',
         text: 'New task assigned',
         summary: 'New task assigned',
@@ -198,7 +198,7 @@ describe('MemberMessagesTab', () => {
     getMessagesPage.mockResolvedValue({
       messages: [
         {
-          from: 'team-lead',
+          from: 'lead',
           to: 'alice',
           text: 'Message for another member',
           summary: 'Message for another member',
@@ -213,13 +213,13 @@ describe('MemberMessagesTab', () => {
 
     const members: ResolvedTeamMember[] = [
       {
-        name: 'team-lead',
+        name: 'lead',
         status: 'active',
         currentTaskId: null,
         taskCount: 0,
         lastActiveAt: null,
         messageCount: 0,
-        agentType: 'team-lead',
+        agentType: 'lead',
       },
       {
         name: 'jack',
@@ -248,7 +248,7 @@ describe('MemberMessagesTab', () => {
         'demo-team': {
           canonicalMessages: [
             {
-              from: 'team-lead',
+              from: 'lead',
               to: 'alice',
               text: 'Message for another member',
               summary: 'Message for another member',

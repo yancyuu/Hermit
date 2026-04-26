@@ -19,18 +19,18 @@ function createBaseTeamData(
     teamName: 'my-team',
     config: {
       name: 'My Team',
-      members: [{ name: 'team-lead' }, { name: 'alice' }, { name: 'bob' }],
+      members: [{ name: 'lead' }, { name: 'alice' }, { name: 'bob' }],
       projectPath: '/repo',
     },
     members: [
       {
-        name: 'team-lead',
+        name: 'lead',
         status: 'active',
         currentTaskId: null,
         taskCount: 0,
         lastActiveAt: null,
         messageCount: 0,
-        agentType: 'team-lead',
+        agentType: 'lead',
       },
       {
         name: 'alice',
@@ -78,18 +78,18 @@ describe('TeamGraphAdapter particles', () => {
       createBaseTeamData({
         config: {
           name: 'My Team',
-          members: [{ name: 'team-lead' }, { name: 'alice' }, { name: 'bob' }, { name: 'tom' }],
+          members: [{ name: 'lead' }, { name: 'alice' }, { name: 'bob' }, { name: 'tom' }],
           projectPath: '/repo',
         },
         members: [
           {
-            name: 'team-lead',
+            name: 'lead',
             status: 'active',
             currentTaskId: null,
             taskCount: 0,
             lastActiveAt: null,
             messageCount: 0,
-            agentType: 'team-lead',
+            agentType: 'lead',
           },
           {
             name: 'tom',
@@ -159,7 +159,7 @@ describe('TeamGraphAdapter particles', () => {
       config: {
         name: 'My Team',
         members: [
-          { name: 'team-lead', agentId: 'lead-agent' },
+          { name: 'lead', agentId: 'lead-agent' },
           { name: 'alice', agentId: 'agent-alice' },
           { name: 'bob', agentId: 'agent-bob' },
         ],
@@ -167,13 +167,13 @@ describe('TeamGraphAdapter particles', () => {
       },
       members: [
         {
-          name: 'team-lead',
+          name: 'lead',
           status: 'active',
           currentTaskId: null,
           taskCount: 0,
           lastActiveAt: null,
           messageCount: 0,
-          agentType: 'team-lead',
+          agentType: 'lead',
           agentId: 'lead-agent',
         },
         {
@@ -255,7 +255,7 @@ describe('TeamGraphAdapter particles', () => {
       messages: [
         {
           from: 'alice',
-          to: 'team-lead',
+          to: 'lead',
           text: 'Please check the latest build output now',
           timestamp: '2026-03-28T19:00:01.000Z',
           read: false,
@@ -333,7 +333,7 @@ describe('TeamGraphAdapter particles', () => {
         messages: [
           {
             from: 'alice',
-            to: 'team-lead',
+            to: 'lead',
             text: 'Old backlog message',
             timestamp: '2026-03-28T19:00:01.000Z',
             read: false,
@@ -356,7 +356,7 @@ describe('TeamGraphAdapter particles', () => {
         config: {
           name: 'My Team',
           members: [
-            { name: 'team-lead' },
+            { name: 'lead' },
             { name: 'alice', agentId: 'shared-agent' },
             { name: 'bob', agentId: 'shared-agent' },
           ],
@@ -364,13 +364,13 @@ describe('TeamGraphAdapter particles', () => {
         },
         members: [
           {
-            name: 'team-lead',
+            name: 'lead',
             status: 'active',
             currentTaskId: null,
             taskCount: 0,
             lastActiveAt: null,
             messageCount: 0,
-            agentType: 'team-lead',
+            agentType: 'lead',
             agentId: 'lead-agent',
           },
           {
@@ -412,7 +412,7 @@ describe('TeamGraphAdapter particles', () => {
         config: {
           name: 'My Team',
           members: [
-            { name: 'team-lead', agentId: 'lead-agent' },
+            { name: 'lead', agentId: 'lead-agent' },
             { name: 'bob', agentId: 'agent-bob' },
             { name: 'alice', agentId: 'agent-alice' },
           ],
@@ -420,13 +420,13 @@ describe('TeamGraphAdapter particles', () => {
         },
         members: [
           {
-            name: 'team-lead',
+            name: 'lead',
             status: 'active',
             currentTaskId: null,
             taskCount: 0,
             lastActiveAt: null,
             messageCount: 0,
-            agentType: 'team-lead',
+            agentType: 'lead',
             agentId: 'lead-agent',
           },
           {
@@ -478,20 +478,20 @@ describe('TeamGraphAdapter particles', () => {
         config: {
           name: 'My Team',
           members: [
-            { name: 'team-lead', agentId: 'lead-agent' },
+            { name: 'lead', agentId: 'lead-agent' },
             { name: 'bob', agentId: 'agent-bob' },
           ],
           projectPath: '/repo',
         },
         members: [
           {
-            name: 'team-lead',
+            name: 'lead',
             status: 'active',
             currentTaskId: null,
             taskCount: 0,
             lastActiveAt: null,
             messageCount: 0,
-            agentType: 'team-lead',
+            agentType: 'lead',
             agentId: 'lead-agent',
           },
           {
@@ -644,14 +644,14 @@ describe('TeamGraphAdapter particles', () => {
       messages: [
         {
           from: 'alice',
-          to: 'team-lead',
+          to: 'lead',
           text: 'First payload',
           timestamp: '2026-03-28T19:00:01.000Z',
           read: false,
         },
         {
           from: 'bob',
-          to: 'team-lead',
+          to: 'lead',
           text: 'Second payload',
           timestamp: '2026-03-28T19:00:01.000Z',
           read: false,
@@ -673,7 +673,7 @@ describe('TeamGraphAdapter particles', () => {
       messages: [
         {
           from: 'alice',
-          to: 'team-lead',
+          to: 'lead',
           text: JSON.stringify({
             type: 'idle_notification',
             idleReason: 'available',
@@ -896,14 +896,14 @@ describe('TeamGraphAdapter particles', () => {
         messages: [
           {
             from: 'alice',
-            to: 'team-lead',
+            to: 'lead',
             text: 'First update',
             timestamp: '2026-03-28T19:00:01.000Z',
             read: false,
             messageId: 'msg-1',
           },
           {
-            from: 'team-lead',
+            from: 'lead',
             to: 'alice',
             text: 'Second update',
             timestamp: '2026-03-28T19:00:02.000Z',
@@ -918,12 +918,12 @@ describe('TeamGraphAdapter particles', () => {
     expect(findNode(graph, 'member:my-team:alice')?.activityItems).toEqual([
       expect.objectContaining({
         id: 'activity:msg:my-team:msg-2',
-        title: 'team-lead -> alice',
+        title: 'lead -> alice',
         preview: 'Second update',
       }),
       expect.objectContaining({
         id: 'activity:msg:my-team:msg-1',
-        title: 'alice -> team-lead',
+        title: 'alice -> lead',
         preview: 'First update',
       }),
     ]);
@@ -978,20 +978,20 @@ describe('TeamGraphAdapter particles', () => {
         config: {
           name: 'My Team',
           members: [
-            { name: 'team-lead', agentId: 'lead-agent' },
+            { name: 'lead', agentId: 'lead-agent' },
             { name: 'alice', agentId: 'agent-alice' },
           ],
           projectPath: '/repo',
         },
         members: [
           {
-            name: 'team-lead',
+            name: 'lead',
             status: 'active',
             currentTaskId: null,
             taskCount: 0,
             lastActiveAt: null,
             messageCount: 0,
-            agentType: 'team-lead',
+            agentType: 'lead',
             agentId: 'lead-agent',
           },
           {
@@ -1051,7 +1051,7 @@ describe('TeamGraphAdapter particles', () => {
         messages: [
           {
             from: 'alice',
-            to: 'team-lead',
+            to: 'lead',
             text: JSON.stringify({ type: 'idle_notification' }),
             timestamp: '2026-03-28T19:00:01.000Z',
             read: true,
@@ -1074,7 +1074,7 @@ describe('TeamGraphAdapter particles', () => {
     expect(findNode(graph, 'lead:my-team')?.activityItems).toEqual([
       expect.objectContaining({
         id: 'activity:msg:my-team:cross-team-1',
-        title: 'team-b -> team-lead',
+        title: 'team-b -> lead',
         preview: 'Need status update',
       }),
     ]);
@@ -1086,7 +1086,7 @@ describe('TeamGraphAdapter particles', () => {
 
     const messages: InboxMessage[] = Array.from({ length: 25 }, (_, index) => ({
       from: index % 2 === 0 ? 'alice' : 'bob',
-      to: 'team-lead',
+      to: 'lead',
       text: `Payload ${index + 1}`,
       timestamp: `2026-03-28T19:00:${String(index).padStart(2, '0')}.000Z`,
       read: false,
@@ -1105,13 +1105,13 @@ describe('TeamGraphAdapter particles', () => {
       createBaseTeamData({
         members: [
           {
-            name: 'team-lead',
+            name: 'lead',
             status: 'active',
             currentTaskId: null,
             taskCount: 0,
             lastActiveAt: null,
             messageCount: 0,
-            agentType: 'team-lead',
+            agentType: 'lead',
           },
           {
             name: 'alice',
@@ -1124,7 +1124,7 @@ describe('TeamGraphAdapter particles', () => {
         ],
         config: {
           name: 'My Team',
-          members: [{ name: 'team-lead' }, { name: 'alice' }],
+          members: [{ name: 'lead' }, { name: 'alice' }],
           projectPath: '/repo',
         },
         processes: [
@@ -1163,13 +1163,13 @@ describe('TeamGraphAdapter particles', () => {
       createBaseTeamData({
         members: [
           {
-            name: 'team-lead',
+            name: 'lead',
             status: 'active',
             currentTaskId: null,
             taskCount: 0,
             lastActiveAt: null,
             messageCount: 0,
-            agentType: 'team-lead',
+            agentType: 'lead',
           },
           {
             name: 'alice',
@@ -1182,7 +1182,7 @@ describe('TeamGraphAdapter particles', () => {
         ],
         config: {
           name: 'My Team',
-          members: [{ name: 'team-lead' }, { name: 'alice' }],
+          members: [{ name: 'lead' }, { name: 'alice' }],
           projectPath: '/repo',
         },
         processes: [
@@ -1314,7 +1314,7 @@ describe('TeamGraphAdapter particles', () => {
         messages: [
           {
             from: 'alice',
-            to: 'team-lead',
+            to: 'lead',
             text: 'Same payload',
             timestamp: '2026-03-28T19:10:00.000Z',
             read: false,
@@ -1335,7 +1335,7 @@ describe('TeamGraphAdapter particles', () => {
         messages: [
           {
             from: 'alice',
-            to: 'team-lead',
+            to: 'lead',
             text: 'Old payload',
             timestamp: '2026-03-28T19:20:00.000Z',
             read: false,
@@ -1351,7 +1351,7 @@ describe('TeamGraphAdapter particles', () => {
         messages: [
           {
             from: 'bob',
-            to: 'team-lead',
+            to: 'lead',
             text: 'New payload',
             timestamp: '2026-03-28T19:20:01.000Z',
             read: false,
@@ -1377,13 +1377,13 @@ describe('TeamGraphAdapter particles', () => {
       createBaseTeamData({
         members: [
           {
-            name: 'team-lead',
+            name: 'lead',
             status: 'active',
             currentTaskId: null,
             taskCount: 0,
             lastActiveAt: null,
             messageCount: 0,
-            agentType: 'team-lead',
+            agentType: 'lead',
           },
           {
             name: 'alice',
@@ -1422,7 +1422,7 @@ describe('TeamGraphAdapter particles', () => {
       undefined,
       'offline',
       undefined,
-      new Set(['team-lead'])
+      new Set(['lead'])
     );
 
     expect(findNode(graph, 'lead:my-team')).toMatchObject({
@@ -1725,13 +1725,13 @@ describe('TeamGraphAdapter particles', () => {
       createBaseTeamData({
         members: [
           {
-            name: 'team-lead',
+            name: 'lead',
             status: 'active',
             currentTaskId: null,
             taskCount: 0,
             lastActiveAt: null,
             messageCount: 0,
-            agentType: 'team-lead',
+            agentType: 'lead',
             providerId: 'codex',
             model: 'gpt-5.4-mini',
             effort: 'medium',

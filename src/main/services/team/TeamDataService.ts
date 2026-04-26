@@ -11,7 +11,11 @@ import {
 import { getMemberColorByName } from '@shared/constants/memberColors';
 import { isTeamEffortLevel } from '@shared/utils/effortLevels';
 import { classifyIdleNotificationText } from '@shared/utils/idleNotificationSemantics';
-import { isLeadMember } from '@shared/utils/leadDetection';
+import {
+  CANONICAL_LEAD_MEMBER_NAME,
+  isLeadMember,
+  isLeadMemberName,
+} from '@shared/utils/leadDetection';
 import { createLogger } from '@shared/utils/logger';
 import { migrateProviderBackendId } from '@shared/utils/providerBackend';
 import { getKanbanColumnFromReviewState, getReviewStateFromTask } from '@shared/utils/reviewState';
@@ -267,7 +271,9 @@ function extractPassiveUserPeerSummaryBody(text: string): string | null {
 
 function isExplicitLeadRole(role: string | undefined): boolean {
   const normalized = role?.trim().toLowerCase();
-  return normalized === 'lead' || normalized === 'team lead' || normalized === 'team-lead';
+  return (
+    normalized === 'lead' || normalized === 'team lead' || normalized === CANONICAL_LEAD_MEMBER_NAME
+  );
 }
 
 function hasVisibleLeadMember(members: readonly TeamMemberSnapshot[]): boolean {
@@ -276,7 +282,7 @@ function hasVisibleLeadMember(members: readonly TeamMemberSnapshot[]): boolean {
       return true;
     }
     const normalizedName = member.name.trim().toLowerCase();
-    if (normalizedName === 'lead') {
+    if (isLeadMemberName(normalizedName)) {
       return true;
     }
     return isExplicitLeadRole(member.role);
@@ -289,7 +295,7 @@ function hasExplicitLeadInConfig(config: TeamConfig): boolean {
       return true;
     }
     const normalizedName = member.name?.trim().toLowerCase() ?? '';
-    if (normalizedName === 'lead') {
+    if (isLeadMemberName(normalizedName)) {
       return true;
     }
     return isExplicitLeadRole(member.role);
@@ -486,7 +492,7 @@ export class TeamDataService {
     }
 
     const launchIdentity = teamMeta?.launchIdentity;
-    const leadName = 'team-lead';
+    const leadName = CANONICAL_LEAD_MEMBER_NAME;
     const ownedTasks = tasks.filter((task) => task.owner === leadName);
     const currentTask =
       ownedTasks.find(
@@ -502,7 +508,7 @@ export class TeamDataService {
       currentTaskId: currentTask?.id ?? null,
       taskCount: ownedTasks.length,
       color: getMemberColorByName(leadName),
-      agentType: 'team-lead',
+      agentType: CANONICAL_LEAD_MEMBER_NAME,
       role: 'Team Lead',
       workflow: undefined,
       isolation: undefined,
@@ -1701,8 +1707,8 @@ export class TeamDataService {
         if (name.toLowerCase() === 'user') {
           throw new Error('Member name "user" is reserved');
         }
-        if (name.toLowerCase() === 'team-lead') {
-          throw new Error('Member name "team-lead" is reserved');
+        if (isLeadMemberName(name)) {
+          throw new Error(`Member name "${CANONICAL_LEAD_MEMBER_NAME}" is reserved`);
         }
         if (nextByName.has(name.toLowerCase())) {
           throw new Error(`Member "${name}" already exists`);
@@ -2179,13 +2185,13 @@ export class TeamDataService {
   }
 
   private resolveLeadNameFromConfig(config: TeamConfig | null): string {
-    if (!config) return 'team-lead';
+    if (!config) return CANONICAL_LEAD_MEMBER_NAME;
     const members = config.members ?? [];
     const lead =
       members.find((member) => isLeadMember(member)) ??
-      members.find((member) => member.name?.trim().toLowerCase() === 'lead') ??
+      members.find((member) => isLeadMemberName(member.name)) ??
       members.find((member) => isExplicitLeadRole(member.role));
-    return lead?.name ?? config.members?.[0]?.name ?? 'team-lead';
+    return lead?.name ?? config.members?.[0]?.name ?? CANONICAL_LEAD_MEMBER_NAME;
   }
 
   private async resolveLeadName(teamName: string): Promise<string> {
@@ -2193,7 +2199,7 @@ export class TeamDataService {
       const config = await this.configReader.getConfig(teamName);
       return this.resolveLeadNameFromConfig(config);
     } catch {
-      return 'team-lead';
+      return CANONICAL_LEAD_MEMBER_NAME;
     }
   }
 
@@ -2207,14 +2213,14 @@ export class TeamDataService {
         leadSessionId: config?.leadSessionId,
       };
     } catch {
-      return { leadName: 'team-lead' };
+      return { leadName: CANONICAL_LEAD_MEMBER_NAME };
     }
   }
 
   private isLeadOwner(owner: string, leadName: string): boolean {
     const normalized = owner.trim().toLowerCase();
     if (!normalized) return false;
-    return normalized === leadName.trim().toLowerCase() || normalized === 'team-lead';
+    return normalized === leadName.trim().toLowerCase() || isLeadMemberName(normalized);
   }
 
   async initializeTaskCommentNotificationState(): Promise<void> {
@@ -2810,8 +2816,8 @@ export class TeamDataService {
           if (name.toLowerCase() === 'user') {
             throw new Error('Member name "user" is reserved');
           }
-          if (name.toLowerCase() === 'team-lead')
-            throw new Error('Member name "team-lead" is reserved');
+          if (isLeadMemberName(name))
+            throw new Error(`Member name "${CANONICAL_LEAD_MEMBER_NAME}" is reserved`);
           const suffixInfo = parseNumericSuffixName(name);
           if (suffixInfo && suffixInfo.suffix >= 2) {
             throw new Error(
@@ -3179,7 +3185,8 @@ export class TeamDataService {
       return [];
     }
     const leadName =
-      transcriptContext.config.members?.find((m) => isLeadMember(m))?.name ?? 'team-lead';
+      transcriptContext.config.members?.find((m) => isLeadMember(m))?.name ??
+      CANONICAL_LEAD_MEMBER_NAME;
     const knownLeadSessionIds = this.getRecentLeadSessionIds(config);
     if (knownLeadSessionIds.length === 0) {
       return [];

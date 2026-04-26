@@ -160,7 +160,7 @@ describe('TeamInboxWriter', () => {
   it('preserves provided message identity fields for dedup across live and persisted rows', async () => {
     const result = await writer.sendMessage('my-team', {
       member: 'alice',
-      from: 'team-lead',
+      from: 'lead',
       to: 'team-best.user',
       text: 'Hello cross-team',
       summary: 'Cross-team response',
@@ -176,7 +176,7 @@ describe('TeamInboxWriter', () => {
     const persisted = JSON.parse(hoisted.files.get(inboxPath) ?? '[]') as Record<string, unknown>[];
     expect(result.messageId).toBe('lead-sendmsg-run-1-123');
     expect(persisted[0]).toMatchObject({
-      from: 'team-lead',
+      from: 'lead',
       to: 'team-best.user',
       text: 'Hello cross-team',
       summary: 'Cross-team response',

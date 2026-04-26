@@ -64,7 +64,7 @@ describe('ActivityItem compact header preview', () => {
       'Делегировал alice длинную задачу с заметно более длинным описанием, чтобы превью занимало больше одной строки в компактном режиме.';
 
     const message: InboxMessage = {
-      from: 'team-lead',
+      from: 'lead',
       text: summary,
       summary,
       timestamp: new Date('2026-04-18T16:30:00.000Z').toISOString(),
@@ -112,7 +112,7 @@ describe('ActivityItem compact header preview', () => {
       'Делегировал bob ещё один узкий шаг: собрать fix-batch с учётом landing P0 по render->generate и пройтись по оставшимся edge cases.';
 
     const message: InboxMessage = {
-      from: 'team-lead',
+      from: 'lead',
       text: fullText,
       summary: 'Делегировал bob ещё один узкий шаг: собрать fix-batch с у...',
       timestamp: new Date('2026-04-18T16:29:00.000Z').toISOString(),
@@ -153,7 +153,7 @@ describe('ActivityItem compact header preview', () => {
 
     const visibleText = 'New task assigned to you: #3fd70e2 Собрать fix-batch';
     const message: InboxMessage = {
-      from: 'team-lead',
+      from: 'lead',
       text: `${visibleText}\n<info_for_agent>\ninternal only\n</info_for_agent>`,
       timestamp: new Date('2026-04-18T16:28:00.000Z').toISOString(),
       read: true,
@@ -197,7 +197,7 @@ describe('ActivityItem compact header preview', () => {
     const markdownText = '**Важно** проверить `CurrentTaskIndicator` и #abc123';
 
     const message: InboxMessage = {
-      from: 'team-lead',
+      from: 'lead',
       text: markdownText,
       timestamp: new Date('2026-04-18T16:31:00.000Z').toISOString(),
       read: true,
@@ -241,7 +241,7 @@ describe('ActivityItem compact header preview', () => {
       'Делегировал alice финальную общую сводку и remediation plan по всем findings команды.';
 
     const message: InboxMessage = {
-      from: 'team-lead',
+      from: 'lead',
       text: fullText,
       timestamp: new Date('2026-04-18T16:30:00.000Z').toISOString(),
       read: true,
@@ -317,7 +317,7 @@ describe('ActivityItem slash command rendering', () => {
     const root = createRoot(host);
 
     const message: InboxMessage = {
-      from: 'team-lead',
+      from: 'lead',
       text: 'Model set to sonnet\nContext usage reset',
       timestamp: new Date('2026-03-27T12:01:00.000Z').toISOString(),
       read: true,
@@ -340,7 +340,7 @@ describe('ActivityItem slash command rendering', () => {
     expect(host.textContent).toContain('/model');
     expect(host.textContent).toContain('Model set to sonnet');
     expect(host.textContent).toContain('Context usage reset');
-    expect(host.textContent).not.toContain('team-lead');
+    expect(host.textContent).not.toContain('lead');
 
     await act(async () => {
       root.unmount();
@@ -483,7 +483,7 @@ describe('ActivityItem legacy system message fallback', () => {
 
     const message: InboxMessage = {
       from: 'jack',
-      to: 'team-lead',
+      to: 'lead',
       text: 'Короткий отчёт по contributor/internal implementation navigation',
       summary: '#8fdd6803 Короткий отчёт по contributor/internal implementation navigation',
       timestamp: new Date('2026-04-13T13:35:00.000Z').toISOString(),
@@ -501,7 +501,7 @@ describe('ActivityItem legacy system message fallback', () => {
     expect(host.textContent).toContain('Comment');
     expect(host.textContent).toContain('jack');
     expect(host.textContent).toContain('#8fdd6803');
-    expect(host.textContent).not.toContain('team-lead');
+    expect(host.textContent).not.toContain('lead');
 
     await act(async () => {
       root.unmount();

@@ -41,7 +41,7 @@ import type { InboxMessage } from '../../../../../src/shared/types';
 
 function makeLeadSessionMsg(text: string, overrides?: Partial<InboxMessage>): InboxMessage {
   return {
-    from: 'team-lead',
+    from: 'lead',
     text,
     timestamp: '2026-03-28T18:30:00.000Z',
     read: true,
@@ -76,7 +76,7 @@ describe('LeadThoughtsGroup', () => {
 
   it('does not classify slash command results as lead thoughts', () => {
     const resultMessage: InboxMessage = {
-      from: 'team-lead',
+      from: 'lead',
       text: 'Total cost: $1.05',
       timestamp: '2026-03-27T22:06:00.000Z',
       read: true,

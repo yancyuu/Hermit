@@ -55,7 +55,7 @@ describe('TeamBackupService', () => {
     const config = {
       name: 'Mixed Team',
       projectPath: '/tmp/project',
-      members: [{ name: 'team-lead', agentType: 'team-lead' }],
+      members: [{ name: 'lead', agentType: 'lead' }],
     };
     const teamMeta = {
       version: 1,

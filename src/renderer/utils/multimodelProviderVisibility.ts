@@ -1,4 +1,4 @@
-import { filterMainScreenCliProviders } from './geminiUiFreeze';
+import { filterMainScreenCliProviders } from './claudeCodeOnlyProviders';
 
 import type {
   CliExtensionCapability,

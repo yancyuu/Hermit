@@ -130,7 +130,7 @@ describe('agent-teams-mcp tools', () => {
   it('launches and stops teams through the runtime MCP tools', async () => {
     const claudeDir = makeClaudeDir();
     writeTeamConfig(claudeDir, 'alpha', {
-      members: [{ name: 'lead', role: 'team-lead' }],
+      members: [{ name: 'lead', role: 'lead' }],
     });
     const calls: Array<{ method?: string; url?: string; body?: unknown }> = [];
     const server = await startControlServer(async ({ method, url, body }) => {
@@ -228,7 +228,7 @@ describe('agent-teams-mcp tools', () => {
     const claudeDir = makeClaudeDir();
     writeTeamConfig(claudeDir, 'alpha', {
       members: [
-        { name: 'lead', role: 'team-lead' },
+        { name: 'lead', role: 'lead' },
         { name: 'alice', role: 'developer' },
       ],
     });
@@ -301,7 +301,7 @@ describe('agent-teams-mcp tools', () => {
   it('discovers the control endpoint from the published state file', async () => {
     const claudeDir = makeClaudeDir();
     writeTeamConfig(claudeDir, 'alpha', {
-      members: [{ name: 'lead', role: 'team-lead' }],
+      members: [{ name: 'lead', role: 'lead' }],
     });
     const statePath = path.join(claudeDir, 'team-control-api.json');
 
@@ -351,7 +351,7 @@ describe('agent-teams-mcp tools', () => {
     writeTeamConfig(claudeDir, teamName, {
       language: 'en',
       members: [
-        { name: 'lead', role: 'team-lead' },
+        { name: 'lead', role: 'lead' },
         { name: 'alice', role: 'developer' },
       ],
     });
@@ -608,7 +608,7 @@ describe('agent-teams-mcp tools', () => {
       language: 'en',
       projectPath: '/tmp/gamma-project',
       members: [
-        { name: 'lead', role: 'team-lead' },
+        { name: 'lead', role: 'lead' },
         { name: 'alice', role: 'developer', workflow: 'Stay focused' },
       ],
     });
@@ -802,7 +802,7 @@ describe('agent-teams-mcp tools', () => {
     const teamName = 'lead-queue';
     writeTeamConfig(claudeDir, teamName, {
       members: [
-        { name: 'lead', role: 'team-lead' },
+        { name: 'lead', role: 'lead' },
         { name: 'alice', role: 'developer' },
         { name: 'bob', role: 'reviewer' },
       ],
@@ -891,7 +891,7 @@ describe('agent-teams-mcp tools', () => {
     const teamName = 'beta';
     writeTeamConfig(claudeDir, teamName, {
       members: [
-        { name: 'lead', role: 'team-lead' },
+        { name: 'lead', role: 'lead' },
         { name: 'alice', role: 'reviewer' },
         { name: 'bob', role: 'developer' },
       ],
@@ -1039,7 +1039,7 @@ describe('agent-teams-mcp tools', () => {
     const teamName = 'public-bypass-guards';
     writeTeamConfig(claudeDir, teamName, {
       members: [
-        { name: 'lead', role: 'team-lead' },
+        { name: 'lead', role: 'lead' },
         { name: 'alice', role: 'reviewer' },
         { name: 'bob', role: 'developer' },
       ],
@@ -1129,7 +1129,7 @@ describe('agent-teams-mcp tools', () => {
     const teamName = 'review-approval-notify';
     writeTeamConfig(claudeDir, teamName, {
       members: [
-        { name: 'lead', role: 'team-lead' },
+        { name: 'lead', role: 'lead' },
         { name: 'alice', role: 'reviewer' },
         { name: 'bob', role: 'developer' },
       ],
@@ -1212,7 +1212,7 @@ describe('agent-teams-mcp tools', () => {
     const teamName = 'gamma';
     writeTeamConfig(claudeDir, teamName, {
       members: [
-        { name: 'lead', role: 'team-lead' },
+        { name: 'lead', role: 'lead' },
         { name: 'alice', role: 'developer' },
       ],
     });
@@ -1249,7 +1249,7 @@ describe('agent-teams-mcp tools', () => {
     const teamName = 'forced-root';
     writeTeamConfig(forcedClaudeDir, teamName, {
       members: [
-        { name: 'lead', role: 'team-lead' },
+        { name: 'lead', role: 'lead' },
         { name: 'bob', role: 'developer' },
       ],
     });
@@ -1288,7 +1288,7 @@ describe('agent-teams-mcp tools', () => {
   it('rejects non-configured teams before MCP side-effect writes', async () => {
     const claudeDir = makeClaudeDir();
     writeTeamConfig(claudeDir, 'real-team', {
-      members: [{ name: 'lead', role: 'team-lead' }],
+      members: [{ name: 'lead', role: 'lead' }],
     });
 
     await expect(
@@ -1351,7 +1351,7 @@ describe('agent-teams-mcp tools', () => {
     const teamName = 'resilience';
     writeTeamConfig(claudeDir, teamName, {
       members: [
-        { name: 'lead', role: 'team-lead' },
+        { name: 'lead', role: 'lead' },
         { name: 'alice', role: 'developer' },
       ],
     });
@@ -1534,14 +1534,14 @@ describe('agent-teams-mcp tools', () => {
       const teamName = 'msg-team';
       fs.mkdirSync(path.join(claudeDir, 'tasks', teamName), { recursive: true });
       writeTeamConfig(claudeDir, teamName, {
-        members: [{ name: 'lead', role: 'team-lead' }],
+        members: [{ name: 'lead', role: 'lead' }],
       });
 
       const messageId = 'msg-user-001';
       writeSentMessage(claudeDir, teamName, {
         messageId,
         from: 'user',
-        to: 'team-lead',
+        to: 'lead',
         text: 'Please implement the login page',
         timestamp: '2026-03-15T10:00:00.000Z',
         source: 'user_sent',
@@ -1572,7 +1572,7 @@ describe('agent-teams-mcp tools', () => {
       const teamName = 'strip-team';
       fs.mkdirSync(path.join(claudeDir, 'tasks', teamName), { recursive: true });
       writeTeamConfig(claudeDir, teamName, {
-        members: [{ name: 'lead', role: 'team-lead' }],
+        members: [{ name: 'lead', role: 'lead' }],
       });
 
       const messageId = 'msg-with-agent-blocks';
@@ -1602,7 +1602,7 @@ describe('agent-teams-mcp tools', () => {
       const teamName = 'unknown-msg';
       fs.mkdirSync(path.join(claudeDir, 'tasks', teamName), { recursive: true });
       writeTeamConfig(claudeDir, teamName, {
-        members: [{ name: 'lead', role: 'team-lead' }],
+        members: [{ name: 'lead', role: 'lead' }],
       });
 
       await expect(
@@ -1622,7 +1622,7 @@ describe('agent-teams-mcp tools', () => {
       const teamName = 'source-reject';
       fs.mkdirSync(path.join(claudeDir, 'tasks', teamName), { recursive: true });
       writeTeamConfig(claudeDir, teamName, {
-        members: [{ name: 'lead', role: 'team-lead' }],
+        members: [{ name: 'lead', role: 'lead' }],
       });
 
       const messageId = 'msg-system-001';
@@ -1651,12 +1651,12 @@ describe('agent-teams-mcp tools', () => {
       const teamName = 'source-reject-2';
       fs.mkdirSync(path.join(claudeDir, 'tasks', teamName), { recursive: true });
       writeTeamConfig(claudeDir, teamName, {
-        members: [{ name: 'lead', role: 'team-lead' }],
+        members: [{ name: 'lead', role: 'lead' }],
       });
 
       writeSentMessage(claudeDir, teamName, {
         messageId: 'msg-lead-001',
-        from: 'team-lead',
+        from: 'lead',
         text: 'Lead process message',
         timestamp: '2026-03-15T12:01:00.000Z',
         source: 'lead_process',
@@ -1698,7 +1698,7 @@ describe('agent-teams-mcp tools', () => {
       const teamName = 'no-source';
       fs.mkdirSync(path.join(claudeDir, 'tasks', teamName), { recursive: true });
       writeTeamConfig(claudeDir, teamName, {
-        members: [{ name: 'lead', role: 'team-lead' }],
+        members: [{ name: 'lead', role: 'lead' }],
       });
 
       writeSentMessage(claudeDir, teamName, {
@@ -1726,7 +1726,7 @@ describe('agent-teams-mcp tools', () => {
       const teamName = 'relay-reject';
       fs.mkdirSync(path.join(claudeDir, 'tasks', teamName), { recursive: true });
       writeTeamConfig(claudeDir, teamName, {
-        members: [{ name: 'lead', role: 'team-lead' }],
+        members: [{ name: 'lead', role: 'lead' }],
       });
 
       const messageId = 'msg-relay-001';
@@ -1756,7 +1756,7 @@ describe('agent-teams-mcp tools', () => {
       const teamName = 'attach-meta';
       fs.mkdirSync(path.join(claudeDir, 'tasks', teamName), { recursive: true });
       writeTeamConfig(claudeDir, teamName, {
-        members: [{ name: 'lead', role: 'team-lead' }],
+        members: [{ name: 'lead', role: 'lead' }],
       });
 
       const messageId = 'msg-attach-001';
@@ -1793,7 +1793,7 @@ describe('agent-teams-mcp tools', () => {
       const teamName = 'parity-check';
       fs.mkdirSync(path.join(claudeDir, 'tasks', teamName), { recursive: true });
       writeTeamConfig(claudeDir, teamName, {
-        members: [{ name: 'lead', role: 'team-lead' }],
+        members: [{ name: 'lead', role: 'lead' }],
       });
 
       const messageId = 'msg-parity-001';
@@ -1844,7 +1844,7 @@ describe('agent-teams-mcp tools', () => {
       const teamName = 'roundtrip';
       fs.mkdirSync(path.join(claudeDir, 'tasks', teamName), { recursive: true });
       writeTeamConfig(claudeDir, teamName, {
-        members: [{ name: 'lead', role: 'team-lead' }],
+        members: [{ name: 'lead', role: 'lead' }],
       });
 
       const messageId = 'msg-roundtrip-001';
@@ -1891,7 +1891,7 @@ describe('agent-teams-mcp tools', () => {
       const teamName = 'legacy';
       fs.mkdirSync(path.join(claudeDir, 'tasks', teamName), { recursive: true });
       writeTeamConfig(claudeDir, teamName, {
-        members: [{ name: 'lead', role: 'team-lead' }],
+        members: [{ name: 'lead', role: 'lead' }],
       });
 
       // Create a regular task (no provenance)
@@ -1950,11 +1950,11 @@ describe('agent-teams-mcp tools', () => {
     await expect(
       getTool('task_create').execute({
         claudeDir,
-        teamName: 'team-lead',
+        teamName: 'lead',
         subject: 'Phantom task should fail',
       })
     ).rejects.toThrow(
-      'Unknown team "team-lead". Board tools require an existing configured team with config.json.'
+      'Unknown team "lead". Board tools require an existing configured team with config.json.'
     );
   });
 
@@ -1964,20 +1964,20 @@ describe('agent-teams-mcp tools', () => {
     await expect(
       getTool('task_create_from_message').execute({
         claudeDir,
-        teamName: 'team-lead',
+        teamName: 'lead',
         messageId: 'msg-1',
         subject: 'Phantom task should fail',
       })
     ).rejects.toThrow(
-      'Unknown team "team-lead". Board tools require an existing configured team with config.json.'
+      'Unknown team "lead". Board tools require an existing configured team with config.json.'
     );
   });
 
   it('fails closed for primary queue and inventory tools when team config does not exist', async () => {
     const claudeDir = makeClaudeDir();
-    const params = { claudeDir, teamName: 'team-lead' };
+    const params = { claudeDir, teamName: 'lead' };
     const expected =
-      'Unknown team "team-lead". Board tools require an existing configured team with config.json.';
+      'Unknown team "lead". Board tools require an existing configured team with config.json.';
 
     await expect(getTool('lead_briefing').execute(params)).rejects.toThrow(expected);
     await expect(

@@ -69,7 +69,7 @@ async function setupRunningTeam(teamName: string) {
       name: teamName,
       description: 'Test team',
       members: [
-        { name: 'team-lead', agentType: 'team-lead' },
+        { name: 'lead', agentType: 'lead' },
         { name: 'alice', agentType: 'teammate', role: 'developer' },
       ],
     }),
@@ -266,7 +266,7 @@ describe('TeamProvisioningService post-compact lifecycle', () => {
 
     // Simulate active relay capture
     run.leadRelayCapture = {
-      leadName: 'team-lead',
+      leadName: 'lead',
       startedAt: new Date().toISOString(),
       textParts: [],
       settled: false,
@@ -531,7 +531,7 @@ describe('TeamProvisioningService post-compact lifecycle', () => {
         name: 'compact-test-15',
         description: 'Test team',
         members: [
-          { name: 'team-lead', agentType: 'team-lead' },
+          { name: 'lead', agentType: 'lead' },
           { name: 'alice', agentType: 'teammate', role: 'developer' },
           { name: 'bob', agentType: 'teammate', role: 'tester' },
         ],

@@ -299,13 +299,6 @@ export class ClaudeBinaryResolver {
     }
 
     const baseBinaryName = 'claude';
-    const fromPath = await resolveFromPathEnv(baseBinaryName, enrichedPath);
-    if (fromPath) {
-      cachedPath = fromPath;
-      cacheVerifiedAt = Date.now();
-      return cachedPath;
-    }
-
     const platformBinaryNames =
       process.platform === 'win32' ? expandWindowsBinaryNames(baseBinaryName) : [baseBinaryName];
 
@@ -361,6 +354,13 @@ export class ClaudeBinaryResolver {
     const found = results.find((r) => r.ok);
     if (found) {
       cachedPath = found.path;
+      cacheVerifiedAt = Date.now();
+      return cachedPath;
+    }
+
+    const fromPath = await resolveFromPathEnv(baseBinaryName, enrichedPath);
+    if (fromPath) {
+      cachedPath = fromPath;
       cacheVerifiedAt = Date.now();
       return cachedPath;
     }

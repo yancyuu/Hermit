@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@renderer/components/ui/dialog';
+import { CANONICAL_LEAD_MEMBER_NAME, isLeadMemberName } from '@shared/utils/leadDetection';
 import { Loader2 } from 'lucide-react';
 
 import type { MemberDraft } from '@renderer/components/team/members/membersEditorTypes';
@@ -56,9 +57,10 @@ function deriveExistingWorktreeDefault(
   existingMembers: AddMemberDialogProps['existingMembers']
 ): boolean {
   const activeTeammates =
-    existingMembers?.filter(
-      (member) => !member.removedAt && member.name.trim().toLowerCase() !== 'team-lead'
-    ) ?? [];
+    existingMembers?.filter((member) => {
+      const name = member.name.trim().toLowerCase();
+      return !member.removedAt && !isLeadMemberName(name);
+    }) ?? [];
   return (
     activeTeammates.length > 0 && activeTeammates.every((member) => member.isolation === 'worktree')
   );
@@ -106,7 +108,8 @@ export const AddMemberDialog = ({
       const inlineError = validateMemberNameInline(name);
       if (inlineError) return inlineError;
 
-      if (trimmed === 'user' || trimmed === 'team-lead') return `Name "${trimmed}" is reserved`;
+      if (trimmed === 'user' || isLeadMemberName(trimmed))
+        return `Name "${CANONICAL_LEAD_MEMBER_NAME}" is reserved`;
 
       // Check against existing team members
       if (existingNames.some((n) => n.toLowerCase() === trimmed)) return 'Name is already taken';
@@ -195,6 +198,7 @@ export const AddMemberDialog = ({
             draftKeyPrefix={`addMember:${teamName}`}
             projectPath={projectPath}
             existingMembers={existingMembers}
+            disableGeminiOption={true}
             showWorktreeIsolationControls
             teammateWorktreeDefault={teammateWorktreeDefault}
             onTeammateWorktreeDefaultChange={setTeammateWorktreeDefault}

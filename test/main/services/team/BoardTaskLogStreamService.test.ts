@@ -790,7 +790,7 @@ describe('BoardTaskLogStreamService', () => {
                 type: 'tool_use',
                 id: 'tool-send',
                 name: 'SendMessage',
-                input: { to: 'team-lead', summary: '#abc done' },
+                input: { to: 'lead', summary: '#abc done' },
               } as never,
             ],
             toolCalls: [],
@@ -814,9 +814,9 @@ describe('BoardTaskLogStreamService', () => {
                     type: 'text',
                     text: JSON.stringify({
                       success: true,
-                      message: "Message sent to team-lead's inbox",
+                      message: "Message sent to lead's inbox",
                       routing: {
-                        target: '@team-lead',
+                        target: '@lead',
                         summary: '#abc done',
                         content: 'Detailed body that should not leak into the preview.',
                       },
@@ -834,9 +834,9 @@ describe('BoardTaskLogStreamService', () => {
                     type: 'text',
                     text: JSON.stringify({
                       success: true,
-                      message: "Message sent to team-lead's inbox",
+                      message: "Message sent to lead's inbox",
                       routing: {
-                        target: '@team-lead',
+                        target: '@lead',
                         summary: '#abc done',
                         content: 'Detailed body that should not leak into the preview.',
                       },
@@ -850,9 +850,9 @@ describe('BoardTaskLogStreamService', () => {
             sourceToolAssistantUUID: 'assistant-send',
             toolUseResult: {
               success: true,
-              message: "Message sent to team-lead's inbox",
+              message: "Message sent to lead's inbox",
               routing: {
-                target: '@team-lead',
+                target: '@lead',
                 summary: '#abc done',
                 content: 'Detailed body that should not leak into the preview.',
               },
@@ -882,12 +882,12 @@ describe('BoardTaskLogStreamService', () => {
     expect(content[0]).toMatchObject({
       type: 'tool_result',
       tool_use_id: 'tool-send',
-      content: "Message sent to team-lead's inbox - #abc done",
+      content: "Message sent to lead's inbox - #abc done",
     });
     expect(toolResultMessage?.toolResults).toEqual([
       {
         toolUseId: 'tool-send',
-        content: "Message sent to team-lead's inbox - #abc done",
+        content: "Message sent to lead's inbox - #abc done",
         isError: false,
       },
     ]);

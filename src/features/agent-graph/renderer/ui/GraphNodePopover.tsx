@@ -292,7 +292,7 @@ const MemberPopoverContent = ({
   const memberName =
     node.domainRef.kind === 'member' || node.domainRef.kind === 'lead'
       ? node.domainRef.memberName
-      : 'team-lead';
+      : 'lead';
   const teamName =
     node.domainRef.kind === 'member' || node.domainRef.kind === 'lead'
       ? node.domainRef.teamName

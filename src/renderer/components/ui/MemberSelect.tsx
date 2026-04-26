@@ -8,6 +8,7 @@ import {
   agentAvatarUrl,
   buildMemberAvatarMap,
   buildMemberColorMap,
+  displayMemberName,
 } from '@renderer/utils/memberHelpers';
 import { Command as CommandPrimitive } from 'cmdk';
 import { Check, ChevronsUpDown } from 'lucide-react';
@@ -78,7 +79,7 @@ export const MemberSelect = ({
             border: `1px solid ${colors.border}40`,
           }}
         >
-          {member.name === 'team-lead' ? 'lead' : member.name}
+          {displayMemberName(member.name)}
         </span>
       </span>
     );
@@ -187,7 +188,7 @@ export const MemberSelect = ({
                       loading="lazy"
                     />
                     <span className="min-w-0 truncate font-medium" style={{ color: colors.text }}>
-                      {m.name === 'team-lead' ? 'lead' : m.name}
+                      {displayMemberName(m.name)}
                     </span>
                     {role ? (
                       <span className="shrink-0 text-[10px] text-[var(--color-text-muted)]">

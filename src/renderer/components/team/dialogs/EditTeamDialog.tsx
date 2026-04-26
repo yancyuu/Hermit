@@ -28,6 +28,7 @@ import {
   buildMemberColorMap,
   displayMemberName,
 } from '@renderer/utils/memberHelpers';
+import { isLeadMemberName } from '@shared/utils/leadDetection';
 import { parseNumericSuffixName } from '@shared/utils/teamMemberName';
 import { Loader2 } from 'lucide-react';
 
@@ -107,7 +108,7 @@ function getInvalidMemberNamesError(
       return '成员名称必须以字母、数字或中文开头，最多 128 个字符';
     }
     const lower = name.toLowerCase();
-    if (lower === 'user' || lower === 'team-lead') {
+    if (lower === 'user' || isLeadMemberName(lower)) {
       return `成员名称“${name}”为保留名称`;
     }
     const suffixInfo = parseNumericSuffixName(name);
@@ -524,7 +525,7 @@ export const EditTeamDialog = ({
                     <MemberDraftRow
                       member={leadDraft}
                       index={0}
-                      avatarSrc={agentAvatarUrl('team-lead', 32)}
+                      avatarSrc={agentAvatarUrl('lead', 32)}
                       resolvedColor={effectiveResolvedMemberColorMap.get(
                         leadDraft.originalName ?? leadDraft.name
                       )}

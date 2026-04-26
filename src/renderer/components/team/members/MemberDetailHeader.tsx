@@ -67,7 +67,7 @@ export const MemberDetailHeader = ({
   // NOTE: lead context display disabled — usage formula is inaccurate
   // const teamName = useStore((s) => s.selectedTeamName);
   // const leadContext = useStore((s) =>
-  //   member.agentType === 'team-lead' && teamName ? s.leadContextByTeam[teamName] : undefined
+  //   member.agentType === 'lead' && teamName ? s.leadContextByTeam[teamName] : undefined
   // );
 
   const colors = getTeamColorSet(member.color ?? '');

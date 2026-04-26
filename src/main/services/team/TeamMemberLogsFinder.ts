@@ -1,4 +1,7 @@
-import { isLeadMember as isLeadMemberCheck } from '@shared/utils/leadDetection';
+import {
+  CANONICAL_LEAD_MEMBER_NAME,
+  isLeadMember as isLeadMemberCheck,
+} from '@shared/utils/leadDetection';
 import { createLogger } from '@shared/utils/logger';
 import { parseAllTeammateMessages } from '@shared/utils/teammateMessageParser';
 import { createReadStream } from 'fs';
@@ -135,7 +138,7 @@ export class TeamMemberLogsFinder {
     const results: MemberLogSummary[] = [];
 
     const leadMemberName =
-      config.members?.find((m) => isLeadMemberCheck(m))?.name?.trim() || 'team-lead';
+      config.members?.find((m) => isLeadMemberCheck(m))?.name?.trim() || CANONICAL_LEAD_MEMBER_NAME;
     if (isLeadMember && config.leadSessionId) {
       const leadJsonl = path.join(projectDir, `${config.leadSessionId}.jsonl`);
       const leadSummary = await this.parseLeadSessionSummary(
@@ -262,7 +265,7 @@ export class TeamMemberLogsFinder {
     const { projectDir, projectId, config, sessionIds, knownMembers } = discovery;
     const results: MemberLogSummary[] = [];
     const leadMemberName =
-      config.members?.find((m) => isLeadMemberCheck(m))?.name?.trim() || 'team-lead';
+      config.members?.find((m) => isLeadMemberCheck(m))?.name?.trim() || CANONICAL_LEAD_MEMBER_NAME;
 
     if (config.leadSessionId) {
       const leadJsonl = path.join(projectDir, `${config.leadSessionId}.jsonl`);
@@ -515,7 +518,7 @@ export class TeamMemberLogsFinder {
     }[] = [];
     const seen = new Set<string>();
     const leadMemberName =
-      config.members?.find((m) => isLeadMemberCheck(m))?.name?.trim() || 'team-lead';
+      config.members?.find((m) => isLeadMemberCheck(m))?.name?.trim() || CANONICAL_LEAD_MEMBER_NAME;
 
     const pushRef = (
       filePath: string,
@@ -966,7 +969,7 @@ export class TeamMemberLogsFinder {
     if (!discovery) return null;
     const { config } = discovery;
     const leadMemberName =
-      config.members?.find((m) => isLeadMemberCheck(m))?.name?.trim() || 'team-lead';
+      config.members?.find((m) => isLeadMemberCheck(m))?.name?.trim() || CANONICAL_LEAD_MEMBER_NAME;
     const isLeadMember = leadMemberName.toLowerCase() === memberName.trim().toLowerCase();
     return { ...discovery, isLeadMember };
   }
@@ -1494,7 +1497,7 @@ export class TeamMemberLogsFinder {
                 parsed[0]?.summary || parsed[0]?.content?.slice(0, 200) || 'Teammate spawn';
             }
 
-            // teammate_id identifies the MESSAGE SENDER (e.g. "team-lead"), not the agent
+            // teammate_id identifies the MESSAGE SENDER (e.g. "lead"), not the agent
             // owning this file. Collected as a signal — higher-precedence sources override.
             if (parsed[0]?.teammateId) {
               const tmId = parsed[0].teammateId.trim().toLowerCase();

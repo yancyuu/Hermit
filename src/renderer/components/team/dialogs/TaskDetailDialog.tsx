@@ -53,7 +53,7 @@ import {
   deriveTaskSince,
 } from '@renderer/utils/taskChangeRequest';
 import { linkifyTaskIdsInMarkdown, parseTaskLinkHref } from '@renderer/utils/taskReferenceUtils';
-import { isLeadMember } from '@shared/utils/leadDetection';
+import { isLeadMember, isLeadMemberName } from '@shared/utils/leadDetection';
 import { getTaskKanbanColumn } from '@shared/utils/reviewState';
 import { canDisplayTaskChanges } from '@shared/utils/taskChangeState';
 import {
@@ -611,10 +611,10 @@ export const TaskDetailDialog = ({
     .map((t) => t.id);
   const isTodo = status === 'pending' && !kanbanColumn;
   const canReassign = isTodo && onOwnerChange;
-  const leadName = members.find((m) => isLeadMember(m))?.name ?? 'team-lead';
+  const leadName = members.find((m) => isLeadMember(m))?.name ?? 'lead';
   const isLeadOwnedTask =
     (currentTask.owner ?? '').trim().toLowerCase() === leadName.trim().toLowerCase() ||
-    (currentTask.owner ?? '').trim().toLowerCase() === 'team-lead';
+    isLeadMemberName((currentTask.owner ?? '').trim().toLowerCase());
   const allowLeadExecutionPreview = true;
 
   return (

@@ -1,3 +1,3 @@
-export function getAnthropicDefaultTeamModel(limitContext: boolean): string {
-  return limitContext ? 'opus' : 'opus[1m]';
+export function getAnthropicDefaultTeamModel(_limitContext?: boolean): string {
+  return 'opus';
 }

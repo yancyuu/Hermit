@@ -23,6 +23,7 @@ import {
 } from '@features/tmux-installer/main';
 import { ConfigManager } from '@main/services/infrastructure/ConfigManager';
 import { NotificationManager } from '@main/services/infrastructure/NotificationManager';
+import { getLeadChannelListenerService } from '@main/services/team/LeadChannelListenerService';
 import type { SshConnectionManager } from '@main/services/infrastructure/SshConnectionManager';
 import { getAppIconPath } from '@main/utils/appIcon';
 import {
@@ -79,7 +80,13 @@ import {
   type ParsedPermissionRequest,
   parsePermissionRequest,
 } from '@shared/utils/inboxNoise';
-import { isLeadAgentType, isLeadMember } from '@shared/utils/leadDetection';
+import {
+  CANONICAL_LEAD_MEMBER_NAME,
+  LEGACY_LEAD_MEMBER_NAME,
+  isLeadAgentType,
+  isLeadMember,
+  isLeadMemberName,
+} from '@shared/utils/leadDetection';
 import { createLogger } from '@shared/utils/logger';
 import { migrateProviderBackendId } from '@shared/utils/providerBackend';
 import { isDefaultProviderModelSelection } from '@shared/utils/providerModelSelection';
@@ -190,7 +197,6 @@ import {
   choosePreferredLaunchSnapshot,
   clearBootstrapState,
   readBootstrapLaunchSnapshot,
-  readBootstrapRealTaskSubmissionState,
   readBootstrapRuntimeState,
 } from './TeamBootstrapStateReader';
 import { TeamConfigReader } from './TeamConfigReader';
@@ -248,6 +254,13 @@ function buildRelayInboxView(messages: RelayInboxMessage[]): RelayInboxMessageVi
   return messages.map((message) => {
     const isCrossTeamLike =
       message.source === CROSS_TEAM_SOURCE || message.source === CROSS_TEAM_SENT_SOURCE;
+    if (message.externalChannel) {
+      return {
+        message,
+        idle: null,
+        isCoarseNoise: false,
+      };
+    }
     return {
       message,
       idle: isCrossTeamLike ? null : classifyIdleNotificationForMainProcess(message.text),
@@ -788,6 +801,21 @@ function getExplicitLaunchModelSelection(model: string | undefined): string | un
   return trimmed;
 }
 
+function isAnthropicOneMillionModel(model: string | undefined | null): boolean {
+  return /\[1m\]/i.test(model?.trim() ?? '');
+}
+
+function sanitizeAnthropicEffortForModel(
+  providerId: TeamProviderId,
+  model: string | undefined,
+  effort: TeamCreateRequest['effort']
+): TeamCreateRequest['effort'] {
+  if (providerId === 'anthropic' && isAnthropicOneMillionModel(model)) {
+    return undefined;
+  }
+  return effort;
+}
+
 function getLaunchModelArg(
   providerId: TeamProviderId,
   model: string | undefined,
@@ -860,7 +888,7 @@ function resolveAnthropicSelectionFromFacts(params: {
       runtimeCapabilities: params.facts.runtimeCapabilities,
     },
     selectedModel: params.selectedModel,
-    limitContext: params.limitContext === true,
+    limitContext: params.limitContext,
   });
 }
 
@@ -880,13 +908,14 @@ function resolveCodexSelectionFromFacts(params: {
 
 function buildAnthropicSettingsArgs(
   providerId: TeamProviderId,
-  launchIdentity?: ProviderModelLaunchIdentity | null
+  launchIdentity?: ProviderModelLaunchIdentity | null,
+  skipPermissions?: boolean
 ): string[] {
   if (providerId !== 'anthropic' || typeof launchIdentity?.resolvedFastMode !== 'boolean') {
     return [];
   }
 
-  const settings = launchIdentity.resolvedFastMode
+  const settings: Record<string, unknown> = launchIdentity.resolvedFastMode
     ? {
         fastMode: true,
         fastModePerSessionOptIn: false,
@@ -894,16 +923,20 @@ function buildAnthropicSettingsArgs(
     : {
         fastMode: false,
       };
+  if (skipPermissions !== false) {
+    settings.skipDangerousModePermissionPrompt = true;
+  }
 
   return ['--settings', JSON.stringify(settings)];
 }
 
 function buildProviderFastModeArgs(
   providerId: TeamProviderId,
-  launchIdentity?: ProviderModelLaunchIdentity | null
+  launchIdentity?: ProviderModelLaunchIdentity | null,
+  skipPermissions?: boolean
 ): string[] {
   if (providerId === 'anthropic') {
-    return buildAnthropicSettingsArgs(providerId, launchIdentity);
+    return buildAnthropicSettingsArgs(providerId, launchIdentity, skipPermissions);
   }
   if (providerId === 'codex') {
     return buildCodexFastModeArgs(launchIdentity?.resolvedFastMode);
@@ -930,7 +963,7 @@ function resolveRequestedLaunchModel(params: {
   if (params.providerId === 'anthropic') {
     return resolveAnthropicLaunchModel({
       selectedModel: params.selectedModel,
-      limitContext: params.limitContext === true,
+      limitContext: params.limitContext,
       availableLaunchModels: params.facts.modelIds,
       defaultLaunchModel: params.facts.defaultModel,
     });
@@ -2131,12 +2164,13 @@ function buildEffectiveTeamMemberSpec(
     (memberProviderId == null || memberProviderId === defaultProviderId
       ? defaults.effort
       : undefined);
+  const sanitizedEffort = sanitizeAnthropicEffortForModel(effectiveProviderId, model, effort);
 
   return {
     ...member,
     providerId: effectiveProviderId,
     model,
-    effort,
+    effort: sanitizedEffort,
   };
 }
 
@@ -2179,7 +2213,7 @@ function shouldSkipResumeForProviderRuntimeChange(
     members.find((member) => isLeadMember(member)) ??
     members.find((member) => {
       const name = typeof member?.name === 'string' ? member.name.trim().toLowerCase() : '';
-      return name === 'team-lead';
+      return isLeadMemberName(name);
     });
   if (!lead) {
     return { skip: false };
@@ -2555,7 +2589,7 @@ Do NOT start work, claim tasks, or improvise workflow/task/process rules before 
 If tool search says agent-teams is still connecting, wait briefly and retry tool search at most once.
 If member_briefing is still unavailable after that one retry, do NOT report it as a bootstrap failure. Continue with the embedded rules below, and stay silent if you have no assigned task.
 Do NOT keep searching for member_briefing or send repeated status/idle messages after using the embedded fallback.
-IMPORTANT: When sending messages to the team lead, always use the exact name "${leadName}" in the \`to\` field of SendMessage. Never abbreviate or shorten it (e.g. do NOT use "lead" instead of "team-lead").
+IMPORTANT: When sending messages to the team lead, always use the exact name "${leadName}" in the \`to\` field of SendMessage.
 ${getCanonicalSendMessageFieldRule()}
 ${getVisibleTaskReferenceFormattingRule()}
 Correct example:
@@ -2632,7 +2666,7 @@ ${providerArgLine}${modelArgLine}${effortArgLine}   - prompt:
      If tool search says agent-teams is still connecting, wait briefly and retry tool search at most once.
      If member_briefing is still unavailable after that one retry, do NOT report it as a bootstrap failure. Continue with the embedded rules below, and stay silent if you have no assigned task.
      Do NOT keep searching for member_briefing or send repeated status/idle messages after using the embedded fallback.
-     IMPORTANT: When sending messages to the team lead, always use the exact name "${leadName}" in the \`to\` field of SendMessage. Never abbreviate or shorten it (e.g. do NOT use "lead" instead of "team-lead").
+     IMPORTANT: When sending messages to the team lead, always use the exact name "${leadName}" in the \`to\` field of SendMessage.
 ${indentMultiline(getVisibleTaskReferenceFormattingRule(), '     ')}
      ${buildTeammateAgentBlockReminder()}
 ${actionModeProtocol}
@@ -2761,162 +2795,48 @@ export function buildRestartMemberSpawnMessage(
   );
 }
 
-interface RuntimeBootstrapMemberSpec {
-  name: string;
-  prompt?: string;
-  cwd?: string;
-  model?: string;
-  provider?: TeamProviderId;
-  effort?: EffortLevel;
-  isolation?: 'worktree';
-  agentType?: string;
-  description?: string;
-  useSplitPane?: boolean;
-  planModeRequired?: boolean;
-}
-
-interface RuntimeBootstrapSpec {
-  version: 1;
-  runId: string;
-  mode: 'create' | 'launch';
-  initiator: {
-    kind: 'app';
-    source: 'claude_team_agent_teams_orchestrator';
-  };
-  team: {
-    name: string;
-    displayName?: string;
-    description?: string;
-    color?: string;
-    cwd: string;
-  };
-  lead: {
-    agentLanguage?: string;
-    permissionSeedTools?: string[];
-  };
-  members: RuntimeBootstrapMemberSpec[];
-  launch?: {
-    bootstrapTimeoutMs?: number;
-    continueOnPartialFailure?: boolean;
-  };
-  ui?: {
-    emitStructuredEvents?: boolean;
-  };
-}
-
-function buildDeterministicCreateBootstrapSpec(
-  runId: string,
+function buildNativeCreateBootstrapPrompt(
   request: TeamCreateRequest,
-  effectiveMembers: TeamCreateRequest['members']
-): RuntimeBootstrapSpec {
-  return {
-    version: 1,
-    runId,
-    mode: 'create',
-    initiator: {
-      kind: 'app',
-      source: 'claude_team_agent_teams_orchestrator',
-    },
-    team: {
-      name: request.teamName,
-      ...(request.displayName?.trim() ? { displayName: request.displayName.trim() } : {}),
-      ...(request.description?.trim() ? { description: request.description.trim() } : {}),
-      ...(request.color?.trim() ? { color: request.color.trim() } : {}),
-      cwd: request.cwd,
-    },
-    lead: {
-      agentLanguage: getConfiguredAgentLanguageName(),
-      ...(request.skipPermissions === false
-        ? {
-            permissionSeedTools: [
-              ...AGENT_TEAMS_NAMESPACED_LEAD_BOOTSTRAP_TOOL_NAMES,
-              'Edit',
-              'Write',
-              'NotebookEdit',
-            ],
-          }
-        : {}),
-    },
-    members: effectiveMembers.map((member) => ({
-      name: member.name,
-      agentType: AGENT_TEAMS_MEMBER_AGENT_TYPE,
-      ...(member.role?.trim() ? { role: member.role.trim() } : {}),
-      ...(member.workflow?.trim() ? { workflow: member.workflow.trim() } : {}),
-      ...(request.cwd ? { cwd: request.cwd } : {}),
-      ...(member.model?.trim() ? { model: member.model.trim() } : {}),
-      ...(member.providerId ? { provider: member.providerId } : {}),
-      ...(member.effort ? { effort: member.effort } : {}),
-      ...(member.isolation === 'worktree' ? { isolation: 'worktree' as const } : {}),
-      ...(member.role?.trim() ? { description: member.role.trim() } : {}),
-    })),
-    launch: {
-      continueOnPartialFailure: true,
-    },
-    ui: {
-      emitStructuredEvents: true,
-    },
-  };
-}
-
-function buildDeterministicLaunchBootstrapSpec(
-  runId: string,
-  request: TeamLaunchRequest,
-  effectiveMembers: TeamCreateRequest['members']
-): RuntimeBootstrapSpec {
-  return {
-    version: 1,
-    runId,
-    mode: 'launch',
-    initiator: {
-      kind: 'app',
-      source: 'claude_team_agent_teams_orchestrator',
-    },
-    team: {
-      name: request.teamName,
-      cwd: request.cwd,
-    },
-    lead: {
-      agentLanguage: getConfiguredAgentLanguageName(),
-      ...(request.skipPermissions === false
-        ? {
-            permissionSeedTools: [
-              ...AGENT_TEAMS_NAMESPACED_LEAD_BOOTSTRAP_TOOL_NAMES,
-              'Edit',
-              'Write',
-              'NotebookEdit',
-            ],
-          }
-        : {}),
-    },
-    members: effectiveMembers.map((member) => ({
-      name: member.name,
-      agentType: AGENT_TEAMS_MEMBER_AGENT_TYPE,
-      ...(request.cwd ? { cwd: request.cwd } : {}),
-      ...(member.model?.trim() ? { model: member.model.trim() } : {}),
-      ...(member.providerId ? { provider: member.providerId } : {}),
-      ...(member.effort ? { effort: member.effort } : {}),
-      ...(member.isolation === 'worktree' ? { isolation: 'worktree' as const } : {}),
-      ...(member.role?.trim() ? { role: member.role.trim() } : {}),
-      ...(member.workflow?.trim() ? { workflow: member.workflow.trim() } : {}),
-      ...(member.role?.trim() ? { description: member.role.trim() } : {}),
-    })),
-    launch: {
-      continueOnPartialFailure: true,
-    },
-    ui: {
-      emitStructuredEvents: true,
-    },
-  };
-}
-
-async function writeDeterministicBootstrapSpecFile(spec: RuntimeBootstrapSpec): Promise<string> {
-  const tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'agent-teams-bootstrap-'));
-  const filePath = path.join(tempDir, `${spec.team.name}-${randomUUID()}.json`);
-  await fs.promises.writeFile(filePath, JSON.stringify(spec), {
-    encoding: 'utf8',
-    mode: 0o600,
+  effectiveMembers: TeamCreateRequest['members'],
+  initialUserPrompt: string
+): string {
+  const leadName = CANONICAL_LEAD_MEMBER_NAME;
+  const displayName = request.displayName?.trim() || request.teamName;
+  const projectName = path.basename(request.cwd);
+  const isSolo = effectiveMembers.length === 0;
+  const persistentContext = buildPersistentLeadContext({
+    teamName: request.teamName,
+    leadName,
+    isSolo,
+    members: effectiveMembers,
   });
-  return filePath;
+  const spawnInstructions = effectiveMembers.length
+    ? effectiveMembers
+        .map((member) => {
+          const prompt = buildMemberSpawnPrompt(member, displayName, request.teamName, leadName);
+          const agentArgs = buildAgentToolArgsSuffix(member);
+          return `Spawn teammate "${member.name}" with the Agent tool using team_name="${request.teamName}", name="${member.name}", subagent_type="general-purpose"${agentArgs}, and this exact prompt:\n${indentMultiline(prompt, '  ')}`;
+        })
+        .join('\n\n')
+    : 'No teammates are configured for this team. Do not spawn teammates.';
+  const userPromptBlock = initialUserPrompt.trim()
+    ? `\nInitial user request after bootstrap is stable:\n${initialUserPrompt.trim()}\n`
+    : '';
+
+  return `Team Create [Native Claude Code | Team: "${request.teamName}" | Project: "${projectName}" | Lead: "${leadName}"]
+
+You are running headless in a non-interactive Claude Code session.
+You are "${leadName}", the team lead. The desktop app has already initialized the base team files; do NOT call TeamDelete, and do NOT delete or recreate the team.
+${getAgentLanguageInstruction()}${userPromptBlock}
+
+Bootstrap now:
+${spawnInstructions}
+
+After the configured teammates have been spawned:
+- If there is an initial user request, create/update visible board tasks and delegate them to the appropriate teammate(s). In solo mode, create/start the task yourself.
+- If there is no initial user request, stay quiet after bootstrap unless there is a real blocker.
+
+${persistentContext}`;
 }
 
 async function removeDeterministicBootstrapTempFile(filePath: string | null): Promise<void> {
@@ -2927,18 +2847,6 @@ async function removeDeterministicBootstrapTempFile(filePath: string | null): Pr
 
 async function removeDeterministicBootstrapSpecFile(filePath: string | null): Promise<void> {
   await removeDeterministicBootstrapTempFile(filePath);
-}
-
-async function writeDeterministicBootstrapUserPromptFile(prompt: string): Promise<string> {
-  const tempDir = await fs.promises.mkdtemp(
-    path.join(os.tmpdir(), 'agent-teams-bootstrap-prompt-')
-  );
-  const filePath = path.join(tempDir, `${randomUUID()}.txt`);
-  await fs.promises.writeFile(filePath, prompt, {
-    encoding: 'utf8',
-    mode: 0o600,
-  });
-  return filePath;
 }
 
 async function removeDeterministicBootstrapUserPromptFile(filePath: string | null): Promise<void> {
@@ -3265,7 +3173,8 @@ function buildDeterministicLaunchHydrationPrompt(
   isResume: boolean
 ): string {
   const leadName =
-    members.find((member) => member.role?.toLowerCase().includes('lead'))?.name || 'team-lead';
+    members.find((member) => member.role?.toLowerCase().includes('lead'))?.name ||
+    CANONICAL_LEAD_MEMBER_NAME;
   const isSolo = members.length === 0;
   const projectName = path.basename(request.cwd);
   const startLabel = isResume ? 'Team Start (resume)' : 'Team Start';
@@ -3977,6 +3886,7 @@ export class TeamProvisioningService {
   >();
   private readonly stoppingSecondaryRuntimeTeams = new Set<string>();
   private readonly retainedClaudeLogsByTeam = new Map<string, RetainedClaudeLogsSnapshot>();
+  private readonly teamSendBlockReasonByTeam = new Map<string, string>();
   private readonly persistedTranscriptClaudeLogsCache = new Map<
     string,
     PersistedTranscriptClaudeLogsCacheEntry
@@ -4507,6 +4417,13 @@ export class TeamProvisioningService {
         selectedFastMode: params.request.fastMode,
         providerFastModeDefault: getAnthropicFastModeDefault(),
       });
+      const requestedEffort = params.request.effort ?? selection.defaultEffort ?? null;
+      const resolvedEffort =
+        requestedEffort &&
+        !isAnthropicOneMillionModel(selection.resolvedLaunchModel ?? resolvedLaunchModel) &&
+        selection.supportedEfforts.includes(requestedEffort)
+          ? requestedEffort
+          : null;
 
       return {
         providerId,
@@ -4522,7 +4439,7 @@ export class TeamProvisioningService {
         catalogSource: selection.catalogSource,
         catalogFetchedAt: selection.catalogFetchedAt,
         selectedEffort: params.request.effort ?? null,
-        resolvedEffort: params.request.effort ?? selection.defaultEffort ?? null,
+        resolvedEffort,
         selectedFastMode: params.request.fastMode ?? 'inherit',
         resolvedFastMode: fastResolution.resolvedFastMode,
         fastResolutionReason: fastResolution.disabledReason,
@@ -4606,7 +4523,11 @@ export class TeamProvisioningService {
           `${params.actorLabel} resolves to Anthropic model "${resolvedLaunchModel}", but the current runtime does not list it as launchable.`
         );
       }
-      if (params.effort && !selection.supportedEfforts.includes(params.effort)) {
+      if (
+        params.effort &&
+        !isAnthropicOneMillionModel(resolvedLaunchModel) &&
+        !selection.supportedEfforts.includes(params.effort)
+      ) {
         const modelLabel = selection.displayName ?? resolvedLaunchModel;
         throw new Error(
           `${params.actorLabel} 使用了 Anthropic 推理强度“${params.effort}”，但 ${modelLabel} 在当前运行时中不支持该设置。`
@@ -5094,8 +5015,8 @@ export class TeamProvisioningService {
       if (configuredLeadName) {
         candidates.push(configuredLeadName);
       }
-      candidates.push('lead');
-      candidates.push('team-lead');
+      candidates.push(CANONICAL_LEAD_MEMBER_NAME);
+      candidates.push(LEGACY_LEAD_MEMBER_NAME);
     }
     return candidates
       .filter((value): value is string => Boolean(value && value.trim()))
@@ -5110,12 +5031,7 @@ export class TeamProvisioningService {
       .trim()
       .toLowerCase()
       .replace(/[\s_]+/g, '-');
-    return (
-      normalized === 'lead' ||
-      normalized === 'team-lead' ||
-      normalized === 'teamlead' ||
-      normalized === 'team-leader'
-    );
+    return isLeadMemberName(normalized) || normalized === 'teamlead' || normalized === 'leader';
   }
 
   private async applyOpenCodeVisibleDestinationProof(input: {
@@ -6736,7 +6652,7 @@ export class TeamProvisioningService {
       if (pseudoTeamName === currentTeam) {
         return null;
       }
-      return { teamName: pseudoTeamName, memberName: 'team-lead' };
+      return { teamName: pseudoTeamName, memberName: CANONICAL_LEAD_MEMBER_NAME };
     }
     const dot = trimmed.indexOf('.');
     if (dot <= 0 || dot === trimmed.length - 1) return null;
@@ -6852,7 +6768,8 @@ export class TeamProvisioningService {
 
   private getRunLeadName(run: ProvisioningRun): string {
     return (
-      run.request.members.find((m) => m.role?.toLowerCase().includes('lead'))?.name || 'team-lead'
+      run.request.members.find((m) => m.role?.toLowerCase().includes('lead'))?.name ||
+      CANONICAL_LEAD_MEMBER_NAME
     );
   }
 
@@ -11128,17 +11045,95 @@ export class TeamProvisioningService {
       .trim();
   }
 
-  private isQuotaRetryMessage(text: string | undefined): boolean {
-    const lower = (text ?? '').toLowerCase();
-    return (
-      lower.includes('quota will reset after') ||
-      lower.includes('exhausted your capacity on this model') ||
-      lower.includes('resource exhausted') ||
-      lower.includes('model cooldown') ||
-      lower.includes('cooling down') ||
-      lower.includes('rate limit') ||
-      lower.includes('rate_limit')
-    );
+  private extractApiErrorStatus(text: string | undefined): number | null {
+    const raw = text?.trim();
+    if (!raw) return null;
+    const match = /api error:\s*(\d{3})\b/i.exec(raw) ?? /^(\d{3})\b/.exec(raw);
+    if (!match) return null;
+    const status = Number.parseInt(match[1], 10);
+    return Number.isFinite(status) ? status : null;
+  }
+
+  private extractStructuredApiErrorCode(text: string | undefined): string | null {
+    const raw = text?.trim();
+    if (!raw) return null;
+    const prefixedMatch = /^(?:API Error:\s*\d+\s+|\d+\s+)?(\{[\s\S]*\})$/i.exec(raw);
+    const jsonCandidate = prefixedMatch?.[1] ?? (raw.startsWith('{') ? raw : null);
+    if (!jsonCandidate) return null;
+
+    try {
+      const parsed = JSON.parse(jsonCandidate) as {
+        error?: { code?: unknown };
+        code?: unknown;
+      };
+      const code = parsed.error?.code ?? parsed.code;
+      return typeof code === 'string' || typeof code === 'number' ? String(code) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private extractApiErrorStatusFromPayload(payload: unknown): number | null {
+    if (!payload || typeof payload !== 'object') return null;
+    const record = payload as Record<string, unknown>;
+    const status = record.status;
+    return typeof status === 'number' && Number.isFinite(status) ? status : null;
+  }
+
+  private extractApiErrorCodeFromPayload(payload: unknown): string | null {
+    if (!payload || typeof payload !== 'object') return null;
+    const record = payload as Record<string, unknown>;
+    const directCode = record.code;
+    if (typeof directCode === 'string' || typeof directCode === 'number') {
+      return String(directCode);
+    }
+
+    const error = record.error;
+    if (!error || typeof error !== 'object') return null;
+    const errorRecord = error as Record<string, unknown>;
+    const nestedCode = errorRecord.code;
+    if (typeof nestedCode === 'string' || typeof nestedCode === 'number') {
+      return String(nestedCode);
+    }
+
+    const nestedError = errorRecord.error;
+    if (!nestedError || typeof nestedError !== 'object') return null;
+    const nestedErrorRecord = nestedError as Record<string, unknown>;
+    const deeplyNestedCode = nestedErrorRecord.code;
+    return typeof deeplyNestedCode === 'string' || typeof deeplyNestedCode === 'number'
+      ? String(deeplyNestedCode)
+      : null;
+  }
+
+  private isRateLimitApiRetryPayload(
+    msg: Record<string, unknown>,
+    rawErrorMessage?: string
+  ): boolean {
+    if (msg.error_status === 429) return true;
+    if (msg.error === 'rate_limit' || msg.error === 'model_cooldown') return true;
+
+    const structuredCode = this.extractStructuredApiErrorCode(rawErrorMessage);
+    return structuredCode === '1302' || structuredCode === 'model_cooldown';
+  }
+
+  private isRateLimitSystemApiErrorPayload(msg: Record<string, unknown>): boolean {
+    const payload = msg.error;
+    const status = this.extractApiErrorStatusFromPayload(payload);
+    if (status === 429) return true;
+
+    const code = this.extractApiErrorCodeFromPayload(payload);
+    return code === '1302' || code === 'model_cooldown';
+  }
+
+  private isRateLimitApiError(text: string | undefined, status?: string | number | null): boolean {
+    const numericStatus =
+      typeof status === 'number'
+        ? status
+        : typeof status === 'string' && status.trim()
+          ? Number.parseInt(status, 10)
+          : this.extractApiErrorStatus(text);
+    if (numericStatus === 429) return true;
+    return this.extractStructuredApiErrorCode(text) === '1302';
   }
 
   private toMarkdownCodeSafe(text: string): string {
@@ -11170,11 +11165,12 @@ export class TeamProvisioningService {
 
     const snippet =
       this.extractApiErrorSnippet(combined) ?? this.extractApiErrorSnippet(source) ?? null;
-    const status =
-      /api error:\s*(\d{3})\b/i.exec(combined)?.[1] ?? /api error:\s*(\d{3})\b/i.exec(source)?.[1];
+    const status = this.extractApiErrorStatus(combined) ?? this.extractApiErrorStatus(source);
+    const isRateLimited =
+      this.isRateLimitApiError(combined, status) || this.isRateLimitApiError(source, status);
 
     const hint = run.isLaunch ? 'Launch' : 'Provisioning';
-    const statusLabel = status ? `API Error ${status}` : 'API Error';
+    const statusLabel = isRateLimited ? '请求限流' : status ? `API Error ${status}` : 'API Error';
     if (snippet) {
       run.provisioningOutputParts.push(
         `**${hint} failed: ${statusLabel} detected**\n\n\`\`\`\n${snippet}\n\`\`\``
@@ -11184,9 +11180,17 @@ export class TeamProvisioningService {
     }
 
     const progress = updateProgress(run, 'failed', `${hint} failed — ${statusLabel}`, {
-      error: `Claude CLI reported ${statusLabel} during startup. The team was not started.`,
+      error: isRateLimited
+        ? 'Anthropic 返回 429/1302，请求已被限流。团队未完成启动，请稍后重试或减少同时启动的成员。'
+        : `Claude CLI reported ${statusLabel} during startup. The team was not started.`,
       cliLogsTail: extractCliLogsFromRun(run),
     });
+    if (isRateLimited) {
+      this.teamSendBlockReasonByTeam.set(
+        run.teamName,
+        '负责人当前处于请求限流状态，团队未完成启动。请稍后重试，或先停止部分团队/成员。'
+      );
+    }
     run.onProgress(progress);
 
     run.processKilled = true;
@@ -11210,8 +11214,12 @@ export class TeamProvisioningService {
     run.apiErrorWarningEmitted = true;
 
     const snippet = this.extractApiErrorSnippet(text);
-    const status = /api error:\s*(\d{3})\b/i.exec(text)?.[1] ?? null;
-    const label = status ? `API Error ${status}` : 'API Error';
+    const status = this.extractApiErrorStatus(text);
+    const label = this.isRateLimitApiError(text, status)
+      ? '请求限流'
+      : status
+        ? `API Error ${status}`
+        : 'API Error';
 
     const warningText = snippet
       ? `**${label} — SDK is retrying**\n\n\`\`\`\n${snippet}\n\`\`\`\n\nWaiting for retry...`
@@ -11446,7 +11454,6 @@ export class TeamProvisioningService {
 
     // Verify --mcp-config still exists; regenerate if deleted (e.g. by stale GC)
     const mcpFlagIdx = ctx.args.indexOf('--mcp-config');
-    const bootstrapPromptFlagIdx = ctx.args.indexOf('--team-bootstrap-user-prompt-file');
     if (mcpFlagIdx !== -1 && mcpFlagIdx + 1 < ctx.args.length) {
       const existingConfigPath = ctx.args[mcpFlagIdx + 1];
       try {
@@ -11467,73 +11474,6 @@ export class TeamProvisioningService {
           run.onProgress(progress);
           this.cleanupRun(run);
           return;
-        }
-      }
-    }
-
-    if (bootstrapPromptFlagIdx !== -1 && bootstrapPromptFlagIdx + 1 < ctx.args.length) {
-      const existingPromptPath = ctx.args[bootstrapPromptFlagIdx + 1];
-      try {
-        await fs.promises.access(existingPromptPath, fs.constants.F_OK);
-      } catch {
-        const submissionState = await readBootstrapRealTaskSubmissionState(run.teamName);
-        if (submissionState === 'submitted') {
-          ctx.args.splice(bootstrapPromptFlagIdx, 2);
-          ctx.prompt = '';
-          run.bootstrapUserPromptPath = null;
-        } else if (submissionState === 'unknown') {
-          run.authRetryInProgress = false;
-          const progress = updateProgress(
-            run,
-            'failed',
-            'Unable to safely retry first task after auth failure',
-            {
-              error:
-                'deterministic bootstrap recorded the first real task as unknown, so retry would risk a duplicate submission',
-              cliLogsTail: extractCliLogsFromRun(run),
-            }
-          );
-          run.onProgress(progress);
-          this.cleanupRun(run);
-          return;
-        } else if (ctx.prompt.trim().length === 0) {
-          run.authRetryInProgress = false;
-          const progress = updateProgress(
-            run,
-            'failed',
-            'Failed to restore deferred first task after auth retry',
-            {
-              error:
-                'deterministic bootstrap user prompt file was missing and no prompt was available to regenerate it',
-              cliLogsTail: extractCliLogsFromRun(run),
-            }
-          );
-          run.onProgress(progress);
-          this.cleanupRun(run);
-          return;
-        } else {
-          logger.warn(
-            `[${run.teamName}] Bootstrap user prompt file ${existingPromptPath} missing, regenerating`
-          );
-          try {
-            const newPromptPath = await writeDeterministicBootstrapUserPromptFile(ctx.prompt);
-            ctx.args[bootstrapPromptFlagIdx + 1] = newPromptPath;
-            run.bootstrapUserPromptPath = newPromptPath;
-          } catch (regenErr) {
-            run.authRetryInProgress = false;
-            const progress = updateProgress(
-              run,
-              'failed',
-              'Failed to regenerate deferred first task for auth retry',
-              {
-                error: regenErr instanceof Error ? regenErr.message : String(regenErr),
-                cliLogsTail: extractCliLogsFromRun(run),
-              }
-            );
-            run.onProgress(progress);
-            this.cleanupRun(run);
-            return;
-          }
         }
       }
     }
@@ -11588,18 +11528,13 @@ export class TeamProvisioningService {
     });
     run.onProgress(run.progress);
 
-    // Resend prompt only for legacy direct-stdin flows. Deterministic bootstrap
-    // owns the first real task via --team-bootstrap-user-prompt-file.
-    if (bootstrapPromptFlagIdx === -1 && child.stdin?.writable) {
-      const message = JSON.stringify({
-        type: 'user',
-        message: {
-          role: 'user',
-          content: [{ type: 'text', text: ctx.prompt }],
-        },
-      });
-      child.stdin.write(message + '\n');
-    }
+    void this.sendStreamJsonUserPrompt(child, ctx.prompt, run.teamName, 'retry').catch((error) => {
+      logger.warn(
+        `[${run.teamName}] Failed to resend bootstrap prompt after auth retry: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    });
 
     // Reattach stdout handler
     this.attachStdoutHandler(run);
@@ -11777,12 +11712,91 @@ export class TeamProvisioningService {
     request: TeamCreateRequest,
     onProgress: (progress: TeamProvisioningProgress) => void
   ): Promise<TeamCreateResponse> {
+    request = this.normalizeClaudeCodeOnlyRequest(request);
     return this.withTeamLock(request.teamName, async () => {
       if (this.isRemoteExecutionTarget(request.executionTarget)) {
         return this.runRemoteTeam(request, onProgress, 'create') as Promise<TeamCreateResponse>;
       }
       return this._createTeamInner(request, onProgress);
     });
+  }
+
+  private normalizeClaudeCodeOnlyRequest<T extends TeamCreateRequest | TeamLaunchRequest>(
+    request: T
+  ): T {
+    const rootProviderId = normalizeOptionalTeamProviderId(request.providerId);
+    const keepRootModel = !rootProviderId || rootProviderId === 'anthropic';
+    const members = 'members' in request ? request.members : undefined;
+    return {
+      ...request,
+      providerId: 'anthropic',
+      providerBackendId: undefined,
+      model: keepRootModel ? request.model : undefined,
+      ...(members
+        ? {
+            members: members.map((member) => {
+              const memberProviderId =
+                normalizeOptionalTeamProviderId(member.providerId) ??
+                normalizeOptionalTeamProviderId((member as { provider?: unknown }).provider);
+              const keepMemberModel = !memberProviderId || memberProviderId === 'anthropic';
+              return {
+                ...member,
+                provider: undefined,
+                providerId: 'anthropic',
+                providerBackendId: undefined,
+                model: keepMemberModel ? member.model : undefined,
+                effort: keepMemberModel ? member.effort : undefined,
+              };
+            }),
+          }
+        : {}),
+    } as T;
+  }
+
+  private async writeNativeClaudeLeadConfig(request: TeamCreateRequest): Promise<void> {
+    const configPath = path.join(getTeamsBasePath(), request.teamName, 'config.json');
+    const config: TeamConfig = {
+      name: request.displayName?.trim() || request.teamName,
+      description: request.description,
+      color: request.color,
+      projectPath: request.cwd,
+      members: [
+        {
+          name: CANONICAL_LEAD_MEMBER_NAME,
+          role: 'Team Lead',
+          agentType: CANONICAL_LEAD_MEMBER_NAME,
+          providerId: normalizeOptionalTeamProviderId(request.providerId),
+          model: request.model,
+          effort: request.effort,
+          cwd: request.cwd,
+        },
+      ],
+    };
+    await atomicWriteAsync(configPath, `${JSON.stringify(config, null, 2)}\n`);
+  }
+
+  private async sendStreamJsonUserPrompt(
+    child: ReturnType<typeof spawn>,
+    prompt: string,
+    teamName: string,
+    phase: 'create' | 'launch' | 'retry'
+  ): Promise<void> {
+    const stdin = child.stdin;
+    if (!prompt.trim() || !stdin?.writable) return;
+    const payload = JSON.stringify({
+      type: 'user',
+      message: {
+        role: 'user',
+        content: [{ type: 'text', text: prompt }],
+      },
+    });
+    await new Promise<void>((resolve, reject) => {
+      stdin.write(payload + '\n', (err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+    logger.info(`[${teamName}] Sent native Claude bootstrap prompt via stdin (${phase})`);
   }
 
   private async _createTeamInner(
@@ -11793,6 +11807,7 @@ export class TeamProvisioningService {
     if (existingProvisioningRunId) {
       return { runId: existingProvisioningRunId };
     }
+    this.teamSendBlockReasonByTeam.delete(request.teamName);
     const stopAllGenerationAtStart = this.stopAllTeamsGeneration;
     assertAppDeterministicBootstrapEnabled();
     if (this.shouldRouteOpenCodeToRuntimeAdapter(request)) {
@@ -11966,13 +11981,13 @@ export class TeamProvisioningService {
       run.onProgress(run.progress);
       await this.clearPersistedLaunchState(request.teamName);
 
-      const bootstrapSpec = buildDeterministicCreateBootstrapSpec(
-        runId,
-        request,
-        effectiveMemberSpecs
-      );
       const initialUserPrompt = request.prompt?.trim() ?? '';
-      const promptSize = getPromptSizeSummary(initialUserPrompt);
+      const nativeBootstrapPrompt = buildNativeCreateBootstrapPrompt(
+        request,
+        effectiveMemberSpecs,
+        initialUserPrompt
+      );
+      const promptSize = getPromptSizeSummary(nativeBootstrapPrompt);
       let child: ReturnType<typeof spawn>;
       shellEnv.CLAUDE_ENABLE_DETERMINISTIC_TEAM_BOOTSTRAP = '1';
       const teammateModeDecision = await resolveDesktopTeammateModeDecision(request.extraCliArgs);
@@ -11980,16 +11995,7 @@ export class TeamProvisioningService {
         shellEnv.CLAUDE_TEAM_FORCE_PROCESS_TEAMMATES = '1';
       }
       let mcpConfigPath: string;
-      let bootstrapSpecPath: string;
-      let bootstrapUserPromptPath: string | null = null;
       try {
-        bootstrapSpecPath = await writeDeterministicBootstrapSpecFile(bootstrapSpec);
-        run.bootstrapSpecPath = bootstrapSpecPath;
-        if (initialUserPrompt) {
-          bootstrapUserPromptPath =
-            await writeDeterministicBootstrapUserPromptFile(initialUserPrompt);
-          run.bootstrapUserPromptPath = bootstrapUserPromptPath;
-        }
         mcpConfigPath = await this.mcpConfigBuilder.writeConfigFile(request.cwd);
         run.mcpConfigPath = mcpConfigPath;
         await this.validateAgentTeamsMcpRuntime(claudePath, request.cwd, shellEnv, mcpConfigPath, {
@@ -12015,8 +12021,13 @@ export class TeamProvisioningService {
         launchIdentity
       );
       const resolvedProviderId = resolveTeamProviderId(request.providerId);
-      const providerFastModeArgs = buildProviderFastModeArgs(resolvedProviderId, launchIdentity);
+      const providerFastModeArgs = buildProviderFastModeArgs(
+        resolvedProviderId,
+        launchIdentity,
+        request.skipPermissions
+      );
       const spawnArgs = [
+        '--print',
         '--input-format',
         'stream-json',
         '--output-format',
@@ -12028,11 +12039,6 @@ export class TeamProvisioningService {
         mcpConfigPath,
         '--agents',
         buildAgentTeamsMemberAgentsJson(mcpConfigPath),
-        '--team-bootstrap-spec',
-        bootstrapSpecPath,
-        ...(bootstrapUserPromptPath
-          ? ['--team-bootstrap-user-prompt-file', bootstrapUserPromptPath]
-          : []),
         '--disallowedTools',
         APP_TEAM_RUNTIME_DISALLOWED_TOOLS,
         // Explicit --permission-mode overrides user's defaultMode in ~/.claude/settings.json
@@ -12065,6 +12071,7 @@ export class TeamProvisioningService {
         const tasksDir = path.join(getTasksBasePath(), request.teamName);
         await fs.promises.mkdir(teamDir, { recursive: true });
         await fs.promises.mkdir(tasksDir, { recursive: true });
+        await this.writeNativeClaudeLeadConfig(request);
         await this.teamMetaStore.writeMeta(request.teamName, {
           displayName: request.displayName,
           description: request.description,
@@ -12137,11 +12144,23 @@ export class TeamProvisioningService {
         args: spawnArgs,
         cwd: request.cwd,
         env: { ...shellEnv },
-        prompt: initialUserPrompt,
+        prompt: nativeBootstrapPrompt,
       };
 
       this.attachStdoutHandler(run);
       this.attachStderrHandler(run);
+      void this.sendStreamJsonUserPrompt(
+        child,
+        nativeBootstrapPrompt,
+        request.teamName,
+        'create'
+      ).catch((error) => {
+        logger.warn(
+          `[${request.teamName}] Failed to send native create bootstrap prompt: ${
+            error instanceof Error ? error.message : String(error)
+          }`
+        );
+      });
 
       // Reset AFTER spawn — not at run init — because async operations (buildProvisioningEnv,
       // writeConfigFile) between init and spawn can take seconds, causing false stall warnings.
@@ -12522,9 +12541,9 @@ export class TeamProvisioningService {
       projectPath: request.cwd,
       members: [
         {
-          name: 'team-lead',
+          name: CANONICAL_LEAD_MEMBER_NAME,
           role: 'Team Lead',
-          agentType: 'team-lead',
+          agentType: CANONICAL_LEAD_MEMBER_NAME,
           providerId: normalizeOptionalTeamProviderId(request.providerId),
           model: request.model,
           effort: request.effort,
@@ -12614,6 +12633,7 @@ export class TeamProvisioningService {
     request: TeamLaunchRequest,
     onProgress: (progress: TeamProvisioningProgress) => void
   ): Promise<TeamLaunchResponse> {
+    request = this.normalizeClaudeCodeOnlyRequest(request);
     return this.withTeamLock(request.teamName, async () => {
       if (this.isRemoteExecutionTarget(request.executionTarget)) {
         return this.runRemoteTeam(request, onProgress, 'launch') as Promise<TeamLaunchResponse>;
@@ -12630,6 +12650,7 @@ export class TeamProvisioningService {
     if (existingProvisioningRunId) {
       return { runId: existingProvisioningRunId };
     }
+    this.teamSendBlockReasonByTeam.delete(request.teamName);
     const stopAllGenerationAtStart = this.stopAllTeamsGeneration;
     assertAppDeterministicBootstrapEnabled();
     if (this.shouldRouteOpenCodeToRuntimeAdapter(request)) {
@@ -12815,7 +12836,7 @@ export class TeamProvisioningService {
       }
 
       // IMPORTANT: The CLI auto-suffixes teammate names when they already exist in config.json.
-      // Normalize config.json to keep only the team-lead before spawning the CLI, so we get stable names.
+      // Normalize config.json to keep only the lead before spawning the CLI, so we get stable names.
       try {
         await this.normalizeTeamConfigForLaunch(request.teamName, configRaw);
         await this.assertConfigLeadOnlyForLaunch(request.teamName);
@@ -13055,18 +13076,7 @@ export class TeamProvisioningService {
         shellEnv.CLAUDE_TEAM_FORCE_PROCESS_TEAMMATES = '1';
       }
       let mcpConfigPath: string;
-      let bootstrapSpecPath: string;
-      let bootstrapUserPromptPath: string | null = null;
       try {
-        const bootstrapSpec = buildDeterministicLaunchBootstrapSpec(
-          runId,
-          request,
-          effectiveMemberSpecs
-        );
-        bootstrapSpecPath = await writeDeterministicBootstrapSpecFile(bootstrapSpec);
-        run.bootstrapSpecPath = bootstrapSpecPath;
-        bootstrapUserPromptPath = await writeDeterministicBootstrapUserPromptFile(prompt);
-        run.bootstrapUserPromptPath = bootstrapUserPromptPath;
         mcpConfigPath = await this.mcpConfigBuilder.writeConfigFile(request.cwd);
         run.mcpConfigPath = mcpConfigPath;
         await this.validateAgentTeamsMcpRuntime(claudePath, request.cwd, shellEnv, mcpConfigPath, {
@@ -13088,6 +13098,7 @@ export class TeamProvisioningService {
         throw error;
       }
       const launchArgs = [
+        '--print',
         '--input-format',
         'stream-json',
         '--output-format',
@@ -13099,11 +13110,6 @@ export class TeamProvisioningService {
         mcpConfigPath,
         '--agents',
         buildAgentTeamsMemberAgentsJson(mcpConfigPath),
-        '--team-bootstrap-spec',
-        bootstrapSpecPath,
-        ...(bootstrapUserPromptPath
-          ? ['--team-bootstrap-user-prompt-file', bootstrapUserPromptPath]
-          : []),
         '--disallowedTools',
         APP_TEAM_RUNTIME_DISALLOWED_TOOLS,
         // Explicit --permission-mode overrides user's defaultMode in ~/.claude/settings.json
@@ -13124,7 +13130,11 @@ export class TeamProvisioningService {
         launchIdentity
       );
       const resolvedProviderId = resolveTeamProviderId(request.providerId);
-      const providerFastModeArgs = buildProviderFastModeArgs(resolvedProviderId, launchIdentity);
+      const providerFastModeArgs = buildProviderFastModeArgs(
+        resolvedProviderId,
+        launchIdentity,
+        request.skipPermissions
+      );
       if (launchModelArg) {
         launchArgs.push('--model', launchModelArg);
       }
@@ -13227,6 +13237,15 @@ export class TeamProvisioningService {
 
       this.attachStdoutHandler(run);
       this.attachStderrHandler(run);
+      void this.sendStreamJsonUserPrompt(child, prompt, request.teamName, 'launch').catch(
+        (error) => {
+          logger.warn(
+            `[${request.teamName}] Failed to send native launch bootstrap prompt: ${
+              error instanceof Error ? error.message : String(error)
+            }`
+          );
+        }
+      );
 
       // Reset AFTER spawn — not at run init — because async operations between init
       // and spawn can take seconds, causing false stall warnings.
@@ -13499,7 +13518,7 @@ export class TeamProvisioningService {
           messageId,
           teamName,
           from: 'user',
-          to: 'team-lead',
+          to: CANONICAL_LEAD_MEMBER_NAME,
           text: message,
           attachments,
           createdAt: nowIso(),
@@ -13595,6 +13614,125 @@ export class TeamProvisioningService {
       });
     });
     this.setLeadActivity(run, 'active');
+  }
+
+  async deliverExternalChannelMessageToLead(
+    teamName: string,
+    input: {
+      channelName: string;
+      provider: 'feishu';
+      text: string;
+      from: string;
+      chatId: string;
+      messageId?: string;
+    }
+  ): Promise<string | null> {
+    const runId = this.getAliveRunId(teamName) ?? this.getProvisioningRunId(teamName);
+    if (!runId) return null;
+    const run = this.runs.get(runId);
+    if (!run?.child || run.processKilled || run.cancelRequested || !run.child.stdin?.writable) {
+      return null;
+    }
+    if (run.leadRelayCapture) {
+      logger.warn(`[${teamName}] external channel delivery skipped — lead turn already in-flight`);
+      return null;
+    }
+
+    const config = await this.configReader.getConfig(teamName).catch(() => null);
+    const leadName =
+      config?.members?.find((member) => isLeadMember(member))?.name?.trim() ||
+      CANONICAL_LEAD_MEMBER_NAME;
+    const message = [
+      `You received a direct message from an external channel.`,
+      `IMPORTANT: Your text response here will be sent back to that channel and shown in the Messages panel. Always include a brief human-readable reply when the sender expects a response. Do NOT respond with only an agent-only block.`,
+      ``,
+      `External channel: ${input.provider} / ${input.channelName} / chat ${input.chatId}`,
+      `From: ${input.from}`,
+      ...(input.messageId ? [`MessageId: ${input.messageId}`] : []),
+      `To: ${leadName}`,
+      ``,
+      `Message:`,
+      input.text,
+    ].join('\n');
+
+    const captureTimeoutMs = 15_000;
+    const captureIdleMs = 800;
+    let resolveCapture: (text: string) => void = () => {};
+    let rejectCapture: (error: Error) => void = () => {};
+    const capturePromise = new Promise<string>((resolve, reject) => {
+      resolveCapture = resolve;
+      rejectCapture = reject;
+    });
+    const activeCapture: NonNullable<ProvisioningRun['leadRelayCapture']> = {
+      leadName,
+      startedAt: nowIso(),
+      textParts: [],
+      settled: false,
+      idleHandle: null,
+      idleMs: captureIdleMs,
+      timeoutHandle: setTimeout(() => {
+        rejectCapture(new Error('Timed out waiting for lead external-channel reply'));
+      }, captureTimeoutMs),
+      resolveOnce: (text: string) => {
+        if (activeCapture.settled) return;
+        activeCapture.settled = true;
+        if (activeCapture.idleHandle) {
+          clearTimeout(activeCapture.idleHandle);
+          activeCapture.idleHandle = null;
+        }
+        clearTimeout(activeCapture.timeoutHandle);
+        resolveCapture(text);
+      },
+      rejectOnce: (error: string) => {
+        if (activeCapture.settled) return;
+        activeCapture.settled = true;
+        if (activeCapture.idleHandle) {
+          clearTimeout(activeCapture.idleHandle);
+          activeCapture.idleHandle = null;
+        }
+        clearTimeout(activeCapture.timeoutHandle);
+        rejectCapture(new Error(error));
+      },
+    };
+    run.leadRelayCapture = activeCapture;
+
+    try {
+      await this.sendMessageToRun(run, message);
+    } catch (error) {
+      if (activeCapture) {
+        clearTimeout(activeCapture.timeoutHandle);
+        if (activeCapture.idleHandle) {
+          clearTimeout(activeCapture.idleHandle);
+        }
+      }
+      if (run.leadRelayCapture === activeCapture) {
+        run.leadRelayCapture = null;
+      }
+      logger.warn(`[${teamName}] external channel stdin delivery failed: ${String(error)}`);
+      return null;
+    }
+
+    let replyText: string | null = null;
+    try {
+      replyText = (await capturePromise).trim() || null;
+    } catch {
+      const partial = activeCapture?.textParts?.join('')?.trim();
+      replyText = partial && partial.length > 0 ? partial : null;
+    } finally {
+      if (activeCapture) {
+        if (activeCapture.idleHandle) {
+          clearTimeout(activeCapture.idleHandle);
+          activeCapture.idleHandle = null;
+        }
+        clearTimeout(activeCapture.timeoutHandle);
+      }
+      if (run.leadRelayCapture === activeCapture) {
+        run.leadRelayCapture = null;
+      }
+    }
+
+    const cleanReply = replyText ? stripAgentBlocks(replyText).trim() : '';
+    return cleanReply || null;
   }
 
   /**
@@ -14281,7 +14419,8 @@ export class TeamProvisioningService {
       }
       if (isStaleRelayRun()) return 0;
       if (config) {
-        const leadName = config.members?.find((m) => isLeadMember(m))?.name?.trim() || 'team-lead';
+        const leadName =
+          config.members?.find((m) => isLeadMember(m))?.name?.trim() || CANONICAL_LEAD_MEMBER_NAME;
         try {
           const leadInboxMessages = await this.inboxReader.getMessagesFor(teamName, leadName);
           if (isStaleRelayRun()) return 0;
@@ -14332,7 +14471,8 @@ export class TeamProvisioningService {
       if (isStaleRelayRun()) return 0;
       if (!config) return 0;
 
-      const leadName = config.members?.find((m) => isLeadMember(m))?.name?.trim() || 'team-lead';
+      const leadName =
+        config.members?.find((m) => isLeadMember(m))?.name?.trim() || CANONICAL_LEAD_MEMBER_NAME;
       let leadInboxMessages: Awaited<ReturnType<TeamInboxReader['getMessagesFor']>> = [];
       try {
         leadInboxMessages = await this.inboxReader.getMessagesFor(teamName, leadName);
@@ -14548,6 +14688,7 @@ export class TeamProvisioningService {
         `Process them in order (oldest first).`,
         `If action is required, delegate via task creation or SendMessage, and keep responses minimal.`,
         `IMPORTANT: Your text response here is shown to the user.`,
+        `For external channel messages (for example Feishu), your text response will also be sent back to that channel. Reply naturally and concisely when the external sender appears to expect a response.`,
         `If you actually take action, include a brief human-readable summary (e.g. "Delegated to carol.").`,
         `If there is no action to take, produce ZERO text output. Do NOT write "No action needed.", status echoes, or any other no-op summary.`,
         `For pure system notifications, comment notifications, or routine teammate availability updates that require no reply/comment/action, say nothing.`,
@@ -14570,6 +14711,9 @@ export class TeamProvisioningService {
         ...batch.flatMap((m, idx) => {
           const summaryLine = m.summary?.trim() ? `Summary: ${m.summary.trim()}` : null;
           const isTaskCreateFromMessageEligible = m.source === 'user_sent';
+          const externalChannelLine = m.externalChannel
+            ? `   External channel: ${m.externalChannel.provider} / ${m.externalChannel.channelName ?? m.externalChannel.channelId} / chat ${m.externalChannel.chatId}`
+            : null;
           const provenanceLines = isTaskCreateFromMessageEligible
             ? [`   Eligible for task_create_from_message: yes`, `   User MessageId: ${m.messageId}`]
             : [`   Eligible for task_create_from_message: no`];
@@ -14599,6 +14743,7 @@ export class TeamProvisioningService {
             ...(typeof m.source === 'string' && m.source.trim()
               ? [`   Source: ${m.source.trim()}`]
               : []),
+            ...(externalChannelLine ? [externalChannelLine] : []),
             ...provenanceLines,
             ...replyInstructions,
             ...(structuredTaskContextBlock ? [structuredTaskContextBlock] : []),
@@ -14657,26 +14802,11 @@ export class TeamProvisioningService {
         return 0;
       }
 
-      for (const m of batch) {
-        relayedIds.add(m.messageId);
-      }
-      this.relayedLeadInboxMessageIds.set(teamName, this.trimRelayedSet(relayedIds));
-      this.rememberRecentCrossTeamLeadDeliveryMessageIds(
-        teamName,
-        batch
-          .filter((message) => message.source === CROSS_TEAM_SOURCE)
-          .map((message) => message.messageId)
-      );
-
-      try {
-        await this.markInboxMessagesRead(teamName, leadName, batch);
-      } catch {
-        // Best-effort: relay succeeded; marking read failed.
-      }
-
       let replyText: string | null = null;
+      let relayTurnCompleted = false;
       try {
         replyText = (await capturePromise).trim() || null;
+        relayTurnCompleted = true;
       } catch {
         // Best-effort: if we captured some text but never got result.success, keep it.
         const partial = run.leadRelayCapture?.textParts?.join('')?.trim();
@@ -14692,10 +14822,50 @@ export class TeamProvisioningService {
         }
       }
 
+      if (!relayTurnCompleted) {
+        logger.warn(
+          `[${teamName}] lead inbox relay did not complete; leaving ${batch.length} message(s) unread for retry`
+        );
+        return 0;
+      }
+
+      for (const m of batch) {
+        relayedIds.add(m.messageId);
+      }
+      this.relayedLeadInboxMessageIds.set(teamName, this.trimRelayedSet(relayedIds));
+      this.rememberRecentCrossTeamLeadDeliveryMessageIds(
+        teamName,
+        batch
+          .filter((message) => message.source === CROSS_TEAM_SOURCE)
+          .map((message) => message.messageId)
+      );
+
+      try {
+        await this.markInboxMessagesRead(teamName, leadName, batch);
+      } catch {
+        // Best-effort: relay turn completed; marking read failed.
+      }
+
       // Strip agent-only blocks — lead may respond with pure coordination content
       // that is not meant for the human user.
       const cleanReply = replyText ? stripAgentBlocks(replyText) : null;
       if (cleanReply) {
+        const externalTargets = new Map<string, NonNullable<InboxMessage['externalChannel']>>();
+        for (const message of batch) {
+          const channel = message.externalChannel;
+          if (!channel || channel.provider !== 'feishu') continue;
+          externalTargets.set(`${channel.channelId}:${channel.chatId}`, channel);
+        }
+        for (const channel of externalTargets.values()) {
+          void getLeadChannelListenerService()
+            .sendFeishuReply(teamName, channel.channelId, channel.chatId, cleanReply)
+            .catch((error: unknown) =>
+              logger.warn(
+                `[${teamName}] Failed to send lead reply to Feishu channel ${channel.channelId}: ${String(error)}`
+              )
+            );
+        }
+
         const relayMsg: InboxMessage = {
           from: leadName,
           to: 'user',
@@ -14757,6 +14927,27 @@ export class TeamProvisioningService {
    */
   getAliveTeams(): string[] {
     return Array.from(this.aliveRunByTeam.keys()).filter((name) => this.isTeamAlive(name));
+  }
+
+  getTeamSendBlockReason(teamName: string): string | null {
+    return this.teamSendBlockReasonByTeam.get(teamName) ?? null;
+  }
+
+  getLeadUserSendBlockReason(teamName: string): string | null {
+    const explicitReason = this.getTeamSendBlockReason(teamName);
+    if (explicitReason) return explicitReason;
+
+    const runId = this.getTrackedRunId(teamName);
+    if (!runId) return null;
+    const run = this.runs.get(runId);
+    if (!run || run.processKilled || run.cancelRequested) return null;
+    if (!run.provisioningComplete) {
+      return '负责人正在启动或重试中，暂时不能发送新消息。请稍后再试。';
+    }
+    if (run.leadActivityState !== 'idle') {
+      return '负责人正在处理上一条消息，暂时不能发送新消息。请等当前回复结束后再试。';
+    }
+    return null;
   }
 
   async getRuntimeState(teamName: string): Promise<TeamRuntimeState> {
@@ -15407,7 +15598,7 @@ export class TeamProvisioningService {
       return metaLeadName;
     }
 
-    return 'team-lead';
+    return CANONICAL_LEAD_MEMBER_NAME;
   }
 
   private isMemberRemovedInMeta(
@@ -17152,7 +17343,7 @@ export class TeamProvisioningService {
 
     const configPath = path.join(getTeamsBasePath(), teamName, 'config.json');
     let configMembers = new Set<string>();
-    let leadName = 'team-lead';
+    let leadName = CANONICAL_LEAD_MEMBER_NAME;
     try {
       const raw = await tryReadRegularFileUtf8(configPath, {
         timeoutMs: TEAM_JSON_READ_TIMEOUT_MS,
@@ -17636,7 +17827,7 @@ export class TeamProvisioningService {
       const summary = typeof inp.summary === 'string' ? inp.summary : '';
       const leadName =
         run.request.members.find((m) => m.role?.toLowerCase().includes('lead'))?.name ||
-        'team-lead';
+        CANONICAL_LEAD_MEMBER_NAME;
 
       const cleanContent = stripAgentBlocks(msgContent);
       if (cleanContent.trim().length === 0) continue;
@@ -17648,14 +17839,17 @@ export class TeamProvisioningService {
           .filter((name) => name.length > 0)
       );
       localRecipientNames.add('user');
-      localRecipientNames.add('team-lead');
+      localRecipientNames.add(CANONICAL_LEAD_MEMBER_NAME);
+      localRecipientNames.add(LEGACY_LEAD_MEMBER_NAME);
 
       const mistakenToolHint = this.isCrossTeamToolRecipientName(recipient)
         ? this.resolveSingleActiveCrossTeamReplyHint(run)
         : null;
       const crossTeamRecipient =
         this.parseCrossTeamRecipient(run.teamName, recipient, localRecipientNames) ??
-        (mistakenToolHint ? { teamName: mistakenToolHint.toTeam, memberName: 'team-lead' } : null);
+        (mistakenToolHint
+          ? { teamName: mistakenToolHint.toTeam, memberName: CANONICAL_LEAD_MEMBER_NAME }
+          : null);
       if (crossTeamRecipient && this.crossTeamSender) {
         const inferredReplyMeta =
           mistakenToolHint?.toTeam === crossTeamRecipient.teamName
@@ -18374,7 +18568,7 @@ export class TeamProvisioningService {
       const paneId = typeof member.tmuxPaneId === 'string' ? member.tmuxPaneId.trim() : '';
       const backendType =
         typeof member.backendType === 'string' ? member.backendType.trim().toLowerCase() : '';
-      if (!name || name === 'team-lead' || !paneId || backendType !== 'tmux') {
+      if (!name || isLeadMemberName(name) || !paneId || backendType !== 'tmux') {
         continue;
       }
       try {
@@ -18732,6 +18926,7 @@ export class TeamProvisioningService {
       const textParts = content
         .filter((part) => part.type === 'text' && typeof part.text === 'string')
         .map((part) => part.text as string);
+      let assistantIsRateLimitApiError = false;
       if (textParts.length > 0) {
         const text = textParts.join('\n');
         const messageTimestamp =
@@ -18743,8 +18938,17 @@ export class TeamProvisioningService {
         // Auth failures sometimes show up as assistant text (e.g. "401", "Please run /login")
         // rather than stderr or a result.subtype=error. Detect early to avoid false "ready".
         this.handleAuthFailureInOutput(run, text, 'assistant');
+        assistantIsRateLimitApiError = this.isRateLimitApiError(text);
         if (this.hasApiError(text) && !this.isAuthFailureWarning(text, 'assistant')) {
-          this.failProvisioningWithApiError(run, text);
+          if (assistantIsRateLimitApiError) {
+            this.teamSendBlockReasonByTeam.set(
+              run.teamName,
+              '负责人当前处于请求限流状态。请稍后重试，或先停止部分团队/成员。'
+            );
+          }
+          if (!run.provisioningComplete) {
+            this.failProvisioningWithApiError(run, text);
+          }
           return;
         }
         logger.debug(`[${run.teamName}] assistant: ${text.slice(0, 200)}`);
@@ -18953,6 +19157,7 @@ export class TeamProvisioningService {
 
           this.resetRuntimeToolActivity(run, this.getRunLeadName(run));
           this.setLeadActivity(run, 'idle');
+          this.teamSendBlockReasonByTeam.delete(run.teamName);
         }
         if (run.pendingDirectCrossTeamSendRefresh) {
           run.pendingDirectCrossTeamSendRefresh = false;
@@ -19063,7 +19268,47 @@ export class TeamProvisioningService {
     // Handle compact_boundary — context was compacted, next assistant message will carry fresh usage
     if (msg.type === 'system') {
       const sub = typeof msg.subtype === 'string' ? msg.subtype : undefined;
-      if (sub === 'compact_boundary') {
+      if (sub === 'api_error') {
+        const isRateLimited = this.isRateLimitSystemApiErrorPayload(msg);
+        if (isRateLimited) {
+          const retryAttempt = typeof msg.retryAttempt === 'number' ? msg.retryAttempt : undefined;
+          const maxRetries = typeof msg.maxRetries === 'number' ? msg.maxRetries : undefined;
+          const retryInMs = typeof msg.retryInMs === 'number' ? msg.retryInMs : undefined;
+          const retryLabel = retryAttempt && maxRetries ? ` ${retryAttempt}/${maxRetries}` : '';
+          const delayLabel = retryInMs ? `，约 ${Math.round(retryInMs / 1000)} 秒后重试` : '';
+          const message = `请求限流${retryLabel}${delayLabel}`;
+
+          this.teamSendBlockReasonByTeam.set(
+            run.teamName,
+            '负责人当前处于请求限流状态。请稍后重试，或先停止部分团队/成员。'
+          );
+
+          if (
+            !run.provisioningComplete &&
+            !run.cancelRequested &&
+            run.progress.state !== 'failed'
+          ) {
+            const warningText = `**请求限流${retryLabel}**\n\nAnthropic 返回 429/1302，Claude 正在自动重试${delayLabel ? `（${delayLabel.replace(/^，/, '')}）` : '。'}`;
+            if (run.apiRetryWarningIndex != null) {
+              run.provisioningOutputParts[run.apiRetryWarningIndex] = warningText;
+            } else {
+              run.apiRetryWarningIndex = run.provisioningOutputParts.length;
+              run.provisioningOutputParts.push(warningText);
+            }
+            run.lastRetryAt = Date.now();
+            run.progress = {
+              ...run.progress,
+              updatedAt: nowIso(),
+              message,
+              messageSeverity: 'error' as const,
+              assistantOutput:
+                buildProgressAssistantOutput(run.provisioningOutputParts) ??
+                run.progress.assistantOutput,
+            };
+            run.onProgress(run.progress);
+          }
+        }
+      } else if (sub === 'compact_boundary') {
         if (run.leadContextUsage) {
           run.leadContextUsage.lastUsageMessageId = null;
         }
@@ -19111,7 +19356,8 @@ export class TeamProvisioningService {
         const attempt = typeof msg.attempt === 'number' ? msg.attempt : '?';
         const maxRetries = typeof msg.max_retries === 'number' ? msg.max_retries : '?';
         const errorStatus = typeof msg.error_status === 'number' ? msg.error_status : undefined;
-        const errorLabel = typeof msg.error === 'string' ? msg.error.replace(/_/g, ' ') : undefined;
+        const errorCode = typeof msg.error === 'string' ? msg.error : undefined;
+        const errorLabel = errorCode ? errorCode.replace(/_/g, ' ') : undefined;
         const retryDelay = typeof msg.retry_delay_ms === 'number' ? msg.retry_delay_ms : undefined;
         const rawErrorMessage =
           typeof msg.error_message === 'string' && msg.error_message.trim().length > 0
@@ -19120,8 +19366,7 @@ export class TeamProvisioningService {
         const errorMessage = rawErrorMessage
           ? this.normalizeApiRetryErrorMessage(rawErrorMessage)
           : undefined;
-        const looksLikeQuotaRetry =
-          errorLabel === 'rate limit' || this.isQuotaRetryMessage(errorMessage);
+        const looksLikeQuotaRetry = this.isRateLimitApiRetryPayload(msg, rawErrorMessage);
 
         if (looksLikeQuotaRetry && rawErrorMessage) {
           const observedAt = new Date();
@@ -19244,12 +19489,12 @@ export class TeamProvisioningService {
 
     // Read current team config for up-to-date members (may have changed since launch).
     let currentMembers: TeamCreateRequest['members'] = run.request.members;
-    let leadName = 'team-lead';
+    let leadName = CANONICAL_LEAD_MEMBER_NAME;
     try {
       const config = await this.configReader.getConfig(run.teamName);
       if (config?.members) {
         const configLead = config.members.find((m) => isLeadMember(m));
-        leadName = configLead?.name?.trim() || 'team-lead';
+        leadName = configLead?.name?.trim() || CANONICAL_LEAD_MEMBER_NAME;
         // Convert config members (excluding lead) to TeamCreateRequest member format.
         const configTeammates = config.members
           .filter((m) => !isLeadMember(m) && m?.name)
@@ -19265,13 +19510,13 @@ export class TeamProvisioningService {
       } else {
         leadName =
           run.request.members.find((m) => m.role?.toLowerCase().includes('lead'))?.name ||
-          'team-lead';
+          CANONICAL_LEAD_MEMBER_NAME;
       }
     } catch {
       // Fallback to launch-time members if config is unavailable.
       leadName =
         run.request.members.find((m) => m.role?.toLowerCase().includes('lead'))?.name ||
-        'team-lead';
+        CANONICAL_LEAD_MEMBER_NAME;
       logger.warn(
         `[${run.teamName}] post-compact reminder: config unavailable, using launch-time members`
       );
@@ -19404,7 +19649,8 @@ export class TeamProvisioningService {
 
     let currentMembers: TeamCreateRequest['members'] = run.effectiveMembers;
     let leadName =
-      run.effectiveMembers.find((m) => m.role?.toLowerCase().includes('lead'))?.name || 'team-lead';
+      run.effectiveMembers.find((m) => m.role?.toLowerCase().includes('lead'))?.name ||
+      CANONICAL_LEAD_MEMBER_NAME;
     try {
       const config = await this.configReader.getConfig(run.teamName);
       if (config?.members) {
@@ -20435,6 +20681,7 @@ export class TeamProvisioningService {
       run.onProgress(progress);
       this.provisioningRunByTeam.delete(run.teamName);
       this.aliveRunByTeam.set(run.teamName, run.runId);
+      this.teamSendBlockReasonByTeam.delete(run.teamName);
       logger.info(`[${run.teamName}] Launch complete. Process alive for subsequent tasks.`);
 
       if (!run.deterministicBootstrap && shouldUseGeminiStagedLaunch(run.request.providerId)) {
@@ -21792,7 +22039,8 @@ export class TeamProvisioningService {
         }
       };
 
-      if (isLeadMember(nextMember) || rawName.toLowerCase() === 'team-lead') {
+      const lowerRawName = rawName.toLowerCase();
+      if (isLeadMember(nextMember) || isLeadMemberName(lowerRawName)) {
         assignRuntimeState({
           providerId: effectiveLeadProviderId,
           model: effectiveLeadModel,
@@ -21936,9 +22184,10 @@ export class TeamProvisioningService {
         if (membersRaw.length > 0) {
           const teammateNames = membersRaw
             .map((m) => (typeof m.name === 'string' ? m.name.trim() : ''))
-            .filter(
-              (n) => n.length > 0 && n.toLowerCase() !== 'team-lead' && n.toLowerCase() !== 'user'
-            );
+            .filter((n) => {
+              const lower = n.toLowerCase();
+              return n.length > 0 && !isLeadMemberName(lower) && lower !== 'user';
+            });
 
           const keepName = createCliAutoSuffixNameGuard(teammateNames);
           const nextMembers: Record<string, unknown>[] = [];
@@ -21977,9 +22226,10 @@ export class TeamProvisioningService {
         const activeNames = metaMembers
           .filter((m) => !m.removedAt)
           .map((m) => m.name.trim())
-          .filter(
-            (n) => n.length > 0 && n.toLowerCase() !== 'team-lead' && n.toLowerCase() !== 'user'
-          );
+          .filter((n) => {
+            const lower = n.toLowerCase();
+            return n.length > 0 && !isLeadMemberName(lower) && lower !== 'user';
+          });
 
         const keepName = createCliAutoSuffixNameGuard(activeNames);
         const removedFromMeta: string[] = [];
@@ -22006,9 +22256,10 @@ export class TeamProvisioningService {
           nextMeta
             .filter((m) => !m.removedAt)
             .map((m) => m.name.trim())
-            .filter(
-              (n) => n.length > 0 && n.toLowerCase() !== 'team-lead' && n.toLowerCase() !== 'user'
-            )
+            .filter((n) => {
+              const lower = n.toLowerCase();
+              return n.length > 0 && !isLeadMemberName(lower) && lower !== 'user';
+            })
         );
       }
     } catch {
@@ -22138,7 +22389,7 @@ export class TeamProvisioningService {
       }
       // Also check by name (CLI may set agentType to "general-purpose" for leads)
       const name = typeof member.name === 'string' ? member.name.trim().toLowerCase() : '';
-      if (name === 'team-lead') return true;
+      if (isLeadMemberName(name)) return true;
       const leadAgentId = config.leadAgentId;
       return (
         typeof leadAgentId === 'string' &&
@@ -22159,7 +22410,7 @@ export class TeamProvisioningService {
       for (const member of metaMembers) {
         const name = member.name.trim();
         const lower = name.toLowerCase();
-        if (name.length > 0 && !member.removedAt && lower !== 'team-lead' && lower !== 'user') {
+        if (name.length > 0 && !member.removedAt && !isLeadMemberName(lower) && lower !== 'user') {
           baseNames.add(name);
         }
       }
@@ -22175,7 +22426,7 @@ export class TeamProvisioningService {
           name &&
           agentType &&
           !isLeadAgentType(agentType) &&
-          name !== 'team-lead' &&
+          !isLeadMemberName(name) &&
           name !== 'user'
         ) {
           allConfigNames.add(name);
@@ -22402,7 +22653,7 @@ export class TeamProvisioningService {
     const teammateMembers = request.members.filter((member) => {
       const trimmed = member.name.trim();
       const lower = trimmed.toLowerCase();
-      return trimmed.length > 0 && lower !== 'team-lead' && lower !== 'user';
+      return trimmed.length > 0 && !isLeadMemberName(lower) && lower !== 'user';
     });
     if (teammateMembers.length === 0) {
       return;
@@ -22505,7 +22756,7 @@ export class TeamProvisioningService {
       );
       const inboxNameSetLower = new Set(allInboxNames.map((n) => n.toLowerCase()));
       const inboxNames = allInboxNames
-        .filter((name) => name !== 'team-lead' && name !== 'user')
+        .filter((name) => !isLeadMemberName(name) && name !== 'user')
         .filter((name) => !this.isCrossTeamPseudoRecipientName(name))
         .filter((name) => !this.isCrossTeamToolRecipientName(name))
         .filter((name) => !this.looksLikeQualifiedExternalRecipientName(name))
@@ -23166,7 +23417,11 @@ export class TeamProvisioningService {
           name: teamName,
           projectPath,
           members: [
-            { name: 'team-lead', agentType: 'team-lead', role: 'lead' },
+            {
+              name: CANONICAL_LEAD_MEMBER_NAME,
+              agentType: CANONICAL_LEAD_MEMBER_NAME,
+              role: 'lead',
+            },
             { name: memberName, agentType: 'teammate', role: 'developer' },
           ],
         },

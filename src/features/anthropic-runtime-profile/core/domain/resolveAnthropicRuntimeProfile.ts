@@ -80,7 +80,7 @@ function hasCatalogTruth(selection: AnthropicRuntimeSelection): boolean {
 export function resolveAnthropicRuntimeSelection(params: {
   source: AnthropicRuntimeProfileSource;
   selectedModel?: string | null;
-  limitContext: boolean;
+  limitContext?: boolean;
 }): AnthropicRuntimeSelection {
   const catalog = getAnthropicCatalog(params.source);
   const resolvedLaunchModel =

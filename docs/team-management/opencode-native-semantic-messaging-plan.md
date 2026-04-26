@@ -46,7 +46,7 @@ This section records the higher-risk places that were checked after the first dr
 - `member_briefing` is not the only source of `SendMessage` wording. `buildAssignmentMessage()` and `buildMemberTaskProtocol()` also contain hardcoded native instructions, so the fix must cover assignment and clarification paths too.
 - Controller member resolution currently drops provider metadata. Without preserving `providerId`/`provider`, task assignment notifications cannot reliably choose OpenCode wording for an OpenCode owner.
 - `message_send` storage already supports `taskRefs`, but MCP schema does not expose it yet. If prompts mention task traceability, schema must accept `taskRefs` or the plan creates another mismatch.
-- `message_send` currently uses the raw `to` value as the inbox filename. If an agent sends to the alias `team-lead` while the configured lead is actually named `lead`, the row can land in `inboxes/team-lead.json` and bypass lead relay. `message_send` must canonicalize local recipients and sender aliases before persistence.
+- `message_send` currently uses the raw `to` value as the inbox filename. If an agent sends to the alias `lead` while the configured lead is actually named `lead`, the row can land in `inboxes/lead.json` and bypass lead relay. `message_send` must canonicalize local recipients and sender aliases before persistence.
 - OpenCode tool names appear through multiple aliases: `agent-teams_message_send`, `agent_teams_message_send`, `mcp__agent-teams__message_send`, `mcp__agent_teams__message_send`, and sometimes plain `message_send`. Capture/logging code must not hardcode only one spelling.
 - `runtime_bootstrap_checkin` needs `runtimeSessionId`. The adapter cannot know it. Only orchestrator knows `record.opencodeSessionId` after `ensureSession()`, so identity injection belongs in `agent_teams_orchestrator`.
 - `runtime_bootstrap_checkin` does not accept `laneId`. `laneId` is bridge/session routing state, not an MCP tool argument. The plan must not show examples with unsupported payload fields.
@@ -63,7 +63,7 @@ This section records the higher-risk places that were checked after the first dr
 - `agentTeamsToolNames.ts` currently canonicalizes only `mcp__agent-teams__` and `mcp__agent_teams__`. Its regex helper for task-boundary lines must be updated with the same alias prefixes as the canonicalizer, or task logs can keep missing OpenCode `agent-teams_task_start` style tool names.
 - `TeamProvisioningService.captureSendMessages()` intentionally ignores normal non-native `message_send` after cross-team fallback handling because the MCP tool itself persists the inbox row. Alias support must not turn OpenCode `message_send` into a second live lead-process message.
 - `OpenCodeSessionBridge.promptAsync()` returns after enqueueing the prompt, and `runLaunch()` currently reconciles immediately. A tool-only/bootstrap response can arrive just after that first reconcile, so launch confirmation needs a short bounded settle/preview step before final launch-state mapping.
-- `cross_team_send` is a separate teammate-operational transport, not a recipient for `message_send`. The semantic seam must keep local/user/team-lead messages separate from cross-team messages.
+- `cross_team_send` is a separate teammate-operational transport, not a recipient for `message_send`. The semantic seam must keep local/user/lead messages separate from cross-team messages.
 - Large `SendMessage` blocks in `TeamProvisioningService`, `teamBootstrapPromptBuilder`, `useInboxPoller`, and native swarm prompts are mostly native runtime contracts. Do not mass-rewrite them. Instead, add routing tests proving OpenCode teammates receive the OpenCode runtime adapter/orchestrator prompt path, while native teammates keep the native `SendMessage` path.
 - `OpenCodeSendMessageCommandBody` is declared twice in `OpenCodeBridgeCommandContract.ts`. TypeScript interface merging makes it compile, but it is a high-risk edit point because a future change can update only one declaration. Consolidate it before adding run-id recovery semantics.
 - `RuntimeRunTombstoneStore.assertEvidenceAccepted()` rejects OpenCode runtime evidence when `currentRunId` is null. The durable `activeRunId` is not in `lanes.json`; it lives in the lane-scoped `RuntimeStoreManifest`. Evidence acceptance and message delivery recovery must read that manifest after app restart instead of adding a second run-id source to `lanes.json`.
@@ -754,10 +754,10 @@ This writes the raw `to` string as the inbox filename.
 
 Bad cases:
 
-- `to: "team-lead"` when the actual configured lead is `lead` writes `inboxes/team-lead.json`; lead relay reads `inboxes/lead.json`.
-- `to: "lead"` when the configured lead is `team-lead` can create a separate alias inbox.
+- `to: "lead"` when the actual configured lead is `lead` writes `inboxes/lead.json`; lead relay reads `inboxes/lead.json`.
+- `to: "lead"` when the configured lead is `lead` can create a separate alias inbox.
 - `to: "cross_team_send"` creates a misleading local inbox instead of a clear error telling the agent to use `cross_team_send`.
-- `from: "team-lead"` can be stored as an alias instead of the canonical lead name, which breaks pending-reply and activity attribution.
+- `from: "lead"` can be stored as an alias instead of the canonical lead name, which breaks pending-reply and activity attribution.
 
 Add a controller-level normalizer before `messageStore.sendInboxMessage()`:
 
@@ -816,9 +816,9 @@ Important:
 
 Acceptance:
 
-- `message_send({ to: "team-lead", from: "bob" })` writes to the actual configured lead inbox.
+- `message_send({ to: "lead", from: "bob" })` writes to the actual configured lead inbox.
 - `message_send({ to: "lead", from: "bob" })` also writes to the actual configured lead inbox when `lead` is a lead alias.
-- `message_send({ to: "alice", from: "team-lead" })` stores `from` as the canonical configured lead name.
+- `message_send({ to: "alice", from: "lead" })` stores `from` as the canonical configured lead name.
 - `message_send({ to: "unknown", from: "bob" })` fails clearly instead of creating `inboxes/unknown.json`.
 - `message_send({ to: "cross_team_send", from: "bob" })` fails with a `use cross_team_send` error.
 - `message_send({ to: "user", from: "bob" })` remains valid and writes to `inboxes/user.json`.
@@ -1723,7 +1723,7 @@ Current delivery split:
 - UI-to-OpenCode direct messages are manually pushed through `deliverOpenCodeMemberMessage()`.
 - OpenCode teammates do not watch inbox files, so a generic `message_send` into an OpenCode teammate inbox is not enough.
 - Pure OpenCode runtime-adapter launches are marked alive through `runtimeAdapterRunByTeam`, but they do not create a `ProvisioningRun.child`; `relayLeadInboxMessages()` currently returns `0` in that shape.
-- The current OpenCode bridge launch handler iterates `body.members` and creates teammate sessions only. `leadPrompt` is carried in the command body, but it does not currently create a stored `team-lead` OpenCode session.
+- The current OpenCode bridge launch handler iterates `body.members` and creates teammate sessions only. `leadPrompt` is carried in the command body, but it does not currently create a stored `lead` OpenCode session.
 - Existing `relayMemberInboxMessages()` is a native-lead-mediated relay. It sends an internal turn to the native lead and asks it to forward with `SendMessage`; do not reuse it for OpenCode-native runtime delivery.
 
 Risk examples:
@@ -1731,7 +1731,7 @@ Risk examples:
 - OpenCode `bob` calls `agent-teams_message_send({ to: "jack", from: "bob", text: "please review" })`, and `jack` is also OpenCode.
 - Task/system notification writes `inboxes/jack.json` for an OpenCode teammate.
 - FileWatcher sees `inboxes/jack.json`, but current code intentionally skips non-lead relay because native teammates read their inbox files.
-- A pure OpenCode team gets `message_send({ to: "team-lead", ... })`. FileWatcher treats it like a lead inbox, but there is no native stdin process and no proven OpenCode lead session to receive it. Marking it read would lose the message.
+- A pure OpenCode team gets `message_send({ to: "lead", ... })`. FileWatcher treats it like a lead inbox, but there is no native stdin process and no proven OpenCode lead session to receive it. Marking it read would lose the message.
 
 Options:
 
@@ -1827,9 +1827,9 @@ OpenCode lead rule:
 
 - Mixed team with native Codex/Claude/Gemini lead: keep the existing `relayLeadInboxMessages()` path.
 - OpenCode teammate or secondary lane: use `relayOpenCodeMemberInboxMessages()`.
-- Pure OpenCode lead inbox in v1: do not mark messages read and do not report delivery success unless a real stored OpenCode `team-lead` session exists. Return a diagnostic like `opencode_lead_runtime_session_missing`.
+- Pure OpenCode lead inbox in v1: do not mark messages read and do not report delivery success unless a real stored OpenCode `lead` session exists. Return a diagnostic like `opencode_lead_runtime_session_missing`.
 - Do not fake lead delivery by sending to a random teammate session. That would make messages appear delivered while the actual recipient never saw them.
-- A future explicit OpenCode lead lane can reuse this selector by teaching the bridge to create/store a `team-lead` session and by passing `agent: "team-lead"` where the bridge supports it. That is not part of this v1 seam.
+- A future explicit OpenCode lead lane can reuse this selector by teaching the bridge to create/store a `lead` session and by passing `agent: "lead"` where the bridge supports it. That is not part of this v1 seam.
 
 FileWatcher change:
 
@@ -2406,10 +2406,10 @@ Alias parsing must accept plain `message_send` for OpenCode direct MCP proof/cap
     The app currently has special relay for native lead inboxes and native teammate file-watch behavior, but OpenCode teammates do not watch `inboxes/<member>.json`. Any plan that only fixes UI direct-send still leaves OpenCode-to-OpenCode and system notification routes unreliable. Add recipient-provider-aware runtime relay with at-least-once semantics, read-flag commit, duplicate-event dedupe, and explicit unsupported OpenCode lead diagnostics. Do not reuse native `relayMemberInboxMessages()`.
 
 17. `message_send` recipient canonicalization - 🎯 9 🛡️ 9 🧠 4, about 70-150 LOC with tests
-    Raw recipient names currently become inbox filenames. This is fragile because prompts and tests use lead aliases like `team-lead` while teams can have a custom lead name. Resolve `to` and `from` against configured members before persistence, with `user` as the only special local destination and cross-team tool names rejected clearly.
+    Raw recipient names currently become inbox filenames. This is fragile because prompts and tests use lead aliases like `lead` while teams can have a custom lead name. Resolve `to` and `from` against configured members before persistence, with `user` as the only special local destination and cross-team tool names rejected clearly.
 
 18. OpenCode lead runtime session gap - 🎯 8 🛡️ 9 🧠 5, about 60-140 LOC for v1 diagnostics, 300-700 LOC if adding a real lead lane
-    The app-side OpenCode adapter passes `leadPrompt`, but the orchestrator launch handler currently creates sessions from `body.members` only. `relayLeadInboxMessages()` also requires native `run.child`. V1 must not pretend pure OpenCode lead inbox delivery works. Either route to an existing stored `team-lead` OpenCode session if one is later introduced, or leave rows unread with an explicit diagnostic. Creating a real OpenCode lead lane is a separate feature, not a hidden side effect of this messaging seam.
+    The app-side OpenCode adapter passes `leadPrompt`, but the orchestrator launch handler currently creates sessions from `body.members` only. `relayLeadInboxMessages()` also requires native `run.child`. V1 must not pretend pure OpenCode lead inbox delivery works. Either route to an existing stored `lead` OpenCode session if one is later introduced, or leave rows unread with an explicit diagnostic. Creating a real OpenCode lead lane is a separate feature, not a hidden side effect of this messaging seam.
 
 ## Tests
 
@@ -2536,17 +2536,17 @@ it('rejects user-directed message_send when from is not a configured team member
 
 ```ts
 it('canonicalizes message_send lead aliases before writing inbox files', async () => {
-  // Configure lead member with name "lead", not "team-lead".
+  // Configure lead member with name "lead", not "lead".
   await getTool('message_send').execute({
     claudeDir,
     teamName,
-    to: 'team-lead',
+    to: 'lead',
     from: 'bob',
     text: 'Need help',
   });
 
   expect(fs.existsSync(path.join(claudeDir, 'teams', teamName, 'inboxes', 'lead.json'))).toBe(true);
-  expect(fs.existsSync(path.join(claudeDir, 'teams', teamName, 'inboxes', 'team-lead.json'))).toBe(
+  expect(fs.existsSync(path.join(claudeDir, 'teams', teamName, 'inboxes', 'lead.json'))).toBe(
     false
   );
 });
@@ -2554,12 +2554,12 @@ it('canonicalizes message_send lead aliases before writing inbox files', async (
 
 ```ts
 it('canonicalizes message_send sender aliases before persistence', async () => {
-  // Configure lead member with name "lead", not "team-lead".
+  // Configure lead member with name "lead", not "lead".
   await getTool('message_send').execute({
     claudeDir,
     teamName,
     to: 'alice',
-    from: 'team-lead',
+    from: 'lead',
     text: 'Please review',
   });
 
@@ -2604,7 +2604,7 @@ it('rejects message_send to qualified external recipients after local roster loo
     getTool('message_send').execute({
       claudeDir,
       teamName,
-      to: 'other-team.team-lead',
+      to: 'other-team.lead',
       from: 'bob',
       text: 'Hello',
     })
@@ -2661,7 +2661,7 @@ it('persists taskRefs through cross_team_send when enabled', async () => {
 
   const targetInbox = JSON.parse(
     fs.readFileSync(
-      path.join(claudeDir, 'teams', 'review-team', 'inboxes', 'team-lead.json'),
+      path.join(claudeDir, 'teams', 'review-team', 'inboxes', 'lead.json'),
       'utf8'
     )
   );
@@ -2979,7 +2979,7 @@ it('does not silently consume pure OpenCode lead inbox when no lead session exis
 
 ```ts
 it('keeps OpenCode member relay independent from unsupported OpenCode lead relay', async () => {
-  // Configure a pure OpenCode team with a stored teammate session for bob but no team-lead session.
+  // Configure a pure OpenCode team with a stored teammate session for bob but no lead session.
   // Seed inboxes/bob.json and inboxes/<lead>.json.
   // Assert bob is relayed and marked read.
   // Assert lead remains unread with an unsupported-lead diagnostic.
@@ -3413,7 +3413,7 @@ Avoid heavy E2E until targeted tests pass.
 - OpenCode member prompt contains native-only "Use SendMessage" guidance. This means routing leaked through a native prompt builder; fix routing, not by global-replacing all native `SendMessage` text.
 - OpenCode direct-message prompt contains native-only "CRITICAL: Reply using the SendMessage tool" guidance. This means runtime delivery is reusing `memberDeliveryText`; pass explicit metadata and build OpenCode-native delivery text.
 - OpenCode uses `runtime_deliver_message` for an ordinary reply after a UI message. This means the tool descriptions/prompts are still ambiguous or the runtime-delivery path is being over-promoted in the normal reply contract.
-- `message_send` creates `inboxes/team-lead.json` while the configured lead is named differently. This means local recipient canonicalization is missing or not using lead aliases.
+- `message_send` creates `inboxes/lead.json` while the configured lead is named differently. This means local recipient canonicalization is missing or not using lead aliases.
 - `message_send` creates `inboxes/unknown-agent.json` for an unconfigured local recipient. This should be a tool error, not a new durable inbox.
 - UI send to an OpenCode teammate closes as success while OpenCode inbox runtime relay fails only in logs. This means delivery is still fire-and-forget or the `runtimeDelivery` result is ignored by the renderer.
 - `inboxes/<opencode-member>.json` contains native hidden `SendMessage` instructions. This makes retry unsafe because FileWatcher relay can later deliver a native prompt to OpenCode.

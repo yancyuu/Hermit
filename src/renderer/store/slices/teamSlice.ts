@@ -1096,7 +1096,7 @@ function fireClarificationNotification(task: GlobalTask, suppressToast: boolean)
     ?.showMessageNotification({
       teamName: task.teamName,
       teamDisplayName: task.teamDisplayName,
-      from: latestComment?.author || 'team-lead',
+      from: latestComment?.author || 'lead',
       to: 'user',
       summary: `Clarification needed — Task ${formatTaskDisplayLabel(task)}`,
       body,

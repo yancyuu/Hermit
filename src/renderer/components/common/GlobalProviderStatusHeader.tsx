@@ -8,7 +8,7 @@ import { isElectronMode } from '@renderer/api';
 import { formatProviderStatusText } from '@renderer/components/runtime/providerConnectionUi';
 import { useStore } from '@renderer/store';
 import { createLoadingMultimodelCliStatus } from '@renderer/store/slices/cliInstallerSlice';
-import { filterMainScreenCliProviders } from '@renderer/utils/geminiUiFreeze';
+import { filterMainScreenCliProviders } from '@renderer/utils/claudeCodeOnlyProviders';
 import { AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -100,7 +100,7 @@ export const GlobalProviderStatusHeader = (): React.JSX.Element | null => {
         cliStatus: state.cliStatus,
         cliStatusLoading: state.cliStatusLoading,
         cliProviderStatusLoading: state.cliProviderStatusLoading,
-        multimodelEnabled: state.appConfig?.general?.multimodelEnabled ?? true,
+        multimodelEnabled: state.appConfig?.general?.multimodelEnabled ?? false,
         isDashboardFocused:
           !focusedPane || focusedPane.tabs.length === 0 || activeTab?.type === 'dashboard',
       };

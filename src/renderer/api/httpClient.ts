@@ -987,6 +987,34 @@ export class HttpAPIClient implements ElectronAPI {
     getLeadContext: async () => {
       return { usage: null, runId: null };
     },
+    getLeadChannel: async () => {
+      return {
+        config: { channels: [], feishu: { enabled: false, appId: '', appSecret: '' } },
+        status: {
+          running: false,
+          state: 'stopped' as const,
+          message: '浏览器模式不支持负责人渠道监听。',
+          startedAt: null,
+          lastEventAt: null,
+        },
+        statusesByChannel: {},
+      };
+    },
+    getGlobalLeadChannel: async () => {
+      return { config: { channels: [], feishu: { enabled: false, appId: '', appSecret: '' } } };
+    },
+    saveGlobalLeadChannel: async () => {
+      throw new Error('渠道集成仅在 Electron 模式可用');
+    },
+    saveLeadChannel: async () => {
+      throw new Error('负责人渠道监听仅在 Electron 模式可用');
+    },
+    startFeishuLeadChannel: async () => {
+      throw new Error('飞书长连接仅在 Electron 模式可用');
+    },
+    stopFeishuLeadChannel: async () => {
+      throw new Error('飞书长连接仅在 Electron 模式可用');
+    },
     getMemberSpawnStatuses: async () => {
       return { statuses: {}, runId: null };
     },

@@ -1022,9 +1022,9 @@ export const ActivityItem = memo(
       ) : null;
 
     const statusBadge = rateLimited ? (
-      <span className="inline-flex items-center gap-1 rounded-full bg-red-500/20 px-1.5 py-0.5 text-[10px] font-medium text-red-400">
+      <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium text-amber-300">
         <AlertTriangle size={10} />
-        已限速
+        请求限流
       </span>
     ) : isApiError ? (
       <span className="inline-flex items-center gap-1 rounded-full bg-red-500/20 px-1.5 py-0.5 text-[10px] font-medium text-red-400">

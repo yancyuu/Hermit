@@ -100,7 +100,7 @@ export function resolveTeamLeadColorName(): string {
   return resolveTeamMemberColorName(
     {
       name: TEAM_LEAD_MEMBER_COLOR_ID,
-      agentType: 'team-lead',
+      agentType: TEAM_LEAD_MEMBER_COLOR_ID,
     },
     { preferProvidedColors: false }
   );

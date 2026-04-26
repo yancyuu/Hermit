@@ -214,7 +214,7 @@ function sendInboxMessage(paths, flags) {
 
 function appendSentMessage(paths, flags) {
   const payload = buildMessage(flags, {
-    from: 'team-lead',
+    from: 'lead',
     to: typeof flags.to === 'string' && flags.to.trim() ? flags.to.trim() : undefined,
     read: true,
   });

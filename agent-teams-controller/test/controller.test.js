@@ -17,7 +17,7 @@ describe('agent-teams-controller API', () => {
           name: 'my-team',
           leadSessionId: 'lead-session-1',
           members: [
-            { name: 'alice', role: 'team-lead' },
+            { name: 'alice', role: 'lead' },
             { name: 'bob', role: 'developer' },
           ],
         },
@@ -98,7 +98,7 @@ describe('agent-teams-controller API', () => {
     expect(controller.tasks.getTask(created.id).reviewState).toBe('approved');
 
     const sent = controller.messages.appendSentMessage({
-      from: 'team-lead',
+      from: 'lead',
       to: 'user',
       text: 'All good',
       leadSessionId: 'session-1',
@@ -130,7 +130,7 @@ describe('agent-teams-controller API', () => {
     config.language = 'en';
     config.projectPath = '/tmp/project-x';
     config.members = [
-      { name: 'alice', role: 'team-lead' },
+      { name: 'alice', role: 'lead' },
       { name: 'bob', role: 'developer', workflow: 'Implement carefully', cwd: '/tmp/project-x' },
     ];
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
@@ -161,7 +161,7 @@ describe('agent-teams-controller API', () => {
     const configPath = path.join(claudeDir, 'teams', 'my-team', 'config.json');
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
     config.members = [
-      { name: 'alice', role: 'team-lead' },
+      { name: 'alice', role: 'lead' },
       { name: 'bob', role: 'developer', providerId: 'opencode', model: 'openrouter/test-model' },
     ];
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
@@ -191,7 +191,7 @@ describe('agent-teams-controller API', () => {
     const configPath = path.join(claudeDir, 'teams', 'my-team', 'config.json');
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
     config.members = [
-      { name: 'alice', role: 'team-lead' },
+      { name: 'alice', role: 'lead' },
       { name: 'bob', role: 'developer', providerId: 'opencode', model: 'opencode/test-model' },
     ];
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
@@ -208,7 +208,7 @@ describe('agent-teams-controller API', () => {
 
     expect(() =>
       controller.messages.sendMessage({
-        to: 'team-lead',
+        to: 'lead',
         from: 'bob',
         text: 'Нет назначенных задач.',
       })
@@ -256,7 +256,7 @@ describe('agent-teams-controller API', () => {
     const configPath = path.join(claudeDir, 'teams', 'my-team', 'config.json');
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
     config.members = [
-      { name: 'alice', role: 'team-lead' },
+      { name: 'alice', role: 'lead' },
       { name: 'bob', role: 'developer', model: 'openai/gpt-5.4-mini' },
     ];
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
@@ -273,7 +273,7 @@ describe('agent-teams-controller API', () => {
     const configPath = path.join(claudeDir, 'teams', 'my-team', 'config.json');
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
     config.members = [
-      { name: 'alice', role: 'team-lead' },
+      { name: 'alice', role: 'lead' },
       { name: 'bob', role: 'developer', providerId: 'codex', model: 'opencode/minimax-m2.5-free' },
     ];
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
@@ -587,7 +587,7 @@ describe('agent-teams-controller API', () => {
             text: 'Need one more verification pass.',
           },
           {
-            from: 'team-lead',
+            from: 'lead',
             to: 'bob',
             summary: `Comment on #${task.displayId}`,
             messageId: 'm-2',
@@ -685,7 +685,7 @@ describe('agent-teams-controller API', () => {
 
     controller.kanban.addReviewer('alice');
     controller.tasks.completeTask(task.id, 'bob');
-    controller.review.requestReview(task.id, { from: 'team-lead' });
+    controller.review.requestReview(task.id, { from: 'lead' });
 
     const reviewerInboxPath = path.join(claudeDir, 'teams', 'my-team', 'inboxes', 'alice.json');
     const inbox = JSON.parse(fs.readFileSync(reviewerInboxPath, 'utf8'));
@@ -705,8 +705,8 @@ describe('agent-teams-controller API', () => {
     controller.kanban.addReviewer('alice');
     controller.tasks.completeTask(task.id, 'bob');
     controller.review.requestReview(task.id, {
-      from: 'team-lead',
-      leadSessionId: 'team-lead',
+      from: 'lead',
+      leadSessionId: 'lead',
     });
 
     const reviewerInboxPath = path.join(claudeDir, 'teams', 'my-team', 'inboxes', 'alice.json');
@@ -722,7 +722,7 @@ describe('agent-teams-controller API', () => {
     const task = controller.tasks.createTask({ subject: 'Review me', owner: 'bob' });
 
     controller.tasks.completeTask(task.id, 'bob');
-    controller.review.requestReview(task.id, { from: 'team-lead', reviewer: 'alice' });
+    controller.review.requestReview(task.id, { from: 'lead', reviewer: 'alice' });
 
     const result = controller.review.startReview(task.id, { from: 'alice' });
     expect(result.ok).toBe(true);
@@ -759,7 +759,7 @@ describe('agent-teams-controller API', () => {
     const task = controller.tasks.createTask({ subject: 'Queued for review', owner: 'bob' });
 
     controller.tasks.completeTask(task.id, 'bob');
-    controller.review.requestReview(task.id, { from: 'team-lead', reviewer: 'alice' });
+    controller.review.requestReview(task.id, { from: 'lead', reviewer: 'alice' });
     const started = controller.review.startReview(task.id, { from: 'alice' });
 
     expect(started.ok).toBe(true);
@@ -784,7 +784,7 @@ describe('agent-teams-controller API', () => {
     const task = controller.tasks.createTask({ subject: 'Queued for implicit reviewer', owner: 'bob' });
 
     controller.tasks.completeTask(task.id, 'bob');
-    controller.review.requestReview(task.id, { from: 'team-lead', reviewer: 'alice' });
+    controller.review.requestReview(task.id, { from: 'lead', reviewer: 'alice' });
     controller.review.startReview(task.id);
 
     const reloaded = controller.tasks.getTask(task.id);
@@ -858,7 +858,7 @@ describe('agent-teams-controller API', () => {
       'must be in review before moving to REVIEW column'
     );
 
-    controller.review.requestReview(completedTask.id, { from: 'team-lead', reviewer: 'alice' });
+    controller.review.requestReview(completedTask.id, { from: 'lead', reviewer: 'alice' });
     const kanbanPath = path.join(claudeDir, 'teams', 'my-team', 'kanban-state.json');
     const state = JSON.parse(fs.readFileSync(kanbanPath, 'utf8'));
     delete state.tasks[completedTask.id];
@@ -874,11 +874,11 @@ describe('agent-teams-controller API', () => {
     const task = controller.tasks.createTask({ subject: 'Approved terminal task', owner: 'bob' });
 
     controller.tasks.completeTask(task.id, 'bob');
-    controller.review.requestReview(task.id, { from: 'team-lead', reviewer: 'alice' });
+    controller.review.requestReview(task.id, { from: 'lead', reviewer: 'alice' });
     controller.review.startReview(task.id, { from: 'alice' });
     controller.review.approveReview(task.id, { from: 'alice' });
 
-    expect(() => controller.review.requestReview(task.id, { from: 'team-lead', reviewer: 'alice' })).toThrow(
+    expect(() => controller.review.requestReview(task.id, { from: 'lead', reviewer: 'alice' })).toThrow(
       'is already approved'
     );
     expect(controller.tasks.getTask(task.id).reviewState).toBe('approved');
@@ -891,7 +891,7 @@ describe('agent-teams-controller API', () => {
     const task = controller.tasks.createTask({ subject: 'Repair review column', owner: 'bob' });
 
     controller.tasks.completeTask(task.id, 'bob');
-    controller.review.requestReview(task.id, { from: 'team-lead', reviewer: 'alice' });
+    controller.review.requestReview(task.id, { from: 'lead', reviewer: 'alice' });
     controller.review.startReview(task.id, { from: 'alice' });
 
     const kanbanPath = path.join(claudeDir, 'teams', 'my-team', 'kanban-state.json');
@@ -935,7 +935,7 @@ describe('agent-teams-controller API', () => {
     const task = controller.tasks.createTask({ subject: 'Needs fix restart', owner: 'bob' });
 
     controller.tasks.completeTask(task.id, 'bob');
-    controller.review.requestReview(task.id, { from: 'team-lead', reviewer: 'alice' });
+    controller.review.requestReview(task.id, { from: 'lead', reviewer: 'alice' });
     controller.review.requestChanges(task.id, { from: 'alice', comment: 'Please fix.' });
     const started = controller.tasks.startTask(task.id, 'bob');
 
@@ -955,7 +955,7 @@ describe('agent-teams-controller API', () => {
 
     const sent = controller.messages.sendMessage({
       to: 'bob',
-      from: 'team-lead',
+      from: 'lead',
       text: 'Need your review',
       summary: 'Review request',
       commentId: 'comment-123',
@@ -1029,7 +1029,7 @@ describe('agent-teams-controller API', () => {
     const controller = createController({ teamName: 'my-team', claudeDir });
 
     controller.messages.sendMessage({
-      to: 'team-lead',
+      to: 'lead',
       from: 'bob',
       text: 'Need lead input',
       summary: 'Lead input',
@@ -1159,7 +1159,7 @@ describe('agent-teams-controller API', () => {
     const controller = createController({ teamName: 'my-team', claudeDir });
     const task = controller.tasks.createTask({
       subject: 'Lead-owned task',
-      owner: 'team-lead',
+      owner: 'lead',
       notifyOwner: false,
     });
 
@@ -1208,12 +1208,12 @@ describe('agent-teams-controller API', () => {
 
     controller.kanban.addReviewer('alice');
     controller.tasks.completeTask(task.id, 'bob');
-    controller.review.requestReview(task.id, { from: 'team-lead', reviewer: 'alice' });
+    controller.review.requestReview(task.id, { from: 'lead', reviewer: 'alice' });
     controller.review.approveReview(task.id, {
-      from: 'team-lead',
+      from: 'lead',
       note: 'Looks good.',
       'notify-owner': true,
-      leadSessionId: 'team-lead',
+      leadSessionId: 'lead',
     });
 
     const inboxPath = path.join(claudeDir, 'teams', 'my-team', 'inboxes', 'bob.json');
@@ -1229,11 +1229,11 @@ describe('agent-teams-controller API', () => {
 
     controller.kanban.addReviewer('alice');
     controller.tasks.completeTask(task.id, 'bob');
-    controller.review.requestReview(task.id, { from: 'team-lead', reviewer: 'alice' });
+    controller.review.requestReview(task.id, { from: 'lead', reviewer: 'alice' });
     controller.review.requestChanges(task.id, {
       from: 'alice',
       comment: 'Please address review feedback.',
-      leadSessionId: 'team-lead',
+      leadSessionId: 'lead',
     });
 
     const inboxPath = path.join(claudeDir, 'teams', 'my-team', 'inboxes', 'bob.json');
@@ -1375,7 +1375,7 @@ describe('agent-teams-controller API', () => {
           name: 'my-team',
           leadSessionId: 'lead-session-1',
           members: [
-            { name: 'team-lead', agentType: 'team-lead' },
+            { name: 'lead', agentType: 'lead' },
             { name: 'alice', role: 'tech lead' },
             { name: 'bob', role: 'developer' },
           ],
@@ -1454,7 +1454,7 @@ describe('agent-teams-controller API', () => {
     expect(fs.existsSync(path.join(claudeDir, 'teams', 'my-team', 'inboxes', 'lead.json'))).toBe(false);
 
     const reassignedTask = controller.tasks.createTask({ subject: 'Reassign alias owner', owner: 'bob' });
-    expect(controller.tasks.setTaskOwner(reassignedTask.id, 'team-lead').owner).toBe('leadbot');
+    expect(controller.tasks.setTaskOwner(reassignedTask.id, 'lead').owner).toBe('leadbot');
 
     controller.kanban.addReviewer('lead');
     expect(controller.kanban.listReviewers()).toEqual(['leadbot']);
@@ -1502,7 +1502,7 @@ describe('agent-teams-controller API', () => {
     const task = controller.tasks.createTask({ subject: 'Column cleanup', owner: 'bob' });
 
     controller.tasks.completeTask(task.id, 'bob');
-    controller.review.requestReview(task.id, { from: 'team-lead', reviewer: 'alice' });
+    controller.review.requestReview(task.id, { from: 'lead', reviewer: 'alice' });
     controller.kanban.updateColumnOrder('review', [task.id]);
     controller.review.requestChanges(task.id, { from: 'alice', comment: 'Needs work.' });
 
@@ -1511,7 +1511,7 @@ describe('agent-teams-controller API', () => {
     expect(kanbanState.columnOrder).toBeUndefined();
 
     controller.tasks.completeTask(task.id, 'bob');
-    controller.review.requestReview(task.id, { from: 'team-lead', reviewer: 'alice' });
+    controller.review.requestReview(task.id, { from: 'lead', reviewer: 'alice' });
     controller.kanban.updateColumnOrder('review', [task.id]);
     const deleted = controller.tasks.softDeleteTask(task.id, 'bob');
 
@@ -1528,7 +1528,7 @@ describe('agent-teams-controller API', () => {
     const task = controller.tasks.createTask({ subject: 'Generic status delete cleanup', owner: 'bob' });
 
     controller.tasks.completeTask(task.id, 'bob');
-    controller.review.requestReview(task.id, { from: 'team-lead', reviewer: 'alice' });
+    controller.review.requestReview(task.id, { from: 'lead', reviewer: 'alice' });
     controller.kanban.updateColumnOrder('review', [task.id]);
     const deleted = controller.tasks.setTaskStatus(task.id, 'deleted', 'bob');
 
@@ -2171,7 +2171,7 @@ describe('agent-teams-controller API', () => {
       const controller = createController({ teamName: 'my-team', claudeDir });
 
       const sent = controller.messages.appendSentMessage({
-        from: 'team-lead',
+        from: 'lead',
         to: 'bob',
         text: 'Please check the logs',
         source: 'user_sent',
@@ -2224,7 +2224,7 @@ describe('agent-teams-controller API', () => {
 
       controller.messages.sendMessage({
         to: 'bob',
-        from: 'team-lead',
+        from: 'lead',
         text: 'Relayed message',
         relayOfMessageId: 'original-msg-123',
         source: 'system_notification',

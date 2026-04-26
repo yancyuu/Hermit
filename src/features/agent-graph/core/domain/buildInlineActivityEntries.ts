@@ -1,7 +1,7 @@
 import { stripCrossTeamPrefix } from '@shared/constants/crossTeam';
 import { getIdleGraphLabel } from '@shared/utils/idleNotificationSemantics';
 import { isInboxNoiseMessage } from '@shared/utils/inboxNoise';
-import { isLeadMember } from '@shared/utils/leadDetection';
+import { isLeadMember, isLeadMemberName } from '@shared/utils/leadDetection';
 
 import { buildGraphMemberNodeIdAliasMap } from './graphOwnerIdentity';
 
@@ -369,7 +369,7 @@ function resolveParticipantId(
   memberNodeIdByAlias: ReadonlyMap<string, string>
 ): string {
   const normalized = name.trim().toLowerCase();
-  if (normalized === 'user' || normalized === 'team-lead') {
+  if (normalized === 'user' || isLeadMemberName(normalized)) {
     return leadId;
   }
   if (normalized === leadName?.trim().toLowerCase()) {
@@ -385,7 +385,7 @@ function buildParticipantLabel(name: string | undefined, leadName: string): stri
   const normalized = name.trim().toLowerCase();
   if (
     normalized === 'user' ||
-    normalized === 'team-lead' ||
+    isLeadMemberName(normalized) ||
     normalized === leadName.trim().toLowerCase()
   ) {
     return leadName;

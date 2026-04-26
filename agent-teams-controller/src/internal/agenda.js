@@ -50,7 +50,7 @@ function buildQueueRoster(paths) {
     (membersByKey.get(normalizeKey(inferredLeadName)) &&
     normalizeName(membersByKey.get(normalizeKey(inferredLeadName)).name)) ||
     '';
-  const leadAliases = new Set(['team-lead']);
+  const leadAliases = new Set(['lead']);
   if (canonicalLeadName) {
     leadAliases.add(normalizeKey(canonicalLeadName));
     leadAliases.add('lead');

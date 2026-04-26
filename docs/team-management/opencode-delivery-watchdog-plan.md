@@ -1783,7 +1783,7 @@ This plan is for OpenCode secondary teammate delivery.
 
 ### Attachments
 
-Current renderer UX only supports file attachments for live team-lead sends. OpenCode secondary teammate live delivery does not have an attachment transport in v1.
+Current renderer UX only supports file attachments for live lead sends. OpenCode secondary teammate live delivery does not have an attachment transport in v1.
 
 Rules:
 
