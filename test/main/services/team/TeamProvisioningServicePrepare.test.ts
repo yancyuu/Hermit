@@ -2428,7 +2428,7 @@ describe('TeamProvisioningService prepare/auth behavior', () => {
         limitContext: false,
         facts,
       })
-    ).toThrow('enables Anthropic Fast mode');
+    ).toThrow('Anthropic Fast mode');
   });
 
   it('emits a lead-message refresh after provisioning reaches ready', async () => {

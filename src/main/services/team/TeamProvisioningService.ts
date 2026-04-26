@@ -2273,6 +2273,7 @@ function extractBootstrapFailureReason(text: string): string | null {
   if (!trimmed) return null;
   if (isBootstrapInstructionPrompt(trimmed)) return null;
   const lower = trimmed.toLowerCase();
+  if (isMemberBriefingUnavailableFallbackSignal(lower)) return null;
   const looksLikeBootstrapFailure =
     lower.includes('bootstrap failed') ||
     lower.includes('bootstrap failure') ||
@@ -2282,21 +2283,10 @@ function extractBootstrapFailureReason(text: string): string | null {
     ((lower.includes('member') || lower.includes('член')) && lower.includes('not found')) ||
     (lower.includes('не найден') &&
       (lower.includes('член') || lower.includes('member') || lower.includes('inbox'))) ||
-    lower.includes('member_briefing tool is not available') ||
-    lower.includes('member_briefing tool not found') ||
     lower.includes('lead_briefing tool is not available') ||
     lower.includes('lead_briefing tool not found') ||
-    lower.includes('no such tool available: mcp__agent_teams__member_briefing') ||
     lower.includes('no such tool available: mcp__agent_teams__lead_briefing') ||
     lower.includes('agent calls that include team_name must also include name') ||
-    (lower.includes('member_briefing') &&
-      (lower.includes('not available') ||
-        lower.includes('not found') ||
-        lower.includes('lookup failure') ||
-        lower.includes('validation error') ||
-        lower.includes('api error') ||
-        lower.includes('empty content') ||
-        lower.includes('unspecified error'))) ||
     (lower.includes('lead_briefing') &&
       (lower.includes('not available') ||
         lower.includes('not found') ||
@@ -2317,6 +2307,22 @@ function extractBootstrapFailureReason(text: string): string | null {
     lower.includes('please check the provided tool list');
   if (!looksLikeBootstrapFailure) return null;
   return trimmed.slice(0, 280);
+}
+
+function isMemberBriefingUnavailableFallbackSignal(lowerText: string): boolean {
+  if (!lowerText.includes('member_briefing')) return false;
+  return (
+    lowerText.includes('not available') ||
+    lowerText.includes('not found') ||
+    lowerText.includes('unavailable') ||
+    lowerText.includes('no such tool available') ||
+    lowerText.includes('工具不可用') ||
+    lowerText.includes('不可用') ||
+    lowerText.includes('未连接') ||
+    lowerText.includes('未配置') ||
+    lowerText.includes('not connected') ||
+    lowerText.includes('not configured')
+  );
 }
 
 function isBootstrapInstructionPrompt(text: string): boolean {
@@ -18641,6 +18647,17 @@ export class TeamProvisioningService {
         typeof msg.reason === 'string' && msg.reason.trim().length > 0
           ? msg.reason.trim()
           : 'Deterministic bootstrap failed.';
+      if (isMemberBriefingUnavailableFallbackSignal(reason.toLowerCase())) {
+        const progress = updateProgress(run, 'finalizing', '成员简报不可用，已改用内置上下文继续', {
+          warnings: mergeProvisioningWarnings(
+            run.progress.warnings,
+            '成员无法调用 member_briefing，已使用启动上下文继续；负责人会在需要时接管通知。'
+          ),
+          cliLogsTail: extractCliLogsFromRun(run),
+        });
+        run.onProgress(progress);
+        return true;
+      }
       const classification = classifyDeterministicBootstrapFailure(reason);
       const progress = updateProgress(run, 'failed', classification.title, {
         error: classification.normalizedReason,
