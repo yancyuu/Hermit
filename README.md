@@ -10,7 +10,7 @@
   <a href="docs/screenshots/6.png"><img src="docs/screenshots/6.png" width="65" alt="Settings" /></a>
 </p>
 
-<h1 align="center"><a href="https://github.com/lazy-agent/multi-agent-workbench">智能体团队</a></h1>
+<h1 align="center"><a href="https://github.com/lazy-agent/multi-agent-workbench">Multi Agent Teams</a></h1>
 
 <p align="center">
   <strong><code>你负责定方向，智能体团队负责拆任务、协作、执行和互相审查。你只需要看着看板推进。</code></strong>
@@ -54,30 +54,30 @@ https://github.com/user-attachments/assets/35e27989-726d-4059-8662-bae610e46b42
 <table align="center">
 <tr>
 <td align="center">
-  <a href="https://github.com/lazy-agent/multi-agent-workbench/releases/latest/download/Claude-Agent-Teams-UI-arm64.dmg">
+  <a href="https://github.com/lazy-agent/multi-agent-workbench/releases/latest/download/Multi-Agent-Teams-arm64.dmg">
     <img src="https://img.shields.io/badge/macOS_Apple_Silicon-.dmg-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS Apple Silicon" />
   </a>
   <br />
-  <a href="https://github.com/lazy-agent/multi-agent-workbench/releases/latest/download/Claude-Agent-Teams-UI-x64.dmg">
+  <a href="https://github.com/lazy-agent/multi-agent-workbench/releases/latest/download/Multi-Agent-Teams-x64.dmg">
     <img src="https://img.shields.io/badge/macOS_Intel-.dmg-434343?style=for-the-badge&logo=apple&logoColor=white" alt="macOS Intel" />
   </a>
 </td>
 <td align="center">
-  <a href="https://github.com/lazy-agent/multi-agent-workbench/releases/latest/download/Claude-Agent-Teams-UI-Setup.exe">
+  <a href="https://github.com/lazy-agent/multi-agent-workbench/releases/latest/download/Multi-Agent-Teams-Setup.exe">
     <img src="https://img.shields.io/badge/Windows-Download_.exe-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Windows" />
   </a>
   <br />
   <sub>May trigger SmartScreen — click "More info" → "Run anyway"</sub>
 </td>
 <td align="center">
-  <a href="https://github.com/lazy-agent/multi-agent-workbench/releases/latest/download/Claude-Agent-Teams-UI.AppImage">
+  <a href="https://github.com/lazy-agent/multi-agent-workbench/releases/latest/download/Multi-Agent-Teams.AppImage">
     <img src="https://img.shields.io/badge/Linux-Download_.AppImage-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux AppImage" />
   </a>
   <br />
-  <a href="https://github.com/lazy-agent/multi-agent-workbench/releases/latest/download/Claude-Agent-Teams-UI-amd64.deb">
+  <a href="https://github.com/lazy-agent/multi-agent-workbench/releases/latest/download/Multi-Agent-Teams-amd64.deb">
     <img src="https://img.shields.io/badge/.deb-E95420?style=flat-square&logo=ubuntu&logoColor=white" alt=".deb" />
   </a>&nbsp;
-  <a href="https://github.com/lazy-agent/multi-agent-workbench/releases/latest/download/Claude-Agent-Teams-UI-x86_64.rpm">
+  <a href="https://github.com/lazy-agent/multi-agent-workbench/releases/latest/download/Multi-Agent-Teams-x86_64.rpm">
     <img src="https://img.shields.io/badge/.rpm-294172?style=flat-square&logo=redhat&logoColor=white" alt=".rpm" />
   </a>&nbsp;
   <a href="https://github.com/lazy-agent/multi-agent-workbench/releases/latest/download/Claude-Agent-Teams-UI.pacman">

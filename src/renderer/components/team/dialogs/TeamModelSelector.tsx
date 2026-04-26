@@ -59,7 +59,7 @@ interface ProviderDef {
 }
 
 const PROVIDERS: ProviderDef[] = [
-  { id: 'anthropic', label: 'Claude', comingSoon: false },
+  { id: 'anthropic', label: 'Anthropic', comingSoon: false },
   { id: 'codex', label: 'Codex', comingSoon: false },
   { id: 'gemini', label: 'Gemini', comingSoon: false },
   { id: 'opencode', label: 'OpenCode', comingSoon: false },
@@ -67,7 +67,7 @@ const PROVIDERS: ProviderDef[] = [
 
 const OPENCODE_UI_DISABLED_REASON = 'OpenCode 团队启动尚未就绪。';
 export const OPENCODE_TEAM_LEAD_DISABLED_REASON =
-  '当前阶段 OpenCode 只能作为成员运行。请使用 Claude、Codex 或 Gemini 作为团队负责人，再把 OpenCode 添加为成员。';
+  '当前阶段 OpenCode 只能作为成员运行。请使用 Anthropic、Codex 或 Gemini 作为团队负责人，再把 OpenCode 添加为成员。';
 export const OPENCODE_TEAM_LEAD_DISABLED_BADGE_LABEL = '侧路';
 
 export function getTeamModelLabel(model: string): string {
@@ -75,7 +75,7 @@ export function getTeamModelLabel(model: string): string {
 }
 
 export function getTeamProviderLabel(providerId: TeamProviderId): string {
-  return getCatalogTeamProviderLabel(providerId) ?? 'Claude';
+  return getCatalogTeamProviderLabel(providerId) ?? 'Anthropic';
 }
 
 export function getTeamEffortLabel(effort: string): string {
@@ -204,13 +204,13 @@ export const TeamModelSelector: React.FC<TeamModelSelectorProps> = ({
           'anthropic',
           getAnthropicDefaultTeamModel(false),
           runtimeProviderStatus
-        ) ?? '奥普斯 4.7 (1M)';
+        ) ?? 'Opus 4.7 (1M)';
       const defaultLimitedContextModel =
         getRuntimeAwareProviderScopedTeamModelLabel(
           'anthropic',
           getAnthropicDefaultTeamModel(true),
           runtimeProviderStatus
-        ) ?? '奥普斯 4.7';
+        ) ?? 'Opus 4.7';
 
       return `使用 Claude 团队默认模型。\n默认解析为 ${defaultLongContextModel}（1M 上下文）；启用 200K 限制后解析为 ${defaultLimitedContextModel}。`;
     }

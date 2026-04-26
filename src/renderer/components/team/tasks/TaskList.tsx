@@ -47,10 +47,10 @@ export const TaskList = ({ tasks }: TaskListProps): React.JSX.Element => {
         <select
           className="rounded border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1 text-xs text-[var(--color-text)]"
           value={ownerFilter}
-          aria-label="Filter tasks by owner"
+          aria-label="按负责人筛选任务"
           onChange={(event) => setOwnerFilter(event.target.value)}
         >
-          <option value="all">All owners</option>
+          <option value="all">全部负责人</option>
           {ownerOptions.map((owner) => (
             <option key={owner} value={owner}>
               {owner}
@@ -61,14 +61,14 @@ export const TaskList = ({ tasks }: TaskListProps): React.JSX.Element => {
           <select
             className="rounded border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1 text-xs text-[var(--color-text)]"
             value={statusFilter}
-            aria-label="Filter tasks by status"
+            aria-label="按状态筛选任务"
             onChange={(event) => setStatusFilter(event.target.value)}
           >
-            <option value="all">All statuses</option>
-            <option value="pending">pending</option>
-            <option value="in_progress">in_progress</option>
-            <option value="completed">completed</option>
-            <option value="deleted">deleted</option>
+            <option value="all">全部状态</option>
+            <option value="pending">待处理</option>
+            <option value="in_progress">进行中</option>
+            <option value="completed">已完成</option>
+            <option value="deleted">已删除</option>
           </select>
         ) : null}
         {ownerFilter !== 'all' || statusFilter !== 'all' ? (

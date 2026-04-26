@@ -35,7 +35,7 @@ export const MemberSelect = ({
   members,
   value,
   onChange,
-  placeholder = 'Select member...',
+  placeholder = '选择成员...',
   allowUnassigned = false,
   size = 'sm',
   disabled = false,
@@ -102,7 +102,7 @@ export const MemberSelect = ({
             {selectedMember ? (
               renderMemberInline(selectedMember)
             ) : value === null && allowUnassigned ? (
-              <span className="text-xs text-[var(--color-text-muted)]">Unassigned</span>
+              <span className="text-xs text-[var(--color-text-muted)]">未分配</span>
             ) : (
               <span className="text-[var(--color-text-muted)]">{placeholder}</span>
             )}
@@ -125,7 +125,7 @@ export const MemberSelect = ({
             <CommandPrimitive.Input
               value={search}
               onValueChange={setSearch}
-              placeholder="Search members..."
+              placeholder="搜索成员..."
               className="flex h-8 w-full border-0 bg-transparent px-2 py-1 text-xs text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-muted)]"
             />
           </div>
@@ -135,7 +135,7 @@ export const MemberSelect = ({
             onWheel={(e) => e.stopPropagation()}
           >
             <CommandPrimitive.Empty className="py-4 pr-2 text-center text-xs text-[var(--color-text-muted)]">
-              No members found.
+              没有找到成员。
             </CommandPrimitive.Empty>
             {allowUnassigned && !search.trim() ? (
               <CommandPrimitive.Item
@@ -147,7 +147,7 @@ export const MemberSelect = ({
                 }}
                 className="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none data-[selected=true]:bg-[var(--color-surface-raised)] data-[selected=true]:text-[var(--color-text)]"
               >
-                <span className="text-[var(--color-text-muted)]">Unassigned</span>
+                <span className="text-[var(--color-text-muted)]">未分配</span>
                 {value === null ? (
                   <Check size={12} className="ml-auto shrink-0 text-blue-400" />
                 ) : null}

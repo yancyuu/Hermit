@@ -11,17 +11,17 @@ import type { TriggerContentType, TriggerToolName } from '@renderer/types/data';
  * Content type options for dropdown.
  */
 export const CONTENT_TYPE_OPTIONS: { value: TriggerContentType; label: string }[] = [
-  { value: 'tool_result', label: 'Tool Result' },
-  { value: 'tool_use', label: 'Tool Use' },
-  { value: 'thinking', label: 'Thinking' },
-  { value: 'text', label: 'Text Output' },
+  { value: 'tool_result', label: '工具结果' },
+  { value: 'tool_use', label: '工具调用' },
+  { value: 'thinking', label: '思考内容' },
+  { value: 'text', label: '文本输出' },
 ];
 
 /**
  * Tool name options for dropdown.
  */
 export const TOOL_NAME_OPTIONS: { value: TriggerToolName; label: string }[] = [
-  { value: '', label: 'Any Tool' },
+  { value: '', label: '任意工具' },
   { value: 'Bash', label: 'Bash' },
   { value: 'Task', label: 'Task' },
   { value: 'Read', label: 'Read' },
@@ -44,7 +44,7 @@ export const TOOL_NAME_OPTIONS: { value: TriggerToolName; label: string }[] = [
  * Mode options for the trigger mode selector.
  */
 export const MODE_OPTIONS: ModeConfig[] = [
-  { value: 'error_status', label: 'Execution Error', icon: AlertCircle },
-  { value: 'content_match', label: 'Content Pattern', icon: Search },
-  { value: 'token_threshold', label: 'High Token Usage', icon: Activity },
+  { value: 'error_status', label: '执行错误', icon: AlertCircle },
+  { value: 'content_match', label: '内容匹配', icon: Search },
+  { value: 'token_threshold', label: '高 Token 使用量', icon: Activity },
 ];

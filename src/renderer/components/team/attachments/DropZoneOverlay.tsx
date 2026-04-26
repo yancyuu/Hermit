@@ -47,7 +47,7 @@ export const DropZoneOverlay = ({
         style={{ color: 'var(--color-accent, #6366f1)' }}
       >
         <Paperclip size={24} />
-        <span className="text-xs font-medium">Drop files here</span>
+        <span className="text-xs font-medium">将文件拖到这里</span>
       </div>
     </div>
   );

@@ -35,7 +35,7 @@ function getFriendlyImportError(message: string): string {
     return 'This folder does not look like a skill yet. It needs a SKILL.md, Skill.md, or skill.md file.';
   }
   if (message.includes('symbolic links')) {
-    return 'This folder contains symbolic links. Import the real files instead of links.';
+    return '此文件夹包含符号链接。请导入真实文件，而不是链接。';
   }
   if (message.includes('too many files')) {
     return 'This skill folder is too large to import at once. Remove extra files and try again.';
@@ -169,9 +169,7 @@ export const SkillImportDialog = ({
       setReviewOpen(true);
     } catch (error) {
       setMutationError(
-        getFriendlyImportError(
-          error instanceof Error ? error.message : 'Failed to review import changes'
-        )
+        getFriendlyImportError(error instanceof Error ? error.message : '检查导入变更失败')
       );
     } finally {
       setReviewLoading(false);
@@ -198,7 +196,7 @@ export const SkillImportDialog = ({
       onClose();
     } catch (error) {
       setMutationError(
-        getFriendlyImportError(error instanceof Error ? error.message : 'Failed to import skill')
+        getFriendlyImportError(error instanceof Error ? error.message : '导入技能失败')
       );
     } finally {
       setImportLoading(false);
@@ -211,7 +209,7 @@ export const SkillImportDialog = ({
         <DialogContent className="gap-0 overflow-hidden p-0">
           <div className="flex max-h-[85vh] min-h-0 flex-col">
             <DialogHeader className="border-b border-border px-6 py-5">
-              <DialogTitle>Import skill</DialogTitle>
+              <DialogTitle>导入技能</DialogTitle>
               <DialogDescription>
                 Pick an existing skill folder, review what will be copied, then import it into one
                 of your supported skill locations.
@@ -228,7 +226,7 @@ export const SkillImportDialog = ({
                   </p>
                 </section>
                 <div className="space-y-2">
-                  <Label htmlFor="skill-import-source">Source folder</Label>
+                  <Label htmlFor="skill-import-source">源文件夹</Label>
                   <div className="flex gap-2">
                     <Input
                       id="skill-import-source"
@@ -237,13 +235,13 @@ export const SkillImportDialog = ({
                     />
                     <Button variant="outline" onClick={() => void handleChooseFolder()}>
                       <FolderOpen className="mr-1.5 size-3.5" />
-                      Browse
+                      浏览
                     </Button>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="skill-import-folder">Destination folder name</Label>
+                  <Label htmlFor="skill-import-folder">目标文件夹名称</Label>
                   <Input
                     id="skill-import-folder"
                     value={folderName}
@@ -251,19 +249,19 @@ export const SkillImportDialog = ({
                       setFolderNameEdited(true);
                       setFolderName(event.target.value);
                     }}
-                    placeholder="Defaults to source folder name"
+                    placeholder="默认使用源文件夹名称"
                   />
                 </div>
 
                 <section className="space-y-1">
-                  <h3 className="text-sm font-semibold text-text">2. Decide where it belongs</h3>
+                  <h3 className="text-sm font-semibold text-text">2. 选择存放位置</h3>
                   <p className="text-sm text-text-muted">
-                    Personal skills work everywhere. Project skills only show up for one codebase.
+                    个人技能会在所有地方生效；项目技能只会出现在一个代码库中。
                   </p>
                 </section>
                 <div className="grid gap-3 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="skill-import-scope">Who can use it</Label>
+                    <Label htmlFor="skill-import-scope">谁可以使用</Label>
                     <Select
                       value={scope}
                       onValueChange={(value) => setScope(value as 'user' | 'project')}
@@ -272,18 +270,16 @@ export const SkillImportDialog = ({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="user">User</SelectItem>
+                        <SelectItem value="user">用户</SelectItem>
                         <SelectItem value="project" disabled={!projectPath}>
-                          {projectPath
-                            ? `Project: ${projectLabel ?? projectPath}`
-                            : 'Project unavailable'}
+                          {projectPath ? `项目：${projectLabel ?? projectPath}` : '项目不可用'}
                         </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="skill-import-root">Where to store it</Label>
+                    <Label htmlFor="skill-import-root">存储位置</Label>
                     <Select
                       value={rootKind}
                       onValueChange={(value) => setRootKind(value as SkillRootKind)}
@@ -324,7 +320,7 @@ export const SkillImportDialog = ({
                 disabled={!sourceDir.trim() || reviewLoading || importLoading}
               >
                 <FileSearch className="mr-1.5 size-3.5" />
-                {reviewLoading ? 'Preparing...' : 'Review And Import'}
+                {reviewLoading ? '准备中...' : '检查并导入'}
               </Button>
             </div>
           </div>
@@ -338,9 +334,9 @@ export const SkillImportDialog = ({
         error={mutationError}
         onClose={() => setReviewOpen(false)}
         onConfirm={() => void handleConfirmImport()}
-        confirmLabel="Import Skill"
-        reviewLabel="Importing this skill"
-        backLabel="Back To Import"
+        confirmLabel="导入技能"
+        reviewLabel="正在导入此技能"
+        backLabel="返回导入"
       />
     </>
   );

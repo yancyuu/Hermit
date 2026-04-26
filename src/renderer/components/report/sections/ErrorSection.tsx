@@ -74,7 +74,7 @@ interface ErrorSectionProps {
 
 export const ErrorSection = ({ data, defaultCollapsed }: ErrorSectionProps) => {
   return (
-    <ReportSection title="Errors" icon={AlertTriangle} defaultCollapsed={defaultCollapsed}>
+    <ReportSection title="错误" icon={AlertTriangle} defaultCollapsed={defaultCollapsed}>
       <div className="mb-3 flex items-center gap-3">
         <span
           className="rounded px-2 py-0.5 text-xs font-medium"
@@ -83,13 +83,10 @@ export const ErrorSection = ({ data, defaultCollapsed }: ErrorSectionProps) => {
             color: 'var(--assess-danger)',
           }}
         >
-          {data.errors.length} error{data.errors.length !== 1 ? 's' : ''}
+          {data.errors.length} 个错误
         </span>
         {data.permissionDenials.count > 0 && (
-          <span className="text-xs text-text-muted">
-            {data.permissionDenials.count} permission denial
-            {data.permissionDenials.count !== 1 ? 's' : ''}
-          </span>
+          <span className="text-xs text-text-muted">{data.permissionDenials.count} 次权限拒绝</span>
         )}
       </div>
 

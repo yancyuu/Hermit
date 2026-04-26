@@ -13,17 +13,17 @@ const alt = IS_MAC ? '\u2325' : 'Alt';
 const shift = IS_MAC ? '\u21E7' : 'Shift';
 
 const shortcuts = [
-  { keys: [`${alt}+J`], action: 'Next change' },
-  { keys: [`${alt}+K`], action: 'Previous change' },
-  { keys: [`${alt}+\u2193`], action: 'Next file' },
-  { keys: [`${alt}+\u2191`], action: 'Previous file' },
-  { keys: [`${mod}+Y`], action: 'Accept change' },
-  { keys: [`${mod}+N`], action: 'Reject change' },
-  { keys: [`${mod}+S`], action: 'Save file' },
-  { keys: [`${mod}+Z`], action: 'Undo' },
-  { keys: [`${mod}+${shift}+Z`], action: 'Redo' },
-  { keys: ['?'], action: 'Toggle shortcuts' },
-  { keys: ['Esc'], action: 'Close dialog' },
+  { keys: [`${alt}+J`], action: '下一个变更' },
+  { keys: [`${alt}+K`], action: '上一个变更' },
+  { keys: [`${alt}+\u2193`], action: '下一个文件' },
+  { keys: [`${alt}+\u2191`], action: '上一个文件' },
+  { keys: [`${mod}+Y`], action: '接受变更' },
+  { keys: [`${mod}+N`], action: '拒绝变更' },
+  { keys: [`${mod}+S`], action: '保存文件' },
+  { keys: [`${mod}+Z`], action: '撤销' },
+  { keys: [`${mod}+${shift}+Z`], action: '重做' },
+  { keys: ['?'], action: '切换快捷键帮助' },
+  { keys: ['Esc'], action: '关闭对话框' },
 ];
 
 export const KeyboardShortcutsHelp = ({
@@ -35,7 +35,7 @@ export const KeyboardShortcutsHelp = ({
   return (
     <div className="absolute right-4 top-14 z-50 w-64 rounded-lg border border-border bg-surface-overlay p-3 shadow-lg">
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-xs font-medium text-text">Keyboard Shortcuts</span>
+        <span className="text-xs font-medium text-text">快捷键</span>
         <button
           onClick={() => onOpenChange(false)}
           className="rounded p-0.5 text-text-muted hover:bg-surface-raised hover:text-text"

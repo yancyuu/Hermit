@@ -42,16 +42,18 @@ export const GPT_5_3_CODEX_SPARK_UI_DISABLED_REASON =
   '该模型在团队启动、任务与回复工具协议中稳定性较低，暂时禁用。';
 
 const TEAM_PROVIDER_LABELS: Record<SupportedProviderId, string> = {
-  anthropic: 'Claude',
+  anthropic: 'Anthropic',
   codex: 'Codex',
   gemini: 'Gemini',
   opencode: 'OpenCode',
 };
 
 const ANTHROPIC_ALIAS_LABELS = {
-  opus: '奥普斯 4.7',
-  sonnet: '十四行诗 4.6',
-  haiku: '俳句 4.5',
+  opus: 'Opus 4.7',
+  'opus[1m]': 'Opus 4.7 (1M)',
+  sonnet: 'Sonnet 4.6',
+  'sonnet[1m]': 'Sonnet 4.6 (1M)',
+  haiku: 'Haiku 4.5',
 } as const;
 
 const ANTHROPIC_VISIBLE_MODEL_FALLBACKS = ['claude-opus-4-7', 'claude-opus-4-7[1m]'] as const;
@@ -75,14 +77,14 @@ const ANTHROPIC_MODEL_ORDER = [
 const TEAM_MODEL_LABEL_OVERRIDES: Record<string, string> = {
   default: '默认',
   ...ANTHROPIC_ALIAS_LABELS,
-  'claude-opus-4-7': '奥普斯 4.7',
-  'claude-opus-4-7[1m]': '奥普斯 4.7 (1M)',
-  'claude-sonnet-4-6': '十四行诗 4.6',
-  'claude-sonnet-4-6[1m]': '十四行诗 4.6 (1M)',
-  'claude-opus-4-6': '奥普斯 4.6',
-  'claude-opus-4-6[1m]': '奥普斯 4.6 (1M)',
-  'claude-haiku-4-5': '俳句 4.5',
-  'claude-haiku-4-5-20251001': '俳句 4.5',
+  'claude-opus-4-7': 'Opus 4.7',
+  'claude-opus-4-7[1m]': 'Opus 4.7 (1M)',
+  'claude-sonnet-4-6': 'Sonnet 4.6',
+  'claude-sonnet-4-6[1m]': 'Sonnet 4.6 (1M)',
+  'claude-opus-4-6': 'Opus 4.6',
+  'claude-opus-4-6[1m]': 'Opus 4.6 (1M)',
+  'claude-haiku-4-5': 'Haiku 4.5',
+  'claude-haiku-4-5-20251001': 'Haiku 4.5',
   'gpt-5.4': 'GPT-5.4',
   'gpt-5.4-mini': 'GPT-5.4 Mini',
   'gpt-5.3-codex': 'GPT-5.3 Codex',
@@ -100,10 +102,10 @@ const TEAM_PROVIDER_MODEL_OPTIONS: Record<SupportedProviderId, readonly TeamProv
   {
     anthropic: [
       { value: '', label: '默认', badgeLabel: '默认' },
-      { value: 'opus', label: '奥普斯 4.7', badgeLabel: '奥普斯 4.7' },
-      { value: 'claude-opus-4-6', label: '奥普斯 4.6', badgeLabel: '奥普斯 4.6' },
-      { value: 'sonnet', label: '十四行诗 4.6', badgeLabel: '十四行诗 4.6' },
-      { value: 'haiku', label: '俳句 4.5', badgeLabel: '俳句 4.5' },
+      { value: 'opus', label: 'Opus 4.7', badgeLabel: 'Opus 4.7' },
+      { value: 'claude-opus-4-6', label: 'Opus 4.6', badgeLabel: 'Opus 4.6' },
+      { value: 'sonnet', label: 'Sonnet 4.6', badgeLabel: 'Sonnet 4.6' },
+      { value: 'haiku', label: 'Haiku 4.5', badgeLabel: 'Haiku 4.5' },
     ],
     codex: [
       { value: '', label: '默认', badgeLabel: '默认' },

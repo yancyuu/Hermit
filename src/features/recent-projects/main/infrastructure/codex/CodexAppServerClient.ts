@@ -215,8 +215,8 @@ export class CodexAppServerClient {
           'initialize',
           {
             clientInfo: {
-              name: 'agent-teams-ai',
-              title: 'Agent Teams UI',
+              name: 'multi-agent-teams',
+              title: 'Multi Agent Teams',
               version: '0.1.0',
             },
             capabilities: {

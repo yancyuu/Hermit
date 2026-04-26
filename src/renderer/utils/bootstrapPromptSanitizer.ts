@@ -88,7 +88,7 @@ function buildRuntimeSummary(
   effort: string | undefined
 ): string | undefined {
   if (providerId) {
-    const providerLabel = getTeamProviderLabel(providerId) ?? 'Claude';
+    const providerLabel = getTeamProviderLabel(providerId) ?? 'Anthropic';
     const modelLabel = model ? (getTeamModelLabel(model) ?? model) : '默认';
     const effortLabel = effort ? getTeamEffortLabel(effort) : undefined;
     const modelAlreadyCarriesProviderBrand = doesTeamModelCarryProviderBrand(

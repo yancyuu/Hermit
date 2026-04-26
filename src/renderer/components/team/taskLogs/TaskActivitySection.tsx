@@ -293,8 +293,7 @@ export const TaskActivitySection = ({
           ...prev,
           [entry.id]: {
             status: 'error',
-            error:
-              detailError instanceof Error ? detailError.message : 'Failed to load activity detail',
+            error: detailError instanceof Error ? detailError.message : '加载活动详情失败',
           },
         }));
       }
@@ -365,7 +364,7 @@ export const TaskActivitySection = ({
         }
       } catch (loadError) {
         if (!cancelled) {
-          setError(loadError instanceof Error ? loadError.message : 'Failed to load task activity');
+          setError(loadError instanceof Error ? loadError.message : '加载任务活动失败');
           setEntries([]);
         }
       } finally {

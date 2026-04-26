@@ -8,7 +8,7 @@ export const ScheduleEmptyState = (): React.JSX.Element => (
     <div className="space-y-1">
       <p className="text-xs font-medium text-[var(--color-text-secondary)]">暂无定时计划</p>
       <p className="text-[11px] text-[var(--color-text-muted)]">
-        创建计划后，可按 cron 时间自动运行 Claude 任务。
+        创建计划后，可按 cron 时间自动运行团队任务。
       </p>
     </div>
   </div>

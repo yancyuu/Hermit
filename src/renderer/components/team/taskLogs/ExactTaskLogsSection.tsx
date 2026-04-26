@@ -74,9 +74,7 @@ export const ExactTaskLogsSection = ({
         );
       } catch (loadError) {
         if (!cancelled) {
-          setError(
-            loadError instanceof Error ? loadError.message : 'Failed to load exact task logs'
-          );
+          setError(loadError instanceof Error ? loadError.message : '加载精确任务日志失败');
           setSummaries([]);
         }
       } finally {
@@ -160,8 +158,7 @@ export const ExactTaskLogsSection = ({
           [summary.id]: {
             status: 'error',
             generation: summary.sourceGeneration,
-            error:
-              detailError instanceof Error ? detailError.message : 'Failed to load exact task logs',
+            error: detailError instanceof Error ? detailError.message : '加载精确任务日志失败',
           },
         }));
       }

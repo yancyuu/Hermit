@@ -265,10 +265,6 @@ export class TeamMcpConfigBuilder {
       configDir,
       `${MCP_CONFIG_PREFIX}${process.pid}-${Date.now()}-${randomUUID()}.json`
     );
-    // Keep the team bootstrap config minimal: recent Claude sidechain runs can
-    // lose the agent-teams tool surface when we inline large user MCP bundles
-    // into the generated --mcp-config. User/project/local MCP remain loaded
-    // through Claude's native settings sources.
     const generatedServers: Record<string, McpServerConfig> = {
       [MCP_SERVER_NAME]: {
         command: launchSpec.command,

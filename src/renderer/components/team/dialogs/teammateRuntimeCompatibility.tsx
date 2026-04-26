@@ -59,7 +59,7 @@ export interface TmuxRuntimeReadiness {
 }
 
 const PROVIDER_LABELS: Record<TeamProviderId, string> = {
-  anthropic: 'Claude',
+  anthropic: 'Anthropic',
   codex: 'Codex',
   gemini: 'Gemini',
   opencode: 'OpenCode',
@@ -243,7 +243,7 @@ export function analyzeTeammateRuntimeCompatibility({
   }
   if (hasOpenCodeLeadMixedUnsupported) {
     details.push(
-      '修复：混用 OpenCode 和其他提供商时，请让团队负责人使用 Claude、Codex 或 Gemini。'
+      '修复：混用 OpenCode 和其他提供商时，请让团队负责人使用 Anthropic、Codex 或 Gemini。'
     );
   } else {
     details.push(
@@ -285,7 +285,7 @@ export function analyzeTeammateRuntimeCompatibility({
     message: checking
       ? '部分成员需要独立进程。应用正在检查 tmux 是否可用。'
       : hasOpenCodeLeadMixedUnsupported
-        ? 'OpenCode 成员可以作为 Claude、Codex 或 Gemini 负责人的次级运行通道，但当前阶段不支持 OpenCode 负责混合团队。'
+        ? 'OpenCode 成员可以作为 Anthropic、Codex 或 Gemini 负责人的次级运行通道，但当前阶段不支持 OpenCode 负责混合团队。'
         : hasCodexNative && !hasMixedProviders
           ? 'Codex 负责人可以不依赖 tmux 运行，但 Codex 原生成员不能使用进程内成员适配器，必须作为独立 Codex 进程启动，而该路径当前需要 tmux。'
           : '这台机器上的 tmux 尚未就绪。同提供商进程内成员可以不依赖 tmux，但该团队存在需要独立进程的成员。',

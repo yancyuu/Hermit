@@ -2417,7 +2417,7 @@ describe('TeamProvisioningService prepare/auth behavior', () => {
         limitContext: false,
         facts,
       })
-    ).toThrow('does not support it in the current runtime');
+    ).toThrow('在当前运行时中不支持该设置');
 
     expect(() =>
       (svc as any).validateRuntimeLaunchSelection({

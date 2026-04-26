@@ -20,13 +20,13 @@ export function isImageMimeType(type: string): type is ImageMimeType {
 export function validateAttachment(file: File): { valid: true } | { valid: false; error: string } {
   const cat = categorizeFile(file);
   if (cat === 'unsupported') {
-    return { valid: false, error: `Unsupported file type: ${file.name}` };
+    return { valid: false, error: `不支持的文件类型：${file.name}` };
   }
   if (file.size === 0) {
-    return { valid: false, error: `File "${file.name}" is empty` };
+    return { valid: false, error: `文件“${file.name}”为空` };
   }
   if (file.size > MAX_FILE_SIZE) {
-    return { valid: false, error: `File "${file.name}" exceeds 10MB limit` };
+    return { valid: false, error: `文件“${file.name}”超过 10MB 限制` };
   }
   return { valid: true };
 }
@@ -46,7 +46,7 @@ export async function fileToAttachmentPayload(file: File): Promise<AttachmentPay
         data: base64,
       });
     };
-    reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`));
+    reader.onerror = () => reject(new Error(`读取文件失败：${file.name}`));
     reader.readAsDataURL(file);
   });
 }

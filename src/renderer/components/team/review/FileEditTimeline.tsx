@@ -14,7 +14,7 @@ export const FileEditTimeline = ({
   activeSnippetIndex,
 }: FileEditTimelineProps) => {
   if (timeline.events.length === 0) {
-    return <div className="px-3 py-2 text-xs text-text-muted">No edit events</div>;
+    return <div className="px-3 py-2 text-xs text-text-muted">暂无编辑事件</div>;
   }
 
   return (

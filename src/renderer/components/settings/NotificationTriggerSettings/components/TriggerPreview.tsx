@@ -58,7 +58,7 @@ export const TriggerPreview = ({
             <span className="font-medium text-indigo-400">
               {previewResult.truncated && effectiveCount >= 10_000 ? '10,000+' : effectiveCount}
             </span>{' '}
-            errors would have been detected
+            个错误会被检测到
           </p>
 
           {/* Truncation warning - only shown when timeout or count limit hit */}
@@ -72,9 +72,7 @@ export const TriggerPreview = ({
               }}
             >
               <AlertTriangle className="size-4 shrink-0" />
-              <span>
-                Search stopped early (timeout or count limit). Actual matches may be higher.
-              </span>
+              <span>搜索提前停止（超时或数量限制）。实际匹配数可能更多。</span>
             </div>
           )}
 

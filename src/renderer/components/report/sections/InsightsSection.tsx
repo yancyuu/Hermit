@@ -33,12 +33,12 @@ export const InsightsSection = ({
   defaultCollapsed,
 }: InsightsSectionProps) => {
   return (
-    <ReportSection title="Session Insights" icon={Lightbulb} defaultCollapsed={defaultCollapsed}>
+    <ReportSection title="会话洞察" icon={Lightbulb} defaultCollapsed={defaultCollapsed}>
       {/* Skills invoked */}
       {skills.length > 0 && (
         <div className="mb-4">
           <div className="mb-2 text-xs font-medium text-text-muted">
-            Skills Invoked ({skills.length})
+            已调用技能（{skills.length}）
           </div>
           <div className="flex flex-col gap-1">
             {skills.map((s, idx) => (
@@ -53,18 +53,18 @@ export const InsightsSection = ({
 
       {/* Bash commands */}
       <div className="mb-4">
-        <div className="mb-2 text-xs font-medium text-text-muted">Bash Commands</div>
+        <div className="mb-2 text-xs font-medium text-text-muted">Bash 命令</div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <div>
-            <div className="text-xs text-text-muted">Total</div>
+            <div className="text-xs text-text-muted">总计</div>
             <div className="text-sm font-medium text-text">{bash.total}</div>
           </div>
           <div>
-            <div className="text-xs text-text-muted">Unique</div>
+            <div className="text-xs text-text-muted">唯一</div>
             <div className="text-sm font-medium text-text">{bash.unique}</div>
           </div>
           <div>
-            <div className="text-xs text-text-muted">Repeated</div>
+            <div className="text-xs text-text-muted">重复</div>
             <div className="text-sm font-medium text-text">{Object.keys(bash.repeated).length}</div>
           </div>
         </div>

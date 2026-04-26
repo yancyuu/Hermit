@@ -115,7 +115,7 @@ export const ConfirmDialog = (): React.JSX.Element | null => {
         className="absolute inset-0 cursor-default"
         style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
         onClick={() => close(false)}
-        aria-label="Close dialog"
+        aria-label="关闭对话框"
         tabIndex={-1}
       />
       <div

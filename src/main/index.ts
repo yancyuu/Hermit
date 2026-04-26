@@ -1,5 +1,5 @@
 /**
- * Main process entry point for Agent Teams UI.
+ * Main process entry point for Multi Agent Teams.
  *
  * Responsibilities:
  * - Initialize Electron app and main window
@@ -1553,7 +1553,7 @@ function createWindow(): void {
     backgroundColor: '#1a1a1a',
     ...(useNativeTitleBar ? {} : { titleBarStyle: 'hidden' as const }),
     ...(isMac && { trafficLightPosition: getTrafficLightPositionForZoom(1) }),
-    title: 'Agent Teams UI',
+    title: 'Multi Agent Teams',
   });
   markRendererUnavailable(mainWindow);
 

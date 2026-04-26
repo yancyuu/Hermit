@@ -158,7 +158,36 @@ import type {
 } from '@shared/types';
 
 function getProviderLabel(providerId: TeamProviderId): string {
-  return getCatalogTeamProviderLabel(providerId) ?? 'Claude';
+  return getCatalogTeamProviderLabel(providerId) ?? 'Anthropic';
+}
+
+function isHardProvisioningPrepareFailure(
+  message: string | null | undefined,
+  checks: ProvisioningProviderCheck[]
+): boolean {
+  const combined = [message ?? '', ...checks.flatMap((check) => check.details)]
+    .join('\n')
+    .toLowerCase();
+
+  return (
+    combined.includes('working directory does not exist') ||
+    combined.includes('cwd must be an absolute path') ||
+    combined.includes('spawn ') ||
+    combined.includes(' enoent') ||
+    combined.includes('eacces') ||
+    combined.includes('enoexec') ||
+    combined.includes('bad cpu type in executable') ||
+    combined.includes('image not found') ||
+    combined.includes('claude cli not found') ||
+    combined.includes('cli binary missing') ||
+    combined.includes('cli binary could not be started')
+  );
+}
+
+function downgradeSoftProvisioningFailures(
+  checks: ProvisioningProviderCheck[]
+): ProvisioningProviderCheck[] {
+  return checks.map((check) => (check.status === 'failed' ? { ...check, status: 'notes' } : check));
 }
 
 function alignProvisioningChecks(
@@ -910,15 +939,25 @@ export const CreateTeamDialog = ({
         if (prepareRequestSeqRef.current !== requestSeq) return;
         const failureMessage =
           getPrimaryProvisioningFailureDetail(checks) ?? '部分提供商状态异常，请先处理。';
-        setPrepareState(anyFailure ? 'failed' : 'ready');
+        const hasHardFailure =
+          anyFailure && isHardProvisioningPrepareFailure(failureMessage, checks);
+        const displayChecks = hasHardFailure ? checks : downgradeSoftProvisioningFailures(checks);
+        setPrepareChecks(displayChecks);
+        setPrepareState(hasHardFailure ? 'failed' : 'ready');
         setPrepareMessage(
-          anyFailure
+          hasHardFailure
             ? failureMessage
-            : anyNotes
-              ? '所选提供商已就绪（含提示信息）。'
-              : '所选提供商已就绪。'
+            : anyFailure
+              ? '预检发现提示，但不会阻止创建。实际启动将使用当前 CLI/runtime 配置。'
+              : anyNotes
+                ? '所选提供商已就绪（含提示信息）。'
+                : '所选提供商已就绪。'
         );
-        setPrepareWarnings(collectedWarnings);
+        setPrepareWarnings(
+          anyFailure && !hasHardFailure
+            ? Array.from(new Set([...collectedWarnings, failureMessage]))
+            : collectedWarnings
+        );
       } catch (error) {
         if (prepareRequestSeqRef.current !== requestSeq) return;
         const failureMessage = error instanceof Error ? error.message : '预热 Claude CLI 环境失败';
@@ -1495,8 +1534,8 @@ export const CreateTeamDialog = ({
 
   const launchOptionalSummary = useMemo(() => {
     const summary: string[] = [];
-    if (prompt.trim()) summary.push('Lead prompt');
-    if (skipPermissions) summary.push('Auto-approve tools');
+    if (prompt.trim()) summary.push('负责人提示词');
+    if (skipPermissions) summary.push('自动批准工具');
     if (selectedProviderId === 'anthropic' || selectedProviderId === 'codex') {
       if (selectedFastMode === 'on') summary.push('快速模式');
       else if (selectedFastMode === 'off') summary.push('快速模式关闭');
@@ -1504,8 +1543,8 @@ export const CreateTeamDialog = ({
         summary.push('快速默认');
       }
     }
-    if (worktreeEnabled && worktreeName.trim()) summary.push(`Worktree: ${worktreeName.trim()}`);
-    if (customArgs.trim()) summary.push('Custom CLI args');
+    if (worktreeEnabled && worktreeName.trim()) summary.push(`Worktree：${worktreeName.trim()}`);
+    if (customArgs.trim()) summary.push('自定义 CLI 参数');
     return summary;
   }, [
     anthropicProviderFastModeDefault,
@@ -1520,8 +1559,8 @@ export const CreateTeamDialog = ({
 
   const teamDetailsSummary = useMemo(() => {
     const summary: string[] = [];
-    if (description.trim()) summary.push('Description');
-    if (teamColor) summary.push(`Color: ${teamColor}`);
+    if (description.trim()) summary.push('描述');
+    if (teamColor) summary.push(`颜色：${teamColor}`);
     return summary;
   }, [description, teamColor]);
 
@@ -1583,7 +1622,7 @@ export const CreateTeamDialog = ({
 
   const handleSubmit = (): void => {
     if (allTakenTeamNames.includes(sanitizedTeamName)) {
-      const msg = isNameProvisioning ? 'Team is currently launching' : 'Team name already exists';
+      const msg = isNameProvisioning ? '团队正在启动中' : '团队名称已存在';
       setFieldErrors({ teamName: msg });
       setLocalError(msg);
       return;
@@ -1593,7 +1632,7 @@ export const CreateTeamDialog = ({
       const errors = validation.errors ?? {};
       setFieldErrors(errors);
       const messages = Object.values(errors).filter(Boolean);
-      setLocalError(messages.join(' · ') || 'Check form fields');
+      setLocalError(messages.join(' · ') || '请检查表单字段');
       return;
     }
     if (modelValidationError) {
@@ -1919,7 +1958,7 @@ export const CreateTeamDialog = ({
                     ))}
                   </select>
                   <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                    MVP 先按团队选择一台机器运行，成员级分配会在后续调度层启用。
+                    MVP 先做团队级分配：每个团队整体选择一台机器运行。
                   </p>
                 </div>
 

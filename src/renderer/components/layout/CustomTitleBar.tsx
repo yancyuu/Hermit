@@ -76,12 +76,12 @@ export const CustomTitleBar = (): React.JSX.Element | null => {
               className={`${buttonBase} ${buttonHover}`}
               style={{ color: 'var(--color-text-secondary)' }}
               onClick={() => void minimize()}
-              aria-label="Minimize"
+              aria-label="最小化"
             >
               <Minus className="size-4" strokeWidth={2.5} />
             </button>
           </TooltipTrigger>
-          <TooltipContent side="bottom">Minimize</TooltipContent>
+          <TooltipContent side="bottom">最小化</TooltipContent>
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -90,12 +90,12 @@ export const CustomTitleBar = (): React.JSX.Element | null => {
               className={`${buttonBase} ${buttonHover}`}
               style={{ color: 'var(--color-text-secondary)' }}
               onClick={() => void handleMaximize()}
-              aria-label={isMaximized ? 'Restore' : 'Maximize'}
+              aria-label={isMaximized ? '还原' : '最大化'}
             >
               <Square className="size-3.5" strokeWidth={2.5} />
             </button>
           </TooltipTrigger>
-          <TooltipContent side="bottom">{isMaximized ? 'Restore' : 'Maximize'}</TooltipContent>
+          <TooltipContent side="bottom">{isMaximized ? '还原' : '最大化'}</TooltipContent>
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -104,12 +104,12 @@ export const CustomTitleBar = (): React.JSX.Element | null => {
               className={`${buttonBase} hover:bg-red-500/90 hover:text-white`}
               style={{ color: 'var(--color-text-secondary)' }}
               onClick={() => void close()}
-              aria-label="Close"
+              aria-label="关闭"
             >
               <X className="size-4" strokeWidth={2.5} />
             </button>
           </TooltipTrigger>
-          <TooltipContent side="bottom">Close</TooltipContent>
+          <TooltipContent side="bottom">关闭</TooltipContent>
         </Tooltip>
       </div>
     </div>

@@ -276,7 +276,7 @@ export const MemberCard = ({
     try {
       await onRestartMember(member.name);
     } catch (error) {
-      setRetryLaunchError(error instanceof Error ? error.message : 'Failed to retry teammate');
+      setRetryLaunchError(error instanceof Error ? error.message : '重试启动成员失败');
     } finally {
       setRetryingLaunch(false);
     }
@@ -294,7 +294,7 @@ export const MemberCard = ({
     try {
       await onSkipMemberForLaunch(member.name);
     } catch (error) {
-      setSkipLaunchError(error instanceof Error ? error.message : 'Failed to skip teammate');
+      setSkipLaunchError(error instanceof Error ? error.message : '跳过成员失败');
     } finally {
       setSkippingLaunch(false);
     }

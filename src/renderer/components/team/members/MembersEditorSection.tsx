@@ -180,7 +180,7 @@ export const MembersEditorSection = ({
       onChange(drafts);
       setJsonError(null);
     } catch (e) {
-      setJsonError(e instanceof Error ? e.message : 'Invalid JSON');
+      setJsonError(e instanceof Error ? e.message : 'JSON 无效');
     }
   };
 

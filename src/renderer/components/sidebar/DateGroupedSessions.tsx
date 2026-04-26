@@ -880,11 +880,11 @@ export const DateGroupedSessions = (): React.JSX.Element => {
         <div className="flex flex-1 items-center justify-center p-4">
           <div className="text-center text-sm" style={{ color: 'var(--color-text-muted)' }}>
             <Search className="mx-auto mb-2 size-8 opacity-50" />
-            <p className="mb-2">No matching sessions</p>
+            <p className="mb-2">没有匹配的会话</p>
             <p className="text-xs opacity-70">
               {hasActiveSearch || hasActiveProviderFilter
-                ? 'Try another query or reset the provider filter.'
-                : 'This project has no matching sessions yet.'}
+                ? '请尝试其他搜索词，或重置提供商筛选。'
+                : '该项目暂无匹配会话。'}
             </p>
           </div>
         </div>
@@ -901,7 +901,7 @@ export const DateGroupedSessions = (): React.JSX.Element => {
           className="text-[12px] font-semibold text-text-secondary"
           style={{ color: 'var(--color-text-secondary)' }}
         >
-          {sessionSortMode === 'most-context' ? 'By Context' : 'Sessions'}
+          {sessionSortMode === 'most-context' ? '按上下文' : '会话'}
         </h2>
         {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- tooltip trigger via hover, not interactive */}
         <span
@@ -931,10 +931,8 @@ export const DateGroupedSessions = (): React.JSX.Element => {
                 color: 'var(--color-text-secondary)',
               }}
             >
-              {filteredSessions.length} matching sessions loaded so far — scroll down to load more.
-              {sessionSortMode === 'most-context'
-                ? ' Context sorting only ranks loaded sessions.'
-                : ''}
+              当前已加载 {filteredSessions.length} 个匹配会话，向下滚动可加载更多。
+              {sessionSortMode === 'most-context' ? ' 上下文排序仅对已加载会话生效。' : ''}
             </div>,
             document.body
           )}
@@ -943,7 +941,7 @@ export const DateGroupedSessions = (): React.JSX.Element => {
           <button
             onClick={toggleSidebarMultiSelect}
             className="rounded p-1 transition-colors hover:bg-white/5"
-            title={sidebarMultiSelectActive ? 'Exit selection mode' : 'Select sessions'}
+            title={sidebarMultiSelectActive ? '退出选择模式' : '选择会话'}
             style={{
               color: sidebarMultiSelectActive ? '#818cf8' : 'var(--color-text-muted)',
             }}
@@ -955,7 +953,7 @@ export const DateGroupedSessions = (): React.JSX.Element => {
             <button
               onClick={toggleShowHiddenSessions}
               className="rounded p-1 transition-colors hover:bg-white/5"
-              title={showHiddenSessions ? 'Hide hidden sessions' : 'Show hidden sessions'}
+              title={showHiddenSessions ? '隐藏已隐藏会话' : '显示已隐藏会话'}
               style={{
                 color: showHiddenSessions ? '#818cf8' : 'var(--color-text-muted)',
               }}
@@ -969,7 +967,7 @@ export const DateGroupedSessions = (): React.JSX.Element => {
               setSessionSortMode(sessionSortMode === 'recent' ? 'most-context' : 'recent')
             }
             className="rounded p-1 transition-colors hover:bg-white/5"
-            title={sessionSortMode === 'recent' ? 'Sort by context consumption' : 'Sort by recent'}
+            title={sessionSortMode === 'recent' ? '按上下文消耗排序' : '按最近活动排序'}
             style={{
               color: sessionSortMode === 'most-context' ? '#818cf8' : 'var(--color-text-muted)',
             }}
@@ -992,40 +990,40 @@ export const DateGroupedSessions = (): React.JSX.Element => {
             className="text-[11px] font-medium"
             style={{ color: 'var(--color-text-secondary)' }}
           >
-            {sidebarSelectedSessionIds.length} selected
+            已选择 {sidebarSelectedSessionIds.length} 个
           </span>
           <div className="ml-auto flex items-center gap-1">
             <button
               onClick={handleBulkPin}
               className="rounded px-1.5 py-0.5 text-[10px] font-medium transition-colors hover:bg-white/5"
               style={{ color: 'var(--color-text-secondary)' }}
-              title="Pin selected sessions"
+              title="固定选中的会话"
             >
-              <Pin className="inline-block size-3" /> Pin
+              <Pin className="inline-block size-3" /> 固定
             </button>
             <button
               onClick={handleBulkHide}
               className="rounded px-1.5 py-0.5 text-[10px] font-medium transition-colors hover:bg-white/5"
               style={{ color: 'var(--color-text-secondary)' }}
-              title="Hide selected sessions"
+              title="隐藏选中的会话"
             >
-              <EyeOff className="inline-block size-3" /> Hide
+              <EyeOff className="inline-block size-3" /> 隐藏
             </button>
             {showHiddenSessions && someSelectedAreHidden && (
               <button
                 onClick={handleBulkUnhide}
                 className="rounded px-1.5 py-0.5 text-[10px] font-medium transition-colors hover:bg-white/5"
                 style={{ color: 'var(--color-text-secondary)' }}
-                title="Unhide selected sessions"
+                title="取消隐藏选中的会话"
               >
-                <Eye className="inline-block size-3" /> Unhide
+                <Eye className="inline-block size-3" /> 显示
               </button>
             )}
             <button
               onClick={clearSidebarSelection}
               className="rounded p-0.5 transition-colors hover:bg-white/5"
               style={{ color: 'var(--color-text-muted)' }}
-              title="Cancel selection"
+              title="取消选择"
             >
               <X className="size-3.5" />
             </button>
@@ -1068,7 +1066,7 @@ export const DateGroupedSessions = (): React.JSX.Element => {
                     }}
                   >
                     <Pin className="size-3" />
-                    Pinned
+                    已固定
                   </div>
                 ) : item.type === 'header' ? (
                   <div
@@ -1090,10 +1088,10 @@ export const DateGroupedSessions = (): React.JSX.Element => {
                     {sessionsLoadingMore ? (
                       <>
                         <Loader2 className="mr-2 size-4 animate-spin" />
-                        <span className="text-xs">Loading more sessions...</span>
+                        <span className="text-xs">正在加载更多会话...</span>
                       </>
                     ) : (
-                      <span className="text-xs opacity-50">Scroll to load more</span>
+                      <span className="text-xs opacity-50">滚动加载更多</span>
                     )}
                   </div>
                 ) : (

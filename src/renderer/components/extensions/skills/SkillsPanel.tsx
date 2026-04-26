@@ -82,23 +82,21 @@ function sortSkills(skills: SkillCatalogItem[], sort: SkillsSortState): SkillCat
 }
 
 function getScopeLabel(skill: SkillCatalogItem): string {
-  return skill.scope === 'project' ? 'This project' : 'Personal';
+  return skill.scope === 'project' ? '当前项目' : '个人';
 }
 
 function getInvocationLabel(skill: SkillCatalogItem): string {
-  return skill.invocationMode === 'manual-only'
-    ? 'Only runs when you explicitly ask for it'
-    : 'Runs automatically when it fits';
+  return skill.invocationMode === 'manual-only' ? '仅在你明确要求时运行' : '匹配任务时自动运行';
 }
 
 function getSkillStatus(skill: SkillCatalogItem): string {
   if (!skill.isValid) {
-    return 'Needs attention before you rely on it';
+    return '使用前需要处理';
   }
   if (skill.flags.hasScripts) {
-    return 'Includes scripts, so review it carefully';
+    return '包含脚本，请仔细检查';
   }
-  return 'Ready to use';
+  return '可使用';
 }
 
 function getPrimarySkillIssue(skill: SkillCatalogItem): SkillValidationIssue | null {
@@ -129,7 +127,7 @@ function getSkillIssueTone(issue: SkillValidationIssue | null): {
 
 function formatRuntimeAudienceLabel(providerNames: readonly string[]): string {
   if (providerNames.length === 0) {
-    return 'the configured runtime';
+    return '已配置运行时';
   }
   if (providerNames.length === 1) {
     return providerNames[0];
@@ -349,9 +347,9 @@ export const SkillsPanel = ({
     <div className="flex flex-col gap-4">
       {effectiveCliStatus?.flavor === 'agent_teams_orchestrator' && (
         <div className="rounded-md border border-blue-500/30 bg-blue-500/5 px-4 py-3 text-sm text-blue-300">
-          Shared skills in `.claude`, `.cursor`, and `.agents` are available to{' '}
-          {skillsAudienceLabel ?? 'the configured runtime'}. Skills stored in `.codex` stay
-          Codex-only when Codex support is available.
+          `.claude`、`.cursor` 和 `.agents` 中的共享技能可供
+          {skillsAudienceLabel ?? '已配置运行时'}使用。存放在 `.codex` 的技能会在 Codex
+          支持可用时保持 Codex 专用。
         </div>
       )}
       <div className="bg-surface-raised/20 rounded-xl border border-border p-4">
@@ -359,21 +357,19 @@ export const SkillsPanel = ({
           <div className="min-w-0 flex-1 space-y-1 xl:max-w-2xl">
             <div className="flex items-center gap-2">
               <BookOpen className="size-4 text-text-muted" />
-              <h2 className="text-sm font-semibold text-text">Teach repeatable work</h2>
+              <h2 className="text-sm font-semibold text-text">教授可重复工作</h2>
             </div>
             <p className="max-w-2xl text-sm leading-5 text-text-muted">
-              Skills are reusable instructions that help the runtime handle the same kind of task
-              more consistently.{' '}
+              技能是可复用指令，能帮助运行时更稳定地处理同一类任务。{' '}
               {projectPath
-                ? `You are seeing skills for ${projectLabel ?? projectPath} plus your personal skills.`
-                : 'You are seeing only your personal skills right now.'}
+                ? `当前显示 ${projectLabel ?? projectPath} 的项目技能，以及你的个人技能。`
+                : '当前只显示你的个人技能。'}
             </p>
             <p className="max-w-2xl text-xs leading-5 text-text-muted">
-              Use personal skills for habits you want everywhere. Use project skills for workflows
-              that only make sense inside one codebase.
+              需要到处生效的习惯请使用个人技能；只对当前代码库有意义的流程请使用项目技能。
               {codexSkillOverlayAvailable
-                ? ' Use `.codex` when a skill should stay Codex-only.'
-                : ' Existing `.codex` skills stay editable here, but new Codex-only skills need the Codex runtime enabled.'}
+                ? ' 如果某个技能应保持 Codex 专用，请使用 `.codex`。'
+                : ' 现有 `.codex` 技能仍可在这里编辑，但新增 Codex 专用技能需要启用 Codex 运行时。'}
             </p>
           </div>
 
@@ -383,17 +379,17 @@ export const SkillsPanel = ({
                 <SearchInput
                   value={skillsSearchQuery}
                   onChange={setSkillsSearchQuery}
-                  placeholder="Search by skill name or what it helps with..."
+                  placeholder="按技能名称或用途搜索..."
                 />
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" size="sm" onClick={() => setCreateOpen(true)}>
                   <Plus className="mr-1.5 size-3.5" />
-                  Create Skill
+                  创建技能
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
                   <Download className="mr-1.5 size-3.5" />
-                  Import
+                  导入
                 </Button>
                 <Popover open={sortMenuOpen} onOpenChange={setSortMenuOpen}>
                   <Tooltip>
@@ -403,13 +399,13 @@ export const SkillsPanel = ({
                           variant="outline"
                           size="icon"
                           className="size-9 shrink-0"
-                          aria-label="Sort skills"
+                          aria-label="排序技能"
                         >
                           <ArrowUpDown className="size-4" />
                         </Button>
                       </PopoverTrigger>
                     </TooltipTrigger>
-                    <TooltipContent>Sort skills</TooltipContent>
+                    <TooltipContent>排序技能</TooltipContent>
                   </Tooltip>
                   <PopoverContent align="end" className="w-44 p-1">
                     <button
@@ -421,7 +417,7 @@ export const SkillsPanel = ({
                       }}
                     >
                       <ArrowUpAZ className="mr-2 size-3.5" />
-                      Name
+                      名称
                       {skillsSort === 'name-asc' && <Check className="ml-auto size-3.5" />}
                     </button>
                     <button
@@ -433,7 +429,7 @@ export const SkillsPanel = ({
                       }}
                     >
                       <Clock3 className="mr-2 size-3.5" />
-                      Recent
+                      最近
                       {skillsSort === 'recent-desc' && <Check className="ml-auto size-3.5" />}
                     </button>
                   </PopoverContent>
@@ -443,20 +439,20 @@ export const SkillsPanel = ({
 
             <div className="flex flex-wrap gap-2 text-[11px] text-text-muted xl:justify-end">
               <Badge variant="secondary" className="font-normal">
-                {mergedSkills.length} total
+                共 {mergedSkills.length} 个
               </Badge>
               <Badge variant="secondary" className="font-normal">
-                {projectSkills.length} project
+                {projectSkills.length} 个项目技能
               </Badge>
               <Badge variant="secondary" className="font-normal">
-                {userSkills.length} personal
+                {userSkills.length} 个个人技能
               </Badge>
               <Badge variant="secondary" className="font-normal">
-                {sharedSkillsCount} shared
+                {sharedSkillsCount} 个共享技能
               </Badge>
               {showCodexOnlyUi && (
                 <Badge variant="secondary" className="font-normal">
-                  {codexOnlySkillsCount} Codex only
+                  {codexOnlySkillsCount} 个 Codex 专用
                 </Badge>
               )}
             </div>
@@ -467,15 +463,15 @@ export const SkillsPanel = ({
       <div className="flex flex-wrap gap-2">
         {(
           [
-            ['all', 'All skills'],
-            ['project', 'Project'],
-            ['personal', 'Personal'],
-            ['shared', 'Shared'],
+            ['all', '全部技能'],
+            ['project', '项目'],
+            ['personal', '个人'],
+            ['shared', '共享'],
             ...(showCodexOnlyUi
-              ? ([['codex-only', 'Codex only']] as [SkillsQuickFilter, string][])
+              ? ([['codex-only', 'Codex 专用']] as [SkillsQuickFilter, string][])
               : []),
-            ['needs-attention', 'Needs attention'],
-            ['has-scripts', 'Has scripts'],
+            ['needs-attention', '需要处理'],
+            ['has-scripts', '包含脚本'],
           ] as [SkillsQuickFilter, string][]
         ).map(([value, label]) => (
           <Button
@@ -505,13 +501,13 @@ export const SkillsPanel = ({
 
       {isRefreshing && (
         <div className="rounded-md border border-blue-500/20 bg-blue-500/10 p-3 text-sm text-blue-700 dark:text-blue-300">
-          Refreshing skills...
+          正在刷新技能...
         </div>
       )}
 
       {skillsLoading && visibleSkills.length === 0 && (
         <div className="rounded-lg border border-border p-6 text-sm text-text-muted">
-          Loading skills...
+          正在加载技能...
         </div>
       )}
 
@@ -521,12 +517,12 @@ export const SkillsPanel = ({
             <Search className="size-5 text-text-muted" />
           </div>
           <p className="text-sm text-text-secondary">
-            {skillsSearchQuery ? 'No skills match your search' : 'No skills yet'}
+            {skillsSearchQuery ? '没有匹配搜索的技能' : '暂无技能'}
           </p>
           <p className="text-xs text-text-muted">
             {skillsSearchQuery
-              ? 'Try a different search term or switch filters.'
-              : 'Create your first skill to teach a repeatable workflow, or import one you already use.'}
+              ? '请尝试其他搜索词或切换筛选条件。'
+              : '创建第一个技能来教授可重复工作流，或导入你已有的技能。'}
           </p>
         </div>
       )}
@@ -537,10 +533,8 @@ export const SkillsPanel = ({
             <section className="space-y-3">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <h3 className="text-sm font-semibold text-text">Project skills</h3>
-                  <p className="text-xs text-text-muted">
-                    Workflows that only make sense for this codebase.
-                  </p>
+                  <h3 className="text-sm font-semibold text-text">项目技能</h3>
+                  <p className="text-xs text-text-muted">只对当前代码库有意义的工作流。</p>
                 </div>
                 <Badge variant="secondary" className="font-normal">
                   {visibleProjectSkills.length}
@@ -573,7 +567,7 @@ export const SkillsPanel = ({
                                 variant="outline"
                                 className="border-amber-500/40 text-amber-700 dark:text-amber-300"
                               >
-                                Needs attention
+                                需要处理
                               </Badge>
                             )}
                           </div>
@@ -591,24 +585,24 @@ export const SkillsPanel = ({
 
                       <div className="mt-3 flex flex-wrap gap-2">
                         <Badge variant="secondary" className="font-normal">
-                          Stored in {formatSkillRootKind(skill.rootKind)}
+                          存储于 {formatSkillRootKind(skill.rootKind)}
                         </Badge>
                         <Badge variant="outline" className="font-normal">
                           {getSkillAudienceLabel(skill.rootKind)}
                         </Badge>
                         {skill.flags.hasScripts && (
                           <Badge variant="destructive" className="font-normal">
-                            Has scripts
+                            包含脚本
                           </Badge>
                         )}
                         {skill.flags.hasReferences && (
                           <Badge variant="secondary" className="font-normal">
-                            References
+                            引用
                           </Badge>
                         )}
                         {skill.flags.hasAssets && (
                           <Badge variant="secondary" className="font-normal">
-                            Assets
+                            资源
                           </Badge>
                         )}
                       </div>
@@ -632,10 +626,8 @@ export const SkillsPanel = ({
             <section className="space-y-3">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <h3 className="text-sm font-semibold text-text">Personal skills</h3>
-                  <p className="text-xs text-text-muted">
-                    Habits and instructions you want available everywhere.
-                  </p>
+                  <h3 className="text-sm font-semibold text-text">个人技能</h3>
+                  <p className="text-xs text-text-muted">需要在所有地方可用的习惯和指令。</p>
                 </div>
                 <Badge variant="secondary" className="font-normal">
                   {visibleUserSkills.length}
@@ -668,7 +660,7 @@ export const SkillsPanel = ({
                                 variant="outline"
                                 className="border-amber-500/40 text-amber-700 dark:text-amber-300"
                               >
-                                Needs attention
+                                需要处理
                               </Badge>
                             )}
                           </div>
@@ -686,24 +678,24 @@ export const SkillsPanel = ({
 
                       <div className="mt-3 flex flex-wrap gap-2">
                         <Badge variant="secondary" className="font-normal">
-                          Stored in {formatSkillRootKind(skill.rootKind)}
+                          存储于 {formatSkillRootKind(skill.rootKind)}
                         </Badge>
                         <Badge variant="outline" className="font-normal">
                           {getSkillAudienceLabel(skill.rootKind)}
                         </Badge>
                         {skill.flags.hasScripts && (
                           <Badge variant="destructive" className="font-normal">
-                            Has scripts
+                            包含脚本
                           </Badge>
                         )}
                         {skill.flags.hasReferences && (
                           <Badge variant="secondary" className="font-normal">
-                            References
+                            引用
                           </Badge>
                         )}
                         {skill.flags.hasAssets && (
                           <Badge variant="secondary" className="font-normal">
-                            Assets
+                            资源
                           </Badge>
                         )}
                       </div>
@@ -749,7 +741,7 @@ export const SkillsPanel = ({
         onClose={() => setCreateOpen(false)}
         onSaved={(skillId) => {
           setCreateOpen(false);
-          setSuccessMessage('Skill created successfully.');
+          setSuccessMessage('技能创建成功。');
           setHighlightedSkillId(skillId);
           setSelectedSkillId(null);
         }}
@@ -769,7 +761,7 @@ export const SkillsPanel = ({
         onSaved={(skillId) => {
           setEditOpen(false);
           setEditingDetail(null);
-          setSuccessMessage('Skill saved successfully.');
+          setSuccessMessage('技能保存成功。');
           setSelectedSkillId(skillId);
         }}
       />
@@ -782,7 +774,7 @@ export const SkillsPanel = ({
         onClose={() => setImportOpen(false)}
         onImported={(skillId) => {
           setImportOpen(false);
-          setSuccessMessage('Skill imported successfully.');
+          setSuccessMessage('技能导入成功。');
           setSelectedSkillId(skillId);
         }}
       />

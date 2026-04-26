@@ -544,8 +544,8 @@ export function getAppDataPath(): string {
 
 // ── App data root (Electron userData) ──
 
-const APP_DATA_FALLBACK_DIR_NAME = '.agent-teams-ai';
-const LEGACY_APP_DATA_FALLBACK_DIR_NAME = '.claude-agent-teams-ui';
+const APP_DATA_FALLBACK_DIR_NAME = '.multi-agent-teams';
+const LEGACY_APP_DATA_FALLBACK_DIR_NAMES = ['.agent-teams-ai', '.claude-agent-teams-ui'] as const;
 
 let appDataBasePathOverride: string | null = null;
 
@@ -569,9 +569,12 @@ function getAppDataBasePath(): string {
 function getFallbackAppDataBasePath(): string {
   const home = getHomeDir();
   const currentPath = path.join(home, APP_DATA_FALLBACK_DIR_NAME);
-  const legacyPath = path.join(home, LEGACY_APP_DATA_FALLBACK_DIR_NAME);
+  const legacyPath =
+    LEGACY_APP_DATA_FALLBACK_DIR_NAMES.map((dirName) => path.join(home, dirName)).find(
+      directoryExists
+    ) ?? null;
 
-  if (!directoryExists(legacyPath)) {
+  if (!legacyPath) {
     return currentPath;
   }
 

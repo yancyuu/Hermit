@@ -100,10 +100,8 @@ export const GraphProvisioningHud = ({
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
         <DialogContent className="w-[min(1120px,92vw)] max-w-5xl p-0">
           <DialogHeader className="sr-only">
-            <DialogTitle>Launch details</DialogTitle>
-            <DialogDescription>
-              Detailed team launch progress, live output and CLI logs.
-            </DialogDescription>
+            <DialogTitle>启动详情</DialogTitle>
+            <DialogDescription>查看团队启动进度、实时输出和 CLI 日志。</DialogDescription>
           </DialogHeader>
           <div className="max-h-[85vh] overflow-y-auto p-4">
             <TeamProvisioningPanel teamName={teamName} surface="flat" defaultLogsOpen />

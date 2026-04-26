@@ -17,14 +17,30 @@ export function isGeminiProviderId(
   return providerId === 'gemini';
 }
 
-export function filterMainScreenCliProviders<T extends { providerId: CliProviderId }>(
-  providers: readonly T[]
-): T[] {
-  if (!GEMINI_UI_FROZEN) {
-    return [...providers];
-  }
-
-  return providers.filter((provider) => provider.providerId !== 'gemini');
+export function filterMainScreenCliProviders<
+  T extends {
+    providerId: CliProviderId;
+    connection?: {
+      codex?: {
+        launchAllowed?: boolean;
+        launchReadinessState?: string | null;
+      } | null;
+    } | null;
+  },
+>(providers: readonly T[]): T[] {
+  return providers.filter((provider) => {
+    if (GEMINI_UI_FROZEN && provider.providerId === 'gemini') {
+      return false;
+    }
+    if (
+      provider.providerId === 'codex' &&
+      provider.connection?.codex?.launchReadinessState === 'runtime_missing' &&
+      provider.connection.codex.launchAllowed !== true
+    ) {
+      return false;
+    }
+    return true;
+  });
 }
 
 export function normalizeCreateLaunchProviderForUi(

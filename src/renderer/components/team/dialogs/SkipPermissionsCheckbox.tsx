@@ -26,7 +26,7 @@ export const SkipPermissionsCheckbox: React.FC<SkipPermissionsCheckboxProps> = (
         htmlFor={id}
         className="flex cursor-pointer items-center gap-1.5 text-xs font-normal text-text-secondary"
       >
-        Auto-approve all tools
+        自动批准所有工具
       </Label>
     </div>
     {checked ? (
@@ -40,10 +40,7 @@ export const SkipPermissionsCheckbox: React.FC<SkipPermissionsCheckboxProps> = (
       >
         <div className="flex items-start gap-2">
           <Info className="mt-0.5 size-3.5 shrink-0 text-blue-400" />
-          <p>
-            Unleash Claude&apos;s full power — no interruptions asking for permission. Autonomous
-            mode — all tools execute without confirmation. Be cautious with untrusted code.
-          </p>
+          <p>启用自主模式后，所有工具都会直接执行，不再逐次请求确认。处理不可信代码时请谨慎。</p>
         </div>
       </div>
     ) : (
@@ -57,7 +54,7 @@ export const SkipPermissionsCheckbox: React.FC<SkipPermissionsCheckboxProps> = (
       >
         <div className="flex items-start gap-2">
           <Info className="mt-0.5 size-3.5 shrink-0 text-blue-400" />
-          <p>Manual mode — you&apos;ll approve or deny each tool call in real-time.</p>
+          <p>手动模式：每次工具调用都需要你实时批准或拒绝。</p>
         </div>
       </div>
     )}

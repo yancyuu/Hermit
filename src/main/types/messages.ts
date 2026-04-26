@@ -1,5 +1,5 @@
 /**
- * Parsed message types and type guards for Agent Teams UI.
+ * Parsed message types and type guards for Multi Agent Teams.
  *
  * ParsedMessage is the application's internal representation after parsing
  * raw JSONL entries. This module also contains type guards for classifying

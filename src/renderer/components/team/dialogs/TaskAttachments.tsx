@@ -54,11 +54,11 @@ export const TaskAttachments = ({
       try {
         for (const file of Array.from(files)) {
           if (!ACCEPTED_TYPES.has(file.type)) {
-            setError(`Unsupported file type: ${file.type}`);
+            setError(`不支持的文件类型：${file.type}`);
             continue;
           }
           if (file.size > MAX_FILE_SIZE) {
-            setError(`File too large: ${(file.size / (1024 * 1024)).toFixed(1)} MB (max 20 MB)`);
+            setError(`文件过大：${(file.size / (1024 * 1024)).toFixed(1)} MB（最大 20 MB）`);
             continue;
           }
 
@@ -70,7 +70,7 @@ export const TaskAttachments = ({
           });
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to upload');
+        setError(err instanceof Error ? err.message : '上传失败');
       } finally {
         setUploading(false);
         if (fileInputRef.current) {
@@ -87,7 +87,7 @@ export const TaskAttachments = ({
       try {
         await deleteTaskAttachment(teamName, taskId, attachmentId, mimeType);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to delete');
+        setError(err instanceof Error ? err.message : '删除失败');
       } finally {
         setDeletingId(null);
       }
@@ -101,7 +101,7 @@ export const TaskAttachments = ({
       try {
         const base64 = await getTaskAttachmentData(teamName, taskId, att.id, att.mimeType);
         if (!base64) {
-          setError('Attachment file not found');
+          setError('未找到附件文件');
           return;
         }
         const mime =
@@ -119,7 +119,7 @@ export const TaskAttachments = ({
         a.remove();
         URL.revokeObjectURL(url);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to download');
+        setError(err instanceof Error ? err.message : '下载失败');
       }
     },
     [getTaskAttachmentData, teamName, taskId]

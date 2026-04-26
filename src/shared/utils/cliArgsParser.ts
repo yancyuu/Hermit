@@ -22,6 +22,7 @@ export const PROTECTED_CLI_FLAGS = new Set([
   '--output-format',
   '--setting-sources',
   '--mcp-config',
+  '--agents',
   '--disallowedTools',
   '--verbose',
   '--model',

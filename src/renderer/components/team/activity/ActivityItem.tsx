@@ -281,19 +281,19 @@ function getNoiseLabel(parsed: StructuredMessage): string | null {
     const taskId =
       typeof rawTaskId === 'string' || typeof rawTaskId === 'number' ? rawTaskId : null;
     return taskId !== null
-      ? `Completed task ${formatTaskDisplayLabel({ id: String(taskId) })}`
-      : 'Completed a task';
+      ? `已完成任务 ${formatTaskDisplayLabel({ id: String(taskId) })}`
+      : '已完成一个任务';
   }
 
   if (type === 'permission_request') {
     const toolName = getStringField(parsed, 'tool_name');
-    return toolName ? `Permission: ${toolName}` : 'Permission request';
+    return toolName ? `权限请求：${toolName}` : '权限请求';
   }
 
   if (type === 'permission_response') {
-    if (parsed.approved === true) return 'Permission granted';
-    if (parsed.approved === false) return 'Permission denied';
-    return 'Permission response';
+    if (parsed.approved === true) return '权限已批准';
+    if (parsed.approved === false) return '权限已拒绝';
+    return '权限响应';
   }
 
   return null;
@@ -346,7 +346,7 @@ const PassiveIdlePeerSummaryRow = ({
   return (
     <div className="flex items-center gap-2 px-3 py-1.5" style={{ opacity: 0.78 }}>
       <span className="bg-sky-500/12 rounded-full px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-sky-300">
-        update
+        更新
       </span>
       <MemberBadge
         name={senderName}
@@ -400,7 +400,7 @@ const BootstrapSystemRow = ({
 }): React.JSX.Element => (
   <div className="flex items-center gap-2 px-3 py-2" style={{ opacity: 0.82 }}>
     <span className="bg-sky-500/12 inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-sky-300">
-      start
+      启动
     </span>
     <MemberBadge
       name={senderName}
@@ -418,7 +418,7 @@ const BootstrapSystemRow = ({
       onClick={onMemberNameClick}
     />
     <span className="min-w-0 flex-1 truncate text-[11px]" style={{ color: CARD_ICON_MUTED }}>
-      {runtime || 'Starting teammate'}
+      {runtime || '正在启动成员'}
     </span>
     <span className="shrink-0 text-[10px]" style={{ color: CARD_ICON_MUTED }}>
       {timestamp}
@@ -445,7 +445,7 @@ const BootstrapAcknowledgementRow = ({
 }): React.JSX.Element => (
   <div className="flex items-center gap-2 px-3 py-2" style={{ opacity: 0.72 }}>
     <span className="bg-emerald-500/12 inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-emerald-300">
-      bootstrap
+      引导
     </span>
     <MemberBadge
       name={senderName}
@@ -463,7 +463,7 @@ const BootstrapAcknowledgementRow = ({
       onClick={onMemberNameClick}
     />
     <span className="min-w-0 flex-1 truncate text-[11px]" style={{ color: CARD_ICON_MUTED }}>
-      Bootstrap acknowledged
+      引导已确认
     </span>
     <span className="shrink-0 text-[10px]" style={{ color: CARD_ICON_MUTED }}>
       {timestamp}
@@ -478,9 +478,9 @@ const BootstrapAcknowledgementRow = ({
 // ---------------------------------------------------------------------------
 
 const SYSTEM_MESSAGE_PATTERNS: { pattern: RegExp; label: string }[] = [
-  { pattern: /^New task assigned to you:/, label: 'Task' },
-  { pattern: /^Task #[A-Za-z0-9-]+\s+approved/, label: 'Task approved' },
-  { pattern: /^Task #[A-Za-z0-9-]+\s+needs fixes/, label: 'Review changes requested' },
+  { pattern: /^New task assigned to you:/, label: '任务' },
+  { pattern: /^Task #[A-Za-z0-9-]+\s+approved/, label: '任务已批准' },
+  { pattern: /^Task #[A-Za-z0-9-]+\s+needs fixes/, label: '需要修改' },
 ];
 
 export function getSystemMessageLabel(text: string): string | null {
@@ -1024,12 +1024,12 @@ export const ActivityItem = memo(
     const statusBadge = rateLimited ? (
       <span className="inline-flex items-center gap-1 rounded-full bg-red-500/20 px-1.5 py-0.5 text-[10px] font-medium text-red-400">
         <AlertTriangle size={10} />
-        Rate Limited
+        已限速
       </span>
     ) : isApiError ? (
       <span className="inline-flex items-center gap-1 rounded-full bg-red-500/20 px-1.5 py-0.5 text-[10px] font-medium text-red-400">
         <AlertTriangle size={10} />
-        API Error
+        API 错误
       </span>
     ) : null;
 
@@ -1184,7 +1184,7 @@ export const ActivityItem = memo(
                   {isUnread ? (
                     <span
                       className="size-2 shrink-0 rounded-full bg-blue-500"
-                      title="Unread"
+                      title="未读"
                       aria-hidden
                     />
                   ) : null}
@@ -1211,7 +1211,7 @@ export const ActivityItem = memo(
                   {onExpand && expandItemKey && (
                     <button
                       type="button"
-                      aria-label="Expand message"
+                      aria-label="展开消息"
                       className="absolute right-0 top-1/2 -translate-y-1/2 rounded p-0.5 opacity-0 transition-opacity focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500/50 group-hover:opacity-100"
                       style={{ color: CARD_ICON_MUTED }}
                       onClick={(e) => {
@@ -1253,7 +1253,7 @@ export const ActivityItem = memo(
                 {isUnread ? (
                   <span
                     className="size-2 shrink-0 rounded-full bg-blue-500"
-                    title="Unread"
+                    title="未读"
                     aria-hidden
                   />
                 ) : null}
@@ -1293,7 +1293,7 @@ export const ActivityItem = memo(
                   {onExpand && expandItemKey && (
                     <button
                       type="button"
-                      aria-label="Expand message"
+                      aria-label="展开消息"
                       className="absolute right-0 top-1/2 -translate-y-1/2 rounded p-0.5 opacity-0 transition-opacity focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500/50 group-hover:opacity-100"
                       style={{ color: CARD_ICON_MUTED }}
                       onClick={(e) => {
@@ -1334,7 +1334,7 @@ export const ActivityItem = memo(
               {isUnread ? (
                 <span
                   className="size-2 shrink-0 rounded-full bg-blue-500"
-                  title="Unread"
+                  title="未读"
                   aria-hidden
                 />
               ) : null}
@@ -1377,7 +1377,7 @@ export const ActivityItem = memo(
                 {onExpand && expandItemKey && (
                   <button
                     type="button"
-                    aria-label="Expand message"
+                    aria-label="展开消息"
                     className="absolute right-0 top-1/2 -translate-y-1/2 rounded p-0.5 opacity-0 transition-opacity focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500/50 group-hover:opacity-100"
                     style={{ color: CARD_ICON_MUTED }}
                     onClick={(e) => {
@@ -1404,7 +1404,7 @@ export const ActivityItem = memo(
                 ) : null}
                 <details className="rounded border border-[var(--color-border)] bg-[var(--color-surface)]">
                   <summary className="cursor-pointer px-2 py-1 text-[11px] text-[var(--color-text-muted)]">
-                    Raw JSON
+                    原始 JSON
                   </summary>
                   <pre className="overflow-auto px-2 pb-2 text-[11px] leading-relaxed text-[var(--color-text-muted)]">
                     {JSON.stringify(structured, null, 2)}
@@ -1502,7 +1502,7 @@ export const ActivityItem = memo(
                           <Reply size={14} />
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent side="top">Reply to message</TooltipContent>
+                      <TooltipContent side="top">回复消息</TooltipContent>
                     </Tooltip>
                   ) : null}
                   {onCreateTask ? (
@@ -1520,7 +1520,7 @@ export const ActivityItem = memo(
                           <ListPlus size={14} />
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent side="top">Create task from message</TooltipContent>
+                      <TooltipContent side="top">从消息创建任务</TooltipContent>
                     </Tooltip>
                   ) : null}
                   <CopyButton text={displayText} inline />
@@ -1565,9 +1565,8 @@ export const ActivityItem = memo(
                 <AlertTriangle size={14} className="mt-0.5 shrink-0 text-red-400" />
                 <div className="flex-1 space-y-1.5">
                   <p className="text-[11px] leading-relaxed text-red-300/90">
-                    Authentication failed. Restarting the team will refresh the session and may
-                    resolve this issue. If the problem persists, check your API credentials or try
-                    again later.
+                    认证失败。重启团队会刷新会话，可能解决此问题。如果仍然失败，请检查 API
+                    凭据或稍后重试。
                   </p>
                   <button
                     type="button"
@@ -1578,7 +1577,7 @@ export const ActivityItem = memo(
                     }}
                   >
                     <RefreshCw size={11} />
-                    Restart team
+                    重启团队
                   </button>
                 </div>
               </div>

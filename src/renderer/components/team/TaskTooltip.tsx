@@ -177,7 +177,7 @@ export const TaskTooltip = ({
           ) : task.owner ? (
             <span className="text-[10px] text-[var(--color-text-secondary)]">{task.owner}</span>
           ) : (
-            <span className="text-[10px] text-[var(--color-text-muted)]">Unassigned</span>
+            <span className="text-[10px] text-[var(--color-text-muted)]">未分配</span>
           )}
         </div>
 

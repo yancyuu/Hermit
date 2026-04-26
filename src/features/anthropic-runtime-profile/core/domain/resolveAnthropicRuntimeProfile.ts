@@ -136,18 +136,16 @@ export function resolveAnthropicFastMode(params: {
 
   let disabledReason: string | null = null;
   if (!hasCatalogTruth(params.selection) && !params.selection.providerFastModeSupported) {
-    disabledReason = 'Anthropic runtime capability data is still loading.';
+    disabledReason = 'Anthropic 运行时能力数据仍在加载。';
   } else if (!params.selection.providerFastModeSupported) {
     disabledReason =
-      params.selection.providerFastModeReason ??
-      'Fast mode is not supported by this Anthropic runtime.';
+      params.selection.providerFastModeReason ?? '当前 Anthropic 运行时不支持 Fast mode。';
   } else if (!params.selection.supportsFastMode) {
     disabledReason = params.selection.displayName
-      ? `Fast mode is available only for Opus 4.6. Selected model resolves to ${params.selection.displayName}.`
-      : 'Fast mode is available only for Opus 4.6.';
+      ? `Fast mode 仅适用于 Opus 4.6。当前所选模型解析为 ${params.selection.displayName}。`
+      : 'Fast mode 仅适用于 Opus 4.6。';
   } else if (!params.selection.providerFastModeAvailable) {
-    disabledReason =
-      params.selection.providerFastModeReason ?? 'Fast mode is currently unavailable.';
+    disabledReason = params.selection.providerFastModeReason ?? 'Fast mode 当前不可用。';
   }
 
   return {
@@ -185,7 +183,7 @@ export function reconcileAnthropicRuntimeSelections(params: {
       : (selectedEffort ?? '');
   const effortResetReason =
     selectedEffort && nextEffort === ''
-      ? `${selectedEffort} effort is not available for the currently selected Anthropic model. Reset to Default.`
+      ? `当前 Anthropic 模型不支持 ${selectedEffort} 推理强度，已重置为默认。`
       : null;
 
   const fastResolution = resolveAnthropicFastMode({
@@ -199,8 +197,7 @@ export function reconcileAnthropicRuntimeSelections(params: {
       : fastResolution.selectedFastMode;
   const fastModeResetReason =
     fastResolution.selectedFastMode === 'on' && nextFastMode !== 'on'
-      ? (fastResolution.disabledReason ??
-        'Fast mode is not available for the currently selected Anthropic model. Reset to Default.')
+      ? (fastResolution.disabledReason ?? '当前 Anthropic 模型不支持 Fast mode，已重置为默认。')
       : null;
 
   return {

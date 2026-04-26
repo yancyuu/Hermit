@@ -23,10 +23,10 @@ export function formatCliExtensionCapabilityStatus(
 ): string {
   switch (status) {
     case 'supported':
-      return 'supported';
+      return '支持';
     case 'read-only':
-      return 'read-only';
+      return '只读';
     default:
-      return 'unsupported';
+      return '不支持';
   }
 }

@@ -245,7 +245,7 @@ const EditorSearchPanelContent = ({
     ? matchCount === -1
       ? `${MAX_MATCH_COUNT}+`
       : matchCount === 0
-        ? 'No results'
+        ? '无结果'
         : `${matchCount} found`
     : '';
 

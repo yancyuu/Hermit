@@ -113,9 +113,7 @@ export const TaskCommentInput = ({
           continue;
         }
         if (file.size > MAX_FILE_SIZE) {
-          setAttachError(
-            `File too large: ${(file.size / (1024 * 1024)).toFixed(1)} MB (max 20 MB)`
-          );
+          setAttachError(`文件过大：${(file.size / (1024 * 1024)).toFixed(1)} MB（最大 20 MB）`);
           continue;
         }
         supported.push(file);

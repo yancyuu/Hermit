@@ -419,11 +419,10 @@ class CodexAccountFeatureFacadeImpl implements CodexAccountFeatureFacade {
         preferredAuthMode,
         effectiveAuthMode: null,
         launchAllowed: false,
-        launchIssueMessage: 'Codex CLI not found. Install Codex to use native account management.',
+        launchIssueMessage: '未找到 Codex CLI。只有使用 Codex 原生账号管理时才需要安装 Codex。',
         launchReadinessState: 'runtime_missing',
         appServerState: 'runtime-missing',
-        appServerStatusMessage:
-          'Codex CLI not found. Install Codex to use native account management.',
+        appServerStatusMessage: '未找到 Codex CLI。只有使用 Codex 原生账号管理时才需要安装 Codex。',
         managedAccount: null,
         apiKey,
         requiresOpenaiAuth: null,

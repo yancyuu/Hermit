@@ -74,13 +74,11 @@ export const TabBarActions = (): React.JSX.Element => {
                 backgroundColor: updateHover ? 'rgba(34, 197, 94, 0.1)' : 'transparent',
               }}
             >
-              {updateStatus === 'downloaded' ? 'Restart to update' : 'Update app'}
+              {updateStatus === 'downloaded' ? '重启更新' : '更新应用'}
             </button>
           </TooltipTrigger>
           <TooltipContent side="bottom">
-            {updateStatus === 'downloaded'
-              ? 'Update downloaded, restart to apply'
-              : 'New version available'}
+            {updateStatus === 'downloaded' ? '更新已下载，重启后生效' : '发现新版本'}
           </TooltipContent>
         </Tooltip>
       )}
@@ -97,7 +95,7 @@ export const TabBarActions = (): React.JSX.Element => {
               color: notificationsHover ? 'var(--color-text)' : 'var(--color-text-muted)',
               backgroundColor: notificationsHover ? 'var(--color-surface-raised)' : 'transparent',
             }}
-            aria-label="Notifications"
+            aria-label="通知"
           >
             <Bell className="size-4" />
             {unreadCount > 0 && (
@@ -107,7 +105,7 @@ export const TabBarActions = (): React.JSX.Element => {
             )}
           </button>
         </TooltipTrigger>
-        <TooltipContent side="bottom">Notifications</TooltipContent>
+        <TooltipContent side="bottom">通知</TooltipContent>
       </Tooltip>
 
       {/* GitHub link */}

@@ -57,10 +57,10 @@ interface PluginsPanelProps {
 }
 
 const SORT_OPTIONS: { value: string; label: string }[] = [
-  { value: 'popularity:desc', label: 'Popular' },
-  { value: 'name:asc', label: 'Name A-Z' },
-  { value: 'name:desc', label: 'Name Z-A' },
-  { value: 'category:asc', label: 'Category' },
+  { value: 'popularity:desc', label: '热门' },
+  { value: 'name:asc', label: '名称 A-Z' },
+  { value: 'name:desc', label: '名称 Z-A' },
+  { value: 'category:asc', label: '分类' },
 ];
 
 /** Pure function: filter + sort the catalog */
@@ -206,9 +206,8 @@ export const PluginsPanel = ({
 
           return (
             <div className="rounded-md border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-sm text-amber-300">
-              In the multimodel runtime, plugins are currently guaranteed only for Anthropic
-              sessions. We are actively building broader plugin support for all agents, including
-              both universal plugins and agent-specific plugins.
+              在多模型运行时中，目前插件仅保证用于 Anthropic
+              会话。我们正在为所有智能体构建更广泛的插件支持，包括通用插件和智能体专用插件。
               {capability.reason ? ` ${capability.reason}` : ''}
             </div>
           );
@@ -219,7 +218,7 @@ export const PluginsPanel = ({
           <SearchInput
             value={pluginFilters.search}
             onChange={updatePluginSearch}
-            placeholder="Search plugins..."
+            placeholder="搜索插件..."
           />
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -251,7 +250,7 @@ export const PluginsPanel = ({
               checked={pluginFilters.installedOnly}
               onCheckedChange={toggleInstalledOnly}
             />
-            Installed only
+            仅已安装
           </Label>
         </div>
       </div>
@@ -267,25 +266,23 @@ export const PluginsPanel = ({
                 </div>
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-sm font-semibold text-text">Browse by fit</h2>
+                    <h2 className="text-sm font-semibold text-text">按适用场景浏览</h2>
                     <Badge variant="outline" className="text-[11px] text-text-muted">
-                      {activeFilterCount} active
+                      {activeFilterCount} 个已启用
                     </Badge>
                   </div>
-                  <p className="text-xs text-text-muted">
-                    Narrow the catalog by category, capability, or installed state.
-                  </p>
+                  <p className="text-xs text-text-muted">按分类、能力或安装状态缩小目录范围。</p>
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 text-[11px] text-text-muted">
                 <Badge variant="secondary" className="font-normal">
-                  {catalog.length} plugins
+                  {catalog.length} 个插件
                 </Badge>
                 <Badge variant="secondary" className="font-normal">
-                  {totalCategoryCount} categories
+                  {totalCategoryCount} 个分类
                 </Badge>
                 <Badge variant="secondary" className="font-normal">
-                  {totalCapabilityCount} capabilities
+                  {totalCapabilityCount} 项能力
                 </Badge>
               </div>
             </div>
@@ -296,7 +293,7 @@ export const PluginsPanel = ({
                 onClick={clearFilters}
                 className="justify-start rounded-lg border border-border px-3 text-xs text-text-secondary hover:text-text lg:justify-center"
               >
-                Clear all filters
+                清除所有筛选
               </Button>
             )}
           </div>
@@ -306,10 +303,10 @@ export const PluginsPanel = ({
               <section className="space-y-3 p-3 xl:border-r xl:border-border">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-text-muted">
-                    Categories
+                    分类
                   </span>
                   <span className="text-[11px] text-text-muted">
-                    {pluginFilters.categories.length} selected
+                    已选 {pluginFilters.categories.length} 个
                   </span>
                 </div>
                 <CategoryChips
@@ -322,10 +319,10 @@ export const PluginsPanel = ({
               <section className="space-y-3 border-t border-border p-3 xl:border-t-0">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-text-muted">
-                    Capabilities
+                    能力
                   </span>
                   <span className="text-[11px] text-text-muted">
-                    {pluginFilters.capabilities.length} selected
+                    已选 {pluginFilters.capabilities.length} 个
                   </span>
                 </div>
                 <CapabilityChips
@@ -343,12 +340,10 @@ export const PluginsPanel = ({
       {!loading && !error && filtered.length > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-xs text-text-muted">
-            Showing {filtered.length} of {catalog.length} plugin{catalog.length !== 1 ? 's' : ''}
+            显示 {filtered.length} / {catalog.length} 个插件
           </p>
           {hasActiveFilters && (
-            <p className="text-xs text-text-muted">
-              Results update instantly as you refine filters.
-            </p>
+            <p className="text-xs text-text-muted">调整筛选后结果会立即更新。</p>
           )}
         </div>
       )}
@@ -399,12 +394,10 @@ export const PluginsPanel = ({
             )}
           </div>
           <p className="text-sm text-text-secondary">
-            {hasActiveFilters ? 'No plugins match your filters' : 'No plugins available'}
+            {hasActiveFilters ? '没有匹配筛选条件的插件' : '暂无可用插件'}
           </p>
           <p className="text-xs text-text-muted">
-            {hasActiveFilters
-              ? 'Try adjusting your search or filter criteria'
-              : 'Check back later for new plugins'}
+            {hasActiveFilters ? '试着调整搜索或筛选条件' : '稍后再回来查看新插件'}
           </p>
           {hasActiveFilters && (
             <Button variant="outline" size="sm" onClick={clearFilters}>

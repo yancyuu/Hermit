@@ -165,19 +165,19 @@ function summarizeInstallationScopes(scopes: InstallScope[]): string | null {
   }
 
   if (scopes.length > 1) {
-    return `Installed in ${scopes.length} scopes`;
+    return `已安装到 ${scopes.length} 个范围`;
   }
 
   switch (scopes[0]) {
     case 'global':
     case 'user':
-      return 'Installed globally';
+      return '已全局安装';
     case 'project':
-      return 'Installed in project';
+      return '已安装到项目';
     case 'local':
-      return 'Installed locally';
+      return '已安装到本地';
     default:
-      return 'Installed';
+      return '已安装';
   }
 }
 
@@ -238,14 +238,14 @@ export function getExtensionActionDisableReason(options: {
 }): string | null {
   const { isInstalled, cliStatus, cliStatusLoading, section = 'plugins' } = options;
   if (cliStatus === null) {
-    return cliStatusLoading ? 'Checking runtime status...' : 'Checking runtime availability...';
+    return cliStatusLoading ? '正在检查运行时状态...' : '正在检查运行时可用性...';
   }
 
   if (cliStatus.installed === false) {
     if (cliStatus.binaryPath && cliStatus.launchError) {
-      return 'The configured runtime was found but failed to start. Open the Dashboard to repair or reinstall it.';
+      return '已找到配置的运行时，但启动失败。请打开首页修复或重新安装。';
     }
-    return 'The configured runtime is required. Install or repair it from the Dashboard.';
+    return '需要配置的运行时。请从首页安装或修复。';
   }
 
   const providers = cliStatus.providers ?? [];
@@ -267,12 +267,12 @@ export function getExtensionActionDisableReason(options: {
       .map((provider) => getCliProviderExtensionCapability(provider, 'mcp').reason)
       .find((value): value is string => typeof value === 'string' && value.trim().length > 0);
 
-    return reason ?? 'MCP management is not supported by the current runtime.';
+    return reason ?? '当前运行时不支持 MCP 管理。';
   }
 
   if (!isMultimodel) {
     if (!isInstalled && !cliStatus.authLoggedIn) {
-      return 'Claude CLI is installed but not signed in. Open the Dashboard to sign in.';
+      return 'Claude CLI 已安装但尚未登录。请打开首页登录。';
     }
     return null;
   }
@@ -285,7 +285,7 @@ export function getExtensionActionDisableReason(options: {
     const reason = providers
       .map((provider) => getCliProviderExtensionCapability(provider, 'plugins').reason)
       .find((value): value is string => typeof value === 'string' && value.trim().length > 0);
-    return reason ?? 'Plugin installs are not supported by the current runtime.';
+    return reason ?? '当前运行时不支持安装插件。';
   }
 
   if (isInstalled) {
@@ -294,7 +294,7 @@ export function getExtensionActionDisableReason(options: {
 
   const authenticatedProvider = pluginProviders.find((provider) => provider.authenticated);
   if (!authenticatedProvider) {
-    return `${pluginProviders[0]?.displayName ?? 'Anthropic'} is not connected. Open the Dashboard to sign in.`;
+    return `${pluginProviders[0]?.displayName ?? 'Anthropic'} 未连接。请打开首页登录。`;
   }
 
   return null;

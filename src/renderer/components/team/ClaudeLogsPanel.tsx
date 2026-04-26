@@ -75,7 +75,7 @@ export const ClaudeLogsPanel = ({
               <span className="font-mono">{data.total}</span> lines
             </>
           ) : isAlive ? (
-            'No logs yet.'
+            '暂无日志。'
           ) : (
             'Team is not running.'
           )}
@@ -87,7 +87,7 @@ export const ClaudeLogsPanel = ({
                 <Search size={12} className="shrink-0 text-[var(--color-text-muted)]" />
                 <input
                   type="text"
-                  placeholder="Search logs..."
+                  placeholder="搜索日志..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="min-w-0 flex-1 bg-transparent text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none"
@@ -97,7 +97,7 @@ export const ClaudeLogsPanel = ({
                     type="button"
                     className="shrink-0 rounded p-0.5 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface-raised)] hover:text-[var(--color-text)]"
                     onClick={() => setSearchQuery('')}
-                    aria-label="Clear search"
+                    aria-label="清除搜索"
                   >
                     <X size={14} />
                   </button>
@@ -118,7 +118,7 @@ export const ClaudeLogsPanel = ({
               className="h-7 border-blue-500/30 bg-blue-600 px-2 text-xs text-white hover:bg-blue-500"
               onClick={applyPending}
             >
-              +{pendingNewCount} new
+              +{pendingNewCount} 条新日志
             </Button>
           )}
         </div>
@@ -149,7 +149,7 @@ export const ClaudeLogsPanel = ({
                     onClick={() => void loadOlderLogs()}
                     disabled={loadingMore}
                   >
-                    {loadingMore ? 'Loading…' : 'Show more'}
+                    {loadingMore ? '加载中...' : '显示更多'}
                   </Button>
                 </div>
               ) : null
@@ -158,11 +158,11 @@ export const ClaudeLogsPanel = ({
         ) : null}
         {!error && data.lines.length === 0 && isAlive ? (
           <p className="p-2 text-xs text-[var(--color-text-muted)]">
-            {loading ? 'Loading…' : 'No logs captured.'}
+            {loading ? '加载中...' : '暂无日志。'}
           </p>
         ) : null}
         {!error && data.lines.length > 0 && filteredText.trim().length === 0 ? (
-          <p className="p-2 text-xs text-[var(--color-text-muted)]">No matching logs.</p>
+          <p className="p-2 text-xs text-[var(--color-text-muted)]">没有匹配的日志。</p>
         ) : null}
       </div>
     </div>

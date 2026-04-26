@@ -324,7 +324,7 @@ export const NotificationsView = (): React.JSX.Element => {
           >
             <Inbox className="mb-3 size-10 opacity-30" />
             <p className="mb-1 text-sm font-medium">
-              {activeFilter !== null ? 'No matching notifications' : 'No notifications'}
+              {activeFilter !== null ? '没有匹配的通知' : '暂无通知'}
             </p>
             <p className="text-xs opacity-70">
               {activeFilter !== null ? 'Try a different filter' : "You're all caught up!"}

@@ -51,6 +51,13 @@ export async function resolveDesktopTeammateModeDecision(
   rawExtraCliArgs: string | undefined
 ): Promise<DesktopTeammateModeDecision> {
   const explicitMode = getExplicitTeammateMode(rawExtraCliArgs);
+  if (explicitMode === 'in-process') {
+    return {
+      injectedTeammateMode: null,
+      forceProcessTeammates: false,
+    };
+  }
+
   if (explicitMode === 'tmux') {
     return {
       injectedTeammateMode: null,
@@ -58,17 +65,17 @@ export async function resolveDesktopTeammateModeDecision(
     };
   }
 
-  if (explicitMode === 'auto' || explicitMode === 'in-process') {
+  if (explicitMode === 'auto') {
     return {
       injectedTeammateMode: null,
-      forceProcessTeammates: false,
+      forceProcessTeammates: true,
     };
   }
 
   if (!(await isTmuxAvailable())) {
     return {
       injectedTeammateMode: null,
-      forceProcessTeammates: false,
+      forceProcessTeammates: true,
     };
   }
 

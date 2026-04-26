@@ -196,7 +196,7 @@ const HoverActions = ({
           onMouseLeave={() => setHoveredButton(null)}
           className="rounded p-1.5 transition-colors"
           style={getButtonStyle('archive')}
-          title="Mark as read"
+          title="标记为已读"
         >
           <Check className="size-4" />
         </button>
@@ -208,7 +208,7 @@ const HoverActions = ({
         onMouseLeave={() => setHoveredButton(null)}
         className="rounded p-1.5 transition-colors"
         style={getButtonStyle('delete', true)}
-        title="Delete"
+        title="删除"
       >
         <Trash2 className="size-4" />
       </button>
@@ -219,7 +219,7 @@ const HoverActions = ({
         onMouseLeave={() => setHoveredButton(null)}
         className="rounded p-1.5 transition-colors"
         style={getButtonStyle('navigate')}
-        title="View in session"
+        title="在会话中查看"
       >
         <ArrowRight className="size-4" />
       </button>

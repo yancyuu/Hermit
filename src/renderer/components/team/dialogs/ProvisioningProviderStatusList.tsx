@@ -17,7 +17,7 @@ export interface ProvisioningProviderCheck {
 }
 
 export function getProvisioningProviderLabel(providerId: TeamProviderId): string {
-  return getCatalogTeamProviderLabel(providerId) ?? 'Claude';
+  return getCatalogTeamProviderLabel(providerId) ?? 'Anthropic';
 }
 
 export function createInitialProviderChecks(
@@ -170,16 +170,51 @@ function isModelDetail(lower: string): boolean {
 function getStatusLabel(status: ProvisioningProviderCheckStatus): string {
   switch (status) {
     case 'checking':
-      return 'checking...';
+      return '检查中...';
     case 'ready':
-      return 'OK';
+      return '正常';
     case 'notes':
-      return 'OK (notes)';
+      return '有提示';
     case 'failed':
-      return 'ERR';
+      return '异常';
     case 'pending':
     default:
-      return 'waiting';
+      return '等待中';
+  }
+}
+
+function translateDetailSummary(summary: ProvisioningDetailSummary): string {
+  switch (summary) {
+    case 'CLI binary missing':
+      return 'CLI 二进制不存在';
+    case 'Working directory missing':
+      return '工作目录不存在';
+    case 'CLI binary could not be started':
+      return 'CLI 无法启动';
+    case 'CLI preflight did not complete':
+      return 'CLI 预检未完成';
+    case 'Authentication required':
+      return '需要认证';
+    case 'Runtime provider is not configured':
+      return '运行时提供商未配置';
+    case 'CLI preflight failed':
+      return 'CLI 预检失败';
+    case 'Selected model compatibility pending':
+      return '所选模型兼容，深度校验仍在进行';
+    case 'Selected model available':
+      return '所选模型可用';
+    case 'Selected model verified':
+      return '所选模型已验证';
+    case 'Selected model unavailable':
+      return '所选模型不可用';
+    case 'Selected model verification timed out':
+      return '所选模型校验超时';
+    case 'Selected model check failed':
+      return '所选模型校验失败';
+    case 'Ready with notes':
+      return '已就绪（含提示）';
+    case 'Needs attention':
+      return '需要处理';
   }
 }
 
@@ -326,28 +361,28 @@ function getModelDetailSummary(details: string[]): string | null {
 
   const parts: string[] = [];
   if (unavailableCount > 0) {
-    parts.push(`${unavailableCount} model${unavailableCount === 1 ? '' : 's'} unavailable`);
+    parts.push(`${unavailableCount} 个模型不可用`);
   }
   if (checkFailedCount > 0) {
-    parts.push(`${checkFailedCount} model${checkFailedCount === 1 ? '' : 's'} check failed`);
+    parts.push(`${checkFailedCount} 个模型校验失败`);
   }
   if (timedOutCount > 0) {
-    parts.push(`${timedOutCount} model${timedOutCount === 1 ? '' : 's'} timed out`);
+    parts.push(`${timedOutCount} 个模型校验超时`);
   }
   if (compatibilityPendingCount > 0) {
-    parts.push(`${compatibilityPendingCount} compatible, deep verification pending`);
+    parts.push(`${compatibilityPendingCount} 个模型兼容，深度校验仍在进行`);
   }
   if (checkingCount > 0) {
-    parts.push(`${checkingCount} checking`);
+    parts.push(`${checkingCount} 个检查中`);
   }
   if (availableCount > 0) {
-    parts.push(`${availableCount} available`);
+    parts.push(`${availableCount} 个可用`);
   }
   if (verifiedCount > 0) {
-    parts.push(`${verifiedCount} verified`);
+    parts.push(`${verifiedCount} 个已验证`);
   }
 
-  return parts.length > 0 ? `Selected model checks - ${parts.join(', ')}` : null;
+  return parts.length > 0 ? `所选模型检查 - ${parts.join('，')}` : null;
 }
 
 function hasCompatibilityPendingDetails(checks: ProvisioningProviderCheck[]): boolean {
@@ -381,7 +416,7 @@ function getDisplayStatusText(check: ProvisioningProviderCheck): string {
         summarizedDetails[0] ??
         null)
       : (summarizedDetails[0] ?? null);
-  return summary ?? getStatusLabel(check.status);
+  return summary ? translateDetailSummary(summary) : getStatusLabel(check.status);
 }
 
 function getDetailTone(
@@ -389,6 +424,11 @@ function getDetailTone(
   status: ProvisioningProviderCheckStatus
 ): 'success' | 'failure' | 'checking' | 'neutral' {
   const summary = summarizeDetail(detail, status);
+  if (status === 'notes') {
+    return summary === 'Selected model verified' || summary === 'Selected model available'
+      ? 'success'
+      : 'neutral';
+  }
   if (summary === 'Selected model verified' || summary === 'Selected model available') {
     return 'success';
   }
@@ -427,6 +467,45 @@ function getDetailColorClass(detail: string, status: ProvisioningProviderCheckSt
     default:
       return 'text-[var(--color-text-muted)]';
   }
+}
+
+function formatProvisioningDetail(detail: string): string {
+  const trimmed = detail.trim();
+  const lower = trimmed.toLowerCase();
+
+  const unavailableMatch = trimmed.match(/^(.+?)\s+-\s+unavailable\s+-\s+(.+)$/i);
+  if (unavailableMatch) {
+    return `${unavailableMatch[1]} - 不可用 - ${formatProvisioningDetail(unavailableMatch[2])}`;
+  }
+
+  if (lower.includes('anthropic provider is not authenticated')) {
+    return 'Anthropic 提供商未认证。未连接';
+  }
+  if (lower.includes('codex provider is not authenticated')) {
+    return 'Codex 提供商未认证。未连接';
+  }
+  if (lower.includes('gemini provider is not authenticated')) {
+    return 'Gemini 提供商未认证。未连接';
+  }
+  if (lower === 'not connected') {
+    return '未连接';
+  }
+  if (lower.includes('selected model') && lower.includes('is unavailable')) {
+    return trimmed
+      .replace(/^Selected model\s+/i, '所选模型 ')
+      .replace(/\s+is unavailable\./i, ' 不可用。');
+  }
+  if (lower.includes('available for launch')) {
+    return trimmed.replace(/available for launch/gi, '可用于启动');
+  }
+  if (lower.includes('verified for launch')) {
+    return trimmed.replace(/verified for launch/gi, '已验证可用于启动');
+  }
+  if (lower.includes('checking...')) {
+    return trimmed.replace(/checking\.\.\./gi, '检查中...');
+  }
+
+  return trimmed;
 }
 
 export function getPrimaryProvisioningFailureDetail(
@@ -502,8 +581,7 @@ export function deriveEffectiveProvisioningPrepareState(params: {
     if (hasCompatibilityPendingDetails(params.checks)) {
       return {
         state: params.state,
-        message:
-          'Deep verification is still running. OpenCode free models may take around 20 seconds.',
+        message: '深度校验仍在进行。OpenCode 免费模型可能需要约 20 秒。',
       };
     }
     return {
@@ -518,7 +596,7 @@ export function deriveEffectiveProvisioningPrepareState(params: {
       message:
         getPrimaryProvisioningFailureDetail(params.checks) ??
         params.message ??
-        'Some selected providers need attention.',
+        '部分所选提供商需要处理。',
     };
   }
 
@@ -527,9 +605,7 @@ export function deriveEffectiveProvisioningPrepareState(params: {
 
   return {
     state: 'ready',
-    message: hasNotes
-      ? 'Selected providers are ready with notes.'
-      : 'Selected providers are ready.',
+    message: hasNotes ? '所选提供商已就绪（含提示）。' : '所选提供商已就绪。',
   };
 }
 
@@ -624,7 +700,7 @@ export const ProvisioningProviderStatusList = ({
                     key={detail}
                     className={`text-[10px] ${getDetailColorClass(detail, check.status)}`}
                   >
-                    {detail}
+                    {formatProvisioningDetail(detail)}
                   </p>
                 ))}
               </div>
@@ -645,13 +721,13 @@ export function getProvisioningFailureHint(
     .toLowerCase();
 
   if (combined.includes('working directory does not exist:')) {
-    return 'Choose an existing working directory, then reopen this dialog.';
+    return '请选择存在的工作目录，然后重新打开此弹窗。';
   }
   if (combined.includes('not authenticated') || combined.includes('not logged in')) {
-    return 'Authenticate the required provider in Claude CLI, then reopen this dialog.';
+    return '请在 Claude CLI 中完成所需提供商认证，然后重新打开此弹窗。';
   }
   if (combined.includes('provider is not configured for runtime use')) {
-    return 'Configure the selected provider runtime, then reopen this dialog.';
+    return '请配置所选提供商运行时，然后重新打开此弹窗。';
   }
   if (
     combined.includes('spawn ') ||
@@ -661,8 +737,8 @@ export function getProvisioningFailureHint(
     combined.includes('bad cpu type in executable') ||
     combined.includes('image not found')
   ) {
-    return 'Make sure the local Claude CLI binary exists and can be started, then reopen this dialog.';
+    return '请确认本地 Claude CLI 二进制存在且可启动，然后重新打开此弹窗。';
   }
 
-  return 'Resolve the issue above, then reopen this dialog.';
+  return '请处理上方问题，然后重新打开此弹窗。';
 }

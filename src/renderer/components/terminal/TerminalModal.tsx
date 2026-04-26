@@ -110,7 +110,7 @@ export function TerminalModal({
           </div>
           <button
             onClick={onClose}
-            aria-label="Close"
+            aria-label="关闭"
             className="rounded p-1 text-text-muted transition-colors hover:bg-surface-raised hover:text-text"
           >
             <X size={16} />

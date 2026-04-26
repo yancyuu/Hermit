@@ -23,13 +23,13 @@ export function isInstalledMcpScope(scope: unknown): scope is McpInstalledScope 
 export function getMcpScopeLabel(scope: McpInstalledScope, flavor?: CliFlavor | null): string {
   switch (scope) {
     case 'global':
-      return 'Global';
+      return '全局';
     case 'user':
-      return flavor === 'agent_teams_orchestrator' ? 'User (legacy)' : 'User (global)';
+      return flavor === 'agent_teams_orchestrator' ? '用户（旧版）' : '用户（全局）';
     case 'project':
-      return 'Project';
+      return '项目';
     case 'local':
-      return 'Local';
+      return '本地';
     default:
       return scope;
   }

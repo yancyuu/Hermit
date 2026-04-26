@@ -249,8 +249,7 @@ export class ClaudeBinaryResolver {
 
     const overrideRaw =
       flavor === 'agent_teams_orchestrator'
-        ? (process.env.CLAUDE_AGENT_TEAMS_ORCHESTRATOR_CLI_PATH?.trim() ??
-          process.env.CLAUDE_CLI_PATH?.trim())
+        ? process.env.CLAUDE_AGENT_TEAMS_ORCHESTRATOR_CLI_PATH?.trim()
         : process.env.CLAUDE_CLI_PATH?.trim();
     if (overrideRaw) {
       const looksLikePath =

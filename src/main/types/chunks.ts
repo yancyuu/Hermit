@@ -1,5 +1,5 @@
 /**
- * Chunk and visualization types for Agent Teams UI.
+ * Chunk and visualization types for Multi Agent Teams.
  *
  * This module contains:
  * - Chunk types (UserChunk, AIChunk, SystemChunk, CompactChunk)

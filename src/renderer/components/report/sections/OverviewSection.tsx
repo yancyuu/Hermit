@@ -11,19 +11,19 @@ interface OverviewSectionProps {
 
 export const OverviewSection = ({ data }: OverviewSectionProps) => {
   return (
-    <ReportSection title="Overview" icon={Activity}>
+    <ReportSection title="概览" icon={Activity}>
       <div className="mb-3 truncate text-xs text-text-muted">{data.firstMessage}</div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div>
-          <div className="text-xs text-text-muted">Duration</div>
+          <div className="text-xs text-text-muted">时长</div>
           <div className="text-sm font-medium text-text">{data.durationHuman}</div>
         </div>
         <div>
-          <div className="text-xs text-text-muted">Messages</div>
+          <div className="text-xs text-text-muted">消息数</div>
           <div className="text-sm font-medium text-text">{data.totalMessages.toLocaleString()}</div>
         </div>
         <div>
-          <div className="text-xs text-text-muted">Context Usage</div>
+          <div className="text-xs text-text-muted">上下文用量</div>
           <div
             className="text-sm font-medium"
             style={{ color: assessmentColor(data.contextAssessment) }}
@@ -35,25 +35,25 @@ export const OverviewSection = ({ data }: OverviewSectionProps) => {
           </div>
         </div>
         <div>
-          <div className="text-xs text-text-muted">Compactions</div>
+          <div className="text-xs text-text-muted">压缩次数</div>
           <div className="text-sm font-medium text-text">{data.compactionCount}</div>
         </div>
         <div>
-          <div className="text-xs text-text-muted">Branch</div>
+          <div className="text-xs text-text-muted">分支</div>
           <div className="truncate text-sm font-medium text-text">{data.gitBranch}</div>
         </div>
         <div>
-          <div className="text-xs text-text-muted">Subagents</div>
-          <div className="text-sm font-medium text-text">{data.hasSubagents ? 'Yes' : 'No'}</div>
+          <div className="text-xs text-text-muted">子 Agent</div>
+          <div className="text-sm font-medium text-text">{data.hasSubagents ? '是' : '否'}</div>
         </div>
         <div>
-          <div className="text-xs text-text-muted">Project</div>
+          <div className="text-xs text-text-muted">项目</div>
           <div className="truncate text-sm font-medium text-text" title={data.projectPath}>
             {data.projectPath}
           </div>
         </div>
         <div>
-          <div className="text-xs text-text-muted">Session ID</div>
+          <div className="text-xs text-text-muted">会话 ID</div>
           <div className="truncate text-sm font-medium text-text" title={data.sessionId}>
             {data.sessionId.slice(0, 12)}...
           </div>

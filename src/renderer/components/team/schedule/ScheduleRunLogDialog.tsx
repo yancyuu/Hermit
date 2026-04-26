@@ -113,7 +113,7 @@ export const ScheduleRunLogDialog = ({
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Failed to load logs');
+          setError(err instanceof Error ? err.message : '加载日志失败');
         }
       } finally {
         if (!cancelled) setLoading(false);

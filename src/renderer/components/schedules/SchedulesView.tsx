@@ -36,10 +36,10 @@ import type { Schedule, ScheduleRun, ScheduleStatus } from '@shared/types';
 // =============================================================================
 
 const STATUS_OPTIONS: { value: ScheduleStatus | 'all'; label: string }[] = [
-  { value: 'all', label: 'All' },
-  { value: 'active', label: 'Active' },
-  { value: 'paused', label: 'Paused' },
-  { value: 'disabled', label: 'Disabled' },
+  { value: 'all', label: '全部' },
+  { value: 'active', label: '运行中' },
+  { value: 'paused', label: '已暂停' },
+  { value: 'disabled', label: '已禁用' },
 ];
 
 // =============================================================================
@@ -125,7 +125,7 @@ const ScheduleListItem = ({
         <Tooltip>
           <TooltipTrigger asChild>
             <span className="shrink-0 text-xs text-[var(--color-text-muted)]">
-              Next: {formatNextRun(schedule.nextRunAt)}
+              下次：{formatNextRun(schedule.nextRunAt)}
             </span>
           </TooltipTrigger>
           {schedule.nextRunAt ? (
@@ -154,7 +154,7 @@ const ScheduleListItem = ({
                 <Zap className="size-3.5" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="top">Run now</TooltipContent>
+            <TooltipContent side="top">立即运行</TooltipContent>
           </Tooltip>
 
           <Popover>
@@ -170,7 +170,7 @@ const ScheduleListItem = ({
                 onClick={() => onEdit(schedule)}
               >
                 <Pencil className="mr-2 size-3.5" />
-                Edit
+                编辑
               </button>
               {schedule.status === 'active' ? (
                 <button
@@ -179,7 +179,7 @@ const ScheduleListItem = ({
                   onClick={() => onPause(schedule.id)}
                 >
                   <Pause className="mr-2 size-3.5" />
-                  Pause
+                  暂停
                 </button>
               ) : (
                 <button
@@ -188,7 +188,7 @@ const ScheduleListItem = ({
                   onClick={() => onResume(schedule.id)}
                 >
                   <Play className="mr-2 size-3.5" />
-                  Resume
+                  恢复
                 </button>
               )}
               <button
@@ -197,7 +197,7 @@ const ScheduleListItem = ({
                 onClick={() => onDelete(schedule.id)}
               >
                 <Trash2 className="mr-2 size-3.5" />
-                Delete
+                删除
               </button>
             </PopoverContent>
           </Popover>
@@ -209,11 +209,11 @@ const ScheduleListItem = ({
         <div className="border-t border-[var(--color-border)]">
           {runsLoading ? (
             <div className="flex items-center justify-center py-4 text-xs text-[var(--color-text-muted)]">
-              Loading run history...
+              正在加载运行历史...
             </div>
           ) : runs.length === 0 ? (
             <div className="flex items-center justify-center py-4 text-xs text-[var(--color-text-muted)]">
-              No runs yet
+              暂无运行记录
             </div>
           ) : (
             <div className="max-h-[240px] overflow-y-auto">
@@ -389,147 +389,143 @@ export const SchedulesView = (): React.JSX.Element => {
   );
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-[var(--color-surface)]">
-      {/* Header */}
-      <div className="shrink-0 border-b border-[var(--color-border)] px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Calendar className="size-5 text-[var(--color-text-muted)]" />
-            <h1 className="text-lg font-semibold text-[var(--color-text)]">Schedules</h1>
-            {schedules.length > 0 && (
-              <span className="rounded-full bg-[var(--color-surface-raised)] px-2 py-0.5 text-xs text-[var(--color-text-muted)]">
-                {schedules.length}
-              </span>
-            )}
+    <div className="h-full overflow-y-auto bg-[var(--color-surface)]">
+      <div className="mx-auto w-full max-w-5xl px-6 py-8">
+        {/* Header */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Calendar className="size-5 text-[var(--color-text-muted)]" />
+              <h1 className="text-lg font-semibold text-[var(--color-text)]">计划任务</h1>
+              {schedules.length > 0 && (
+                <span className="rounded-full bg-[var(--color-surface-raised)] px-2 py-0.5 text-xs text-[var(--color-text-muted)]">
+                  {schedules.length}
+                </span>
+              )}
+            </div>
+            <Button size="sm" className="gap-1.5" onClick={handleCreate}>
+              <Plus className="size-3.5" />
+              添加计划
+            </Button>
           </div>
-          <Button size="sm" className="gap-1.5" onClick={handleCreate}>
-            <Plus className="size-3.5" />
-            Add Schedule
-          </Button>
-        </div>
 
-        {/* Filters row */}
-        {schedules.length > 0 && (
-          <div className="mt-3 flex items-center gap-3">
-            {/* Search */}
-            <div className="relative max-w-xs flex-1">
-              <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-[var(--color-text-muted)]" />
-              <Input
-                placeholder="Search schedules..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-8 pl-8 text-xs"
-              />
-            </div>
+          {/* Filters row */}
+          {schedules.length > 0 && (
+            <div className="mt-3 flex items-center gap-3">
+              {/* Search */}
+              <div className="relative max-w-xs flex-1">
+                <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-[var(--color-text-muted)]" />
+                <Input
+                  placeholder="搜索计划..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="h-8 pl-8 text-xs"
+                />
+              </div>
 
-            {/* Status filter chips */}
-            <div className="flex items-center gap-1">
-              {STATUS_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  className={`rounded-md px-2.5 py-1 text-xs transition-colors ${
-                    statusFilter === opt.value
-                      ? 'bg-[var(--color-surface-raised)] font-medium text-[var(--color-text)]'
-                      : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
-                  }`}
-                  onClick={() => setStatusFilter(opt.value)}
-                >
-                  {opt.label}
-                  {statusCounts[opt.value] > 0 && (
-                    <span className="ml-1 text-[10px] opacity-60">{statusCounts[opt.value]}</span>
-                  )}
-                </button>
-              ))}
-            </div>
-
-            {/* Team filter */}
-            {teamNames.length > 1 && (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
-                    <Filter className="size-3" />
-                    {teamFilter ? (
-                      <>
-                        <span
-                          className="size-2 shrink-0 rounded-full"
-                          style={{ backgroundColor: getTeamColor(teamFilter) }}
-                        />
-                        {teamFilter}
-                      </>
-                    ) : (
-                      'All teams'
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="start" className="w-48 p-1">
+              {/* Status filter chips */}
+              <div className="flex items-center gap-1">
+                {STATUS_OPTIONS.map((opt) => (
                   <button
+                    key={opt.value}
                     type="button"
-                    className={`flex w-full items-center rounded-sm px-2 py-1.5 text-xs ${
-                      !teamFilter
-                        ? 'font-medium text-[var(--color-text)]'
-                        : 'text-[var(--color-text-secondary)]'
-                    } hover:bg-[var(--color-surface-raised)]`}
-                    onClick={() => setTeamFilter(null)}
+                    className={`rounded-md px-2.5 py-1 text-xs transition-colors ${
+                      statusFilter === opt.value
+                        ? 'bg-[var(--color-surface-raised)] font-medium text-[var(--color-text)]'
+                        : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
+                    }`}
+                    onClick={() => setStatusFilter(opt.value)}
                   >
-                    All teams
+                    {opt.label}
+                    {statusCounts[opt.value] > 0 && (
+                      <span className="ml-1 text-[10px] opacity-60">{statusCounts[opt.value]}</span>
+                    )}
                   </button>
-                  {teamNames.map((name) => (
+                ))}
+              </div>
+
+              {/* Team filter */}
+              {teamNames.length > 1 && (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
+                      <Filter className="size-3" />
+                      {teamFilter ? (
+                        <>
+                          <span
+                            className="size-2 shrink-0 rounded-full"
+                            style={{ backgroundColor: getTeamColor(teamFilter) }}
+                          />
+                          {teamFilter}
+                        </>
+                      ) : (
+                        '全部团队'
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="start" className="w-48 p-1">
                     <button
-                      key={name}
                       type="button"
-                      className={`flex w-full items-center gap-1.5 rounded-sm px-2 py-1.5 text-xs ${
-                        teamFilter === name
+                      className={`flex w-full items-center rounded-sm px-2 py-1.5 text-xs ${
+                        !teamFilter
                           ? 'font-medium text-[var(--color-text)]'
                           : 'text-[var(--color-text-secondary)]'
                       } hover:bg-[var(--color-surface-raised)]`}
-                      onClick={() => setTeamFilter(name)}
+                      onClick={() => setTeamFilter(null)}
                     >
-                      <span
-                        className="size-2 shrink-0 rounded-full"
-                        style={{ backgroundColor: getTeamColor(name) }}
-                      />
-                      {name}
+                      全部团队
                     </button>
-                  ))}
-                </PopoverContent>
-              </Popover>
-            )}
-          </div>
-        )}
-      </div>
+                    {teamNames.map((name) => (
+                      <button
+                        key={name}
+                        type="button"
+                        className={`flex w-full items-center gap-1.5 rounded-sm px-2 py-1.5 text-xs ${
+                          teamFilter === name
+                            ? 'font-medium text-[var(--color-text)]'
+                            : 'text-[var(--color-text-secondary)]'
+                        } hover:bg-[var(--color-surface-raised)]`}
+                        onClick={() => setTeamFilter(name)}
+                      >
+                        <span
+                          className="size-2 shrink-0 rounded-full"
+                          style={{ backgroundColor: getTeamColor(name) }}
+                        />
+                        {name}
+                      </button>
+                    ))}
+                  </PopoverContent>
+                </Popover>
+              )}
+            </div>
+          )}
+        </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto px-6 py-4">
+        {/* Content */}
         {schedulesLoading && schedules.length === 0 ? (
           <div className="flex items-center justify-center py-12 text-sm text-[var(--color-text-muted)]">
-            Loading schedules...
+            正在加载计划...
           </div>
         ) : schedules.length === 0 ? (
           /* Global empty state */
           <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
             <Calendar className="size-12 text-[var(--color-text-muted)]" />
             <div className="space-y-1.5">
-              <p className="text-sm font-medium text-[var(--color-text-secondary)]">
-                No scheduled tasks
-              </p>
+              <p className="text-sm font-medium text-[var(--color-text-secondary)]">暂无计划任务</p>
               <p className="max-w-sm text-xs text-[var(--color-text-muted)]">
-                Create a schedule on any team to automate Claude task execution with cron
-                expressions. Schedules from all teams will appear here.
+                在任意团队中创建计划，即可使用 Cron 表达式自动执行团队任务。
+                所有团队的计划都会显示在这里。
               </p>
             </div>
             <Button size="sm" variant="outline" className="mt-2 gap-1.5" onClick={handleCreate}>
               <Plus className="size-3.5" />
-              Create Schedule
+              创建计划
             </Button>
           </div>
         ) : filteredSchedules.length === 0 ? (
           /* No results for current filters */
           <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
             <Search className="size-8 text-[var(--color-text-muted)]" />
-            <p className="text-sm text-[var(--color-text-muted)]">
-              No schedules match the current filters
-            </p>
+            <p className="text-sm text-[var(--color-text-muted)]">没有符合当前筛选条件的计划</p>
             <button
               type="button"
               className="text-xs text-[var(--color-text-secondary)] underline hover:text-[var(--color-text)]"
@@ -539,7 +535,7 @@ export const SchedulesView = (): React.JSX.Element => {
                 setTeamFilter(null);
               }}
             >
-              Clear filters
+              清除筛选
             </button>
           </div>
         ) : (

@@ -1227,7 +1227,7 @@ export function getOpenCodeTeamModelRecommendation(
   if (OPENCODE_TEAM_RECOMMENDED_MODELS.has(normalizedModelId)) {
     return {
       level: 'recommended',
-      label: 'Recommended',
+      label: '推荐',
       reason: PASSED_GAUNTLET_REAL_AGENT_TEAMS_E2E_REASON,
     };
   }
@@ -1235,7 +1235,7 @@ export function getOpenCodeTeamModelRecommendation(
   if (OPENCODE_TEAM_RECOMMENDED_WITH_LIMITS_MODELS.has(normalizedModelId)) {
     return {
       level: 'recommended-with-limits',
-      label: 'Recommended with limits',
+      label: '推荐（有限制）',
       reason: PASSED_GAUNTLET_WITH_LIMITS_REASON,
     };
   }
@@ -1243,7 +1243,7 @@ export function getOpenCodeTeamModelRecommendation(
   if (OPENCODE_TEAM_TESTED_MODELS.has(normalizedModelId)) {
     return {
       level: 'tested',
-      label: 'Tested',
+      label: '已测试',
       reason: PASSED_REAL_AGENT_TEAMS_E2E_REASON,
     };
   }
@@ -1251,7 +1251,7 @@ export function getOpenCodeTeamModelRecommendation(
   if (OPENCODE_TEAM_TESTED_WITH_LIMITS_MODELS.has(normalizedModelId)) {
     return {
       level: 'tested-with-limits',
-      label: 'Tested with limits',
+      label: '已测试（有限制）',
       reason: PASSED_FREE_ROUTE_REAL_AGENT_TEAMS_E2E_REASON,
     };
   }
@@ -1260,7 +1260,7 @@ export function getOpenCodeTeamModelRecommendation(
   if (unavailableReason) {
     return {
       level: 'unavailable-in-opencode',
-      label: 'Unavailable in OpenCode',
+      label: 'OpenCode 中不可用',
       reason: unavailableReason,
     };
   }
@@ -1273,7 +1273,7 @@ export function getOpenCodeTeamModelRecommendation(
 
     return {
       level: 'not-recommended',
-      label: 'Not recommended',
+      label: '不推荐',
       reason: notRecommendedReason,
     };
   }

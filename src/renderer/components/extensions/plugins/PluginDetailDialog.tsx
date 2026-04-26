@@ -142,25 +142,25 @@ export const PluginDetailDialog = ({
         {/* Metadata grid */}
         <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
           <div>
-            <span className="text-text-muted">Author</span>
+            <span className="text-text-muted">作者</span>
             <p className="text-text">{plugin.author?.name ?? 'Unknown'}</p>
           </div>
           <div>
-            <span className="text-text-muted">Category</span>
+            <span className="text-text-muted">分类</span>
             <p className="capitalize text-text">{category}</p>
           </div>
           <div>
-            <span className="text-text-muted">Source</span>
+            <span className="text-text-muted">来源</span>
             <p className="capitalize text-text">{plugin.source}</p>
           </div>
           {plugin.version && (
             <div>
-              <span className="text-text-muted">Version</span>
+              <span className="text-text-muted">版本</span>
               <p className="text-text">{plugin.version}</p>
             </div>
           )}
           <div>
-            <span className="text-text-muted">Capabilities</span>
+            <span className="text-text-muted">能力</span>
             <div className="mt-0.5 flex flex-wrap gap-1">
               {capabilities.map((cap) => (
                 <Badge
@@ -174,7 +174,7 @@ export const PluginDetailDialog = ({
             </div>
           </div>
           <div>
-            <span className="text-text-muted">Installs</span>
+            <span className="text-text-muted">安装量</span>
             <div className="mt-0.5">
               <InstallCountBadge count={plugin.installCount} />
             </div>
@@ -262,9 +262,7 @@ export const PluginDetailDialog = ({
           {!isReadmeLoading && readme && (
             <MarkdownViewer content={readme} bare maxHeight="max-h-none" />
           )}
-          {!isReadmeLoading && !readme && (
-            <p className="text-sm text-text-muted">No README available.</p>
-          )}
+          {!isReadmeLoading && !readme && <p className="text-sm text-text-muted">暂无 README。</p>}
         </div>
       </DialogContent>
     </Dialog>

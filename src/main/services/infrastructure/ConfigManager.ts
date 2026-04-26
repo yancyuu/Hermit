@@ -365,7 +365,7 @@ const DEFAULT_CONFIG: AppConfig = {
     showDockIcon: true,
     theme: 'dark',
     defaultTab: 'dashboard',
-    multimodelEnabled: false,
+    multimodelEnabled: true,
     claudeRootPath: null,
     agentLanguage: 'system',
     autoExpandAIGroups: false,
@@ -585,6 +585,7 @@ export class ConfigManager {
       ...DEFAULT_CONFIG.general,
       ...(loaded.general ?? {}),
     };
+    mergedGeneral.multimodelEnabled = true;
     mergedGeneral.claudeRootPath = normalizeConfiguredClaudeRootPath(mergedGeneral.claudeRootPath);
 
     // Merge triggers: preserve existing triggers, add missing builtin ones

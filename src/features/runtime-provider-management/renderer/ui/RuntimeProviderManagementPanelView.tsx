@@ -78,12 +78,12 @@ interface ProviderRowProps {
 }
 
 const DIRECTORY_FILTERS: Array<{ id: RuntimeProviderDirectoryFilterDto; label: string }> = [
-  { id: 'all', label: 'All' },
-  { id: 'connectable', label: 'Connectable' },
-  { id: 'connected', label: 'Connected' },
-  { id: 'configured', label: 'Configured' },
-  { id: 'manual', label: 'Manual setup' },
-  { id: 'has-models', label: 'Has models' },
+  { id: 'all', label: '全部' },
+  { id: 'connectable', label: '可连接' },
+  { id: 'connected', label: '已连接' },
+  { id: 'configured', label: '已配置' },
+  { id: 'manual', label: '手动设置' },
+  { id: 'has-models', label: '有模型' },
 ];
 
 function getDirectoryAction(
@@ -96,28 +96,51 @@ function getDirectoryAction(
 function formatDirectorySetupKind(provider: RuntimeProviderDirectoryEntryDto): string {
   switch (provider.setupKind) {
     case 'connected':
-      return 'Connected';
+      return '已连接';
     case 'connect-api-key':
-      return 'Connect';
+      return '连接';
     case 'configure-manually':
-      return 'Manual setup required';
+      return '需要手动设置';
     case 'requires-environment':
-      return 'Requires environment';
+      return '需要环境变量';
     case 'available-readonly':
-      return 'Available';
+      return '可用';
     case 'unsupported':
-      return 'Unsupported';
+      return '不支持';
   }
 }
 
 function getDirectoryModelsLabel(provider: RuntimeProviderDirectoryEntryDto): string {
   if (provider.modelCount === null) {
-    return 'models unknown';
+    return '模型未知';
   }
   if (provider.modelCount <= 0) {
-    return 'models not reported';
+    return '未报告模型';
   }
-  return `${provider.modelCount} model${provider.modelCount === 1 ? '' : 's'}`;
+  return `${provider.modelCount} 个模型`;
+}
+
+function formatProviderActionLabel(label: string | null | undefined): string {
+  switch (label) {
+    case 'Connect':
+      return '连接';
+    case 'Reconnect':
+      return '重新连接';
+    case 'Use':
+      return '使用';
+    case 'Test':
+      return '测试';
+    case 'Set default':
+      return '设为默认';
+    case 'Forget':
+      return '忘记';
+    case 'Configure':
+      return '配置';
+    case 'Save key':
+      return '保存密钥';
+    default:
+      return label ?? '连接';
+  }
 }
 
 function directoryEntryMatchesQuery(
@@ -260,7 +283,7 @@ function ProviderSetupFormPanel({
       {loading ? (
         <div className="flex items-center gap-2 text-xs text-[var(--color-text-secondary)]">
           <Loader2 className="size-3.5 animate-spin" />
-          Loading provider setup...
+          正在加载提供商设置...
         </div>
       ) : null}
 
@@ -292,7 +315,7 @@ function ProviderSetupFormPanel({
                 value={state.apiKeyValue}
                 disabled={disabled || busy || !form.supported}
                 onChange={(event) => actions.setApiKeyValue(event.target.value)}
-                placeholder={form.secret.placeholder ?? 'Paste API key'}
+                placeholder={form.secret.placeholder ?? '粘贴 API 密钥'}
                 className="h-9 text-sm"
                 autoFocus
               />
@@ -319,7 +342,7 @@ function ProviderSetupFormPanel({
                       id={`runtime-provider-${provider.providerId}-${prompt.key}`}
                       className="h-9 text-sm"
                     >
-                      <SelectValue placeholder={prompt.placeholder ?? 'Select value'} />
+                      <SelectValue placeholder={prompt.placeholder ?? '选择值'} />
                     </SelectTrigger>
                     <SelectContent>
                       {prompt.options.map((option) => (
@@ -367,7 +390,7 @@ function ProviderSetupFormPanel({
           disabled={busy}
           onClick={actions.cancelConnect}
         >
-          Cancel
+          取消
         </Button>
         <Button
           type="button"
@@ -376,7 +399,7 @@ function ProviderSetupFormPanel({
           onClick={() => void actions.submitConnect(provider.providerId)}
         >
           {busy ? <Loader2 className="mr-1 size-3.5 animate-spin" /> : null}
-          {form?.submitLabel ?? 'Connect'}
+          {formatProviderActionLabel(form?.submitLabel)}
         </Button>
       </div>
     </div>
@@ -412,18 +435,14 @@ function RuntimeSummary({
               variant="outline"
               className={`border-white/10 ${loadingWithoutRuntime ? 'bg-white/[0.04]' : ''}`}
             >
-              {runtime
-                ? formatRuntimeState(runtime)
-                : state.loading
-                  ? 'Checking runtime'
-                  : 'Unavailable'}
+              {runtime ? formatRuntimeState(runtime) : state.loading ? '正在检查运行时' : '不可用'}
             </Badge>
             {runtime?.version ? (
               <span style={{ color: 'var(--color-text-secondary)' }}>v{runtime.version}</span>
             ) : null}
             {state.view?.defaultModel ? (
               <span className="break-all" style={{ color: 'var(--color-text-secondary)' }}>
-                OpenCode default: {state.view.defaultModel}
+                OpenCode 默认模型：{state.view.defaultModel}
               </span>
             ) : null}
           </div>
@@ -433,8 +452,8 @@ function RuntimeSummary({
             title={projectPath ?? undefined}
           >
             {projectPath
-              ? `Managing selected project profile: ${projectPath}`
-              : 'Managing fallback OpenCode profile. Select a project to manage launch credentials for that project.'}
+              ? `正在管理所选项目配置：${projectPath}`
+              : '正在管理备用 OpenCode 配置。选择项目后可管理该项目的启动凭据。'}
           </div>
           {state.loading ? (
             <div
@@ -442,9 +461,7 @@ function RuntimeSummary({
               style={{ color: 'var(--color-text-secondary)' }}
             >
               <Loader2 className="size-3.5 animate-spin" />
-              <span>
-                Loading managed OpenCode runtime, connected providers, and model defaults...
-              </span>
+              <span>正在加载托管的 OpenCode 运行时、已连接提供商和默认模型...</span>
             </div>
           ) : null}
           {state.view?.diagnostics.length ? (
@@ -470,7 +487,7 @@ function RuntimeSummary({
           ) : (
             <RefreshCcw className="mr-1 size-3.5" />
           )}
-          {state.loading ? 'Checking...' : 'Refresh'}
+          {state.loading ? '检查中...' : '刷新'}
         </Button>
       </div>
     </div>
@@ -498,7 +515,7 @@ function RuntimeProviderLoadingPlaceholder(): JSX.Element {
           />
           <div className="min-w-0 flex-1">
             <div className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
-              Loading OpenCode providers
+              正在加载 OpenCode 提供商
             </div>
             <div
               className="skeleton-shimmer mt-1 h-3 w-72 max-w-full rounded-sm"
@@ -655,7 +672,7 @@ function ProviderActions({
         ) : (
           <KeyRound className="mr-1 size-3.5" />
         )}
-        {connect.label}
+        {formatProviderActionLabel(connect.label)}
       </Button>
     );
   }
@@ -679,7 +696,7 @@ function ProviderActions({
           ) : (
             <Trash2 className="mr-1 size-3.5" />
           )}
-          {forget.label}
+          {formatProviderActionLabel(forget.label)}
         </Button>
       ) : null}
       {configure ? (
@@ -690,7 +707,7 @@ function ProviderActions({
           disabled
           title={configure.disabledReason ?? undefined}
         >
-          {configure.label}
+          {formatProviderActionLabel(configure.label)}
         </Button>
       ) : null}
     </div>
@@ -743,7 +760,7 @@ function ProviderRow({
             <span className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
               {provider.displayName}
             </span>
-            {provider.recommended ? <Badge variant="secondary">Recommended</Badge> : null}
+            {provider.recommended ? <Badge variant="secondary">推荐</Badge> : null}
             <span
               className={`rounded-md border px-2 py-0.5 text-[11px] ${stateClassName(provider)}`}
               style={stateStyle(provider)}
@@ -757,7 +774,7 @@ function ProviderRow({
             </span>
             {provider.defaultModelId ? (
               <span className="break-all" style={{ color: 'var(--color-text-secondary)' }}>
-                OpenCode default: {provider.defaultModelId}
+                OpenCode 默认模型：{provider.defaultModelId}
               </span>
             ) : null}
             {provider.ownership.map((owner) => (
@@ -874,7 +891,7 @@ function DirectoryProviderRow({
             <span className="text-sm font-medium text-[var(--color-text)]">
               {provider.displayName}
             </span>
-            {provider.recommended ? <Badge variant="secondary">Recommended</Badge> : null}
+            {provider.recommended ? <Badge variant="secondary">推荐</Badge> : null}
             <span
               className={`rounded-md border px-2 py-0.5 text-[11px] ${directorySetupKindClassName(provider)}`}
             >
@@ -917,7 +934,7 @@ function DirectoryProviderRow({
               ) : (
                 <KeyRound className="mr-1 size-3.5" />
               )}
-              {connect.label}
+              {formatProviderActionLabel(connect.label)}
             </Button>
           ) : null}
           {forget ? (
@@ -937,7 +954,7 @@ function DirectoryProviderRow({
               ) : (
                 <Trash2 className="mr-1 size-3.5" />
               )}
-              {forget.label}
+              {formatProviderActionLabel(forget.label)}
             </Button>
           ) : null}
           {!connect && configure ? (
@@ -949,7 +966,7 @@ function DirectoryProviderRow({
               title={configure.disabledReason ?? undefined}
               onClick={(event) => event.stopPropagation()}
             >
-              {configure.label}
+              {formatProviderActionLabel(configure.label)}
             </Button>
           ) : null}
         </div>
@@ -997,13 +1014,13 @@ function ProviderDirectoryPanel({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Button type="button" size="sm" variant="ghost" onClick={actions.closeDirectory}>
           <ArrowLeft className="mr-1 size-3.5" />
-          Providers
+          提供商
         </Button>
         <div className="flex items-center gap-2">
           <div className="text-xs text-[var(--color-text-muted)]">
             {state.directoryTotalCount === null
-              ? 'All OpenCode providers'
-              : `${state.directoryTotalCount} OpenCode providers`}
+              ? '全部 OpenCode 提供商'
+              : `${state.directoryTotalCount} 个 OpenCode 提供商`}
           </div>
           <Button
             type="button"
@@ -1017,7 +1034,7 @@ function ProviderDirectoryPanel({
             ) : (
               <RefreshCcw className="mr-1 size-3.5" />
             )}
-            Refresh
+            刷新
           </Button>
         </div>
       </div>
@@ -1030,7 +1047,7 @@ function ProviderDirectoryPanel({
             value={state.directoryQuery}
             disabled={disabled || state.directoryLoading}
             onChange={(event) => actions.setDirectoryQuery(event.target.value)}
-            placeholder="Search all OpenCode providers"
+            placeholder="搜索全部 OpenCode 提供商"
             className="h-9 pr-3 text-sm"
             style={{ paddingLeft: 40 }}
           />
@@ -1082,7 +1099,7 @@ function ProviderDirectoryPanel({
 
       {!state.directoryLoading && state.directoryEntries.length === 0 && !state.directoryError ? (
         <div className="mt-3 rounded-md border border-white/10 px-3 py-3 text-sm text-[var(--color-text-muted)]">
-          No providers match this search.
+          没有匹配此搜索的提供商。
         </div>
       ) : null}
 
@@ -1096,7 +1113,7 @@ function ProviderDirectoryPanel({
             onClick={() => void actions.loadMoreDirectory()}
           >
             {state.directoryRefreshing ? <Loader2 className="mr-1 size-3.5 animate-spin" /> : null}
-            Load more
+            加载更多
           </Button>
         </div>
       ) : null}
@@ -1151,14 +1168,14 @@ function ModelBadges({
       {usedForNewTeams ? (
         <Badge className="bg-sky-400/15 px-1.5 py-0 text-[10px] text-sky-100">
           <Star className="mr-1 size-3" />
-          Used for new teams
+          用于新团队
         </Badge>
       ) : null}
       {model.free ? (
-        <Badge className="bg-emerald-400/15 px-1.5 py-0 text-[10px] text-emerald-200">free</Badge>
+        <Badge className="bg-emerald-400/15 px-1.5 py-0 text-[10px] text-emerald-200">免费</Badge>
       ) : null}
       {model.default ? (
-        <Badge className="bg-amber-400/15 px-1.5 py-0 text-[10px] text-amber-200">default</Badge>
+        <Badge className="bg-amber-400/15 px-1.5 py-0 text-[10px] text-amber-200">默认</Badge>
       ) : null}
     </div>
   );
@@ -1264,7 +1281,7 @@ function ModelRow({
             ) : (
               <CheckCircle2 className="mr-1 size-3.5" />
             )}
-            Test
+            测试
           </Button>
         </div>
       </div>
@@ -1325,7 +1342,7 @@ function ProviderModelList({
             onChange={(event) => actions.setModelQuery(event.target.value)}
             onClick={(event) => event.stopPropagation()}
             onKeyDown={(event) => event.stopPropagation()}
-            placeholder="Search models"
+            placeholder="搜索模型"
             className="h-10 pl-10 pr-3 text-sm leading-5"
             style={{ paddingLeft: 42 }}
           />
@@ -1347,7 +1364,7 @@ function ProviderModelList({
               htmlFor={`runtime-provider-${provider.providerId}-recommended-only`}
               className="cursor-pointer text-xs font-normal text-[var(--color-text-secondary)]"
             >
-              Recommended only
+              仅推荐
             </Label>
           </div>
         ) : null}
@@ -1367,7 +1384,7 @@ function ProviderModelList({
         {!pickerOpen || state.modelsLoading ? <RuntimeProviderModelLoadingSkeleton /> : null}
         {pickerOpen && !state.modelsLoading && visibleModels.length === 0 && !state.modelsError ? (
           <div className="text-sm text-[var(--color-text-muted)]">
-            {recommendedOnly ? 'No recommended models found.' : 'No models found.'}
+            {recommendedOnly ? '没有找到推荐模型。' : '没有找到模型。'}
           </div>
         ) : null}
         {pickerOpen
@@ -1418,10 +1435,10 @@ export function RuntimeProviderManagementPanelView({
     directoryEntryMatchesQuery(provider, providerQuery)
   );
   const providerCountLabel = state.directoryTotalCount
-    ? `${state.directoryTotalCount} OpenCode providers`
+    ? `${state.directoryTotalCount} 个 OpenCode 提供商`
     : state.directorySupported
-      ? 'OpenCode provider catalog'
-      : 'OpenCode providers';
+      ? 'OpenCode 提供商目录'
+      : 'OpenCode 提供商';
 
   return (
     <div className="space-y-3">
@@ -1462,9 +1479,9 @@ export function RuntimeProviderManagementPanelView({
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0">
-          <div className="text-sm font-medium text-[var(--color-text)]">Providers</div>
+          <div className="text-sm font-medium text-[var(--color-text)]">提供商</div>
           <div className="text-xs text-[var(--color-text-muted)]">
-            {providerCountLabel}. Connected and recommended providers are shown first.
+            {providerCountLabel}。已连接和推荐的提供商会优先显示。
           </div>
         </div>
         {state.directorySupported ? (
@@ -1480,7 +1497,7 @@ export function RuntimeProviderManagementPanelView({
             ) : (
               <RefreshCcw className="mr-1 size-3.5" />
             )}
-            Refresh catalog
+            刷新目录
           </Button>
         ) : null}
       </div>
@@ -1498,7 +1515,7 @@ export function RuntimeProviderManagementPanelView({
                 actions.searchAllProviders(state.providerQuery.trim());
               }
             }}
-            placeholder="Search providers"
+            placeholder="搜索提供商"
             className="h-9 pr-3 text-sm"
             style={{ paddingLeft: 40 }}
           />
@@ -1541,7 +1558,7 @@ export function RuntimeProviderManagementPanelView({
                   {state.directoryRefreshing ? (
                     <Loader2 className="mr-1 size-3.5 animate-spin" />
                   ) : null}
-                  Load more providers
+                  加载更多提供商
                 </Button>
               </div>
             ) : null}
@@ -1578,7 +1595,7 @@ export function RuntimeProviderManagementPanelView({
             color: 'var(--color-text-secondary)',
           }}
         >
-          No providers match that search.
+          没有匹配此搜索的提供商。
         </div>
       ) : null}
 
@@ -1593,7 +1610,7 @@ export function RuntimeProviderManagementPanelView({
             color: 'var(--color-text-secondary)',
           }}
         >
-          No providers match that search.
+          没有匹配此搜索的提供商。
         </div>
       ) : null}
 
@@ -1605,7 +1622,7 @@ export function RuntimeProviderManagementPanelView({
             color: 'var(--color-text-secondary)',
           }}
         >
-          No OpenCode providers reported by the managed runtime.
+          托管运行时未报告任何 OpenCode 提供商。
         </div>
       ) : null}
     </div>

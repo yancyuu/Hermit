@@ -146,10 +146,10 @@ export const ProcessesSection = memo(function ProcessesSection({
                   type="button"
                   className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] text-red-400 transition-colors hover:bg-red-500/10"
                   onClick={() => void window.electronAPI.teams.killProcess(teamName, proc.pid)}
-                  title="Stop process (SIGTERM)"
+                  title="停止进程（SIGTERM）"
                 >
                   <Square size={8} className="fill-current" />
-                  Kill
+                  停止
                 </button>
               )}
               {alive && proc.url && (
@@ -157,10 +157,10 @@ export const ProcessesSection = memo(function ProcessesSection({
                   type="button"
                   className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] text-blue-400 transition-colors hover:bg-blue-500/10"
                   onClick={() => void window.electronAPI.openExternal(proc.url!)}
-                  title="Open in browser"
+                  title="在浏览器中打开"
                 >
                   <ExternalLink size={10} />
-                  Open
+                  打开
                 </button>
               )}
               <span className="font-mono text-[var(--color-text-muted)]">PID{proc.pid}</span>

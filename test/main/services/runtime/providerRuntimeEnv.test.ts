@@ -22,16 +22,17 @@ describe('providerRuntimeEnv', () => {
     expect(result.CLAUDE_CODE_USE_BEDROCK).toBeUndefined();
   });
 
-  it('pins anthropic explicitly instead of relying on default provider fallback', () => {
+  it('clears provider routing for anthropic so native OAuth auth is preserved', () => {
     const env: NodeJS.ProcessEnv = {
       CLAUDE_CODE_ENTRY_PROVIDER: 'codex',
+      CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST: '1',
       CLAUDE_CODE_USE_OPENAI: '1',
     };
 
     const result = applyProviderRuntimeEnv(env, 'anthropic');
 
-    expect(result.CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST).toBe('1');
-    expect(result.CLAUDE_CODE_ENTRY_PROVIDER).toBe('anthropic');
+    expect(result.CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST).toBeUndefined();
+    expect(result.CLAUDE_CODE_ENTRY_PROVIDER).toBeUndefined();
     expect(result.CLAUDE_CODE_USE_OPENAI).toBeUndefined();
   });
 

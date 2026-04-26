@@ -636,6 +636,8 @@ const STALL_CHECK_INTERVAL_MS = 10_000;
 const STALL_WARNING_THRESHOLD_MS = 20_000;
 const APP_TEAM_RUNTIME_DISALLOWED_TOOLS =
   'TeamDelete,TodoWrite,TaskCreate,TaskUpdate,mcp__agent-teams__team_launch,mcp__agent-teams__team_stop';
+const AGENT_TEAMS_MCP_SERVER_NAME = 'agent-teams';
+const AGENT_TEAMS_MEMBER_AGENT_TYPE = 'agent-teams-member';
 const TEAM_JSON_READ_TIMEOUT_MS = 5_000;
 const TEAM_CONFIG_MAX_BYTES = 10 * 1024 * 1024;
 const TEAM_INBOX_MAX_BYTES = 2 * 1024 * 1024;
@@ -653,6 +655,33 @@ const HANDLED_STREAM_JSON_TYPES = new Set([
   'result',
   'system',
 ]);
+
+function readAgentTeamsMcpServerForAgent(
+  mcpConfigPath: string
+): Record<string, AgentTeamsMcpConfigEntry> {
+  const raw = fs.readFileSync(mcpConfigPath, 'utf8');
+  const parsed = JSON.parse(raw) as AgentTeamsMcpConfigFile;
+  const server = parsed.mcpServers?.[AGENT_TEAMS_MCP_SERVER_NAME];
+  if (!server || typeof server !== 'object' || Array.isArray(server)) {
+    throw new Error(
+      `Generated MCP config ${mcpConfigPath} is missing ${AGENT_TEAMS_MCP_SERVER_NAME}`
+    );
+  }
+  return { [AGENT_TEAMS_MCP_SERVER_NAME]: server };
+}
+
+function buildAgentTeamsMemberAgentsJson(mcpConfigPath: string): string {
+  return JSON.stringify({
+    [AGENT_TEAMS_MEMBER_AGENT_TYPE]: {
+      description: 'Agent Teams persistent teammate',
+      prompt:
+        'You are a persistent teammate managed by Agent Teams. Follow the task-specific prompt and use the agent-teams MCP tools for team coordination.',
+      tools: ['*'],
+      mcpServers: [readAgentTeamsMcpServerForAgent(mcpConfigPath)],
+    },
+  });
+}
+
 function assertAppDeterministicBootstrapEnabled(): void {
   if (process.env.CLAUDE_APP_DISABLE_DETERMINISTIC_TEAM_BOOTSTRAP === '1') {
     throw new Error(
@@ -2515,11 +2544,11 @@ ${getAgentLanguageInstruction()}
 Your FIRST action: call MCP tool member_briefing with:
 { teamName: "${teamName}", memberName: "${member.name}" }
 Call member_briefing directly as your own MCP tool call. Do NOT use the Agent tool, any subagent, or any delegated helper for this step.
-member_briefing is expected to be available in your initial MCP tool list. If it is missing or unavailable, treat that as a real bootstrap error and report the exact error text to your team lead.
-Do NOT start work, claim tasks, or improvise workflow/task/process rules before member_briefing succeeds.
+member_briefing is expected to be available in your initial MCP tool list. If it is missing or unavailable, use the embedded rules below as your briefing instead.
+Do NOT start work, claim tasks, or improvise workflow/task/process rules before member_briefing succeeds or you fall back to the embedded rules below.
 If tool search says agent-teams is still connecting, wait briefly and retry tool search at most once.
-If member_briefing is still unavailable after that one retry, send exactly one short natural-language message to your team lead "${leadName}" that includes the exact failure reason (for example the API error, validation error, or lookup failure), then stop this turn and wait. Do NOT send only "bootstrap failed".
-Do NOT keep searching for member_briefing, check tasks, or send repeated status/idle messages after reporting the bootstrap failure.
+If member_briefing is still unavailable after that one retry, do NOT report it as a bootstrap failure. Continue with the embedded rules below, and stay silent if you have no assigned task.
+Do NOT keep searching for member_briefing or send repeated status/idle messages after using the embedded fallback.
 IMPORTANT: When sending messages to the team lead, always use the exact name "${leadName}" in the \`to\` field of SendMessage. Never abbreviate or shorten it (e.g. do NOT use "lead" instead of "team-lead").
 ${getCanonicalSendMessageFieldRule()}
 ${getVisibleTaskReferenceFormattingRule()}
@@ -2592,11 +2621,11 @@ ${providerArgLine}${modelArgLine}${effortArgLine}   - prompt:
      Your FIRST action: call MCP tool member_briefing with:
      { teamName: "${teamName}", memberName: "${member.name}" }
      Call member_briefing directly as your own MCP tool call. Do NOT use the Agent tool, any subagent, or any delegated helper for this step.
-     member_briefing is expected to be available in your initial MCP tool list. If it is missing or unavailable, treat that as a real bootstrap error and report the exact error text to your team lead.
-     Do NOT start work, claim tasks, or improvise workflow/task/process rules before member_briefing succeeds.
+     member_briefing is expected to be available in your initial MCP tool list. If it is missing or unavailable, use the embedded rules below as your briefing instead.
+     Do NOT start work, claim tasks, or improvise workflow/task/process rules before member_briefing succeeds or you fall back to the embedded rules below.
      If tool search says agent-teams is still connecting, wait briefly and retry tool search at most once.
-     If member_briefing is still unavailable after that one retry, send exactly one short natural-language message to your team lead "${leadName}" that includes the exact failure reason (for example the API error, validation error, or lookup failure), then stop this turn and wait. Do NOT send only "bootstrap failed".
-     Do NOT keep searching for member_briefing, check tasks, or send repeated status/idle messages after reporting the bootstrap failure.
+     If member_briefing is still unavailable after that one retry, do NOT report it as a bootstrap failure. Continue with the embedded rules below, and stay silent if you have no assigned task.
+     Do NOT keep searching for member_briefing or send repeated status/idle messages after using the embedded fallback.
      IMPORTANT: When sending messages to the team lead, always use the exact name "${leadName}" in the \`to\` field of SendMessage. Never abbreviate or shorten it (e.g. do NOT use "lead" instead of "team-lead").
 ${indentMultiline(getVisibleTaskReferenceFormattingRule(), '     ')}
      ${buildTeammateAgentBlockReminder()}
@@ -2804,6 +2833,7 @@ function buildDeterministicCreateBootstrapSpec(
     },
     members: effectiveMembers.map((member) => ({
       name: member.name,
+      agentType: AGENT_TEAMS_MEMBER_AGENT_TYPE,
       ...(member.role?.trim() ? { role: member.role.trim() } : {}),
       ...(member.workflow?.trim() ? { workflow: member.workflow.trim() } : {}),
       ...(request.cwd ? { cwd: request.cwd } : {}),
@@ -2854,6 +2884,7 @@ function buildDeterministicLaunchBootstrapSpec(
     },
     members: effectiveMembers.map((member) => ({
       name: member.name,
+      agentType: AGENT_TEAMS_MEMBER_AGENT_TYPE,
       ...(request.cwd ? { cwd: request.cwd } : {}),
       ...(member.model?.trim() ? { model: member.model.trim() } : {}),
       ...(member.providerId ? { provider: member.providerId } : {}),
@@ -4572,7 +4603,7 @@ export class TeamProvisioningService {
       if (params.effort && !selection.supportedEfforts.includes(params.effort)) {
         const modelLabel = selection.displayName ?? resolvedLaunchModel;
         throw new Error(
-          `${params.actorLabel} uses Anthropic effort "${params.effort}", but ${modelLabel} does not support it in the current runtime.`
+          `${params.actorLabel} 使用了 Anthropic 推理强度“${params.effort}”，但 ${modelLabel} 在当前运行时中不支持该设置。`
         );
       }
 
@@ -4583,8 +4614,8 @@ export class TeamProvisioningService {
       });
       if ((params.fastMode ?? 'inherit') === 'on' && !fastResolution.selectable) {
         throw new Error(
-          `${params.actorLabel} enables Anthropic Fast mode, but ${
-            fastResolution.disabledReason ?? 'it is unavailable for the selected runtime or model.'
+          `${params.actorLabel} 启用了 Anthropic Fast mode，但${
+            fastResolution.disabledReason ?? '所选运行时或模型不可用。'
           }`
         );
       }
@@ -11989,6 +12020,8 @@ export class TeamProvisioningService {
         'user,project,local',
         '--mcp-config',
         mcpConfigPath,
+        '--agents',
+        buildAgentTeamsMemberAgentsJson(mcpConfigPath),
         '--team-bootstrap-spec',
         bootstrapSpecPath,
         ...(bootstrapUserPromptPath
@@ -12087,7 +12120,7 @@ export class TeamProvisioningService {
         throw error;
       }
 
-      updateProgress(run, 'spawning', 'Starting Claude CLI process', {
+      updateProgress(run, 'spawning', '正在启动 Claude CLI 进程', {
         pid: child.pid ?? undefined,
         warnings: mergeProvisioningWarnings(run.progress.warnings, runtimeWarning),
       });
@@ -13058,6 +13091,8 @@ export class TeamProvisioningService {
         'user,project,local',
         '--mcp-config',
         mcpConfigPath,
+        '--agents',
+        buildAgentTeamsMemberAgentsJson(mcpConfigPath),
         '--team-bootstrap-spec',
         bootstrapSpecPath,
         ...(bootstrapUserPromptPath
@@ -13169,8 +13204,8 @@ export class TeamProvisioningService {
         throw error;
       }
 
-      const resumeHint = previousSessionId ? ' (resuming previous session)' : '';
-      updateProgress(run, 'spawning', `Starting Claude CLI process for team launch${resumeHint}`, {
+      const resumeHint = previousSessionId ? '（正在恢复上次会话）' : '';
+      updateProgress(run, 'spawning', `正在为团队启动 Claude CLI 进程${resumeHint}`, {
         pid: child.pid ?? undefined,
         warnings: mergeProvisioningWarnings(run.progress.warnings, runtimeWarning),
       });
@@ -21227,7 +21262,7 @@ export class TeamProvisioningService {
 
     // === Process exited DURING provisioning ===
     // Try to verify if files were created before the process died.
-    updateProgress(run, 'verifying', 'Process exited — verifying provisioning results');
+    updateProgress(run, 'verifying', '进程已退出，正在验证团队启动结果');
     run.onProgress(run.progress);
 
     if (run.cancelRequested) {
@@ -23353,7 +23388,7 @@ export class TeamProvisioningService {
         {
           protocolVersion: '2024-11-05',
           capabilities: {},
-          clientInfo: { name: 'agent-teams-ai', version: '1.0.0' },
+          clientInfo: { name: 'multi-agent-teams', version: '1.0.0' },
         },
         MCP_PREFLIGHT_INITIALIZE_TIMEOUT_MS
       );

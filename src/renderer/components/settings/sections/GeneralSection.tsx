@@ -48,6 +48,7 @@ export const GeneralSection = ({
     port: 3456,
   });
   const [serverLoading, setServerLoading] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   // Claude Root state
@@ -68,7 +69,12 @@ export const GeneralSection = ({
 
   // Fetch server status and Claude root info on mount
   useEffect(() => {
-    void api.httpServer.getStatus().then(setServerStatus);
+    void api.httpServer
+      .getStatus()
+      .then(setServerStatus)
+      .catch((error: unknown) => {
+        setServerError(error instanceof Error ? error.message : '获取服务端状态失败');
+      });
   }, []);
 
   const loadClaudeRootInfo = useCallback(async () => {
@@ -86,11 +92,12 @@ export const GeneralSection = ({
 
   const handleServerToggle = useCallback(async (enabled: boolean) => {
     setServerLoading(true);
+    setServerError(null);
     try {
       const status = enabled ? await api.httpServer.start() : await api.httpServer.stop();
       setServerStatus(status);
-    } catch {
-      // Status didn't change
+    } catch (error) {
+      setServerError(error instanceof Error ? error.message : '切换服务端模式失败');
     } finally {
       setServerLoading(false);
     }
@@ -581,10 +588,14 @@ export const GeneralSection = ({
               <SettingsToggle
                 enabled={serverStatus.running}
                 onChange={handleServerToggle}
-                disabled={saving}
+                disabled={serverLoading}
               />
             )}
           </SettingRow>
+
+          {serverError && (
+            <p className="-mt-1 mb-2 text-xs text-red-400">服务端模式启动失败：{serverError}</p>
+          )}
 
           {serverStatus.running && (
             <div

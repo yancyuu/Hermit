@@ -28,21 +28,21 @@ export function getProviderRuntimeBackendStateLabel(
     case 'ready':
       return null;
     case 'locked':
-      return 'Locked';
+      return '已锁定';
     case 'disabled':
-      return 'Disabled';
+      return '已禁用';
     case 'authentication-required':
-      return 'Auth required';
+      return '需要认证';
     case 'runtime-missing':
-      return 'Runtime missing';
+      return '缺少运行时';
     case 'degraded':
-      return 'Degraded';
+      return '降级';
     default:
       if (!option.available) {
-        return 'Unavailable';
+        return '不可用';
       }
       if (option.selectable === false) {
-        return 'Locked';
+        return '已锁定';
       }
       return null;
   }
@@ -51,7 +51,7 @@ export function getProviderRuntimeBackendStateLabel(
 export function getProviderRuntimeBackendAudienceLabel(
   option: NonNullable<CliProviderStatus['availableBackends']>[number]
 ): string | null {
-  return option.audience === 'internal' ? 'Internal' : null;
+  return option.audience === 'internal' ? '内部' : null;
 }
 
 export function getVisibleProviderRuntimeBackendOptions(
@@ -77,10 +77,10 @@ export function getOptionDisplayLabel(
   }
 
   if (resolvedOption?.label) {
-    return `Auto (currently: ${resolvedOption.label})`;
+    return `自动（当前：${resolvedOption.label}）`;
   }
 
-  return 'Auto';
+  return '自动';
 }
 
 export function getProviderRuntimeBackendSummary(provider: CliProviderStatus): string | null {
@@ -131,7 +131,7 @@ export const ProviderRuntimeBackendSelector = ({
     <div className="mt-2 space-y-2.5">
       <div className="flex items-center justify-between gap-2">
         <span className="text-[11px] font-medium" style={{ color: 'var(--color-text-muted)' }}>
-          Runtime backend
+          运行时后端
         </span>
         {provider.resolvedBackendId &&
           provider.resolvedBackendId !== provider.selectedBackendId && (
@@ -142,7 +142,7 @@ export const ProviderRuntimeBackendSelector = ({
                 backgroundColor: 'rgba(255, 255, 255, 0.04)',
               }}
             >
-              Resolved: {resolvedOption?.label ?? provider.resolvedBackendId}
+              已解析：{resolvedOption?.label ?? provider.resolvedBackendId}
             </span>
           )}
       </div>
@@ -154,7 +154,7 @@ export const ProviderRuntimeBackendSelector = ({
         <SelectTrigger className="h-10 text-sm">
           <div className="flex min-w-0 items-center gap-2">
             <span className="shrink-0 text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
-              Current
+              当前
             </span>
             <span className="truncate">{selectedLabel}</span>
           </div>
@@ -183,7 +183,7 @@ export const ProviderRuntimeBackendSelector = ({
                         backgroundColor: 'rgba(74, 222, 128, 0.14)',
                       }}
                     >
-                      Recommended
+                      推荐
                     </span>
                   ) : null}
                   {getProviderRuntimeBackendAudienceLabel(option) ? (
@@ -251,7 +251,7 @@ export const ProviderRuntimeBackendSelector = ({
                   backgroundColor: 'rgba(74, 222, 128, 0.14)',
                 }}
               >
-                Recommended
+                推荐
               </span>
             ) : null}
             {selectedAudienceLabel ? (
@@ -276,11 +276,11 @@ export const ProviderRuntimeBackendSelector = ({
                         backgroundColor: 'rgba(248, 113, 113, 0.14)',
                       }}
                     >
-                      Unavailable
+                      不可用
                     </span>
                   </TooltipTrigger>
                   <TooltipContent>
-                    {selectedOption.detailMessage ?? selectedOption.statusMessage ?? 'Unavailable'}
+                    {selectedOption.detailMessage ?? selectedOption.statusMessage ?? '不可用'}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -307,7 +307,7 @@ export const ProviderRuntimeBackendSelector = ({
                   <TooltipContent>
                     {selectedOption.detailMessage ??
                       selectedOption.statusMessage ??
-                      'This backend cannot be selected yet.'}
+                      '此后端暂时无法选择。'}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>

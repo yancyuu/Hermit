@@ -206,7 +206,7 @@ export const ReviewToolbar = ({
               ) : (
                 <GitMerge className="size-3" />
               )}
-              {applying ? 'Applying...' : 'Apply Rejections'}
+              {applying ? '正在应用...' : '应用拒绝项'}
             </button>
           </TooltipTrigger>
           <TooltipContent side="bottom">

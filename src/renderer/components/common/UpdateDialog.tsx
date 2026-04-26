@@ -119,7 +119,7 @@ export const UpdateDialog = (): React.JSX.Element | null => {
         className="absolute inset-0 cursor-default"
         style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
         onClick={dismissUpdateDialog}
-        aria-label="Close dialog"
+        aria-label="关闭对话框"
         tabIndex={-1}
       />
       <div
@@ -127,7 +127,7 @@ export const UpdateDialog = (): React.JSX.Element | null => {
         className="relative mx-4 w-full max-w-2xl rounded-md border p-5 shadow-lg"
         role="dialog"
         aria-modal="true"
-        aria-label="Update available"
+        aria-label="有可用更新"
         style={{
           backgroundColor: 'var(--color-surface-overlay)',
           borderColor: 'var(--color-border-emphasis)',
@@ -144,7 +144,7 @@ export const UpdateDialog = (): React.JSX.Element | null => {
 
         <div className="mb-3 pr-8">
           <h2 className="text-base font-semibold" style={{ color: 'var(--color-text)' }}>
-            {isDownloaded ? 'Update Ready' : 'Update Available'}
+            {isDownloaded ? '更新已就绪' : '有可用更新'}
           </h2>
           {availableVersion && (
             <div
@@ -180,7 +180,7 @@ export const UpdateDialog = (): React.JSX.Element | null => {
             </ReactMarkdown>
           ) : (
             <p className="italic" style={{ color: 'var(--color-text-muted)' }}>
-              No release notes available.
+              暂无发布说明。
             </p>
           )}
         </div>

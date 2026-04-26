@@ -16,9 +16,9 @@ import {
 import type { ComboboxOption } from '../ui/combobox';
 
 const READ_FILTER_OPTIONS: { value: ReadFilter; label: string }[] = [
-  { value: 'all', label: 'All' },
-  { value: 'unread', label: 'Unread' },
-  { value: 'read', label: 'Read' },
+  { value: 'all', label: '全部' },
+  { value: 'unread', label: '未读' },
+  { value: 'read', label: '已读' },
 ];
 
 interface TaskFiltersPopoverProps {
@@ -91,13 +91,13 @@ export const TaskFiltersPopover = ({
         <div className="space-y-3">
           <div>
             <div className="mb-1.5 flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-text-secondary">Status</span>
+              <span className="text-[11px] font-semibold text-text-secondary">状态</span>
               <button
                 type="button"
                 className="text-[10px] text-text-muted hover:text-text-secondary"
                 onClick={handleSelectAll}
               >
-                {allSelected ? 'Clear all' : 'Select all'}
+                {allSelected ? '清除全部' : '全选'}
               </button>
             </div>
             <div className="flex flex-col gap-1.5">
@@ -122,10 +122,10 @@ export const TaskFiltersPopover = ({
           </div>
 
           <div>
-            <span className="mb-1.5 block text-[11px] font-semibold text-text-secondary">Team</span>
+            <span className="mb-1.5 block text-[11px] font-semibold text-text-secondary">团队</span>
             <Combobox
               options={[
-                { value: '__all__', label: 'All teams' },
+                { value: '__all__', label: '全部团队' },
                 ...teams.map((t) => ({ value: t.teamName, label: t.displayName })),
               ]}
               value={draft.teamName ?? '__all__'}
@@ -135,9 +135,9 @@ export const TaskFiltersPopover = ({
                   teamName: v === '__all__' ? null : v,
                 })
               }
-              placeholder="All teams"
-              searchPlaceholder="Search teams..."
-              emptyMessage="No teams found"
+              placeholder="全部团队"
+              searchPlaceholder="搜索团队..."
+              emptyMessage="没有找到团队"
               className="text-[12px]"
             />
           </div>
@@ -145,26 +145,24 @@ export const TaskFiltersPopover = ({
           {projectOptions.length > 0 && (
             <div>
               <span className="mb-1.5 block text-[11px] font-semibold text-text-secondary">
-                Project
+                项目
               </span>
               <Combobox
                 options={projectOptions}
                 value={draft.projectPath ?? ''}
                 onValueChange={(v) => setDraft({ ...draft, projectPath: v || null })}
-                placeholder="All Projects"
-                searchPlaceholder="Search projects..."
-                emptyMessage="No projects"
+                placeholder="全部项目"
+                searchPlaceholder="搜索项目..."
+                emptyMessage="没有项目"
                 className="text-[12px]"
-                resetLabel="All Projects"
+                resetLabel="全部项目"
                 onReset={() => setDraft({ ...draft, projectPath: null })}
               />
             </div>
           )}
 
           <div>
-            <span className="mb-1.5 block text-[11px] font-semibold text-text-secondary">
-              Comments
-            </span>
+            <span className="mb-1.5 block text-[11px] font-semibold text-text-secondary">评论</span>
             <div className="flex rounded-md border border-[var(--color-border)]">
               {READ_FILTER_OPTIONS.map((opt) => (
                 <button
@@ -196,7 +194,7 @@ export const TaskFiltersPopover = ({
             className="w-full"
             onClick={handleApply}
           >
-            Apply
+            应用
           </Button>
         </div>
       </PopoverContent>

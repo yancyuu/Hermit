@@ -34,7 +34,7 @@ interface RepositoryDropdownProps {
 export const RepositoryDropdown = ({
   onSelect,
   excludeIds = [],
-  placeholder = 'Select repository...',
+  placeholder = '选择仓库...',
   disabled = false,
   dropUp = false,
   className = '',
@@ -115,7 +115,7 @@ export const RepositoryDropdown = ({
       >
         <span className="flex items-center gap-2">
           <FolderOpen className="size-3" />
-          {isEmpty ? 'No repositories available' : placeholder}
+          {isEmpty ? '暂无可用仓库' : placeholder}
         </span>
         <ChevronDown
           className={`size-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
@@ -212,7 +212,7 @@ const SelectedRepositoryItemInner = ({
         onClick={onRemove}
         disabled={disabled}
         className={`shrink-0 rounded p-1 text-text-muted transition-colors hover:bg-red-500/10 hover:text-red-400 ${disabled ? 'cursor-not-allowed opacity-50' : ''} `}
-        aria-label="Remove repository"
+        aria-label="移除仓库"
       >
         <svg className="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path

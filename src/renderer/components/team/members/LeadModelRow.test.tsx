@@ -22,7 +22,7 @@ vi.mock('@renderer/components/team/dialogs/TeamModelSelector', () => ({
   getTeamProviderLabel: (providerId: string) => providerId,
   OPENCODE_TEAM_LEAD_DISABLED_BADGE_LABEL: '侧路',
   OPENCODE_TEAM_LEAD_DISABLED_REASON:
-    '当前阶段 OpenCode 只能作为成员运行。请使用 Claude、Codex 或 Gemini 作为团队负责人，再把 OpenCode 添加为成员。',
+    '当前阶段 OpenCode 只能作为成员运行。请使用 Anthropic、Codex 或 Gemini 作为团队负责人，再把 OpenCode 添加为成员。',
   TeamModelSelector: () => React.createElement('div', null, 'team-model-selector'),
 }));
 

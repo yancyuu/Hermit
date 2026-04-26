@@ -108,7 +108,7 @@ export const ClaudeLogsFilterPopover = ({
               variant="ghost"
               size="sm"
               className="relative h-7 px-2 text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
-              aria-label="Filter Claude logs"
+              aria-label="筛选 Claude 日志"
             >
               <Filter size={14} />
               {activeCount > 0 && (
@@ -119,12 +119,12 @@ export const ClaudeLogsFilterPopover = ({
             </Button>
           </PopoverTrigger>
         </TooltipTrigger>
-        <TooltipContent side="bottom">Filter logs</TooltipContent>
+        <TooltipContent side="bottom">筛选日志</TooltipContent>
       </Tooltip>
       <PopoverContent align="end" className="w-72 p-0">
         <div className="border-b border-[var(--color-border)] p-3">
           <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-[var(--color-text-muted)]">
-            Stream
+            日志流
           </p>
           <div className="space-y-1">
             <label

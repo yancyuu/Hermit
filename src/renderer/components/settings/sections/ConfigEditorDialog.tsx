@@ -106,7 +106,7 @@ export const ConfigEditorDialog = ({
           setSaveStatus('idle');
         } else {
           setSaveStatus('error');
-          setJsonError(e instanceof Error ? e.message : 'Failed to save config');
+          setJsonError(e instanceof Error ? e.message : '保存配置失败');
           if (savedRevertTimerRef.current) clearTimeout(savedRevertTimerRef.current);
           savedRevertTimerRef.current = setTimeout(() => {
             setSaveStatus('idle');
@@ -202,7 +202,7 @@ export const ConfigEditorDialog = ({
       } catch (e) {
         if (destroyed) return;
         setLoading(false);
-        setJsonError(e instanceof Error ? e.message : 'Failed to load config');
+        setJsonError(e instanceof Error ? e.message : '加载配置失败');
       }
     };
 
@@ -337,7 +337,7 @@ const SaveStatusBadge = ({
         title={error}
       >
         <AlertTriangle className="size-3" />
-        {status === 'error' ? 'Save failed' : 'Invalid JSON'}
+        {status === 'error' ? '保存失败' : 'JSON 无效'}
       </span>
     );
   }

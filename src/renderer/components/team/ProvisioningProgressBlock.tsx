@@ -133,8 +133,8 @@ function sanitizeAssistantOutput(raw?: string, isError = false): string | null {
 
   return (
     'API Error: 400\n\n' +
-    'Raw payload from CLI stream hidden because it contains encoded/binary-like content.\n\n' +
-    'Open **CLI logs** below for readable diagnostics.'
+    '已隐藏 CLI 流中的原始载荷，因为其中包含编码或类似二进制的内容。\n\n' +
+    '请展开下面的 **CLI 日志** 查看可读诊断。'
   );
 }
 
@@ -274,7 +274,7 @@ export const ProvisioningProgressBlock = ({
             className="h-6 shrink-0 px-2 text-xs"
             onClick={onCancel}
           >
-            Cancel
+            取消
           </Button>
         ) : null}
       </div>
@@ -309,7 +309,7 @@ export const ProvisioningProgressBlock = ({
             onClick={() => setDiagnosticsOpen((v) => !v)}
           >
             {diagnosticsOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-            Diagnostics
+            诊断
           </button>
           {diagnosticsOpen ? (
             <div className="mt-1 space-y-1 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-2">
@@ -344,7 +344,7 @@ export const ProvisioningProgressBlock = ({
           onClick={() => setLiveOutputOpen((v) => !v)}
         >
           {liveOutputOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-          Live output
+          实时输出
         </button>
         {liveOutputOpen ? (
           <div
@@ -363,7 +363,7 @@ export const ProvisioningProgressBlock = ({
                   isError ? 'text-[var(--step-error-text-dim)]' : 'text-[var(--color-text-muted)]'
                 )}
               >
-                No output captured yet.
+                暂无输出。
               </p>
             )}
           </div>
@@ -377,7 +377,7 @@ export const ProvisioningProgressBlock = ({
             onClick={() => setLogsOpen((v) => !v)}
           >
             {logsOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-            CLI logs
+            CLI 日志
           </button>
           {logsOpen ? (
             <CliLogsRichView cliLogsTail={cliLogsTail} order="newest-first" className="mt-1" />

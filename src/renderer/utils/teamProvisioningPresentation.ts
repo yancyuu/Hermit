@@ -141,9 +141,7 @@ function countPermissionBlockedMembers(params: {
 }
 
 function buildAwaitingPermissionPhrase(count: number): string {
-  return count === 1
-    ? '1 teammate awaiting permission approval'
-    : `${count} teammates awaiting permission approval`;
+  return count === 1 ? '1 个成员等待权限批准' : `${count} 个成员等待权限批准`;
 }
 
 function getMemberNamesFromSpawnSources(params: {
@@ -229,7 +227,7 @@ function formatNamedPendingDiagnostic(label: string, names: readonly string[]): 
   }
   const listedNames = names.slice(0, MAX_PENDING_DIAGNOSTIC_NAMES).join(', ');
   const remainingCount = names.length - Math.min(names.length, MAX_PENDING_DIAGNOSTIC_NAMES);
-  return `${label}: ${listedNames}${remainingCount > 0 ? `, +${remainingCount} more` : ''}`;
+  return `${label}: ${listedNames}${remainingCount > 0 ? `，另有 ${remainingCount} 个` : ''}`;
 }
 
 function formatCountPendingDiagnostic(count: number | undefined, label: string): string | null {
@@ -255,11 +253,11 @@ function buildPendingDiagnosticPhrase({
     memberSpawnSnapshotUpdatedAt,
   });
   const namedParts = [
-    formatNamedPendingDiagnostic('Shell-only', groups.shellOnly),
-    formatNamedPendingDiagnostic('Waiting for bootstrap', groups.runtimeProcess),
-    formatNamedPendingDiagnostic('Process candidates', groups.runtimeCandidate),
-    formatNamedPendingDiagnostic('Awaiting permission', groups.permission),
-    formatNamedPendingDiagnostic('No runtime found', groups.noRuntime),
+    formatNamedPendingDiagnostic('仅检测到 Shell', groups.shellOnly),
+    formatNamedPendingDiagnostic('等待启动初始化', groups.runtimeProcess),
+    formatNamedPendingDiagnostic('候选进程', groups.runtimeCandidate),
+    formatNamedPendingDiagnostic('等待权限', groups.permission),
+    formatNamedPendingDiagnostic('未找到运行时', groups.noRuntime),
   ].filter(Boolean);
   if (namedParts.length > 0) {
     return namedParts.join(', ');
@@ -268,11 +266,11 @@ function buildPendingDiagnosticPhrase({
     return fallbackJoiningPhrase;
   }
   const countParts = [
-    formatCountPendingDiagnostic(summary.shellOnlyPendingCount, 'shell-only'),
-    formatCountPendingDiagnostic(summary.runtimeProcessPendingCount, 'waiting for bootstrap'),
-    formatCountPendingDiagnostic(summary.runtimeCandidatePendingCount, 'process candidates'),
-    formatCountPendingDiagnostic(summary.permissionPendingCount, 'awaiting permission'),
-    formatCountPendingDiagnostic(summary.noRuntimePendingCount, 'no runtime found'),
+    formatCountPendingDiagnostic(summary.shellOnlyPendingCount, '个仅检测到 Shell'),
+    formatCountPendingDiagnostic(summary.runtimeProcessPendingCount, '个等待启动初始化'),
+    formatCountPendingDiagnostic(summary.runtimeCandidatePendingCount, '个候选进程'),
+    formatCountPendingDiagnostic(summary.permissionPendingCount, '个等待权限'),
+    formatCountPendingDiagnostic(summary.noRuntimePendingCount, '个未找到运行时'),
   ].filter(Boolean);
   return countParts.length > 0 ? countParts.join(', ') : fallbackJoiningPhrase;
 }
@@ -403,8 +401,8 @@ function buildFailedSpawnPanelMessage(
   if (failedSpawnDetails.length === 1) {
     const [failed] = failedSpawnDetails;
     return failed.reason
-      ? `${failed.name} failed to start - ${normalizeFailureReason(failed.reason)}`
-      : `${failed.name} failed to start`;
+      ? `${failed.name} 启动失败 - ${normalizeFailureReason(failed.reason)}`
+      : `${failed.name} 启动失败`;
   }
   const listedFailures = failedSpawnDetails
     .slice(0, 2)
@@ -413,7 +411,7 @@ function buildFailedSpawnPanelMessage(
     )
     .join('; ');
   const remainingCount = failedSpawnDetails.length - Math.min(failedSpawnDetails.length, 2);
-  return `Failed teammates: ${listedFailures}${remainingCount > 0 ? `; +${remainingCount} more` : ''}`;
+  return `启动失败的成员：${listedFailures}${remainingCount > 0 ? `；另有 ${remainingCount} 个` : ''}`;
 }
 
 function buildFailedSpawnCompactDetail(
@@ -423,9 +421,9 @@ function buildFailedSpawnCompactDetail(
     return null;
   }
   if (failedSpawnDetails.length === 1) {
-    return `${failedSpawnDetails[0].name} failed to start`;
+    return `${failedSpawnDetails[0].name} 启动失败`;
   }
-  return `${failedSpawnDetails.length} teammates failed to start`;
+  return `${failedSpawnDetails.length} 个成员启动失败`;
 }
 
 function buildGenericFailedSpawnPanelMessage(
@@ -436,9 +434,9 @@ function buildGenericFailedSpawnPanelMessage(
     return null;
   }
   if (failedSpawnCount === 1) {
-    return '1 teammate failed to start';
+    return '1 个成员启动失败';
   }
-  return `${failedSpawnCount}/${Math.max(expectedTeammateCount, failedSpawnCount)} teammates failed to start`;
+  return `${failedSpawnCount}/${Math.max(expectedTeammateCount, failedSpawnCount)} 个成员启动失败`;
 }
 
 function buildSkippedSpawnPanelMessage(
@@ -450,8 +448,8 @@ function buildSkippedSpawnPanelMessage(
   if (skippedSpawnDetails.length === 1) {
     const [skipped] = skippedSpawnDetails;
     return skipped.reason
-      ? `${skipped.name} skipped for this launch - ${normalizeFailureReason(skipped.reason)}`
-      : `${skipped.name} skipped for this launch`;
+      ? `${skipped.name} 本次启动已跳过 - ${normalizeFailureReason(skipped.reason)}`
+      : `${skipped.name} 本次启动已跳过`;
   }
   const listedSkipped = skippedSpawnDetails
     .slice(0, 3)
@@ -460,7 +458,7 @@ function buildSkippedSpawnPanelMessage(
     )
     .join('; ');
   const remainingCount = skippedSpawnDetails.length - Math.min(skippedSpawnDetails.length, 3);
-  return `Skipped teammates: ${listedSkipped}${remainingCount > 0 ? `; +${remainingCount} more` : ''}`;
+  return `已跳过的成员：${listedSkipped}${remainingCount > 0 ? `；另有 ${remainingCount} 个` : ''}`;
 }
 
 function buildSkippedSpawnCompactDetail(
@@ -470,9 +468,9 @@ function buildSkippedSpawnCompactDetail(
     return null;
   }
   if (skippedSpawnDetails.length === 1) {
-    return `${skippedSpawnDetails[0].name} skipped`;
+    return `${skippedSpawnDetails[0].name} 已跳过`;
   }
-  return `${skippedSpawnDetails.length} teammates skipped`;
+  return `${skippedSpawnDetails.length} 个成员已跳过`;
 }
 
 export interface TeamProvisioningPresentation {
@@ -616,11 +614,11 @@ export function buildTeamProvisioningPresentation({
       allTeammatesConfirmedAlive,
       hasMembersStillJoining,
       remainingJoinCount,
-      panelTitle: 'Launch failed',
+      panelTitle: '启动失败',
       panelMessage: progress.error ?? failedSpawnPanelMessage ?? genericFailedSpawnPanelMessage,
       panelTone: 'error',
       defaultLiveOutputOpen: true,
-      compactTitle: 'Launch failed',
+      compactTitle: '启动失败',
       compactDetail: progress.message ?? null,
       compactTone: 'error',
     };
@@ -628,9 +626,7 @@ export function buildTeamProvisioningPresentation({
 
   if (isReady) {
     const joiningPhrase =
-      remainingJoinCount === 1
-        ? '1 teammate still joining'
-        : `${remainingJoinCount} teammates still joining`;
+      remainingJoinCount === 1 ? '1 个成员仍在加入' : `${remainingJoinCount} 个成员仍在加入`;
     const pendingMembersAwaitApproval =
       failedSpawnCount === 0 &&
       permissionBlockedCount > 0 &&
@@ -646,29 +642,27 @@ export function buildTeamProvisioningPresentation({
         });
     const readyCompactDetail =
       failedSpawnCount > 0
-        ? (failedSpawnCompactDetail ??
-          `${failedSpawnCount} teammate${failedSpawnCount === 1 ? '' : 's'} failed to start`)
+        ? (failedSpawnCompactDetail ?? `${failedSpawnCount} 个成员启动失败`)
         : skippedSpawnCount > 0
-          ? (skippedSpawnCompactDetail ??
-            `${skippedSpawnCount} teammate${skippedSpawnCount === 1 ? '' : 's'} skipped`)
+          ? (skippedSpawnCompactDetail ?? `${skippedSpawnCount} 个成员已跳过`)
           : hasMembersStillJoining
             ? pendingDetailPhrase
             : expectedTeammateCount === 0
-              ? 'Lead online'
-              : `All ${expectedTeammateCount} teammates joined`;
+              ? '负责人已在线'
+              : `全部 ${expectedTeammateCount} 个成员已加入`;
     const readyDetailMessage =
       failedSpawnCount > 0
         ? (failedSpawnPanelMessage ?? genericFailedSpawnPanelMessage ?? progress.message)
         : skippedSpawnCount > 0
           ? (skippedSpawnPanelMessage ??
-            `${skippedSpawnCount}/${Math.max(expectedTeammateCount, skippedSpawnCount)} teammates skipped for this launch`)
+            `本次启动已跳过 ${skippedSpawnCount}/${Math.max(expectedTeammateCount, skippedSpawnCount)} 个成员`)
           : expectedTeammateCount === 0
-            ? 'Team provisioned - lead online'
+            ? '团队已启动，负责人已在线'
             : allTeammatesConfirmedAlive
-              ? `Team provisioned - all ${expectedTeammateCount} teammates joined`
+              ? `团队已启动，全部 ${expectedTeammateCount} 个成员已加入`
               : hasMembersStillJoining
                 ? pendingDetailPhrase
-                : 'Team provisioned - teammates are still joining';
+                : '团队已启动，成员仍在加入';
     const readyDetailSeverity =
       failedSpawnCount > 0 || skippedSpawnCount > 0
         ? 'warning'
@@ -677,14 +671,14 @@ export function buildTeamProvisioningPresentation({
           : undefined;
     const readyMessage =
       failedSpawnCount > 0
-        ? `Launch finished with errors - ${failedSpawnCount}/${Math.max(expectedTeammateCount, failedSpawnCount)} teammates failed to start`
+        ? `启动完成但有错误：${failedSpawnCount}/${Math.max(expectedTeammateCount, failedSpawnCount)} 个成员启动失败`
         : skippedSpawnCount > 0
-          ? `Launch continued - ${skippedSpawnCount}/${Math.max(expectedTeammateCount, skippedSpawnCount)} teammates skipped`
+          ? `启动已继续：已跳过 ${skippedSpawnCount}/${Math.max(expectedTeammateCount, skippedSpawnCount)} 个成员`
           : expectedTeammateCount === 0
-            ? 'Team launched - lead online'
+            ? '团队已启动，负责人已在线'
             : allTeammatesConfirmedAlive
-              ? `Team launched - all ${expectedTeammateCount} teammates joined`
-              : 'Finishing launch';
+              ? `团队已启动，全部 ${expectedTeammateCount} 个成员已加入`
+              : '正在完成启动';
 
     return {
       progress,
@@ -701,7 +695,7 @@ export function buildTeamProvisioningPresentation({
       allTeammatesConfirmedAlive,
       hasMembersStillJoining,
       remainingJoinCount,
-      panelTitle: 'Launch details',
+      panelTitle: '启动详情',
       panelMessage:
         failedSpawnCount > 0 || skippedSpawnCount > 0 || hasMembersStillJoining
           ? readyDetailMessage
@@ -717,12 +711,12 @@ export function buildTeamProvisioningPresentation({
       defaultLiveOutputOpen: false,
       compactTitle:
         failedSpawnCount > 0
-          ? 'Launch finished with errors'
+          ? '启动完成但有错误'
           : skippedSpawnCount > 0
-            ? 'Launch continued with skipped teammates'
+            ? '启动已继续，部分成员已跳过'
             : hasMembersStillJoining
-              ? 'Finishing launch'
-              : 'Team launched',
+              ? '正在完成启动'
+              : '团队已启动',
       compactDetail: readyCompactDetail,
       compactTone:
         failedSpawnCount > 0 || skippedSpawnCount > 0
@@ -741,9 +735,7 @@ export function buildTeamProvisioningPresentation({
 
   if (isActive) {
     const activeJoiningPhrase =
-      remainingJoinCount === 1
-        ? '1 teammate still joining'
-        : `${remainingJoinCount} teammates still joining`;
+      remainingJoinCount === 1 ? '1 个成员仍在加入' : `${remainingJoinCount} 个成员仍在加入`;
     const activePendingDetailPhrase =
       failedSpawnCount === 0 &&
       hasMembersStillJoining &&
@@ -773,13 +765,13 @@ export function buildTeamProvisioningPresentation({
       allTeammatesConfirmedAlive,
       hasMembersStillJoining,
       remainingJoinCount,
-      panelTitle: 'Launching team',
+      panelTitle: '正在启动团队',
       panelMessage:
         failedSpawnCount > 0
           ? (failedSpawnPanelMessage ?? genericFailedSpawnPanelMessage ?? progress.message)
           : skippedSpawnCount > 0
             ? (skippedSpawnPanelMessage ??
-              `${skippedSpawnCount}/${Math.max(expectedTeammateCount, skippedSpawnCount)} teammates skipped for this launch`)
+              `本次启动已跳过 ${skippedSpawnCount}/${Math.max(expectedTeammateCount, skippedSpawnCount)} 个成员`)
             : hasMembersStillJoining &&
                 permissionBlockedCount > 0 &&
                 permissionBlockedCount === remainingJoinCount
@@ -788,20 +780,18 @@ export function buildTeamProvisioningPresentation({
       panelMessageSeverity:
         failedSpawnCount > 0 || skippedSpawnCount > 0 ? 'warning' : progress.messageSeverity,
       defaultLiveOutputOpen: false,
-      compactTitle: 'Launching team',
+      compactTitle: '正在启动团队',
       compactDetail:
         failedSpawnCount > 0
-          ? (failedSpawnCompactDetail ??
-            `${failedSpawnCount} teammate${failedSpawnCount === 1 ? '' : 's'} failed to start`)
+          ? (failedSpawnCompactDetail ?? `${failedSpawnCount} 个成员启动失败`)
           : skippedSpawnCount > 0
-            ? (skippedSpawnCompactDetail ??
-              `${skippedSpawnCount} teammate${skippedSpawnCount === 1 ? '' : 's'} skipped`)
+            ? (skippedSpawnCompactDetail ?? `已跳过 ${skippedSpawnCount} 个成员`)
             : hasMembersStillJoining && failedSpawnCount === 0 && permissionBlockedCount > 0
               ? permissionBlockedCount === remainingJoinCount
                 ? buildAwaitingPermissionPhrase(permissionBlockedCount)
-                : `${heartbeatConfirmedCount}/${expectedTeammateCount} teammates confirmed`
+                : `${heartbeatConfirmedCount}/${expectedTeammateCount} 个成员已确认`
               : expectedTeammateCount > 0 && progressStepIndex >= 2
-                ? `${heartbeatConfirmedCount}/${expectedTeammateCount} teammates confirmed`
+                ? `${heartbeatConfirmedCount}/${expectedTeammateCount} 个成员已确认`
                 : progress.message,
       compactTone: failedSpawnCount > 0 || skippedSpawnCount > 0 ? 'warning' : 'default',
     };

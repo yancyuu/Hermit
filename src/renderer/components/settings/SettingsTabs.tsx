@@ -29,25 +29,22 @@ interface TabConfig {
 const tabs: TabConfig[] = [
   {
     id: 'general',
-    label: 'General',
+    label: '通用',
     icon: Settings,
-    description:
-      'Core app preferences like theme, language, display density, and startup behavior.',
+    description: '主题、语言、显示密度和启动行为等核心应用偏好。',
   },
   // { id: 'connection', label: 'Connection', icon: Server, description: 'Manage CLI connection and authentication settings.', electronOnly: true },
   {
     id: 'notifications',
-    label: 'Notifications',
+    label: '通知',
     icon: Bell,
-    description:
-      'Control when and how you get notified about agent activity, task completions, and errors.',
+    description: '控制何时以及如何接收智能体活动、任务完成和错误通知。',
   },
   {
     id: 'advanced',
-    label: 'Advanced',
+    label: '高级',
     icon: Wrench,
-    description:
-      'Power-user options: export/import config, reset defaults, and raw configuration editing.',
+    description: '高级选项：导出/导入配置、重置默认值和编辑原始配置。',
   },
 ];
 

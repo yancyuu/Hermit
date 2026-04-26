@@ -257,7 +257,7 @@ function getStoredTeamFastMode(): TeamFastMode {
 }
 
 function getProviderLabel(providerId: TeamProviderId): string {
-  return getCatalogTeamProviderLabel(providerId) ?? 'Claude';
+  return getCatalogTeamProviderLabel(providerId) ?? 'Anthropic';
 }
 
 function resolveMemberDraftRuntime(
@@ -1142,7 +1142,7 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
           selectedProviderId,
           currentLeadDisplayModel,
           (selectedEffort as EffortLevel) || undefined
-        )} instead of ${formatTeamModelSummary(
+        )}，而不是 ${formatTeamModelSummary(
           previousProviderId,
           previousLeadModel,
           previousLeadEffort
@@ -1208,12 +1208,12 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
               currentProviderId,
               currentModel,
               currentEffort
-            )} instead of ${formatTeamModelSummary(previousProvider, previousModel, previousEffort)}`
+            )}，而不是 ${formatTeamModelSummary(previousProvider, previousModel, previousEffort)}`
           : null;
       const isolationMessage =
         previousMember.isolation !== member.isolation
-          ? `${member.isolation === 'worktree' ? 'separate worktree' : 'shared workspace'} instead of ${
-              previousMember.isolation === 'worktree' ? 'separate worktree' : 'shared workspace'
+          ? `${member.isolation === 'worktree' ? '独立 worktree' : '共享工作区'}，而不是 ${
+              previousMember.isolation === 'worktree' ? '独立 worktree' : '共享工作区'
             }`
           : null;
 
@@ -1254,7 +1254,7 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
     }
     const runtimeChange = runtimeChangeNoteByKey.get('lead');
     if (runtimeChange) {
-      parts.push(`Next launch will use ${runtimeChange}.`);
+      parts.push(`下次启动将使用 ${runtimeChange}。`);
     }
     return parts.length > 0 ? parts.join(' ') : null;
   }, [
@@ -1273,7 +1273,7 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
       }
       const note = runtimeChangeNoteByKey.get(`member:${name.toLowerCase()}`);
       if (note) {
-        warnings[member.id] = `Next launch will use ${note}.`;
+        warnings[member.id] = `下次启动将使用 ${note}。`;
       }
     }
     return warnings;
@@ -1351,9 +1351,7 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
       setPrepareState('failed');
       setPrepareWarnings([]);
       setPrepareChecks([]);
-      setPrepareMessage(
-        'Current preload version does not support team:prepareProvisioning. Restart the dev app.'
-      );
+      setPrepareMessage('当前 preload 版本不支持 team:prepareProvisioning，请重启开发应用。');
       return;
     }
 
@@ -1363,7 +1361,7 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
       setPrepareState('idle');
       setPrepareWarnings([]);
       setPrepareChecks([]);
-      setPrepareMessage('Select a working directory to validate the launch environment.');
+      setPrepareMessage('请选择工作目录以验证启动环境。');
       return;
     }
 
@@ -1378,7 +1376,7 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
       selectedMemberProviders
     );
     setPrepareState('loading');
-    setPrepareMessage('Checking selected providers in parallel...');
+    setPrepareMessage('正在并行检查选中的提供商...');
     setPrepareWarnings([]);
     setPrepareChecks(initialChecks);
 
@@ -1691,18 +1689,16 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
     if (!isLaunchMode) return [];
 
     const summary: string[] = [];
-    if (promptDraft.value.trim()) summary.push('Lead prompt');
+    if (promptDraft.value.trim()) summary.push('负责人提示词');
     const worktreeMemberCount = effectiveMemberDrafts.filter(
       (member) => !member.removedAt && member.isolation === 'worktree'
     ).length;
     if (worktreeMemberCount > 0) {
-      summary.push(
-        `${worktreeMemberCount} teammate worktree${worktreeMemberCount === 1 ? '' : 's'}`
-      );
+      summary.push(`${worktreeMemberCount} 个成员使用独立 worktree`);
     }
-    summary.push(`Provider: ${getProviderLabel(selectedProviderId)}`);
-    if (selectedModel) summary.push(`Model: ${selectedModel}`);
-    if (selectedEffort) summary.push(`Effort: ${selectedEffort}`);
+    summary.push(`提供商：${getProviderLabel(selectedProviderId)}`);
+    if (selectedModel) summary.push(`模型：${selectedModel}`);
+    if (selectedEffort) summary.push(`推理强度：${selectedEffort}`);
     if (selectedProviderId === 'anthropic' || selectedProviderId === 'codex') {
       if (selectedFastMode === 'on') summary.push('快速模式');
       else if (selectedFastMode === 'off') summary.push('快速模式关闭');
@@ -1710,11 +1706,11 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
         summary.push('快速默认');
       }
     }
-    if (selectedProviderId === 'anthropic' && limitContext) summary.push('Limited to 200K context');
-    if (skipPermissions) summary.push('Auto-approve tools');
-    if (clearContext) summary.push('Fresh session');
-    if (worktreeEnabled && worktreeName.trim()) summary.push(`Worktree: ${worktreeName.trim()}`);
-    if (customArgs.trim()) summary.push('Custom CLI args');
+    if (selectedProviderId === 'anthropic' && limitContext) summary.push('上下文限制为 200K');
+    if (skipPermissions) summary.push('自动批准工具');
+    if (clearContext) summary.push('全新会话');
+    if (worktreeEnabled && worktreeName.trim()) summary.push(`Worktree：${worktreeName.trim()}`);
+    if (customArgs.trim()) summary.push('自定义 CLI 参数');
     return summary;
   }, [
     isLaunchMode,
@@ -1739,11 +1735,11 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
 
   const validationErrors = useMemo(() => {
     const errors: string[] = [];
-    if (!effectiveCwd) errors.push('Working directory is required');
+    if (!effectiveCwd) errors.push('必须填写工作目录');
     if (isSchedule) {
-      if (!effectiveTeamName) errors.push('Team is required');
-      if (!promptDraft.value.trim()) errors.push('Prompt is required');
-      if (!cronExpression.trim()) errors.push('Cron expression is required');
+      if (!effectiveTeamName) errors.push('必须选择团队');
+      if (!promptDraft.value.trim()) errors.push('必须填写提示词');
+      if (!cronExpression.trim()) errors.push('必须填写 Cron 表达式');
     }
     return errors;
   }, [effectiveCwd, isSchedule, effectiveTeamName, promptDraft.value, cronExpression]);
@@ -1897,7 +1893,7 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
       return;
     }
     if (isLaunchMode && !effectiveCwd) {
-      setLocalError('Select working directory (cwd)');
+      setLocalError('请选择工作目录（cwd）');
       return;
     }
     if (
@@ -1906,7 +1902,7 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
         (member) => !member.name.trim() || validateMemberNameInline(member.name.trim()) !== null
       )
     ) {
-      setLocalError('Fix member names before launch');
+      setLocalError('请先修正成员名称再启动');
       return;
     }
     if (isLaunchMode) {
@@ -1914,7 +1910,7 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
         .map((member) => member.name.trim().toLowerCase())
         .filter(Boolean);
       if (new Set(activeNames).size !== activeNames.length) {
-        setLocalError('Member names must be unique before launch');
+        setLocalError('启动前成员名称不能重复');
         return;
       }
     }
@@ -2042,10 +2038,10 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
           err instanceof Error
             ? err.message
             : isSchedule
-              ? 'Failed to save schedule'
+              ? '保存计划失败'
               : isRelaunch
-                ? 'Failed to relaunch team'
-                : 'Failed to launch team';
+                ? '重新启动团队失败'
+                : '启动团队失败';
         setLocalError(message);
         if (isLaunchMode) {
           console.error(
@@ -2081,39 +2077,39 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
 
   const dialogTitle = isLaunchMode
     ? isRelaunch
-      ? 'Relaunch Team'
-      : 'Launch Team'
+      ? '重新启动团队'
+      : '启动团队'
     : isEditing
-      ? 'Edit Schedule'
-      : 'Create Schedule';
+      ? '编辑计划'
+      : '创建计划';
 
   const dialogDescription = isLaunchMode ? (
     isRelaunch ? (
       <>
-        Stop the current run for <span className="font-mono font-medium">{effectiveTeamName}</span>{' '}
-        and start it again via local Claude CLI.
+        停止 <span className="font-mono font-medium">{effectiveTeamName}</span> 的当前运行，并通过
+        Claude CLI 重新启动。
       </>
     ) : (
       <>
-        Start team <span className="font-mono font-medium">{effectiveTeamName}</span> via local
-        Claude CLI.
+        通过 Claude CLI 启动团队 <span className="font-mono font-medium">{effectiveTeamName}</span>
+        。
       </>
     )
   ) : isEditing ? (
-    `Editing schedule for team "${effectiveTeamName}"`
+    `正在编辑团队“${effectiveTeamName}”的计划`
   ) : effectiveTeamName ? (
-    `Schedule automatic runs for team "${effectiveTeamName}"`
+    `为团队“${effectiveTeamName}”创建自动运行计划`
   ) : (
-    'Schedule automatic Claude task execution'
+    '创建团队任务自动执行计划'
   );
 
   const submitLabel = isLaunchMode
     ? isRelaunch
-      ? 'Relaunch team'
-      : 'Launch team'
+      ? '重新启动团队'
+      : '启动团队'
     : isEditing
-      ? 'Save Changes'
-      : 'Create Schedule';
+      ? '保存更改'
+      : '创建计划';
 
   const submittingLabel = isLaunchMode
     ? isRelaunch
@@ -2739,14 +2735,11 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
                       <span>
                         {effectivePrepare.message ??
                           (effectivePrepare.state === 'idle'
-                            ? 'Warming up CLI environment...'
-                            : 'Preparing environment...')}
+                            ? '正在预热 CLI 环境...'
+                            : '正在准备环境...')}
                       </span>
                       <p className="mt-0.5 flex items-center gap-1.5 text-[10px] text-[var(--color-text-muted)] opacity-70">
-                        <span>
-                          Pre-flight check to catch errors before{' '}
-                          {isRelaunch ? 'relaunch' : 'launch'}
-                        </span>
+                        <span>启动前检查会提前发现{isRelaunch ? '重新启动' : '启动'}问题</span>
                       </p>
                     </div>
                   </div>
@@ -2761,8 +2754,8 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
                     <span>
                       {prepareChecks.some((check) => check.status === 'notes') ||
                       prepareWarnings.length > 0
-                        ? 'CLI environment ready (with notes)'
-                        : 'CLI environment ready'}
+                        ? 'CLI 环境已就绪（有提示）'
+                        : 'CLI 环境已就绪'}
                     </span>
                   </div>
                   {effectivePrepare.message ? (
@@ -2789,14 +2782,13 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
                     <AlertTriangle className="mt-0.5 size-4 shrink-0" />
                     <div className="min-w-0">
                       <p className="font-medium">
-                        CLI environment is not available - {isRelaunch ? 'relaunch' : 'launch'} is
-                        blocked
+                        CLI 环境不可用，已阻止{isRelaunch ? '重新启动' : '启动'}
                       </p>
                       <p className="mt-0.5 text-red-300/80">
-                        {effectivePrepare.message ?? 'Failed to prepare environment'}
+                        {effectivePrepare.message ?? '准备环境失败'}
                       </p>
                       <p className="mt-0.5 text-[10px] text-[var(--color-text-muted)] opacity-70">
-                        Pre-flight check to catch errors before {isRelaunch ? 'relaunch' : 'launch'}
+                        启动前检查会提前发现{isRelaunch ? '重新启动' : '启动'}问题
                       </p>
                     </div>
                   </div>
@@ -2850,7 +2842,7 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
 
           <div className="flex shrink-0 items-center gap-2">
             <Button variant="outline" size="sm" onClick={closeDialog}>
-              {isLaunchMode ? 'Close' : 'Cancel'}
+              {isLaunchMode ? '关闭' : '取消'}
             </Button>
             <Button
               size="sm"

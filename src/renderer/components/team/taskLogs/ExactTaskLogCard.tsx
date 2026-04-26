@@ -49,7 +49,7 @@ function describeDetailState(state: ExactTaskLogDetailState | undefined): string
     return 'Exact detail is no longer available for this transcript slice.';
   }
   if (state.status === 'error') {
-    return state.error ?? 'Failed to load exact detail.';
+    return state.error ?? '加载精确详情失败。';
   }
   return null;
 }

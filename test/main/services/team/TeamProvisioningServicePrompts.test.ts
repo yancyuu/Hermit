@@ -325,11 +325,25 @@ describe('TeamProvisioningService prompt content (solo mode discipline)', () => 
     expect(bootstrapSpec.members).toEqual([
       expect.objectContaining({
         name: 'alice',
+        agentType: 'agent-teams-member',
         role: 'developer',
         description: 'developer',
         cwd: process.cwd(),
       }),
     ]);
+    const launchArgs = vi.mocked(spawnCli).mock.calls[0]?.[1] as string[];
+    const agentsArg = launchArgs[launchArgs.indexOf('--agents') + 1] ?? '{}';
+    expect(JSON.parse(agentsArg)).toMatchObject({
+      'agent-teams-member': {
+        mcpServers: [
+          {
+            'agent-teams': expect.objectContaining({
+              args: expect.any(Array),
+            }),
+          },
+        ],
+      },
+    });
 
     await svc.cancelProvisioning(runId);
   });

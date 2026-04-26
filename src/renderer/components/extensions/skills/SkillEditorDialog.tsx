@@ -308,7 +308,7 @@ export const SkillEditorDialog = ({
     [allowCodexRootKind, detail?.item.rootKind]
   );
   const instructionsLocked = manualRawEdit || customMarkdownDetected;
-  const title = mode === 'create' ? 'Create skill' : 'Edit skill';
+  const title = mode === 'create' ? '创建技能' : '编辑技能';
   const descriptionText =
     mode === 'create'
       ? 'Describe the workflow in plain language, review the files that will be created, then save it.'
@@ -319,17 +319,17 @@ export const SkillEditorDialog = ({
       return 'Add a skill name so people know what this workflow is for.';
     }
     if (!description.trim()) {
-      return 'Add a short description so it is clear what this skill helps with.';
+      return '请添加简短描述，说明这个技能能帮助完成什么。';
     }
     if (!folderName.trim()) {
-      return 'Choose a folder name for this skill.';
+      return '请为这个技能选择文件夹名称。';
     }
     const folderNameError = validateSkillFolderName(folderName);
     if (folderNameError) {
       return folderNameError;
     }
     if (scope === 'project' && !effectiveProjectPath) {
-      return 'Project skills need an active project.';
+      return '项目技能需要当前已打开项目。';
     }
     return null;
   }
@@ -375,7 +375,7 @@ export const SkillEditorDialog = ({
       setReviewPreview(preview);
       setReviewOpen(true);
     } catch (error) {
-      setMutationError(error instanceof Error ? error.message : 'Failed to review skill changes');
+      setMutationError(error instanceof Error ? error.message : '检查技能变更失败');
     } finally {
       setReviewLoading(false);
     }
@@ -393,7 +393,7 @@ export const SkillEditorDialog = ({
       onSaved(saved?.item.id ?? detail?.item.id ?? null);
       onClose();
     } catch (error) {
-      setMutationError(error instanceof Error ? error.message : 'Failed to save skill');
+      setMutationError(error instanceof Error ? error.message : '保存技能失败');
     } finally {
       setSaveLoading(false);
     }
@@ -442,7 +442,7 @@ export const SkillEditorDialog = ({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="skill-root">Where to store it</Label>
+                    <Label htmlFor="skill-root">存储位置</Label>
                     <Select
                       value={rootKind}
                       onValueChange={(value) => setRootKind(value as SkillRootKind)}
@@ -743,7 +743,7 @@ export const SkillEditorDialog = ({
                         size="sm"
                         onClick={() => setShowAdvancedEditor((prev) => !prev)}
                       >
-                        {showAdvancedEditor ? 'Hide Advanced Editor' : 'Show Advanced Editor'}
+                        {showAdvancedEditor ? '隐藏高级编辑器' : '显示高级编辑器'}
                       </Button>
                     )}
                   </div>
@@ -845,11 +845,7 @@ export const SkillEditorDialog = ({
               </div>
               <Button onClick={() => void handleReview()} disabled={reviewLoading || saveLoading}>
                 <FileSearch className="mr-1.5 size-3.5" />
-                {reviewLoading
-                  ? 'Preparing...'
-                  : mode === 'create'
-                    ? 'Review And Create'
-                    : 'Review And Save'}
+                {reviewLoading ? '准备中...' : mode === 'create' ? '检查并创建' : '检查并保存'}
               </Button>
             </div>
           </div>
@@ -863,8 +859,8 @@ export const SkillEditorDialog = ({
         error={mutationError}
         onClose={() => setReviewOpen(false)}
         onConfirm={() => void handleConfirmSave()}
-        confirmLabel={mode === 'create' ? 'Create Skill' : 'Save Skill'}
-        reviewLabel={mode === 'create' ? 'Creating a skill' : 'Saving this skill'}
+        confirmLabel={mode === 'create' ? '创建技能' : '保存技能'}
+        reviewLabel={mode === 'create' ? '正在创建技能' : '正在保存技能'}
       />
     </>
   );

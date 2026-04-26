@@ -42,11 +42,12 @@ export function applyProviderRuntimeEnv(
     env[key] = undefined;
   }
 
-  // Provider overrides must be positive pins. In dev and multimodel desktop
-  // flows the host process can already be routed to codex or gemini, and the
-  // child runtime reapplies settings.env after trust. Mark the env as
-  // host-managed and set the exact entry provider so anthropic teammates do not
-  // silently fall back into the host's current routing world.
+  // Anthropic uses the native Claude Code auth/proxy path; do not host-route it.
+  if (resolvedProvider === 'anthropic') {
+    return env;
+  }
+
+  // Non-Anthropic provider overrides must be positive pins.
   env.CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST = '1';
   env.CLAUDE_CODE_ENTRY_PROVIDER = resolvedProvider;
 

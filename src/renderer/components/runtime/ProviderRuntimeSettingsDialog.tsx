@@ -93,25 +93,24 @@ const API_KEY_PROVIDER_CONFIG: Record<
   anthropic: {
     envVarName: 'ANTHROPIC_API_KEY',
     name: 'Anthropic API Key',
-    title: 'API key',
+    title: 'API 密钥',
     description:
-      'Use a direct Anthropic API key for API-billed access. Your Anthropic subscription session stays available when you switch back.',
+      '使用直接的 Anthropic API 密钥进行按 API 计费的访问。切回后，你的 Anthropic 订阅会话仍可使用。',
     placeholder: 'sk-ant-...',
   },
   codex: {
     envVarName: 'OPENAI_API_KEY',
     name: 'Codex API Key',
-    title: 'API key',
+    title: 'API 密钥',
     description:
-      'Use an OpenAI API key as a secondary Codex auth path. If you switch Codex to API key mode, the app will mirror OPENAI_API_KEY into CODEX_API_KEY for native launches.',
+      '将 OpenAI API 密钥作为 Codex 的备用认证路径。切换到 Codex API 密钥模式后，应用会把 OPENAI_API_KEY 映射到 CODEX_API_KEY 供原生启动使用。',
     placeholder: 'sk-proj-...',
   },
   gemini: {
     envVarName: 'GEMINI_API_KEY',
     name: 'Gemini API Key',
-    title: 'API access',
-    description:
-      'Use `GEMINI_API_KEY` for the Gemini API backend. CLI SDK and ADC do not require it.',
+    title: 'API 访问',
+    description: '为 Gemini API 后端使用 `GEMINI_API_KEY`。CLI SDK 和 ADC 不需要它。',
     placeholder: 'AIza...',
   },
 };
@@ -128,26 +127,26 @@ function findPreferredApiKeyEntry(apiKeys: ApiKeyEntry[], envVarName: string): A
 function getConnectionDescription(provider: CliProviderStatus): string {
   switch (provider.providerId) {
     case 'anthropic':
-      return 'Choose how app-launched Anthropic sessions authenticate.';
+      return '选择应用启动的 Anthropic 会话如何认证。';
     case 'codex':
-      return 'Choose whether Codex should prefer your ChatGPT subscription or an API key when the native runtime launches.';
+      return '选择 Codex 原生运行时启动时优先使用 ChatGPT 订阅还是 API 密钥。';
     case 'gemini':
-      return 'Configure optional API access. CLI SDK and ADC are still discovered automatically.';
+      return '配置可选 API 访问。CLI SDK 和 ADC 仍会自动发现。';
     case 'opencode':
-      return 'OpenCode authentication and provider inventory are managed by the OpenCode runtime.';
+      return 'OpenCode 认证和提供商清单由 OpenCode 运行时管理。';
   }
 }
 
 function getRuntimeDescription(provider: CliProviderStatus): string {
   switch (provider.providerId) {
     case 'anthropic':
-      return 'Anthropic currently has no separate runtime backend selector.';
+      return 'Anthropic 当前没有单独的运行时后端选择器。';
     case 'codex':
-      return 'Codex now runs only through the native runtime path.';
+      return 'Codex 现在仅通过原生运行时路径运行。';
     case 'gemini':
-      return 'Choose which Gemini runtime backend multimodel should use.';
+      return '选择多模型运行时应使用哪个 Gemini 后端。';
     case 'opencode':
-      return 'OpenCode uses its own managed runtime host. Desktop currently exposes status only.';
+      return 'OpenCode 使用自己的托管运行时宿主。桌面端当前仅显示状态。';
   }
 }
 
@@ -155,22 +154,22 @@ function getAuthModeDescription(providerId: CliProviderId, authMode: CliProvider
   if (providerId === 'anthropic') {
     switch (authMode) {
       case 'auto':
-        return 'Use the runtime default behavior. Saved API keys in this app are only used after you switch to API key mode.';
+        return '使用运行时默认行为。此应用保存的 API 密钥只会在切换到 API 密钥模式后使用。';
       case 'oauth':
-        return 'Force app-launched Anthropic sessions to use the local Anthropic subscription session.';
+        return '强制应用启动的 Anthropic 会话使用本地 Anthropic 订阅会话。';
       case 'api_key':
-        return 'Force app-launched Anthropic sessions to use an API key credential.';
+        return '强制应用启动的 Anthropic 会话使用 API 密钥凭据。';
     }
   }
 
   if (providerId === 'codex') {
     switch (authMode) {
       case 'auto':
-        return 'Prefer your ChatGPT account when it is available. Fall back to API key mode only when needed.';
+        return '可用时优先使用 ChatGPT 账号，仅在需要时回退到 API 密钥模式。';
       case 'chatgpt':
-        return 'Force native Codex launches to use your connected ChatGPT account and subscription.';
+        return '强制 Codex 原生启动使用已连接的 ChatGPT 账号和订阅。';
       case 'api_key':
-        return 'Force native Codex launches to use OPENAI_API_KEY / CODEX_API_KEY billing.';
+        return '强制 Codex 原生启动使用 OPENAI_API_KEY / CODEX_API_KEY 计费。';
       default:
         return '';
     }
@@ -189,7 +188,7 @@ function getConnectionAlert(provider: CliProviderStatus): string | null {
     authMode === 'api_key' &&
     !provider.connection?.apiKeyConfigured
   ) {
-    return 'API key mode is selected, but no Anthropic API credential is available yet.';
+    return '已选择 API 密钥模式，但尚未配置 Anthropic API 凭据。';
   }
 
   if (
@@ -197,7 +196,7 @@ function getConnectionAlert(provider: CliProviderStatus): string | null {
     authMode === 'oauth' &&
     !hasAnthropicSubscriptionSession
   ) {
-    return 'Anthropic subscription mode is selected. Sign in with Anthropic to use this provider.';
+    return '已选择 Anthropic 订阅模式。请登录 Anthropic 后使用此提供商。';
   }
 
   if (
@@ -205,17 +204,17 @@ function getConnectionAlert(provider: CliProviderStatus): string | null {
     authMode === 'auto' &&
     provider.connection?.apiKeySource === 'stored'
   ) {
-    return 'A saved API key is available, but app-launched Anthropic sessions use it only after you switch to API key mode.';
+    return '已有保存的 API 密钥，但应用启动的 Anthropic 会话只会在切换到 API 密钥模式后使用它。';
   }
 
   if (provider.providerId === 'codex') {
     const codex = provider.connection?.codex;
     if (codex?.login.status === 'starting') {
-      return 'Starting ChatGPT login...';
+      return '正在启动 ChatGPT 登录...';
     }
 
     if (codex?.login.status === 'pending') {
-      return 'Waiting for ChatGPT account login to finish...';
+      return '正在等待 ChatGPT 账号登录完成...';
     }
 
     if (codex?.login.status === 'failed' && codex.login.error) {
@@ -224,19 +223,19 @@ function getConnectionAlert(provider: CliProviderStatus): string | null {
 
     if (provider.connection?.configuredAuthMode === 'api_key') {
       if (!provider.connection?.apiKeyConfigured) {
-        return 'API key mode is selected, but no OPENAI_API_KEY or CODEX_API_KEY credential is available yet.';
+        return '已选择 API 密钥模式，但尚未配置 OPENAI_API_KEY 或 CODEX_API_KEY 凭据。';
       }
       return null;
     }
 
     if (provider.connection?.configuredAuthMode === 'chatgpt' && !codex?.managedAccount) {
       const missingChatgptMessage = codex?.localActiveChatgptAccountPresent
-        ? 'Codex has a locally selected ChatGPT account, but the current session needs reconnect.'
+        ? 'Codex 已有本地选择的 ChatGPT 账号，但当前会话需要重新连接。'
         : codex?.localAccountArtifactsPresent
-          ? 'Codex CLI currently has no active ChatGPT account. Local Codex account data exists, but no active managed session is selected.'
-          : 'Codex CLI currently has no active ChatGPT account. Connect ChatGPT to use your subscription.';
+          ? 'Codex CLI 当前没有活跃的 ChatGPT 账号。本地存在 Codex 账号数据，但尚未选择活跃的托管会话。'
+          : 'Codex CLI 当前没有活跃的 ChatGPT 账号。连接 ChatGPT 后即可使用订阅。';
       return provider.connection.apiKeyConfigured
-        ? `${missingChatgptMessage} Switch to API key mode to use the detected API key.`
+        ? `${missingChatgptMessage} 切换到 API 密钥模式即可使用检测到的 API 密钥。`
         : missingChatgptMessage;
     }
 
@@ -249,7 +248,7 @@ function getConnectionAlert(provider: CliProviderStatus): string | null {
     }
 
     if (!provider.connection?.apiKeyConfigured && !codex?.managedAccount) {
-      return 'No ChatGPT account or API key is available yet.';
+      return '尚无可用的 ChatGPT 账号或 API 密钥。';
     }
 
     return null;
@@ -259,7 +258,7 @@ function getConnectionAlert(provider: CliProviderStatus): string | null {
     provider.providerId === 'gemini' &&
     provider.availableBackends?.some((option) => option.id === 'api' && !option.available)
   ) {
-    return 'Gemini API is currently unavailable. Configure `GEMINI_API_KEY` here or use valid Google ADC credentials.';
+    return 'Gemini API 当前不可用。请在此配置 `GEMINI_API_KEY`，或使用有效的 Google ADC 凭据。';
   }
 
   return null;
@@ -283,23 +282,23 @@ function getCodexAccountPanelHint(
 
   if (hasActiveChatgptSession) {
     if (!codex.rateLimits) {
-      return 'Usage limits appear here after Codex reports them for the connected ChatGPT account.';
+      return 'Codex 报告已连接 ChatGPT 账号的用量限制后，会显示在这里。';
     }
 
     return null;
   }
 
   const usageSentence = codex.localActiveChatgptAccountPresent
-    ? 'Codex has a locally selected ChatGPT account, but the current session needs reconnect before usage limits can load here.'
+    ? 'Codex 已有本地选择的 ChatGPT 账号，但当前会话需要重新连接后才能在这里加载用量限制。'
     : codex.localAccountArtifactsPresent
-      ? 'Codex CLI currently reports no active ChatGPT account. Local Codex account data exists, but no active managed session is selected. Usage limits appear here only after Codex CLI sees one.'
-      : 'Codex CLI currently reports no active ChatGPT account. Usage limits appear here only after Codex CLI sees one.';
+      ? 'Codex CLI 当前未报告活跃的 ChatGPT 账号。本地存在 Codex 账号数据，但尚未选择活跃的托管会话。只有 Codex CLI 识别到账号后，用量限制才会显示在这里。'
+      : 'Codex CLI 当前未报告活跃的 ChatGPT 账号。只有 Codex CLI 识别到账号后，用量限制才会显示在这里。';
   if (configuredAuthMode === 'chatgpt' && provider.connection?.apiKeyConfigured) {
-    return `${usageSentence} The detected API key is only used after you switch Codex to API key mode.`;
+    return `${usageSentence} 检测到的 API 密钥只会在你将 Codex 切换到 API 密钥模式后使用。`;
   }
 
   if (configuredAuthMode === 'auto' && provider.connection?.apiKeyConfigured) {
-    return `${usageSentence} Auto will keep using the detected API key until ChatGPT is connected.`;
+    return `${usageSentence} 自动模式会在 ChatGPT 连接前继续使用检测到的 API 密钥。`;
   }
 
   return usageSentence;
@@ -417,37 +416,36 @@ function getConnectionMethodCardOptions(
       return [
         {
           authMode: 'auto',
-          title: 'Auto',
-          description: 'Use Anthropic runtime defaults and the best local credential available.',
+          title: '自动',
+          description: '使用 Anthropic 运行时默认值和最佳可用本地凭据。',
         },
         {
           authMode: 'oauth',
-          title: 'Anthropic subscription',
-          description: 'Use your local Anthropic sign-in session and subscription access.',
+          title: 'Anthropic 订阅',
+          description: '使用本地 Anthropic 登录会话和订阅访问权限。',
         },
         {
           authMode: 'api_key',
-          title: 'API key',
-          description: 'Use ANTHROPIC_API_KEY and Anthropic API billing.',
+          title: 'API 密钥',
+          description: '使用 ANTHROPIC_API_KEY 和 Anthropic API 计费。',
         },
       ];
     case 'codex':
       return [
         {
           authMode: 'auto',
-          title: 'Auto',
-          description:
-            'Prefer your ChatGPT account and subscription. Use API key mode only if needed.',
+          title: '自动',
+          description: '优先使用 ChatGPT 账号和订阅，仅在需要时使用 API 密钥模式。',
         },
         {
           authMode: 'chatgpt',
-          title: 'ChatGPT account',
-          description: 'Use your connected ChatGPT account and Codex subscription.',
+          title: 'ChatGPT 账号',
+          description: '使用已连接的 ChatGPT 账号和 Codex 订阅。',
         },
         {
           authMode: 'api_key',
-          title: 'API key',
-          description: 'Use OPENAI_API_KEY and CODEX_API_KEY billing for native Codex launches.',
+          title: 'API 密钥',
+          description: '为 Codex 原生启动使用 OPENAI_API_KEY 和 CODEX_API_KEY 计费。',
         },
       ];
     default:
@@ -457,11 +455,11 @@ function getConnectionMethodCardOptions(
 
 function getConnectionMethodCardsHint(provider: CliProviderStatus): string | null {
   if (provider.providerId === 'codex') {
-    return 'Codex always runs through the native runtime. Auto prefers your ChatGPT account before falling back to API-key credentials.';
+    return 'Codex 始终通过原生运行时运行。自动模式会优先使用 ChatGPT 账号，再回退到 API 密钥凭据。';
   }
 
   if (provider.providerId === 'anthropic') {
-    return 'Auto keeps Anthropic on its default local credential resolution.';
+    return '自动模式会让 Anthropic 保持默认的本地凭据解析方式。';
   }
 
   return null;
@@ -515,7 +513,7 @@ const ConnectionMethodCards = ({
                   }}
                 >
                   <Loader2 className="size-3 animate-spin" />
-                  Switching...
+                  切换中...
                 </span>
               ) : selected ? (
                 <span
@@ -525,7 +523,7 @@ const ConnectionMethodCards = ({
                     backgroundColor: 'rgba(74, 222, 128, 0.14)',
                   }}
                 >
-                  Selected
+                  已选择
                 </span>
               ) : null}
             </div>
@@ -667,11 +665,11 @@ export const ProviderRuntimeSettingsDialog = ({
       if (nextConnection.apiKeySource === 'stored') {
         nextConnection.apiKeyConfigured = Boolean(selectedApiKey);
         nextConnection.apiKeySource = selectedApiKey ? 'stored' : null;
-        nextConnection.apiKeySourceLabel = selectedApiKey ? 'Stored in app' : null;
+        nextConnection.apiKeySourceLabel = selectedApiKey ? '已存储在应用中' : null;
       } else if (!nextConnection.apiKeyConfigured && selectedApiKey) {
         nextConnection.apiKeyConfigured = true;
         nextConnection.apiKeySource = 'stored';
-        nextConnection.apiKeySourceLabel = 'Stored in app';
+        nextConnection.apiKeySourceLabel = '已存储在应用中';
       }
     }
 
@@ -757,8 +755,8 @@ export const ProviderRuntimeSettingsDialog = ({
   const anthropicFastModeDisabledReason =
     anthropicFastModeCapability?.reason ??
     (anthropicFastModeSupported
-      ? 'Fast mode is currently unavailable for this Anthropic runtime.'
-      : 'This Anthropic runtime does not expose Fast mode.');
+      ? '此 Anthropic 运行时当前无法使用 Fast mode。'
+      : '此 Anthropic 运行时未提供 Fast mode。');
   const connectionMethodCardsHint = selectedProvider
     ? getConnectionMethodCardsHint(selectedProvider)
     : null;
@@ -788,9 +786,8 @@ export const ProviderRuntimeSettingsDialog = ({
   const codexFastCapabilityHint =
     selectedProvider?.providerId === 'codex' && codexFastCapability
       ? codexFastCapability.selectable
-        ? `Fast mode can be enabled per team or schedule for Fast-capable Codex models with your ChatGPT account. It is about ${CODEX_FAST_SPEED_MULTIPLIER}x faster and costs ${CODEX_FAST_CREDIT_COST_MULTIPLIER}x credits.`
-        : (codexFastCapability.disabledReason ??
-          'Codex Fast mode is currently unavailable for this account or runtime.')
+        ? `使用 ChatGPT 账号时，可为支持 Fast 的 Codex 模型按团队或计划启用 Fast mode。速度约提升 ${CODEX_FAST_SPEED_MULTIPLIER} 倍，消耗 ${CODEX_FAST_CREDIT_COST_MULTIPLIER} 倍 credits。`
+        : (codexFastCapability.disabledReason ?? '此账号或运行时当前无法使用 Codex Fast mode。')
       : null;
   const hasSubscriptionSession =
     selectedProvider?.providerId === 'anthropic'
@@ -818,12 +815,12 @@ export const ProviderRuntimeSettingsDialog = ({
   let connectionStatusLabel: string | null = null;
   if (selectedProvider) {
     if (!hideConnectionMethodMeta && selectedProvider.authenticated) {
-      connectionStatusLabel = `Using ${formatProviderAuthMethodLabelForProvider(
+      connectionStatusLabel = `使用 ${formatProviderAuthMethodLabelForProvider(
         selectedProvider.providerId,
         selectedProvider.authMethod
       )}`;
     } else if (!hideConnectionMethodMeta) {
-      connectionStatusLabel = 'Not connected';
+      connectionStatusLabel = '未连接';
     }
   }
   const showSelectedProviderSummary = Boolean(selectedProvider) && !connectionManagedRuntime;
@@ -837,33 +834,33 @@ export const ProviderRuntimeSettingsDialog = ({
       if (selectedProvider.providerId === 'anthropic') {
         switch (pendingConnectionAction) {
           case 'api_key':
-            return 'Switching to API key...';
+            return '正在切换到 API 密钥...';
           case 'oauth':
-            return 'Switching to Anthropic subscription...';
+            return '正在切换到 Anthropic 订阅...';
           case 'auto':
-            return 'Switching to Auto...';
+            return '正在切换到自动模式...';
           default:
-            return 'Applying connection changes...';
+            return '正在应用连接变更...';
         }
       }
 
       if (selectedProvider.providerId === 'codex') {
         switch (pendingConnectionAction) {
           case 'chatgpt':
-            return 'Switching to ChatGPT account mode...';
+            return '正在切换到 ChatGPT 账号模式...';
           case 'api_key':
-            return 'Switching to API key mode...';
+            return '正在切换到 API 密钥模式...';
           case 'auto':
-            return 'Switching to Auto...';
+            return '正在切换到自动模式...';
           default:
-            return 'Applying connection changes...';
+            return '正在应用连接变更...';
         }
       }
 
-      return 'Applying connection changes...';
+      return '正在应用连接变更...';
     }
 
-    return 'Refreshing provider status...';
+    return '正在刷新提供商状态...';
   }, [connectionLoading, connectionSaving, pendingConnectionAction, selectedProvider]);
 
   const handleStartApiKeyEdit = (): void => {
@@ -890,7 +887,7 @@ export const ProviderRuntimeSettingsDialog = ({
     }
 
     if (!apiKeyValue.trim()) {
-      setApiKeyError('API key is required');
+      setApiKeyError('API 密钥不能为空');
       return;
     }
 
@@ -905,7 +902,7 @@ export const ProviderRuntimeSettingsDialog = ({
         scope: apiKeyScope,
       });
     } catch (error) {
-      setApiKeyError(error instanceof Error ? error.message : 'Failed to save API key');
+      setApiKeyError(error instanceof Error ? error.message : '保存 API 密钥失败');
       return;
     }
 
@@ -915,7 +912,7 @@ export const ProviderRuntimeSettingsDialog = ({
     try {
       await onRefreshProvider?.(selectedProvider.providerId);
     } catch {
-      setConnectionError('API key saved, but failed to refresh provider status.');
+      setConnectionError('API 密钥已保存，但刷新提供商状态失败。');
     }
   };
 
@@ -929,7 +926,7 @@ export const ProviderRuntimeSettingsDialog = ({
     try {
       await deleteApiKey(selectedApiKey.id);
     } catch (error) {
-      setApiKeyError(error instanceof Error ? error.message : 'Failed to delete API key');
+      setApiKeyError(error instanceof Error ? error.message : '删除 API 密钥失败');
       return;
     }
 
@@ -939,7 +936,7 @@ export const ProviderRuntimeSettingsDialog = ({
     try {
       await onRefreshProvider?.(selectedProvider.providerId);
     } catch {
-      setConnectionError('API key deleted, but failed to refresh provider status.');
+      setConnectionError('API 密钥已删除，但刷新提供商状态失败。');
     }
   };
 
@@ -975,13 +972,13 @@ export const ProviderRuntimeSettingsDialog = ({
 
       updateSucceeded = true;
     } catch (error) {
-      setConnectionError(error instanceof Error ? error.message : 'Failed to update connection');
+      setConnectionError(error instanceof Error ? error.message : '更新连接失败');
     } finally {
       if (updateSucceeded) {
         try {
           await onRefreshProvider?.(selectedProvider.providerId);
         } catch {
-          setConnectionError('Connection updated, but failed to refresh provider status.');
+          setConnectionError('连接已更新，但刷新提供商状态失败。');
         }
       }
 
@@ -996,9 +993,7 @@ export const ProviderRuntimeSettingsDialog = ({
       await codexAccount.refresh({ includeRateLimits: true, forceRefreshToken: true });
       await onRefreshProvider?.('codex');
     } catch (error) {
-      setConnectionError(
-        error instanceof Error ? error.message : 'Failed to refresh Codex account'
-      );
+      setConnectionError(error instanceof Error ? error.message : '刷新 Codex 账号失败');
     }
   };
 
@@ -1039,7 +1034,7 @@ export const ProviderRuntimeSettingsDialog = ({
     try {
       await onSelectBackend(providerId, backendId);
     } catch (error) {
-      setRuntimeError(error instanceof Error ? error.message : 'Failed to update runtime backend');
+      setRuntimeError(error instanceof Error ? error.message : '更新运行时后端失败');
     } finally {
       setRuntimeSaving(false);
     }
@@ -1060,9 +1055,7 @@ export const ProviderRuntimeSettingsDialog = ({
       });
       await onRefreshProvider?.('anthropic');
     } catch (error) {
-      setConnectionError(
-        error instanceof Error ? error.message : 'Failed to update Anthropic Fast mode'
-      );
+      setConnectionError(error instanceof Error ? error.message : '更新 Anthropic Fast mode 失败');
     } finally {
       setConnectionSaving(false);
     }
@@ -1072,17 +1065,16 @@ export const ProviderRuntimeSettingsDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[min(96vw,980px)] max-w-[min(96vw,980px)]">
         <DialogHeader>
-          <DialogTitle>Provider Settings</DialogTitle>
+          <DialogTitle>提供商设置</DialogTitle>
           <DialogDescription>
-            Manage how each provider connects and, when supported, which backend the multimodel
-            runtime should use.
+            管理每个提供商的连接方式，以及在支持时选择多模型运行时使用的后端。
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
             <div className="text-[11px] font-medium" style={{ color: 'var(--color-text-muted)' }}>
-              Provider
+              提供商
             </div>
             <Tabs
               value={selectedProvider?.providerId ?? selectedProviderId}
@@ -1130,21 +1122,21 @@ export const ProviderRuntimeSettingsDialog = ({
                   style={{
                     color: getProviderStatusColor(
                       selectedProvider.authenticated
-                        ? `Using ${formatProviderAuthMethodLabelForProvider(
+                        ? `使用 ${formatProviderAuthMethodLabelForProvider(
                             selectedProvider.providerId,
                             selectedProvider.authMethod
                           )}`
-                        : selectedProvider.statusMessage || 'Not connected',
+                        : selectedProvider.statusMessage || '未连接',
                       selectedProvider.authenticated
                     ),
                   }}
                 >
                   {selectedProvider.authenticated
-                    ? `Using ${formatProviderAuthMethodLabelForProvider(
+                    ? `使用 ${formatProviderAuthMethodLabelForProvider(
                         selectedProvider.providerId,
                         selectedProvider.authMethod
                       )}`
-                    : selectedProvider.statusMessage || 'Not connected'}
+                    : selectedProvider.statusMessage || '未连接'}
                 </span>
                 {managedRuntimeSummary && !hideConnectionMethodMeta ? (
                   <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
@@ -1152,7 +1144,7 @@ export const ProviderRuntimeSettingsDialog = ({
                   </span>
                 ) : runtimeSummary ? (
                   <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                    Runtime: {runtimeSummary}
+                    运行时：{runtimeSummary}
                   </span>
                 ) : null}
               </div>
@@ -1170,7 +1162,7 @@ export const ProviderRuntimeSettingsDialog = ({
                   {selectedProvider.externalRuntimeDiagnostics.slice(0, 3).map((diagnostic) => (
                     <div key={diagnostic.id}>
                       {diagnostic.label}:{' '}
-                      {diagnostic.statusMessage ?? (diagnostic.detected ? 'detected' : 'missing')}
+                      {diagnostic.statusMessage ?? (diagnostic.detected ? '已检测到' : '缺失')}
                       {diagnostic.detailMessage ? ` - ${diagnostic.detailMessage}` : ''}
                     </div>
                   ))}
@@ -1199,7 +1191,7 @@ export const ProviderRuntimeSettingsDialog = ({
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
-                      Connection
+                      连接
                     </div>
                     <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
                       {getConnectionDescription(selectedProvider)}
@@ -1225,7 +1217,7 @@ export const ProviderRuntimeSettingsDialog = ({
                       {selectedProvider.authenticated &&
                       (selectedProvider.authMethod === 'oauth_token' ||
                         selectedProvider.authMethod === 'claude.ai')
-                        ? 'Reconnect Anthropic'
+                        ? '重新连接 Anthropic'
                         : getProviderConnectLabel(selectedProvider)}
                     </Button>
                   ) : null}
@@ -1233,7 +1225,7 @@ export const ProviderRuntimeSettingsDialog = ({
 
                 {showConnectionMethodCards ? (
                   <div className="space-y-2">
-                    <Label className="text-xs">Connection method</Label>
+                    <Label className="text-xs">连接方式</Label>
                     <ConnectionMethodCards
                       options={connectionMethodCardOptions}
                       selectedAuthMode={configuredAuthMode}
@@ -1251,9 +1243,7 @@ export const ProviderRuntimeSettingsDialog = ({
                 ) : configurableAuthModes.length > 0 && configuredAuthMode ? (
                   <div className="space-y-1.5">
                     <Label className="text-xs">
-                      {selectedProvider.providerId === 'codex'
-                        ? 'Connection method'
-                        : 'Authentication method'}
+                      {selectedProvider.providerId === 'codex' ? '连接方式' : '认证方式'}
                     </Label>
                     <Select
                       value={configuredAuthMode}
@@ -1289,7 +1279,7 @@ export const ProviderRuntimeSettingsDialog = ({
                         backgroundColor: 'rgba(255, 255, 255, 0.05)',
                       }}
                     >
-                      Mode:{' '}
+                      模式：
                       {formatProviderAuthModeLabelForProvider(
                         selectedProvider.providerId,
                         configuredAuthMode
@@ -1324,17 +1314,17 @@ export const ProviderRuntimeSettingsDialog = ({
                     style={{ borderColor: 'var(--color-border-subtle)' }}
                   >
                     <div className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
-                      Fast mode default
+                      Fast mode 默认值
                     </div>
                     <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                      Apply Claude Code Fast mode by default for new Anthropic team launches when
-                      the resolved model and runtime allow it.
+                      当解析后的模型和运行时允许时，新建 Anthropic 团队启动默认应用 Claude Code Fast
+                      mode。
                     </div>
                     {anthropicFastModeSupported ? (
                       <div className="inline-flex rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-0.5">
                         {[
-                          { enabled: false, label: 'Default Off' },
-                          { enabled: true, label: 'Prefer Fast' },
+                          { enabled: false, label: '默认关闭' },
+                          { enabled: true, label: '优先 Fast' },
                         ].map((option) => (
                           <button
                             key={option.label}
@@ -1357,8 +1347,8 @@ export const ProviderRuntimeSettingsDialog = ({
                     <div className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
                       {anthropicFastModeSupported && anthropicFastModeAvailable
                         ? anthropicFastModeEnabled
-                          ? 'New Anthropic launches will request Fast mode by default when the resolved model supports it.'
-                          : 'New Anthropic launches stay on normal speed unless a team explicitly enables Fast mode.'
+                          ? '当解析后的模型支持时，新的 Anthropic 启动会默认请求 Fast mode。'
+                          : '除非团队明确启用 Fast mode，新的 Anthropic 启动会保持普通速度。'
                         : anthropicFastModeDisabledReason}
                     </div>
                   </div>
@@ -1372,11 +1362,10 @@ export const ProviderRuntimeSettingsDialog = ({
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
-                          ChatGPT account
+                          ChatGPT 账号
                         </div>
                         <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                          Manage the local Codex app-server account session that powers
-                          subscription-backed native launches.
+                          管理由本地 Codex app-server 维护、用于订阅原生启动的账号会话。
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-2">
@@ -1386,7 +1375,7 @@ export const ProviderRuntimeSettingsDialog = ({
                           disabled={codexActionBusy}
                           onClick={() => void handleCodexAccountRefresh()}
                         >
-                          Refresh
+                          刷新
                         </Button>
                         {codexLoginPending ? (
                           <Button
@@ -1395,7 +1384,7 @@ export const ProviderRuntimeSettingsDialog = ({
                             disabled={codexActionBusy}
                             onClick={() => void handleCodexCancelLogin()}
                           >
-                            Cancel login
+                            取消登录
                           </Button>
                         ) : codexHasActiveChatgptSession ? (
                           <Button
@@ -1404,7 +1393,7 @@ export const ProviderRuntimeSettingsDialog = ({
                             disabled={codexActionBusy}
                             onClick={() => void handleCodexLogout()}
                           >
-                            Disconnect account
+                            断开账号
                           </Button>
                         ) : (
                           <Button
@@ -1414,7 +1403,7 @@ export const ProviderRuntimeSettingsDialog = ({
                             onClick={() => void handleCodexStartLogin()}
                           >
                             <Link2 className="mr-1 size-3.5" />
-                            {codexNeedsReconnect ? 'Reconnect ChatGPT' : 'Connect ChatGPT'}
+                            {codexNeedsReconnect ? '重新连接 ChatGPT' : '连接 ChatGPT'}
                           </Button>
                         )}
                       </div>
@@ -1437,12 +1426,12 @@ export const ProviderRuntimeSettingsDialog = ({
                         }}
                       >
                         {codexHasActiveChatgptSession
-                          ? 'Connected'
+                          ? '已连接'
                           : codexNeedsReconnect
-                            ? 'Reconnect required'
+                            ? '需要重新连接'
                             : codexLoginPending
-                              ? 'Login in progress'
-                              : 'Not connected'}
+                              ? '正在登录'
+                              : '未连接'}
                       </span>
                       {codexConnection ? (
                         <span
@@ -1462,12 +1451,12 @@ export const ProviderRuntimeSettingsDialog = ({
                                   : 'rgba(248, 113, 113, 0.08)',
                           }}
                         >
-                          App-server: {codexConnection.appServerState}
+                          App-server：{codexConnection.appServerState}
                         </span>
                       ) : null}
                       {codexConnection?.managedAccount?.planType ? (
                         <span style={{ color: 'var(--color-text-secondary)' }}>
-                          Plan: {codexConnection.managedAccount.planType}
+                          计划：{codexConnection.managedAccount.planType}
                         </span>
                       ) : null}
                       {codexConnection?.managedAccount?.email ? (
@@ -1517,26 +1506,26 @@ export const ProviderRuntimeSettingsDialog = ({
                             color: 'var(--color-text-secondary)',
                           }}
                         >
-                          These percentages show used quota, not remaining quota.{' '}
+                          这些百分比表示已用额度，不是剩余额度。{' '}
                           {formatCodexUsageExplanation(
                             codexConnection.rateLimits.primary?.usedPercent,
                             codexConnection.rateLimits.primary?.windowDurationMins
                           )}
                           {codexConnection.rateLimits.secondary
-                            ? ` Weekly limits are shown separately in the ${
+                            ? ` 每周限制会单独显示在 ${
                                 formatCodexWindowDurationLong(
                                   codexConnection.rateLimits.secondary.windowDurationMins
                                 ) ?? 'secondary'
-                              } window.`
+                              } 窗口中。`
                             : ''}
                         </div>
 
                         <div className="space-y-3">
                           <div className="grid gap-3 md:grid-cols-2">
                             <CodexRateLimitWindowCard
-                              title="Primary window"
+                              title="主要窗口"
                               usedLabel={formatCodexUsageWindowLabel(
-                                'Primary used',
+                                '主要已用',
                                 codexConnection.rateLimits.primary?.windowDurationMins
                               )}
                               usedValue={formatCodexUsagePercent(
@@ -1545,10 +1534,10 @@ export const ProviderRuntimeSettingsDialog = ({
                               remainingValue={
                                 formatCodexRemainingPercent(
                                   codexConnection.rateLimits.primary?.usedPercent
-                                ) ?? 'Remaining unknown'
+                                ) ?? '剩余额度未知'
                               }
                               resetLabel={formatCodexResetWindowLabel(
-                                'Primary reset',
+                                '主要重置',
                                 codexConnection.rateLimits.primary?.windowDurationMins
                               )}
                               resetValue={formatCodexResetDateTime(
@@ -1561,13 +1550,13 @@ export const ProviderRuntimeSettingsDialog = ({
                               <CodexRateLimitWindowCard
                                 title={
                                   codexConnection.rateLimits.secondary.windowDurationMins === 10_080
-                                    ? 'Weekly window'
-                                    : 'Secondary window'
+                                    ? '每周窗口'
+                                    : '次要窗口'
                                 }
                                 usedLabel={formatCodexUsageWindowLabel(
                                   codexConnection.rateLimits.secondary.windowDurationMins === 10_080
-                                    ? 'Weekly used'
-                                    : 'Secondary used',
+                                    ? '每周已用'
+                                    : '次要已用',
                                   codexConnection.rateLimits.secondary.windowDurationMins
                                 )}
                                 usedValue={formatCodexUsagePercent(
@@ -1576,12 +1565,12 @@ export const ProviderRuntimeSettingsDialog = ({
                                 remainingValue={
                                   formatCodexRemainingPercent(
                                     codexConnection.rateLimits.secondary.usedPercent
-                                  ) ?? 'Remaining unknown'
+                                  ) ?? '剩余额度未知'
                                 }
                                 resetLabel={formatCodexResetWindowLabel(
                                   codexConnection.rateLimits.secondary.windowDurationMins === 10_080
-                                    ? 'Weekly reset'
-                                    : 'Secondary reset',
+                                    ? '每周重置'
+                                    : '次要重置',
                                   codexConnection.rateLimits.secondary.windowDurationMins
                                 )}
                                 resetValue={formatCodexResetDateTime(
@@ -1601,25 +1590,25 @@ export const ProviderRuntimeSettingsDialog = ({
                                   className="text-sm font-medium"
                                   style={{ color: 'var(--color-text)' }}
                                 >
-                                  Weekly window
+                                  每周窗口
                                 </div>
                                 <div
                                   className="mt-3 text-[11px]"
                                   style={{ color: 'var(--color-text-muted)' }}
                                 >
-                                  Weekly used (1w)
+                                  每周已用（1 周）
                                 </div>
                                 <div
                                   className="mt-1 text-sm font-medium"
                                   style={{ color: 'var(--color-text)' }}
                                 >
-                                  Not reported
+                                  未报告
                                 </div>
                                 <div
                                   className="mt-1 text-[11px]"
                                   style={{ color: 'var(--color-text-secondary)' }}
                                 >
-                                  Codex did not return a secondary window for this account snapshot.
+                                  Codex 未为此账号快照返回次要窗口。
                                 </div>
                               </div>
                             )}
@@ -1651,8 +1640,8 @@ export const ProviderRuntimeSettingsDialog = ({
                                 className="max-w-md text-[11px]"
                                 style={{ color: 'var(--color-text-secondary)' }}
                               >
-                                Credits are shown separately from window-based subscription usage
-                                and may be unavailable for plan-backed ChatGPT sessions.
+                                Credits 会与基于窗口的订阅用量分开显示；对于计划支持的 ChatGPT
+                                会话，它可能不可用。
                               </div>
                             </div>
                           </div>
@@ -1698,7 +1687,7 @@ export const ProviderRuntimeSettingsDialog = ({
                       </div>
                       {!showApiKeyForm ? (
                         <Button size="sm" variant="outline" onClick={handleStartApiKeyEdit}>
-                          {selectedApiKey ? 'Replace key' : 'Set API key'}
+                          {selectedApiKey ? '替换密钥' : '设置 API 密钥'}
                         </Button>
                       ) : null}
                     </div>
@@ -1718,8 +1707,8 @@ export const ProviderRuntimeSettingsDialog = ({
                         }}
                       >
                         {selectedProvider.connection?.apiKeyConfigured || selectedApiKey
-                          ? 'Configured'
-                          : 'Not configured'}
+                          ? '已配置'
+                          : '未配置'}
                       </span>
                       {selectedApiKey ? (
                         <span style={{ color: 'var(--color-text-secondary)' }}>
@@ -1732,7 +1721,7 @@ export const ProviderRuntimeSettingsDialog = ({
                       ) : null}
                       {apiKeyStorageStatus && selectedApiKey ? (
                         <span style={{ color: 'var(--color-text-muted)' }}>
-                          Stored in {apiKeyStorageStatus.backend}
+                          存储于 {apiKeyStorageStatus.backend}
                         </span>
                       ) : null}
                     </div>
@@ -1762,7 +1751,7 @@ export const ProviderRuntimeSettingsDialog = ({
                         </div>
 
                         <div className="space-y-1.5">
-                          <Label className="text-xs">Scope</Label>
+                          <Label className="text-xs">范围</Label>
                           <Select
                             value={apiKeyScope}
                             onValueChange={(value) => setApiKeyScope(value as 'user' | 'project')}
@@ -1771,8 +1760,8 @@ export const ProviderRuntimeSettingsDialog = ({
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="user">User</SelectItem>
-                              <SelectItem value="project">Project</SelectItem>
+                              <SelectItem value="user">用户</SelectItem>
+                              <SelectItem value="project">项目</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -1800,7 +1789,7 @@ export const ProviderRuntimeSettingsDialog = ({
                               disabled={apiKeySaving}
                             >
                               <Trash2 className="mr-1 size-3.5" />
-                              Delete
+                              删除
                             </Button>
                           ) : (
                             <span />
@@ -1812,7 +1801,7 @@ export const ProviderRuntimeSettingsDialog = ({
                               size="sm"
                               onClick={handleCancelApiKeyEdit}
                             >
-                              Cancel
+                              取消
                             </Button>
                             <Button
                               type="button"
@@ -1821,10 +1810,10 @@ export const ProviderRuntimeSettingsDialog = ({
                               disabled={apiKeySaving || !apiKeyValue.trim()}
                             >
                               {apiKeySaving
-                                ? 'Saving...'
+                                ? '保存中...'
                                 : selectedApiKey
-                                  ? 'Update key'
-                                  : 'Save key'}
+                                  ? '更新密钥'
+                                  : '保存密钥'}
                             </Button>
                           </div>
                         </div>
@@ -1863,7 +1852,7 @@ export const ProviderRuntimeSettingsDialog = ({
 
                 {apiKeysLoading && !selectedApiKey ? (
                   <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                    Loading stored credentials...
+                    正在加载已保存凭据...
                   </div>
                 ) : null}
               </div>
@@ -1880,7 +1869,7 @@ export const ProviderRuntimeSettingsDialog = ({
             >
               <div>
                 <div className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
-                  Runtime
+                  运行时
                 </div>
                 <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
                   {getRuntimeDescription(selectedProvider)}
@@ -1901,7 +1890,7 @@ export const ProviderRuntimeSettingsDialog = ({
                   style={{ color: 'var(--color-text-secondary)' }}
                 >
                   <Loader2 className="size-3 animate-spin" />
-                  <span>Updating runtime...</span>
+                  <span>正在更新运行时...</span>
                 </div>
               ) : null}
 

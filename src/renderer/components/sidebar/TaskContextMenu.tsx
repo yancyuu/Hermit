@@ -40,19 +40,19 @@ export const TaskContextMenu = ({
           {isPinned ? (
             <>
               <PinOff className="size-3.5 shrink-0" />
-              <span>Unpin</span>
+              <span>取消固定</span>
             </>
           ) : (
             <>
               <Pin className="size-3.5 shrink-0" />
-              <span>Pin</span>
+              <span>固定</span>
             </>
           )}
         </ContextMenuItem>
 
         <ContextMenuItem onSelect={onRename}>
           <Pencil className="size-3.5 shrink-0" />
-          <span>Rename</span>
+          <span>重命名</span>
         </ContextMenuItem>
 
         <ContextMenuSeparator />
@@ -61,12 +61,12 @@ export const TaskContextMenu = ({
           {isArchived ? (
             <>
               <ArchiveRestore className="size-3.5 shrink-0" />
-              <span>Unarchive</span>
+              <span>取消归档</span>
             </>
           ) : (
             <>
               <Archive className="size-3.5 shrink-0" />
-              <span>Archive</span>
+              <span>归档</span>
             </>
           )}
         </ContextMenuItem>
@@ -74,12 +74,9 @@ export const TaskContextMenu = ({
         {onDelete && (
           <>
             <ContextMenuSeparator />
-            <ContextMenuItem
-              onSelect={onDelete}
-              className="text-red-400 focus:text-red-400"
-            >
+            <ContextMenuItem onSelect={onDelete} className="text-red-400 focus:text-red-400">
               <Trash2 className="size-3.5 shrink-0" />
-              <span>Delete task</span>
+              <span>删除任务</span>
             </ContextMenuItem>
           </>
         )}

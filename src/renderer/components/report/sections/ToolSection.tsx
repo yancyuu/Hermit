@@ -17,10 +17,10 @@ export const ToolSection = ({ data, defaultCollapsed }: ToolSectionProps) => {
   );
 
   return (
-    <ReportSection title="Tool Usage" icon={Wrench} defaultCollapsed={defaultCollapsed}>
+    <ReportSection title="工具使用" icon={Wrench} defaultCollapsed={defaultCollapsed}>
       <div className="mb-2 flex items-center gap-2">
         <span className="text-xs text-text-muted">
-          {data.totalCalls.toLocaleString()} total calls across {toolEntries.length} tools
+          共 {data.totalCalls.toLocaleString()} 次调用，覆盖 {toolEntries.length} 个工具
         </span>
         <AssessmentBadge assessment={data.overallToolHealth} metricKey="toolHealth" />
       </div>
@@ -28,11 +28,11 @@ export const ToolSection = ({ data, defaultCollapsed }: ToolSectionProps) => {
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-border text-left text-text-muted">
-              <th className="pb-2 pr-4">Tool</th>
-              <th className="pb-2 pr-4 text-right">Calls</th>
-              <th className="pb-2 pr-4 text-right">Errors</th>
-              <th className="pb-2 pr-4 text-right">Success %</th>
-              <th className="pb-2 text-right">Health</th>
+              <th className="pb-2 pr-4">工具</th>
+              <th className="pb-2 pr-4 text-right">调用</th>
+              <th className="pb-2 pr-4 text-right">错误</th>
+              <th className="pb-2 pr-4 text-right">成功率</th>
+              <th className="pb-2 text-right">健康度</th>
             </tr>
           </thead>
           <tbody>

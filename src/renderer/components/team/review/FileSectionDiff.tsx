@@ -167,7 +167,7 @@ export const FileSectionDiff = ({
           style={{ color: 'var(--diff-removed-text)' }}
         >
           File is missing on disk. This diff may be only a preview from agent logs. Use{' '}
-          <span className="font-medium">Restore</span> to create the file on disk.
+          <span className="font-medium">恢复</span>以在磁盘上创建该文件。
         </div>
       )}
       <DiffErrorBoundary

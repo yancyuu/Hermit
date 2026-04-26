@@ -26,28 +26,28 @@ export const TimelineSection = ({
   const idleColor = assessmentColor(idle.idleAssessment);
 
   return (
-    <ReportSection title="Timeline & Activity" icon={Clock} defaultCollapsed={defaultCollapsed}>
+    <ReportSection title="时间线与活动" icon={Clock} defaultCollapsed={defaultCollapsed}>
       {/* Idle stats */}
       <div className="mb-4">
         <div className="mb-2 flex items-center gap-2">
-          <span className="text-xs font-medium text-text-muted">Idle Analysis</span>
+          <span className="text-xs font-medium text-text-muted">空闲分析</span>
           <AssessmentBadge assessment={idle.idleAssessment} metricKey="idle" />
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div>
-            <div className="text-xs text-text-muted">Idle Gaps</div>
+            <div className="text-xs text-text-muted">空闲间隔</div>
             <div className="text-sm font-medium text-text">{idle.idleGapCount}</div>
           </div>
           <div>
-            <div className="text-xs text-text-muted">Total Idle</div>
+            <div className="text-xs text-text-muted">总空闲</div>
             <div className="text-sm font-medium text-text">{idle.totalIdleHuman}</div>
           </div>
           <div>
-            <div className="text-xs text-text-muted">Active Time</div>
+            <div className="text-xs text-text-muted">活跃时间</div>
             <div className="text-sm font-medium text-text">{idle.activeWorkingHuman}</div>
           </div>
           <div>
-            <div className="text-xs text-text-muted">Idle %</div>
+            <div className="text-xs text-text-muted">空闲占比</div>
             <div className="text-sm font-medium" style={{ color: idleColor }}>
               {idle.idlePct}%
             </div>
@@ -60,7 +60,7 @@ export const TimelineSection = ({
         <div className="mb-4">
           <div className="mb-2 flex items-center gap-2">
             <span className="text-xs font-medium text-text-muted">
-              Model Switches ({modelSwitches.count})
+              模型切换（{modelSwitches.count}）
             </span>
             {modelSwitches.switchPattern && (
               <span
@@ -80,7 +80,7 @@ export const TimelineSection = ({
                 <span className="text-text-secondary">{sw.from}</span>
                 <span className="text-text-muted">&rarr;</span>
                 <span className="text-text">{sw.to}</span>
-                <span className="ml-auto text-text-muted">msg #{sw.messageIndex}</span>
+                <span className="ml-auto text-text-muted">消息 #{sw.messageIndex}</span>
               </div>
             ))}
           </div>
@@ -90,7 +90,7 @@ export const TimelineSection = ({
       {/* Key events */}
       {keyEvents.length > 0 && (
         <div>
-          <div className="mb-2 text-xs font-medium text-text-muted">Key Events</div>
+          <div className="mb-2 text-xs font-medium text-text-muted">关键事件</div>
           <div className="flex flex-col gap-1">
             {keyEvents.map((event, idx) => (
               <div key={idx} className="flex items-center gap-2 px-2 py-0.5 text-xs">

@@ -180,7 +180,7 @@ const ScheduleRow = ({
             </div>
           ) : runs.length === 0 ? (
             <div className="flex items-center justify-center py-3 text-[11px] text-[var(--color-text-muted)]">
-              No runs yet
+              暂无运行记录
             </div>
           ) : (
             <div className="max-h-[200px] overflow-y-auto">

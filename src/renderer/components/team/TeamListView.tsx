@@ -523,10 +523,10 @@ export const TeamListView = (): React.JSX.Element => {
       void (async () => {
         if (isDraft) {
           const confirmed = await confirm({
-            title: 'Delete draft',
-            message: `Delete draft team "${teamName}"? This cannot be undone.`,
-            confirmLabel: 'Delete',
-            cancelLabel: 'Cancel',
+            title: '删除草稿',
+            message: `确定删除草稿团队“${teamName}”吗？此操作无法撤销。`,
+            confirmLabel: '删除',
+            cancelLabel: '取消',
             variant: 'danger',
           });
           if (confirmed) {
@@ -535,10 +535,10 @@ export const TeamListView = (): React.JSX.Element => {
           return;
         }
         const confirmed = await confirm({
-          title: 'Move to trash',
-          message: `Move team "${teamName}" to trash? You can restore it later.`,
-          confirmLabel: 'Move to trash',
-          cancelLabel: 'Cancel',
+          title: '移入回收站',
+          message: `确定将团队“${teamName}”移入回收站吗？之后可以恢复。`,
+          confirmLabel: '移入回收站',
+          cancelLabel: '取消',
           variant: 'danger',
         });
         if (confirmed) {
@@ -572,10 +572,10 @@ export const TeamListView = (): React.JSX.Element => {
       e.stopPropagation();
       void (async () => {
         const confirmed = await confirm({
-          title: 'Delete permanently',
-          message: `Delete team "${teamName}" permanently? All data will be lost.`,
-          confirmLabel: 'Delete forever',
-          cancelLabel: 'Cancel',
+          title: '永久删除',
+          message: `确定永久删除团队“${teamName}”吗？所有数据都将丢失。`,
+          confirmLabel: '永久删除',
+          cancelLabel: '取消',
           variant: 'danger',
         });
         if (confirmed) {
@@ -1124,12 +1124,12 @@ export const TeamListView = (): React.JSX.Element => {
                               type="button"
                               className="shrink-0 rounded p-1 text-[var(--color-text-muted)] opacity-0 transition-opacity hover:bg-emerald-500/10 hover:text-emerald-300 group-hover:opacity-100"
                               onClick={(e) => handleRestoreTeam(team.teamName, e)}
-                              aria-label="Restore team"
+                              aria-label="恢复团队"
                             >
                               <RotateCcw size={14} />
                             </button>
                           </TooltipTrigger>
-                          <TooltipContent side="bottom">Restore</TooltipContent>
+                          <TooltipContent side="bottom">恢复</TooltipContent>
                         </Tooltip>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -1137,17 +1137,17 @@ export const TeamListView = (): React.JSX.Element => {
                               type="button"
                               className="shrink-0 rounded p-1 text-[var(--color-text-muted)] opacity-0 transition-opacity hover:bg-red-500/10 hover:text-red-300 group-hover:opacity-100"
                               onClick={(e) => handlePermanentlyDeleteTeam(team.teamName, e)}
-                              aria-label="Delete permanently"
+                              aria-label="永久删除"
                             >
                               <Trash2 size={14} />
                             </button>
                           </TooltipTrigger>
-                          <TooltipContent side="bottom">Delete forever</TooltipContent>
+                          <TooltipContent side="bottom">永久删除</TooltipContent>
                         </Tooltip>
                       </div>
                     </div>
                     <p className="mt-2 line-clamp-2 text-xs text-[var(--color-text-muted)]">
-                      {team.description || 'No description'}
+                      {team.description || '暂无描述'}
                     </p>
                     {team.members && team.members.length > 0 && (
                       <div className="mt-3 flex flex-wrap items-center gap-1.5">

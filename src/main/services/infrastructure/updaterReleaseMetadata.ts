@@ -1,13 +1,12 @@
-const REPO_OWNER = '777genius';
-const REPO_NAME = 'claude_agent_teams_ui';
-const PLANNED_REPO_NAME = 'agent-teams-ai';
+const REPO_OWNER = 'lazy-agent';
+const REPO_NAME = 'multi-agent-workbench';
 
 export function buildReleaseAssetBase(version: string, repoName = REPO_NAME): string {
   return `https://github.com/${REPO_OWNER}/${repoName}/releases/download/v${version}`;
 }
 
 export function buildReleaseAssetBases(version: string): readonly string[] {
-  return [buildReleaseAssetBase(version), buildReleaseAssetBase(version, PLANNED_REPO_NAME)];
+  return [buildReleaseAssetBase(version)];
 }
 
 export function getExpectedReleaseAssetUrl(
@@ -20,12 +19,12 @@ export function getExpectedReleaseAssetUrl(
   switch (platform) {
     case 'darwin':
       return arch === 'arm64'
-        ? `${base}/Claude.Agent.Teams.UI-${version}-arm64.dmg`
-        : `${base}/Claude.Agent.Teams.UI-${version}-x64.dmg`;
+        ? `${base}/Multi.Agent.Teams-${version}-arm64.dmg`
+        : `${base}/Multi.Agent.Teams-${version}-x64.dmg`;
     case 'win32':
-      return `${base}/Claude.Agent.Teams.UI.Setup.${version}.exe`;
+      return `${base}/Multi.Agent.Teams.Setup.${version}.exe`;
     case 'linux':
-      return `${base}/Claude.Agent.Teams.UI-${version}.AppImage`;
+      return `${base}/Multi.Agent.Teams-${version}.AppImage`;
     default:
       return null;
   }
@@ -58,11 +57,8 @@ export function getExpectedLatestMacArtifacts(
   arch: Extract<NodeJS.Architecture, 'arm64' | 'x64'>
 ): readonly string[] {
   return arch === 'arm64'
-    ? [
-        `Claude.Agent.Teams.UI-${version}-arm64-mac.zip`,
-        `Claude.Agent.Teams.UI-${version}-arm64.dmg`,
-      ]
-    : [`Claude.Agent.Teams.UI-${version}-x64-mac.zip`, `Claude.Agent.Teams.UI-${version}-x64.dmg`];
+    ? [`Multi.Agent.Teams-${version}-arm64-mac.zip`, `Multi.Agent.Teams-${version}-arm64.dmg`]
+    : [`Multi.Agent.Teams-${version}-x64-mac.zip`, `Multi.Agent.Teams-${version}-x64.dmg`];
 }
 
 function stripYamlScalar(rawValue: string): string {

@@ -67,7 +67,7 @@ export const ExecutionTrace: React.FC<ExecutionTraceProps> = ({
   if (!items || items.length === 0) {
     return (
       <div className="px-3 py-2 text-xs" style={{ color: CARD_ICON_MUTED }}>
-        No execution items
+        暂无执行项
       </div>
     );
   }

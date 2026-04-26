@@ -45,7 +45,7 @@ export const IgnorePatternsSection = ({
         <div className="mt-2 flex gap-2">
           <input
             type="text"
-            placeholder="Add ignore regex..."
+            placeholder="添加忽略正则..."
             disabled={disabled}
             className={`flex-1 rounded border border-border bg-transparent px-2 py-1 font-mono text-xs text-text placeholder:text-text-muted focus:border-transparent focus:outline-none focus:ring-1 focus:ring-indigo-500 ${disabled ? 'cursor-not-allowed opacity-50' : ''} `}
             onKeyDown={(e) => {

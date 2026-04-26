@@ -72,7 +72,7 @@ describe('ClaudeBinaryResolver', () => {
     });
     process.cwd = vi.fn(() => workspaceRoot);
     Object.defineProperty(process, 'resourcesPath', {
-      value: '/Applications/Agent Teams UI.app/Contents/Resources',
+      value: '/Applications/Multi Agent Teams.app/Contents/Resources',
       configurable: true,
       writable: true,
     });
@@ -100,12 +100,12 @@ describe('ClaudeBinaryResolver', () => {
     vi.unstubAllEnvs();
   });
 
-  it('resolves agent_teams_orchestrator runtime from an explicit CLAUDE_CLI_PATH override', async () => {
-    const expectedBinary = '/Users/belief/dev/projects/claude/agent_teams_orchestrator/cli-dev';
-    process.env.CLAUDE_CLI_PATH = expectedBinary;
+  it('does not use CLAUDE_CLI_PATH as an agent_teams_orchestrator runtime override', async () => {
+    const standardClaudeBinary = '/Users/belief/.local/bin/claude';
+    process.env.CLAUDE_CLI_PATH = standardClaudeBinary;
 
     accessMock.mockImplementation((filePath) => {
-      if (filePath === expectedBinary) {
+      if (filePath === standardClaudeBinary) {
         return Promise.resolve();
       }
       return Promise.reject(Object.assign(new Error('ENOENT'), { code: 'ENOENT' }));
@@ -114,8 +114,8 @@ describe('ClaudeBinaryResolver', () => {
     const { ClaudeBinaryResolver } = await import('@main/services/team/ClaudeBinaryResolver');
     ClaudeBinaryResolver.clearCache();
 
-    await expect(ClaudeBinaryResolver.resolve()).resolves.toBe(expectedBinary);
-    expect(accessMock).toHaveBeenCalledWith(expectedBinary, 1);
+    await expect(ClaudeBinaryResolver.resolve()).resolves.toBeNull();
+    expect(accessMock).not.toHaveBeenCalledWith(standardClaudeBinary, 1);
   });
 
   it('prefers the dedicated CLAUDE_AGENT_TEAMS_ORCHESTRATOR_CLI_PATH override', async () => {
@@ -200,7 +200,7 @@ describe('ClaudeBinaryResolver', () => {
 
   it('prefers the bundled runtime binary for packaged agent_teams_orchestrator builds', async () => {
     const expectedBinary = path.join(
-      '/Applications/Agent Teams UI.app/Contents/Resources',
+      '/Applications/Multi Agent Teams.app/Contents/Resources',
       'runtime',
       'claude-multimodel'
     );

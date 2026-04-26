@@ -33,7 +33,7 @@ const TIMEZONE_PRESETS = [
 ] as const;
 
 const WARMUP_OPTIONS = [
-  { value: 0, label: 'No warm-up' },
+  { value: 0, label: '不预热' },
   { value: 5, label: '5 min' },
   { value: 10, label: '10 min' },
   { value: 15, label: '15 min' },

@@ -65,34 +65,34 @@ export function selectInitialProviderId(
 export function formatRuntimeState(runtime: RuntimeProviderManagementRuntimeDto): string {
   switch (runtime.state) {
     case 'ready':
-      return 'Ready';
+      return '已就绪';
     case 'needs-auth':
-      return 'Needs auth';
+      return '需要认证';
     case 'needs-setup':
-      return 'Needs setup';
+      return '需要设置';
     case 'degraded':
-      return 'Degraded';
+      return '降级';
   }
 }
 
 export function formatProviderState(provider: RuntimeProviderConnectionDto): string {
   switch (provider.state) {
     case 'connected':
-      return 'Connected';
+      return '已连接';
     case 'available':
-      return 'Available';
+      return '可用';
     case 'not-connected':
-      return 'Not connected';
+      return '未连接';
     case 'ignored':
-      return 'Ignored';
+      return '已忽略';
     case 'error':
-      return 'Error';
+      return '错误';
   }
 }
 
 export function getProviderModelsLabel(provider: RuntimeProviderConnectionDto): string {
   if (provider.modelCount <= 0) {
-    return 'Models not reported';
+    return '未报告模型';
   }
-  return `${provider.modelCount} model${provider.modelCount === 1 ? '' : 's'}`;
+  return `${provider.modelCount} 个模型`;
 }

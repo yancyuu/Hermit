@@ -22,7 +22,7 @@ const diffLines = [
 
 /* Phases */
 const phases = [
-  { icon: Search, label: 'Reading task ledger...', accent: 'rgba(147,197,253,0.7)' },
+  { icon: Search, label: '正在读取任务台账...', accent: 'rgba(147,197,253,0.7)' },
   { icon: FileDiff, label: 'Resolving file states...', accent: 'rgba(253,186,116,0.7)' },
   { icon: GitBranch, label: 'Checking worktree context...', accent: 'rgba(167,139,250,0.7)' },
   { icon: FileCode, label: 'Preparing review diffs...', accent: 'rgba(110,231,183,0.7)' },

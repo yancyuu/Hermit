@@ -64,7 +64,7 @@ export function formatCodexWindowDurationLong(
 }
 
 export function formatCodexUsageWindowLabel(
-  title: 'Primary used' | 'Secondary used' | 'Weekly used',
+  title: string,
   windowDurationMins: number | null | undefined
 ): string {
   const duration = formatCodexWindowDuration(windowDurationMins);
@@ -72,7 +72,7 @@ export function formatCodexUsageWindowLabel(
 }
 
 export function formatCodexResetWindowLabel(
-  title: 'Primary reset' | 'Secondary reset' | 'Weekly reset',
+  title: string,
   windowDurationMins: number | null | undefined
 ): string {
   const duration = formatCodexWindowDuration(windowDurationMins);

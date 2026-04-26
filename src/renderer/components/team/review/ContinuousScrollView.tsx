@@ -240,7 +240,7 @@ export const ContinuousScrollView = ({
   if (files.length === 0) {
     return (
       <div className="flex h-full items-center justify-center text-sm text-text-muted">
-        No reviewable file changes
+        没有可审查的文件变更
       </div>
     );
   }

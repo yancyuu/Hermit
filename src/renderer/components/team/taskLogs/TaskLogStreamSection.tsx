@@ -168,9 +168,7 @@ export const TaskLogStreamSection = ({
         }
 
         if (!background || streamRef.current == null) {
-          setError(
-            loadError instanceof Error ? loadError.message : 'Failed to load task log stream'
-          );
+          setError(loadError instanceof Error ? loadError.message : '加载任务日志流失败');
           setStream(null);
         }
       } finally {

@@ -13,10 +13,10 @@ interface LaunchJoinMemberLike {
 
 /** Display steps for the provisioning stepper (0-indexed). */
 export const DISPLAY_STEPS = [
-  { key: 'starting', label: 'Starting' },
-  { key: 'configuring', label: 'Team setup' },
-  { key: 'assembling', label: 'Members joining' },
-  { key: 'finalizing', label: 'Finalizing' },
+  { key: 'starting', label: '启动中' },
+  { key: 'configuring', label: '团队设置' },
+  { key: 'assembling', label: '成员加入' },
+  { key: 'finalizing', label: '收尾确认' },
 ] as const;
 
 export const DISPLAY_COMPLETE_STEP_INDEX = DISPLAY_STEPS.length;

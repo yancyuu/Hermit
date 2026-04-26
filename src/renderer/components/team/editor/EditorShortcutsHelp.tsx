@@ -99,7 +99,7 @@ export const EditorShortcutsHelp = ({ onClose }: EditorShortcutsHelpProps): Reac
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="w-[480px] max-w-[480px]">
         <DialogHeader>
-          <DialogTitle className="text-sm">Keyboard Shortcuts</DialogTitle>
+          <DialogTitle className="text-sm">快捷键</DialogTitle>
         </DialogHeader>
 
         <div className="grid grid-cols-2 gap-x-6 gap-y-4">

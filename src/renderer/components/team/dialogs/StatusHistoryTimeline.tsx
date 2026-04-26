@@ -141,12 +141,12 @@ const EventContent = ({
       return (
         <span className="flex items-center gap-1">
           <ShieldCheck size={10} className="text-emerald-400" />
-          Approved
+          已批准
           <ReviewStateBadge state="approved" />
         </span>
       );
     default:
-      return <span>Unknown event</span>;
+      return <span>未知事件</span>;
   }
 };
 

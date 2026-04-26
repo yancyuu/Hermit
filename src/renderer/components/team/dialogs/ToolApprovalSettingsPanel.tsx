@@ -33,7 +33,7 @@ export const ToolApprovalSettingsToggle: React.FC<{ expanded: boolean; onToggle:
     }}
   >
     <Settings className="size-3" />
-    <span>Settings</span>
+    <span>设置</span>
     {expanded ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
   </button>
 );
@@ -69,7 +69,7 @@ export const ToolApprovalSettingsContent: React.FC<{
           checked={settings.autoAllowAll}
           onCheckedChange={(checked) => void updateSettings({ autoAllowAll: checked === true })}
         />
-        Auto-allow all tools
+        自动允许所有工具
       </label>
 
       {/* Separator */}
@@ -90,7 +90,7 @@ export const ToolApprovalSettingsContent: React.FC<{
             void updateSettings({ autoAllowFileEdits: checked === true })
           }
         />
-        Auto-allow file edits (Edit, Write, NotebookEdit)
+        自动允许文件编辑（Edit、Write、NotebookEdit）
       </label>
 
       {/* Auto-allow safe bash */}
@@ -108,7 +108,7 @@ export const ToolApprovalSettingsContent: React.FC<{
             void updateSettings({ autoAllowSafeBash: checked === true })
           }
         />
-        Auto-allow safe commands (git, pnpm, npm, ls...)
+        自动允许安全命令（git、pnpm、npm、ls...）
       </label>
 
       {/* Separator */}
@@ -119,7 +119,7 @@ export const ToolApprovalSettingsContent: React.FC<{
         className="flex items-center gap-2 text-xs"
         style={{ color: 'var(--color-text-secondary)' }}
       >
-        <span className="shrink-0">On timeout:</span>
+        <span className="shrink-0">超时后：</span>
         <Select
           value={settings.timeoutAction}
           onValueChange={(value) =>
@@ -130,15 +130,15 @@ export const ToolApprovalSettingsContent: React.FC<{
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="z-[60]">
-            <SelectItem value="wait">Wait forever</SelectItem>
-            <SelectItem value="allow">Allow</SelectItem>
-            <SelectItem value="deny">Deny</SelectItem>
+            <SelectItem value="wait">一直等待</SelectItem>
+            <SelectItem value="allow">允许</SelectItem>
+            <SelectItem value="deny">拒绝</SelectItem>
           </SelectContent>
         </Select>
 
         {settings.timeoutAction !== 'wait' && (
           <>
-            <span className="shrink-0">after</span>
+            <span className="shrink-0">等待</span>
             <input
               type="number"
               min={5}

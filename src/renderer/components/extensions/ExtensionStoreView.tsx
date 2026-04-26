@@ -73,11 +73,11 @@ const ProviderCapabilityCardSkeleton = ({
         </p>
         <div className="mt-1 flex items-center gap-2 text-[11px] text-text-muted">
           <Loader2 className="size-3 animate-spin" />
-          <span>Checking provider status...</span>
+          <span>正在检查提供商状态...</span>
         </div>
       </div>
       <Badge variant="outline" className="shrink-0 text-text-muted">
-        Loading...
+        加载中...
       </Badge>
     </div>
     <div className="mt-2 flex flex-wrap gap-1.5">
@@ -222,31 +222,28 @@ export const ExtensionStoreView = (): React.JSX.Element => {
     () => [
       {
         value: 'plugins' as const,
-        label: 'Plugins',
+        label: '插件',
         icon: Puzzle,
         description:
-          'Small add-ons for the runtime. In multimodel mode they currently apply to Anthropic sessions when supported. Broader provider support is in development.',
+          '运行时的小型扩展。多模型模式下，目前在支持时主要作用于 Anthropic 会话，更广泛的提供商支持正在开发中。',
       },
       {
         value: 'mcp-servers' as const,
-        label: 'MCP Servers',
+        label: 'MCP 服务器',
         icon: Server,
-        description:
-          'Connections to outside tools and apps. They let the runtime read data or do actions beyond this app.',
+        description: '连接外部工具和应用，让运行时可以读取数据或执行本应用之外的操作。',
       },
       {
         value: 'skills' as const,
-        label: 'Skills',
+        label: '技能',
         icon: BookOpen,
-        description:
-          'Ready-made instructions for common jobs. They help the runtime handle repeatable tasks more consistently.',
+        description: '面向常见任务的可复用指令，帮助运行时更稳定地处理重复工作。',
       },
       {
         value: 'api-keys' as const,
-        label: 'API Keys',
+        label: 'API 密钥',
         icon: Key,
-        description:
-          'Secret keys for online services. Add them here so plugins, servers, and integrations can connect and work.',
+        description: '在线服务的密钥。添加后，插件、服务器和集成即可连接并工作。',
       },
     ],
     []
@@ -335,12 +332,9 @@ export const ExtensionStoreView = (): React.JSX.Element => {
         <div className="bg-surface/70 mx-4 mt-3 flex items-start gap-3 rounded-md border border-border px-4 py-3">
           <Info className="mt-0.5 size-4 shrink-0 text-text-secondary" />
           <div>
-            <p className="text-sm font-medium text-text">
-              Checking extensions runtime availability
-            </p>
+            <p className="text-sm font-medium text-text">正在检查扩展运行时可用性</p>
             <p className="mt-0.5 text-xs text-text-muted">
-              Extensions need the configured runtime to manage plugins, MCP servers, skills, and
-              provider connections.
+              扩展需要配置好的运行时来管理插件、MCP 服务器、技能和提供商连接。
             </p>
           </div>
         </div>
@@ -432,10 +426,10 @@ export const ExtensionStoreView = (): React.JSX.Element => {
                     ? 'border-amber-500/30 bg-amber-500/5 text-amber-300'
                     : 'border-border bg-surface-raised text-text-muted';
                 const statusLabel = provider.authenticated
-                  ? 'Connected'
+                  ? '已连接'
                   : provider.supported
-                    ? 'Needs setup'
-                    : 'Unsupported';
+                    ? '需要设置'
+                    : '不支持';
                 const extensionCapabilities = getCliProviderExtensionCapabilities(provider);
                 const pluginStatus = extensionCapabilities.plugins.status;
 
@@ -454,9 +448,7 @@ export const ExtensionStoreView = (): React.JSX.Element => {
                           <span>{provider.displayName}</span>
                         </p>
                         <p className="truncate text-[11px] text-text-muted">
-                          {provider.statusMessage ??
-                            provider.backend?.label ??
-                            'Ready to configure'}
+                          {provider.statusMessage ?? provider.backend?.label ?? '可配置'}
                         </p>
                       </div>
                       <Badge variant="outline" className="shrink-0">
@@ -472,13 +464,13 @@ export const ExtensionStoreView = (): React.JSX.Element => {
                             : undefined
                         }
                       >
-                        Plugins: {formatCliExtensionCapabilityStatus(pluginStatus)}
+                        插件：{formatCliExtensionCapabilityStatus(pluginStatus)}
                       </Badge>
                       <Badge variant="secondary">
                         MCP: {formatCliExtensionCapabilityStatus(extensionCapabilities.mcp.status)}
                       </Badge>
                       <Badge variant="secondary">
-                        Skills: {extensionCapabilities.skills.ownership}
+                        技能：{extensionCapabilities.skills.ownership}
                       </Badge>
                     </div>
                   </div>
@@ -494,11 +486,11 @@ export const ExtensionStoreView = (): React.JSX.Element => {
       <div className="mx-4 mt-3 flex items-start gap-3 rounded-md border border-emerald-500/30 bg-emerald-500/5 px-4 py-3">
         <Info className="mt-0.5 size-4 shrink-0 text-emerald-300" />
         <div>
-          <p className="text-sm font-medium text-emerald-300">{runtimeDisplayName} is ready</p>
+          <p className="text-sm font-medium text-emerald-300">{runtimeDisplayName} 已就绪</p>
           <p className="mt-0.5 text-xs text-text-muted">
-            Plugins can be installed from this page
+            可以从此页面安装插件
             {effectiveCliStatus.installedVersion
-              ? ` using ${runtimeDisplayName} ${effectiveCliStatus.installedVersion}`
+              ? `，使用 ${runtimeDisplayName} ${effectiveCliStatus.installedVersion}`
               : ''}
             .
           </p>
@@ -519,8 +511,8 @@ export const ExtensionStoreView = (): React.JSX.Element => {
       <div className="flex flex-1 items-center justify-center">
         <div className="text-center">
           <Puzzle className="mx-auto mb-3 size-12 text-text-muted" />
-          <h2 className="text-lg font-semibold text-text">Extensions</h2>
-          <p className="mt-1 text-sm text-text-muted">Available in the desktop app only.</p>
+          <h2 className="text-lg font-semibold text-text">扩展</h2>
+          <p className="mt-1 text-sm text-text-muted">仅桌面应用可用。</p>
         </div>
       </div>
     );
@@ -535,7 +527,7 @@ export const ExtensionStoreView = (): React.JSX.Element => {
           <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center gap-3">
               <Puzzle className="size-5 text-text-muted" />
-              <h1 className="text-lg font-semibold text-text">Extensions</h1>
+              <h1 className="text-lg font-semibold text-text">扩展</h1>
             </div>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -543,7 +535,7 @@ export const ExtensionStoreView = (): React.JSX.Element => {
                   <RefreshCw className={`size-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Refresh catalog</TooltipContent>
+              <TooltipContent>刷新目录</TooltipContent>
             </Tooltip>
           </div>
 

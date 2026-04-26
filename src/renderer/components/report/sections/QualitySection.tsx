@@ -27,31 +27,31 @@ export const QualitySection = ({
   defaultCollapsed,
 }: QualitySectionProps) => {
   return (
-    <ReportSection title="Quality Signals" icon={BarChart3} defaultCollapsed={defaultCollapsed}>
+    <ReportSection title="质量信号" icon={BarChart3} defaultCollapsed={defaultCollapsed}>
       {/* Prompt quality */}
       <div className="mb-4">
-        <div className="mb-2 text-xs font-medium text-text-muted">Prompt Quality</div>
+        <div className="mb-2 text-xs font-medium text-text-muted">提示词质量</div>
         <div className="mb-2 flex items-center gap-2">
           <AssessmentBadge assessment={prompt.assessment} metricKey="promptQuality" />
         </div>
         <div className="text-xs text-text-secondary">{prompt.note}</div>
         <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div>
-            <div className="text-xs text-text-muted">First Message</div>
+            <div className="text-xs text-text-muted">首条消息</div>
             <div className="text-sm font-medium text-text">
-              {prompt.firstMessageLengthChars.toLocaleString()} chars
+              {prompt.firstMessageLengthChars.toLocaleString()} 字符
             </div>
           </div>
           <div>
-            <div className="text-xs text-text-muted">User Messages</div>
+            <div className="text-xs text-text-muted">用户消息</div>
             <div className="text-sm font-medium text-text">{prompt.userMessageCount}</div>
           </div>
           <div>
-            <div className="text-xs text-text-muted">Corrections</div>
+            <div className="text-xs text-text-muted">纠正次数</div>
             <div className="text-sm font-medium text-text">{prompt.correctionCount}</div>
           </div>
           <div>
-            <div className="text-xs text-text-muted">Friction Rate</div>
+            <div className="text-xs text-text-muted">摩擦率</div>
             <div className="text-sm font-medium text-text">
               {(prompt.frictionRate * 100).toFixed(1)}%
             </div>
@@ -62,22 +62,22 @@ export const QualitySection = ({
       {/* Startup overhead */}
       <div className="mb-4">
         <div className="mb-2 flex items-center gap-2">
-          <span className="text-xs font-medium text-text-muted">Startup Overhead</span>
+          <span className="text-xs font-medium text-text-muted">启动开销</span>
           <AssessmentBadge assessment={startup.overheadAssessment} metricKey="startup" />
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <div>
-            <div className="text-xs text-text-muted">Messages Before Work</div>
+            <div className="text-xs text-text-muted">开始前消息数</div>
             <div className="text-sm font-medium text-text">{startup.messagesBeforeFirstWork}</div>
           </div>
           <div>
-            <div className="text-xs text-text-muted">Tokens Before Work</div>
+            <div className="text-xs text-text-muted">开始前 Token</div>
             <div className="text-sm font-medium text-text">
               {startup.tokensBeforeFirstWork.toLocaleString()}
             </div>
           </div>
           <div>
-            <div className="text-xs text-text-muted">% of Total</div>
+            <div className="text-xs text-text-muted">总量占比</div>
             <div className="text-sm font-medium text-text">{startup.pctOfTotal}%</div>
           </div>
         </div>
@@ -86,7 +86,7 @@ export const QualitySection = ({
       {/* File read redundancy */}
       <div className="mb-4">
         <div className="mb-2 flex items-center gap-2">
-          <span className="text-xs font-medium text-text-muted">File Read Redundancy</span>
+          <span className="text-xs font-medium text-text-muted">文件读取冗余</span>
           <AssessmentBadge
             assessment={fileReadRedundancy.redundancyAssessment}
             metricKey="fileReads"
@@ -94,15 +94,15 @@ export const QualitySection = ({
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <div>
-            <div className="text-xs text-text-muted">Total Reads</div>
+            <div className="text-xs text-text-muted">总读取数</div>
             <div className="text-sm font-medium text-text">{fileReadRedundancy.totalReads}</div>
           </div>
           <div>
-            <div className="text-xs text-text-muted">Unique Files</div>
+            <div className="text-xs text-text-muted">唯一文件数</div>
             <div className="text-sm font-medium text-text">{fileReadRedundancy.uniqueFiles}</div>
           </div>
           <div>
-            <div className="text-xs text-text-muted">Reads/Unique File</div>
+            <div className="text-xs text-text-muted">每文件读取数</div>
             <div className="text-sm font-medium text-text">
               {fileReadRedundancy.readsPerUniqueFile}x
             </div>
@@ -112,36 +112,34 @@ export const QualitySection = ({
 
       {/* Test progression */}
       <div>
-        <div className="mb-2 text-xs font-medium text-text-muted">Test Progression</div>
+        <div className="mb-2 text-xs font-medium text-text-muted">测试进展</div>
         <div className="mb-2 flex items-center gap-2">
           <AssessmentBadge assessment={testProgression.trajectory} metricKey="testTrajectory" />
-          <span className="text-xs text-text-muted">
-            {testProgression.snapshotCount} snapshot{testProgression.snapshotCount !== 1 ? 's' : ''}
-          </span>
+          <span className="text-xs text-text-muted">{testProgression.snapshotCount} 个快照</span>
         </div>
         {testProgression.firstSnapshot && testProgression.lastSnapshot && (
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <div className="text-xs text-text-muted">First Run</div>
+              <div className="text-xs text-text-muted">首次运行</div>
               <div className="text-sm text-text">
                 <span style={{ color: severityColor('good') }}>
-                  {testProgression.firstSnapshot.passed} passed
+                  {testProgression.firstSnapshot.passed} 通过
                 </span>
                 {' / '}
                 <span style={{ color: severityColor('danger') }}>
-                  {testProgression.firstSnapshot.failed} failed
+                  {testProgression.firstSnapshot.failed} 失败
                 </span>
               </div>
             </div>
             <div>
-              <div className="text-xs text-text-muted">Last Run</div>
+              <div className="text-xs text-text-muted">最近运行</div>
               <div className="text-sm text-text">
                 <span style={{ color: severityColor('good') }}>
-                  {testProgression.lastSnapshot.passed} passed
+                  {testProgression.lastSnapshot.passed} 通过
                 </span>
                 {' / '}
                 <span style={{ color: severityColor('danger') }}>
-                  {testProgression.lastSnapshot.failed} failed
+                  {testProgression.lastSnapshot.failed} 失败
                 </span>
               </div>
             </div>

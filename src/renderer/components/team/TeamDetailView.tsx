@@ -1512,7 +1512,7 @@ export const TeamDetailView = ({
         }
       } catch (e) {
         if (!cancelled) {
-          setSessionsError(e instanceof Error ? e.message : 'Failed to load sessions');
+          setSessionsError(e instanceof Error ? e.message : '加载会话失败');
         }
       } finally {
         if (!cancelled) {
@@ -1893,10 +1893,10 @@ export const TeamDetailView = ({
     (taskId: string) => {
       void (async () => {
         const confirmed = await confirm({
-          title: 'Delete task',
-          message: `Move task #${deriveTaskDisplayId(taskId)} to trash?`,
-          confirmLabel: 'Delete',
-          cancelLabel: 'Cancel',
+          title: '删除任务',
+          message: `将任务 #${deriveTaskDisplayId(taskId)} 移入废纸篓？`,
+          confirmLabel: '删除',
+          cancelLabel: '取消',
           variant: 'danger',
         });
         if (confirmed) {

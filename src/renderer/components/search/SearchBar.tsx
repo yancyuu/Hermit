@@ -127,14 +127,14 @@ export const SearchBar = ({ tabId }: SearchBarProps): React.JSX.Element | null =
         value={localQuery}
         onChange={(e) => handleChange(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Find in conversation..."
+        placeholder="在对话中查找..."
         className="w-48 rounded border border-border bg-surface-raised px-3 py-1.5 text-sm text-text focus:border-text-secondary focus:outline-none"
       />
 
       {/* Result count */}
       {searchQuery && (
         <span className="whitespace-nowrap text-xs text-text-secondary">
-          {searchResultCount > 0 ? resultLabel : 'No results'}
+          {searchResultCount > 0 ? resultLabel : '无结果'}
         </span>
       )}
 
@@ -144,7 +144,7 @@ export const SearchBar = ({ tabId }: SearchBarProps): React.JSX.Element | null =
           onClick={previousSearchResult}
           disabled={searchResultCount === 0}
           className="rounded p-1 text-text-secondary transition-colors hover:bg-surface-raised hover:text-text disabled:cursor-not-allowed disabled:opacity-30"
-          title="Previous result (Shift+Enter)"
+          title="上一个结果（Shift+Enter）"
         >
           <ChevronUp className="size-4" />
         </button>
@@ -152,7 +152,7 @@ export const SearchBar = ({ tabId }: SearchBarProps): React.JSX.Element | null =
           onClick={nextSearchResult}
           disabled={searchResultCount === 0}
           className="rounded p-1 text-text-secondary transition-colors hover:bg-surface-raised hover:text-text disabled:cursor-not-allowed disabled:opacity-30"
-          title="Next result (Enter)"
+          title="下一个结果（Enter）"
         >
           <ChevronDown className="size-4" />
         </button>
@@ -162,7 +162,7 @@ export const SearchBar = ({ tabId }: SearchBarProps): React.JSX.Element | null =
       <button
         onClick={hideSearch}
         className="rounded p-1 text-text-secondary transition-colors hover:bg-surface-raised hover:text-text"
-        title="Close (Esc)"
+        title="关闭（Esc）"
       >
         <X className="size-4" />
       </button>

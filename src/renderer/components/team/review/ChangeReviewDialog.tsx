@@ -86,7 +86,7 @@ const TaskChangesEmptyState = ({
           className={cn('mx-auto mb-2 size-5', hasWarnings ? 'text-amber-300' : 'text-text-muted')}
         />
         <div className="text-sm font-medium text-text">
-          {hasWarnings ? 'No reviewable file changes' : 'No file changes recorded'}
+          {hasWarnings ? '没有可审查的文件变更' : '未记录文件变更'}
         </div>
         <p className="mt-1 text-xs leading-5 text-text-muted">
           {hasWarnings

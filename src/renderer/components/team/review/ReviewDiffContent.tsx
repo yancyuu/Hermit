@@ -187,7 +187,7 @@ export const ReviewDiffContent = ({ file }: ReviewDiffContentProps) => {
         <div className="py-8 text-center text-sm text-text-muted">
           {hasLedgerMetadataOnly
             ? 'Ledger metadata is available, but no text diff can be rendered for this file.'
-            : 'No text changes to display'}
+            : '没有可显示的文本变更'}
         </div>
       )}
     </div>

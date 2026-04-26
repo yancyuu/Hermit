@@ -1,7 +1,7 @@
 {
-  "name": "claude-agent-teams-ui",
+  "name": "multi-agent-teams",
   "type": "module",
-  "version": "1.3.3",
+  "version": "1.3.12",
   "description": "Desktop app for managing AI agent teams, reviews, runtime logs, and provider-aware workflows",
   "license": "AGPL-3.0",
   "author": {
@@ -222,8 +222,8 @@
     "vitest": "^3.1.4"
   },
   "build": {
-    "appId": "com.agent-teams.app",
-    "productName": "Agent Teams UI",
+    "appId": "com.multiagentteams.app",
+    "productName": "Multi Agent Teams",
     "directories": {
       "output": "release"
     },
@@ -262,7 +262,7 @@
       "main": "dist-electron/main/index.cjs"
     },
     "mac": {
-      "artifactName": "Claude.Agent.Teams.UI-${version}-${arch}-mac.${ext}",
+      "artifactName": "Multi.Agent.Teams-${version}-${arch}-mac.${ext}",
       "category": "public.app-category.developer-tools",
       "minimumSystemVersion": "12.0",
       "target": [
@@ -278,7 +278,7 @@
     },
     "dmg": {
       "sign": false,
-      "artifactName": "Claude.Agent.Teams.UI-${version}-${arch}.${ext}"
+      "artifactName": "Multi.Agent.Teams-${version}-${arch}.${ext}"
     },
     "win": {
       "target": [
@@ -297,13 +297,13 @@
       "category": "Development"
     },
     "appImage": {
-      "artifactName": "Claude.Agent.Teams.UI-${version}.${ext}"
+      "artifactName": "Multi.Agent.Teams-${version}.${ext}"
     },
     "deb": {
       "afterInstall": "resources/afterInstall.sh"
     },
     "nsis": {
-      "artifactName": "Claude.Agent.Teams.UI.Setup.${version}.${ext}",
+      "artifactName": "Multi.Agent.Teams.Setup.${version}.${ext}",
       "oneClick": false,
       "perMachine": false,
       "allowToChangeInstallationDirectory": true

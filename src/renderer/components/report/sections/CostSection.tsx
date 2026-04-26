@@ -64,7 +64,7 @@ const CostBreakdownCard = ({
           );
         })}
         <div className="mt-1 flex items-baseline justify-between gap-4 border-t border-border pt-1.5">
-          <span className="font-medium text-text">Total</span>
+          <span className="font-medium text-text">总计</span>
           <span className="font-medium text-text">{fmt(total)}</span>
         </div>
       </div>
@@ -88,7 +88,7 @@ export const CostSection = ({
       : 100;
 
   return (
-    <ReportSection title="Cost Analysis" icon={DollarSign} defaultCollapsed={defaultCollapsed}>
+    <ReportSection title="费用分析" icon={DollarSign} defaultCollapsed={defaultCollapsed}>
       <div className="mb-4 text-2xl font-bold text-text">{fmt(data.totalSessionCostUsd)}</div>
 
       {/* Parent/Subagent stacked bar */}
@@ -110,14 +110,14 @@ export const CostSection = ({
                 className="inline-block size-2 rounded-full"
                 style={{ backgroundColor: '#60a5fa' }}
               />
-              <span className="text-text-secondary">Parent: {fmt(data.parentCostUsd)}</span>
+              <span className="text-text-secondary">主会话：{fmt(data.parentCostUsd)}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span
                 className="inline-block size-2 rounded-full"
                 style={{ backgroundColor: '#c084fc' }}
               />
-              <span className="text-text-secondary">Subagent: {fmt(data.subagentCostUsd)}</span>
+              <span className="text-text-secondary">子 Agent：{fmt(data.subagentCostUsd)}</span>
             </div>
           </div>
         </div>
@@ -127,21 +127,21 @@ export const CostSection = ({
         {!showStackedBar && (
           <>
             <div>
-              <div className="text-xs text-text-muted">Parent Cost</div>
+              <div className="text-xs text-text-muted">主会话费用</div>
               <div className="text-sm font-medium text-text">{fmt(data.parentCostUsd)}</div>
             </div>
             <div>
-              <div className="text-xs text-text-muted">Subagent Cost</div>
+              <div className="text-xs text-text-muted">子 Agent 费用</div>
               <div className="text-sm font-medium text-text">{fmt(data.subagentCostUsd)}</div>
             </div>
           </>
         )}
         <div>
-          <div className="text-xs text-text-muted">Per Commit</div>
+          <div className="text-xs text-text-muted">每次提交</div>
           <div className="text-[10px] text-text-muted">
             {commitCount > 0 ? (
               <>
-                total cost {'\u00F7'} {commitCount} commit{commitCount !== 1 ? 's' : ''}
+                总费用 {'\u00F7'} {commitCount} 次提交
               </>
             ) : (
               'no commits'
@@ -160,15 +160,14 @@ export const CostSection = ({
           </div>
         </div>
         <div>
-          <div className="text-xs text-text-muted">Per Line Changed</div>
+          <div className="text-xs text-text-muted">每行变更</div>
           <div className="text-[10px] text-text-muted">
             {linesChanged > 0 ? (
               <>
-                total cost {'\u00F7'} {linesChanged.toLocaleString()} line
-                {linesChanged !== 1 ? 's' : ''}
+                总费用 {'\u00F7'} {linesChanged.toLocaleString()} 行
               </>
             ) : (
-              'no lines changed'
+              '无行变更'
             )}
           </div>
           <div className="flex items-center gap-2">
@@ -186,12 +185,12 @@ export const CostSection = ({
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-border text-left text-text-muted">
-              <th className="pb-2 pr-4">Model</th>
-              <th className="pb-2 pr-4 text-right">Input</th>
-              <th className="pb-2 pr-4 text-right">Output</th>
-              <th className="pb-2 pr-4 text-right">Cache Read</th>
-              <th className="pb-2 pr-4 text-right">Cache Write</th>
-              <th className="pb-2 pr-4 text-right">Cost</th>
+              <th className="pb-2 pr-4">模型</th>
+              <th className="pb-2 pr-4 text-right">输入</th>
+              <th className="pb-2 pr-4 text-right">输出</th>
+              <th className="pb-2 pr-4 text-right">缓存读取</th>
+              <th className="pb-2 pr-4 text-right">缓存写入</th>
+              <th className="pb-2 pr-4 text-right">费用</th>
             </tr>
           </thead>
           <tbody>

@@ -101,18 +101,18 @@ function getInvalidMemberNamesError(
     }
     const name = member.name.trim();
     if (!name) {
-      return 'Member name cannot be empty';
+      return '成员名称不能为空';
     }
     if (validateMemberNameInline(name) !== null) {
-      return 'Member name must start with alphanumeric, use only [a-zA-Z0-9._-], max 128 chars';
+      return '成员名称必须以字母、数字或中文开头，最多 128 个字符';
     }
     const lower = name.toLowerCase();
     if (lower === 'user' || lower === 'team-lead') {
-      return `Member name "${name}" is reserved`;
+      return `成员名称“${name}”为保留名称`;
     }
     const suffixInfo = parseNumericSuffixName(name);
     if (suffixInfo && suffixInfo.suffix >= 2) {
-      return `Member name "${name}" is not allowed (reserved for Claude CLI auto-suffix). Use "${suffixInfo.base}" instead.`;
+      return `成员名称“${name}”不可用（保留给 Claude CLI 自动编号），请改用“${suffixInfo.base}”。`;
     }
   }
   return null;
@@ -304,7 +304,7 @@ export const EditTeamDialog = ({
       members.map((member) => [
         member.id,
         restartNames.has(member.name.trim().toLowerCase())
-          ? 'Saving will restart this teammate to apply role, workflow, worktree isolation, provider, model, or effort changes.'
+          ? '保存后将重启该成员，以应用角色、工作流、worktree 隔离、提供商、模型或推理强度变更。'
           : null,
       ])
     );
@@ -312,7 +312,7 @@ export const EditTeamDialog = ({
 
   const handleSave = (): void => {
     if (!name.trim()) {
-      setError('Team name cannot be empty');
+      setError('团队名称不能为空');
       return;
     }
     if (invalidMemberNamesError) {
@@ -320,7 +320,7 @@ export const EditTeamDialog = ({
       return;
     }
     if (hasDuplicateMembers) {
-      setError('Member names must be unique before saving');
+      setError('保存前成员名称不能重复');
       return;
     }
     const latestSourceSnapshot = buildEditTeamSourceSnapshot({
@@ -335,27 +335,19 @@ export const EditTeamDialog = ({
       )
     );
     if (allowedSourceSnapshots.size > 0 && !allowedSourceSnapshots.has(latestSourceSnapshot)) {
-      setError(
-        'Team settings changed while this dialog was open. Reopen it and review the latest state before saving.'
-      );
+      setError('打开此对话框后团队设置已发生变化，请重新打开并确认最新状态后再保存。');
       return;
     }
     if (hasBlockedLiveIdentityChanges) {
-      setError(
-        `Existing teammates cannot be renamed while the team is live. renamed: ${liveIdentityChanges.renamed.join(', ')}`
-      );
+      setError(`团队运行中不能重命名已有成员。已重命名：${liveIdentityChanges.renamed.join(', ')}`);
       return;
     }
     if (isTeamProvisioning) {
-      setError(
-        'Team settings cannot be edited while provisioning is still in progress. Wait for launch to finish, then try again.'
-      );
+      setError('团队仍在启动准备中，暂时不能编辑设置。请等待启动完成后再试。');
       return;
     }
     if (hasNewLiveTeammates) {
-      setError(
-        'Add new teammates from the dedicated Add member dialog while the team is live. Edit Team only supports updating existing teammates.'
-      );
+      setError('团队运行中请通过专用的添加成员对话框新增成员。编辑团队仅支持更新已有成员。');
       return;
     }
     setSaving(true);
@@ -429,14 +421,12 @@ export const EditTeamDialog = ({
           )
         );
         setSaveOutcomeError(
-          `Team saved, but failed to restart ${restartFailures.length === 1 ? 'this teammate' : 'these teammates'}: ${restartFailures.join(', ')}`
+          `团队已保存，但重启${restartFailures.length === 1 ? '该成员' : '这些成员'}失败：${restartFailures.join(', ')}`
         );
       } catch (e) {
-        const message = e instanceof Error ? e.message : 'Failed to save';
+        const message = e instanceof Error ? e.message : '保存失败';
         if (membersSaved) {
-          setSaveOutcomeError(
-            `Team changes were saved, but failed to refresh the latest view: ${message}`
-          );
+          setSaveOutcomeError(`团队变更已保存，但刷新最新视图失败：${message}`);
         } else if (configSaved) {
           pendingCommittedSourceSnapshotRef.current = buildEditTeamSourceSnapshot({
             name: name.trim(),
@@ -453,8 +443,8 @@ export const EditTeamDialog = ({
           }
           setSaveOutcomeError(
             refreshErrorDetail
-              ? `Team settings were saved, but member changes failed: ${message}. Refresh also failed: ${refreshErrorDetail}`
-              : `Team settings were saved, but member changes failed: ${message}`
+              ? `团队设置已保存，但成员变更失败：${message}。刷新也失败：${refreshErrorDetail}`
+              : `团队设置已保存，但成员变更失败：${message}`
           );
         } else {
           setError(message);
@@ -575,41 +565,34 @@ export const EditTeamDialog = ({
               lockExistingMemberIdentity={isTeamAlive}
               identityLockReason={undefined}
               disableAddMember={isTeamAlive}
-              addMemberLockReason="Use the dedicated Add member dialog to add new teammates while the team is live."
+              addMemberLockReason="团队运行中请通过专用的添加成员对话框新增成员。"
               memberWarningById={memberWarningById}
             />
           </div>
           {isTeamProvisioning ? (
-            <p className="text-xs text-amber-300">
-              Team provisioning is still in progress. Editing is temporarily locked until launch
-              finishes.
-            </p>
+            <p className="text-xs text-amber-300">团队仍在启动准备中，启动完成前暂时锁定编辑。</p>
           ) : null}
           {isTeamAlive && hasNewLiveTeammates ? (
             <p className="text-xs text-red-300">
-              New teammates cannot be added from Edit Team while the team is live. Use the Add
-              member dialog instead.
+              团队运行中不能从“编辑团队”新增成员，请改用“添加成员”对话框。
             </p>
           ) : null}
           {isTeamAlive && hasBlockedLiveIdentityChanges ? (
             <p className="text-xs text-red-300">
-              Live save is blocked because existing teammates were renamed. Revert those identity
-              changes or stop the team first.
+              团队运行中无法保存：已有成员被重命名。请还原这些身份变更，或先停止团队。
             </p>
           ) : null}
           {isTeamAlive && effectiveMembersToRestart.length > 0 ? (
             <p className="text-xs text-amber-300">
-              Saving will restart{' '}
-              {effectiveMembersToRestart.length === 1 ? 'this teammate' : 'these teammates'} to
-              apply role, workflow, worktree isolation, provider, model, or effort changes:{' '}
+              保存后将重启
+              {effectiveMembersToRestart.length === 1 ? '该成员' : '这些成员'}
+              以应用角色、工作流、worktree 隔离、提供商、模型或推理强度变更：
               {effectiveMembersToRestart.join(', ')}.
             </p>
           ) : null}
           <div>
             {/* eslint-disable-next-line jsx-a11y/label-has-associated-control -- Color picker is a group of buttons, not a single input */}
-            <label className="label-optional mb-1 block text-xs font-medium">
-              Color (optional)
-            </label>
+            <label className="label-optional mb-1 block text-xs font-medium">颜色（可选）</label>
             <div className="flex flex-wrap gap-2">
               {TEAM_COLOR_NAMES.map((colorName) => {
                 const colorSet = getTeamColorSet(colorName);

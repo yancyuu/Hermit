@@ -35,9 +35,7 @@ export const RepositoryScopeSection = ({
           Limit to Repositories (applies only to selected repositories)
         </span>
         {selectedItems.length === 0 ? (
-          <p className="mb-2 text-xs italic text-text-muted">
-            No repositories selected - trigger applies to all repositories
-          </p>
+          <p className="mb-2 text-xs italic text-text-muted">未选择仓库，触发器将应用到所有仓库</p>
         ) : (
           selectedItems.map((item, idx) => (
             <SelectedRepositoryItem
@@ -53,7 +51,7 @@ export const RepositoryScopeSection = ({
         <RepositoryDropdown
           onSelect={onAdd}
           excludeIds={repositoryIds}
-          placeholder="Select repository to add..."
+          placeholder="选择要添加的仓库..."
           disabled={disabled}
           className="mt-2"
         />

@@ -55,7 +55,7 @@ export const SessionTabContent = ({
       <div className="flex flex-1 items-center justify-center bg-claude-dark-bg">
         <div className="p-8 text-center">
           <AlertCircle className="mx-auto mb-4 size-12 text-red-500/70" />
-          <h3 className="mb-2 text-lg font-medium text-claude-dark-text">Failed to load session</h3>
+          <h3 className="mb-2 text-lg font-medium text-claude-dark-text">加载会话失败</h3>
           <p className="mb-4 max-w-md text-sm text-claude-dark-text-secondary">
             {sessionDetailError}
           </p>

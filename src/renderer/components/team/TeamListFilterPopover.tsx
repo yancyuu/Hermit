@@ -93,7 +93,7 @@ export const TeamListFilterPopover = ({
               variant="ghost"
               size="sm"
               className="relative h-8 px-2 text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
-              aria-label="Filter teams"
+              aria-label="筛选团队"
             >
               <Filter size={14} />
               {activeCount > 0 && (
@@ -104,7 +104,7 @@ export const TeamListFilterPopover = ({
             </Button>
           </PopoverTrigger>
         </TooltipTrigger>
-        <TooltipContent side="bottom">Filter teams</TooltipContent>
+        <TooltipContent side="bottom">筛选团队</TooltipContent>
       </Tooltip>
       <PopoverContent align="end" className="w-72 p-0">
         {/* Status section */}

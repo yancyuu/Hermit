@@ -82,10 +82,10 @@ export type TaskSortMode = 'time' | 'project' | 'team' | 'unread';
 const TASK_SORT_STORAGE_KEY = 'sidebarTasksSort';
 
 const SORT_OPTIONS: { id: TaskSortMode; label: string }[] = [
-  { id: 'time', label: 'By time' },
-  { id: 'unread', label: 'By unread' },
-  { id: 'project', label: 'By project' },
-  { id: 'team', label: 'By team' },
+  { id: 'time', label: '按时间' },
+  { id: 'unread', label: '按未读' },
+  { id: 'project', label: '按项目' },
+  { id: 'team', label: '按团队' },
 ];
 
 function loadSortMode(): TaskSortMode {
@@ -152,8 +152,8 @@ export interface GlobalTaskListProps {
 }
 
 const dateCategoryLabels: Record<string, string> = {
-  'Previous 7 Days': 'Last 7 Days',
-  Older: 'Earlier',
+  'Previous 7 Days': '最近 7 天',
+  Older: '更早',
 };
 
 function applySearch(tasks: GlobalTask[], query: string): GlobalTask[] {
@@ -282,10 +282,10 @@ export const GlobalTaskList = ({
 
   const handleDeleteTask = async (teamName: string, taskId: string): Promise<void> => {
     const confirmed = await confirm({
-      title: 'Delete task',
-      message: `Move task #${deriveTaskDisplayId(taskId)} to trash?`,
-      confirmLabel: 'Delete',
-      cancelLabel: 'Cancel',
+      title: '删除任务',
+      message: `将任务 #${deriveTaskDisplayId(taskId)} 移入废纸篓？`,
+      confirmLabel: '删除',
+      cancelLabel: '取消',
       variant: 'danger',
     });
     if (confirmed) {
@@ -294,9 +294,9 @@ export const GlobalTaskList = ({
         await fetchAllTasks();
       } catch (err) {
         void confirm({
-          title: 'Failed to delete task',
-          message: err instanceof Error ? err.message : 'An unexpected error occurred',
-          confirmLabel: 'OK',
+          title: '删除任务失败',
+          message: err instanceof Error ? err.message : '发生了意外错误',
+          confirmLabel: '确定',
           variant: 'danger',
         });
       }
@@ -600,7 +600,7 @@ export const GlobalTaskList = ({
                 </button>
               </TooltipTrigger>
               <TooltipContent side="top">
-                {effectiveShowArchived ? 'Hide archived' : 'Show archived'}
+                {effectiveShowArchived ? '隐藏已归档' : '显示已归档'}
               </TooltipContent>
             </Tooltip>
           </div>
@@ -621,7 +621,7 @@ export const GlobalTaskList = ({
           <div className="flex flex-col items-center gap-2 px-4 py-8 text-text-muted">
             <ListTodo className="size-8 opacity-40" />
             <span className="text-[12px]">
-              {searchQuery || selectedProjectPath ? 'No matching tasks' : 'No tasks found'}
+              {searchQuery || selectedProjectPath ? '没有匹配的任务' : '暂无任务'}
             </span>
           </div>
         )}
@@ -755,7 +755,7 @@ export const GlobalTaskList = ({
                           }))
                         }
                       >
-                        Show more
+                        显示更多
                       </button>
                     )}
                     {showLessVisible && (
@@ -772,7 +772,7 @@ export const GlobalTaskList = ({
                           }))
                         }
                       >
-                        Show less
+                        收起
                       </button>
                     )}
                   </div>

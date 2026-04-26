@@ -60,7 +60,7 @@ export const SessionFiltersPopover = ({
               variant="ghost"
               size="sm"
               className="relative h-7 px-2 text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
-              aria-label="Filter sessions"
+              aria-label="筛选会话"
             >
               <Filter size={14} />
               {activeCount > 0 && (
@@ -71,7 +71,7 @@ export const SessionFiltersPopover = ({
             </Button>
           </PopoverTrigger>
         </TooltipTrigger>
-        <TooltipContent side="bottom">Filter sessions</TooltipContent>
+        <TooltipContent side="bottom">筛选会话</TooltipContent>
       </Tooltip>
       <PopoverContent align="end" className="w-72 p-0">
         <div className="border-b border-[var(--color-border)] p-3">

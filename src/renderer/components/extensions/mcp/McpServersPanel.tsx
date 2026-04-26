@@ -270,16 +270,16 @@ export const McpServersPanel = ({
       <div className="rounded-md border border-black/10 bg-surface-raised px-4 py-3 dark:border-white/10">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-medium text-text">MCP Health Status</p>
+            <p className="text-sm font-medium text-text">MCP 健康状态</p>
             <p className="text-xs text-text-muted">
               {mcpDiagnosticsLoading ? (
-                <>Checking installed MCP servers via {runtimeLabel} ...</>
+                <>正在通过 {runtimeLabel} 检查已安装的 MCP 服务器...</>
               ) : diagnosticsDisableReason ? (
                 diagnosticsDisableReason
               ) : mcpDiagnosticsLastCheckedAt ? (
-                `Last checked ${formatRelativeTime(new Date(mcpDiagnosticsLastCheckedAt).toISOString())}`
+                `上次检查：${formatRelativeTime(new Date(mcpDiagnosticsLastCheckedAt).toISOString())}`
               ) : (
-                <>Run diagnostics from this page to verify installed MCP connectivity.</>
+                <>在此页面运行诊断，以验证已安装 MCP 的连接状态。</>
               )}
             </p>
           </div>
@@ -293,16 +293,16 @@ export const McpServersPanel = ({
             <RefreshCw
               className={`mr-1.5 size-3.5 ${mcpDiagnosticsLoading ? 'animate-spin' : ''}`}
             />
-            {mcpDiagnosticsLoading ? 'Checking...' : 'Check Status'}
+            {mcpDiagnosticsLoading ? '检查中...' : '检查状态'}
           </Button>
         </div>
 
         {(mcpDiagnosticsLoading || allDiagnostics.length > 0) && (
           <div className="mt-4 border-t border-black/10 pt-4 dark:border-white/10">
             <div className="mb-3 flex items-center justify-between gap-3">
-              <p className="text-sm font-medium text-text">Runtime MCP Diagnostics</p>
+              <p className="text-sm font-medium text-text">运行时 MCP 诊断</p>
               {allDiagnostics.length > 0 && (
-                <span className="text-xs text-text-muted">{allDiagnostics.length} servers</span>
+                <span className="text-xs text-text-muted">{allDiagnostics.length} 个服务器</span>
               )}
             </div>
             {allDiagnostics.length > 0 ? (
@@ -335,7 +335,7 @@ export const McpServersPanel = ({
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-text-muted">Waiting for diagnostics results...</p>
+              <p className="text-xs text-text-muted">正在等待诊断结果...</p>
             )}
           </div>
         )}
@@ -347,7 +347,7 @@ export const McpServersPanel = ({
           <SearchInput
             value={mcpSearchQuery}
             onChange={mcpSearch}
-            placeholder="Search MCP servers..."
+            placeholder="搜索 MCP 服务器..."
           />
         </div>
         <Select value={mcpSort} onValueChange={(v) => setMcpSort(v as McpSortValue)}>
@@ -447,10 +447,10 @@ export const McpServersPanel = ({
             )}
           </div>
           <p className="text-sm text-text-secondary">
-            {isSearching ? 'No servers found' : 'No MCP servers available'}
+            {isSearching ? '没有找到服务器' : '暂无 MCP 服务器'}
           </p>
           <p className="text-xs text-text-muted">
-            {isSearching ? 'Try a different search term' : 'Check back later for new servers'}
+            {isSearching ? '试试其他搜索词' : '稍后再回来查看新服务器'}
           </p>
         </div>
       )}

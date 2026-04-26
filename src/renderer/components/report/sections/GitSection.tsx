@@ -11,24 +11,24 @@ interface GitSectionProps {
 
 export const GitSection = ({ data, defaultCollapsed }: GitSectionProps) => {
   return (
-    <ReportSection title="Git Activity" icon={GitBranch} defaultCollapsed={defaultCollapsed}>
+    <ReportSection title="Git 活动" icon={GitBranch} defaultCollapsed={defaultCollapsed}>
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div>
-          <div className="text-xs text-text-muted">Commits</div>
+          <div className="text-xs text-text-muted">提交</div>
           <div className="text-sm font-medium text-text">{data.commitCount}</div>
         </div>
         <div>
-          <div className="text-xs text-text-muted">Pushes</div>
+          <div className="text-xs text-text-muted">推送</div>
           <div className="text-sm font-medium text-text">{data.pushCount}</div>
         </div>
         <div>
-          <div className="text-xs text-text-muted">Lines Added</div>
+          <div className="text-xs text-text-muted">新增行</div>
           <div className="text-sm font-medium" style={{ color: 'var(--assess-good)' }}>
             +{data.linesAdded.toLocaleString()}
           </div>
         </div>
         <div>
-          <div className="text-xs text-text-muted">Lines Removed</div>
+          <div className="text-xs text-text-muted">删除行</div>
           <div className="text-sm font-medium" style={{ color: 'var(--assess-danger)' }}>
             -{data.linesRemoved.toLocaleString()}
           </div>
@@ -37,7 +37,7 @@ export const GitSection = ({ data, defaultCollapsed }: GitSectionProps) => {
 
       {data.commits.length > 0 && (
         <div>
-          <div className="mb-2 text-xs font-medium text-text-muted">Commits</div>
+          <div className="mb-2 text-xs font-medium text-text-muted">提交记录</div>
           <div className="flex flex-col gap-1">
             {data.commits.map((commit, idx) => (
               <div
@@ -54,7 +54,7 @@ export const GitSection = ({ data, defaultCollapsed }: GitSectionProps) => {
 
       {data.branchCreations.length > 0 && (
         <div className="mt-3">
-          <div className="mb-1 text-xs font-medium text-text-muted">Branches Created</div>
+          <div className="mb-1 text-xs font-medium text-text-muted">已创建分支</div>
           <div className="flex flex-wrap gap-1">
             {data.branchCreations.map((branch, idx) => (
               <span

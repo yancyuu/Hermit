@@ -108,10 +108,10 @@ export const SettingsView = (): React.JSX.Element | null => {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-lg font-medium" style={{ color: 'var(--color-text)' }}>
-            Settings
+            设置
           </h1>
           <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-            Manage your app preferences
+            管理应用偏好设置
           </p>
           {error && (
             <div className="mt-4 rounded-md border border-red-500/20 bg-red-500/10 px-3 py-2">

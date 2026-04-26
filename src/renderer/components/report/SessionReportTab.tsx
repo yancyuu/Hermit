@@ -44,14 +44,14 @@ export const SessionReportTab = ({ tab }: SessionReportTabProps) => {
   if (!report) {
     return (
       <div className="flex h-full items-center justify-center text-text-muted">
-        No session data available. Open the session tab first.
+        暂无会话数据，请先打开会话标签页。
       </div>
     );
   }
 
   return (
     <div className="h-full overflow-y-auto p-6" style={{ backgroundColor: 'var(--color-surface)' }}>
-      <h1 className="mb-6 text-lg font-semibold text-text">Session Analysis Report</h1>
+      <h1 className="mb-6 text-lg font-semibold text-text">会话分析报告</h1>
       <div className="flex flex-col gap-4">
         {takeaways.length > 0 && <KeyTakeawaysSection takeaways={takeaways} />}
         <OverviewSection data={report.overview} />

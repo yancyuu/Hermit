@@ -166,16 +166,16 @@ export const ApiKeysPanel = ({
                   }`}
                 >
                   {provider.authenticated
-                    ? 'Connected'
+                    ? '已连接'
                     : provider.apiKeyConfigured
-                      ? 'Key configured'
-                      : 'Key missing'}
+                      ? '已配置密钥'
+                      : '缺少密钥'}
                 </span>
               </div>
               <p className="mt-2 text-xs text-text-muted">
                 {provider.sourceLabel
-                  ? `Current source: ${provider.sourceLabel}.`
-                  : 'No stored or environment key detected for this provider.'}
+                  ? `当前来源：${provider.sourceLabel}。`
+                  : '未检测到此提供商的已保存密钥或环境变量密钥。'}
                 {provider.statusMessage ? ` ${provider.statusMessage}` : ''}
               </p>
             </div>
@@ -185,7 +185,7 @@ export const ApiKeysPanel = ({
       {/* Header row */}
       <div className="flex items-center justify-between">
         <p className="flex items-center gap-1.5 text-sm text-text-secondary">
-          Securely store API keys for auto-filling when installing MCP servers.
+          安全保存 API 密钥，用于安装 MCP 服务器时自动填充。
           {storageStatus && (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -198,13 +198,12 @@ export const ApiKeysPanel = ({
               <TooltipContent side="bottom" className="max-w-xs">
                 {isOsKeychain ? (
                   <p>
-                    Keys are encrypted via {storageStatus.backend} and stored with restricted file
-                    permissions (owner-only).
+                    密钥通过 {storageStatus.backend} 加密，并以受限文件权限保存（仅所有者可读写）。
                   </p>
                 ) : (
                   <p>
-                    OS keychain unavailable — keys are encrypted locally with AES-256. For stronger
-                    protection, install a keyring service (gnome-keyring, kwallet).
+                    系统钥匙串不可用，密钥会使用 AES-256 在本地加密。若需要更强保护，请安装 keyring
+                    服务（gnome-keyring、kwallet）。
                   </p>
                 )}
               </TooltipContent>
@@ -213,7 +212,7 @@ export const ApiKeysPanel = ({
         </p>
         <Button variant="outline" size="sm" onClick={handleAdd} className="gap-1.5">
           <Plus className="size-3.5" />
-          Add API Key
+          添加 API 密钥
         </Button>
       </div>
 
@@ -247,13 +246,13 @@ export const ApiKeysPanel = ({
           <div className="flex size-10 items-center justify-center rounded-lg border border-border bg-surface-raised">
             <Key className="size-5 text-text-muted" />
           </div>
-          <p className="text-sm text-text-secondary">No API keys saved</p>
+          <p className="text-sm text-text-secondary">尚未保存 API 密钥</p>
           <p className="text-xs text-text-muted">
-            Add keys to auto-fill environment variables when installing MCP servers.
+            添加密钥后，安装 MCP 服务器时可自动填充环境变量。
           </p>
           <Button variant="outline" size="sm" onClick={handleAdd} className="mt-2 gap-1.5">
             <Plus className="size-3.5" />
-            Add your first key
+            添加第一个密钥
           </Button>
         </div>
       )}

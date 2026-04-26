@@ -79,13 +79,13 @@ export const ActiveTasksBlock = ({
           type="button"
           className="flex min-w-0 items-center gap-1.5 text-[10px] font-medium uppercase tracking-wide text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-secondary)]"
           onClick={() => setCollapsed((v) => !v)}
-          aria-label={collapsed ? 'Expand in progress' : 'Collapse in progress'}
+          aria-label={collapsed ? '展开进行中任务' : '收起进行中任务'}
         >
           <ChevronRight
             size={10}
             className={`shrink-0 transition-transform duration-150 ${collapsed ? '' : 'rotate-90'}`}
           />
-          <span>In progress</span>
+          <span>进行中</span>
           {collapsed && (
             <span className="rounded-full bg-[var(--color-surface-raised)] px-1.5 py-0.5 text-[10px] font-medium tabular-nums leading-none text-[var(--color-text-muted)]">
               {entries.length}

@@ -115,8 +115,8 @@ export const McpServerDetailDialog = ({
     normalizedInstalledEntries.some((entry) => entry.scope === 'user')
       ? [{ value: 'user' as const, label: getMcpScopeLabel('user', cliStatus?.flavor) }]
       : []),
-    { value: 'project', label: 'Project' },
-    { value: 'local', label: 'Local' },
+    { value: 'project', label: '项目' },
+    { value: 'local', label: '本地' },
   ];
   const preferredInstalledEntry = getPreferredMcpInstallationEntry(normalizedInstalledEntries);
   const selectedInstalledEntry =
@@ -128,7 +128,7 @@ export const McpServerDetailDialog = ({
       .sort()
       .join('\0') ?? '';
   const statusSectionLabel =
-    cliStatus?.flavor === 'agent_teams_orchestrator' ? 'Runtime Status' : 'Claude Status';
+    cliStatus?.flavor === 'agent_teams_orchestrator' ? '运行时状态' : 'Claude 状态';
   const apiKeyLookupProjectPath = isProjectScopedMcpScope(scope)
     ? (projectPath ?? undefined)
     : undefined;
@@ -323,7 +323,7 @@ export const McpServerDetailDialog = ({
                       className="border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
                       variant="outline"
                     >
-                      {installSummaryLabel ?? 'Installed'}
+                      {installSummaryLabel ?? '已安装'}
                     </Badge>
                   )}
                   {server.source !== 'official' && <SourceBadge source={server.source} />}
@@ -336,12 +336,12 @@ export const McpServerDetailDialog = ({
         {/* Metadata grid */}
         <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
           <div>
-            <span className="text-text-muted">Source</span>
+            <span className="text-text-muted">来源</span>
             <p className="capitalize text-text">{server.source}</p>
           </div>
           {stars != null && (
             <div>
-              <span className="text-text-muted">GitHub Stars</span>
+              <span className="text-text-muted">GitHub 星标</span>
               <p className="flex items-center gap-1 text-text">
                 <Star className="size-3.5 fill-amber-400 text-amber-400" />
                 {stars.toLocaleString()}
@@ -350,18 +350,18 @@ export const McpServerDetailDialog = ({
           )}
           {server.version && (
             <div>
-              <span className="text-text-muted">Version</span>
+              <span className="text-text-muted">版本</span>
               <p className="text-text">{server.version}</p>
             </div>
           )}
           {server.license && (
             <div>
-              <span className="text-text-muted">License</span>
+              <span className="text-text-muted">许可证</span>
               <p className="text-text">{server.license}</p>
             </div>
           )}
           <div>
-            <span className="text-text-muted">Install Type</span>
+            <span className="text-text-muted">安装类型</span>
             {server.installSpec?.type === 'stdio' ? (
               <Button
                 variant="link"
@@ -372,33 +372,31 @@ export const McpServerDetailDialog = ({
               </Button>
             ) : (
               <p className="text-text">
-                {server.installSpec
-                  ? `HTTP: ${server.installSpec.transportType}`
-                  : 'Manual setup required'}
+                {server.installSpec ? `HTTP: ${server.installSpec.transportType}` : '需要手动设置'}
               </p>
             )}
           </div>
           {server.author && (
             <div>
-              <span className="text-text-muted">Author</span>
+              <span className="text-text-muted">作者</span>
               <p className="text-text">{server.author}</p>
             </div>
           )}
           {server.hostingType && (
             <div>
-              <span className="text-text-muted">Hosting</span>
+              <span className="text-text-muted">托管方式</span>
               <p className="capitalize text-text">{server.hostingType}</p>
             </div>
           )}
           {server.publishedAt && (
             <div>
-              <span className="text-text-muted">Published</span>
+              <span className="text-text-muted">发布时间</span>
               <p className="text-text">{new Date(server.publishedAt).toLocaleDateString()}</p>
             </div>
           )}
           {server.updatedAt && (
             <div>
-              <span className="text-text-muted">Updated</span>
+              <span className="text-text-muted">更新时间</span>
               <p className="text-text">{new Date(server.updatedAt).toLocaleDateString()}</p>
             </div>
           )}
@@ -408,13 +406,13 @@ export const McpServerDetailDialog = ({
         {server.requiresAuth && (
           <div className="flex items-center gap-2 rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-sm text-amber-400">
             <Lock className="size-4" />
-            This server requires authentication
+            此服务器需要认证
           </div>
         )}
         {isHttp && !server.requiresAuth && (server.authHeaders?.length ?? 0) === 0 && (
           <div className="rounded-md border border-blue-500/30 bg-blue-500/5 px-3 py-2 text-sm text-blue-400">
-            Remote MCP servers may still require custom headers or API keys even when the registry
-            does not describe them. If connection fails after install, check the provider docs.
+            远程 MCP 服务器即使未在注册表中声明，也可能仍需要自定义请求头或 API
+            密钥。若安装后连接失败，请查看提供商文档。
           </div>
         )}
         {isInstalledForScope && (
@@ -426,7 +424,7 @@ export const McpServerDetailDialog = ({
                   className="border-border bg-surface-raised text-text-muted"
                   variant="outline"
                 >
-                  Checking...
+                  检查中...
                 </Badge>
               ) : diagnostic ? (
                 <Badge className={diagnosticBadgeClass} variant="outline">
@@ -437,13 +435,13 @@ export const McpServerDetailDialog = ({
                   className="border-border bg-surface-raised text-text-muted"
                   variant="outline"
                 >
-                  Not checked
+                  未检查
                 </Badge>
               )}
             </div>
             {diagnostic?.target && (
               <div>
-                <p className="mb-1 text-xs text-text-muted">Launch Target</p>
+                <p className="mb-1 text-xs text-text-muted">启动目标</p>
                 <code className="block overflow-x-auto rounded bg-surface px-2 py-1 text-xs text-text">
                   {diagnostic.target}
                 </code>
@@ -456,13 +454,13 @@ export const McpServerDetailDialog = ({
         {canAutoInstall && (
           <div className="space-y-3 rounded-md border border-border bg-surface-raised p-4">
             <h4 className="text-sm font-medium text-text">
-              {isInstalledForScope ? 'Manage Installation' : 'Install Server'}
+              {isInstalledForScope ? '管理安装' : '安装服务器'}
             </h4>
 
             {/* Server name */}
             <div className="space-y-1.5">
               <Label htmlFor="server-name" className="text-xs">
-                Server Name
+                服务器名称
               </Label>
               <Input
                 id="server-name"
@@ -476,7 +474,7 @@ export const McpServerDetailDialog = ({
 
             {/* Scope */}
             <div className="space-y-1.5">
-              <Label className="text-xs">Scope</Label>
+              <Label className="text-xs">范围</Label>
               <Select value={scope} onValueChange={(v) => setScope(v as Scope)}>
                 <SelectTrigger className="h-8 text-sm">
                   <SelectValue />
@@ -498,7 +496,7 @@ export const McpServerDetailDialog = ({
             {/* Environment variables */}
             {server.envVars.length > 0 && (
               <div className="space-y-1.5">
-                <Label className="text-xs">Environment Variables</Label>
+                <Label className="text-xs">环境变量</Label>
                 <div className="space-y-2">
                   {server.envVars.map((env) => (
                     <div key={env.name} className="flex items-center gap-2">
@@ -515,7 +513,7 @@ export const McpServerDetailDialog = ({
                         placeholder={env.description ?? env.name}
                       />
                       {autoFilledFields.has(env.name) && envValues[env.name] && (
-                        <span className="shrink-0 text-[10px] text-emerald-400">Auto-filled</span>
+                        <span className="shrink-0 text-[10px] text-emerald-400">已自动填充</span>
                       )}
                     </div>
                   ))}
@@ -527,7 +525,7 @@ export const McpServerDetailDialog = ({
             {isHttp && (
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs">Headers</Label>
+                  <Label className="text-xs">请求头</Label>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -535,7 +533,7 @@ export const McpServerDetailDialog = ({
                     className="h-6 px-1.5 text-xs"
                   >
                     <Plus className="mr-1 size-3" />
-                    {hasSuggestedHeaders ? 'Add custom' : 'Add'}
+                    {hasSuggestedHeaders ? '添加自定义' : '添加'}
                   </Button>
                 </div>
                 {headers.length > 0 && (
@@ -575,7 +573,7 @@ export const McpServerDetailDialog = ({
                         {(header.description || header.valueTemplate || header.isRequired) && (
                           <p className="text-[10px] text-text-muted">
                             {[
-                              header.isRequired ? 'Required' : null,
+                              header.isRequired ? '必填' : null,
                               header.description,
                               header.valueTemplate,
                             ]
@@ -610,7 +608,7 @@ export const McpServerDetailDialog = ({
 
         {!canAutoInstall && (
           <div className="rounded-md border border-border bg-surface-raised px-4 py-3 text-sm text-text-muted">
-            This server requires manual setup. Check the repository for installation instructions.
+            此服务器需要手动设置。请查看仓库中的安装说明。
           </div>
         )}
 
@@ -619,7 +617,7 @@ export const McpServerDetailDialog = ({
           <div>
             <h4 className="mb-2 flex items-center gap-1.5 text-sm font-medium text-text">
               <Wrench className="size-4" />
-              Tools ({server.tools.length})
+              工具（{server.tools.length}）
             </h4>
             <div className="max-h-48 space-y-1 overflow-y-auto">
               {server.tools.map((tool) => (
@@ -641,7 +639,7 @@ export const McpServerDetailDialog = ({
               onClick={() => void api.openExternal(server.repositoryUrl!)}
             >
               <ExternalLink className="mr-1 size-3.5" />
-              Repository
+              仓库
             </Button>
           )}
           {server.glamaUrl && (
@@ -661,7 +659,7 @@ export const McpServerDetailDialog = ({
               onClick={() => void api.openExternal(server.websiteUrl!)}
             >
               <ExternalLink className="mr-1 size-3.5" />
-              Website
+              网站
             </Button>
           )}
         </div>

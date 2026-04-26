@@ -86,13 +86,11 @@ export const SkillDetailDialog = ({
   const issuesTone = item?.issues.length ? getIssuesTone(item.issues) : null;
 
   function formatScopeLabel(scope: 'user' | 'project'): string {
-    return scope === 'project' ? 'This project only' : 'Your personal skills';
+    return scope === 'project' ? '仅当前项目' : '你的个人技能';
   }
 
   function formatInvocationLabel(invocationMode: 'auto' | 'manual-only'): string {
-    return invocationMode === 'manual-only'
-      ? 'Only runs when you explicitly ask for it.'
-      : 'Runs automatically when it matches the task.';
+    return invocationMode === 'manual-only' ? '仅在你明确要求时运行。' : '匹配任务时自动运行。';
   }
 
   function getIssuesTone(issues: SkillValidationIssue[]): {
@@ -104,14 +102,14 @@ export const SkillDetailDialog = ({
     if (informationalOnly) {
       return {
         className: 'border-blue-500/30 bg-blue-500/5',
-        title: 'This skill includes bundled scripts',
+        title: '此技能包含随附脚本',
         Icon: Info,
       };
     }
 
     return {
       className: 'border-amber-500/30 bg-amber-500/5',
-      title: 'Review this skill carefully before using it',
+      title: '使用前请仔细检查此技能',
       Icon: AlertTriangle,
     };
   }
@@ -128,7 +126,7 @@ export const SkillDetailDialog = ({
       setDeleteConfirmOpen(false);
       onDeleted();
     } catch (error) {
-      setDeleteError(error instanceof Error ? error.message : 'Failed to delete skill');
+      setDeleteError(error instanceof Error ? error.message : '删除技能失败');
     } finally {
       setDeleteLoading(false);
     }
@@ -138,14 +136,14 @@ export const SkillDetailDialog = ({
     <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
       <DialogContent className="max-w-4xl">
         <DialogHeader>
-          <DialogTitle>{item?.name ?? 'Skill details'}</DialogTitle>
+          <DialogTitle>{item?.name ?? '技能详情'}</DialogTitle>
           <DialogDescription>
-            {item?.description ?? 'Inspect discovered skill metadata and raw instructions.'}
+            {item?.description ?? '查看已发现的技能元数据和原始说明。'}
           </DialogDescription>
         </DialogHeader>
 
         {(loading || (open && skillId && detail === undefined)) && (
-          <p className="text-sm text-text-muted">Loading skill details...</p>
+          <p className="text-sm text-text-muted">正在加载技能详情...</p>
         )}
 
         {!loading && detailError && (
@@ -159,7 +157,7 @@ export const SkillDetailDialog = ({
                   void fetchSkillDetail(skillId, effectiveProjectPath).catch(() => undefined);
                 }}
               >
-                Retry
+                重试
               </Button>
             )}
           </div>
@@ -167,7 +165,7 @@ export const SkillDetailDialog = ({
 
         {!loading && !detailError && detail === null && (
           <div className="rounded-md border border-red-500/30 bg-red-500/5 p-4 text-sm text-red-400">
-            Unable to load this skill.
+            无法加载此技能。
           </div>
         )}
 
@@ -180,14 +178,14 @@ export const SkillDetailDialog = ({
             )}
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="outline">{formatScopeLabel(item.scope)}</Badge>
-              <Badge variant="outline">Stored in {formatSkillRootKind(item.rootKind)}</Badge>
+              <Badge variant="outline">存储于 {formatSkillRootKind(item.rootKind)}</Badge>
               <Badge variant="outline">{getSkillAudienceLabel(item.rootKind)}</Badge>
               <Badge variant="secondary">
-                {item.invocationMode === 'manual-only' ? 'Manual use' : 'Auto use'}
+                {item.invocationMode === 'manual-only' ? '手动使用' : '自动使用'}
               </Badge>
-              {item.flags.hasScripts && <Badge variant="destructive">Has scripts</Badge>}
-              {item.flags.hasReferences && <Badge variant="secondary">References</Badge>}
-              {item.flags.hasAssets && <Badge variant="secondary">Assets</Badge>}
+              {item.flags.hasScripts && <Badge variant="destructive">包含脚本</Badge>}
+              {item.flags.hasReferences && <Badge variant="secondary">参考资料</Badge>}
+              {item.flags.hasAssets && <Badge variant="secondary">资源文件</Badge>}
             </div>
 
             {item.issues.length > 0 && (
@@ -224,28 +222,28 @@ export const SkillDetailDialog = ({
             <div className="grid gap-3 rounded-lg border border-border p-4 md:grid-cols-3">
               <div className="space-y-1">
                 <p className="text-xs font-medium uppercase tracking-wide text-text-muted">
-                  Who can use it
+                  谁可以使用
                 </p>
                 <p className="text-sm text-text">{formatScopeLabel(item.scope)}</p>
               </div>
               <div className="space-y-1">
                 <p className="text-xs font-medium uppercase tracking-wide text-text-muted">
-                  How it is used
+                  如何使用
                 </p>
                 <p className="text-sm text-text">{formatInvocationLabel(item.invocationMode)}</p>
               </div>
               <div className="space-y-1">
                 <p className="text-xs font-medium uppercase tracking-wide text-text-muted">
-                  What comes with it
+                  随附内容
                 </p>
                 <p className="text-sm text-text">
                   {[
-                    item.flags.hasReferences ? 'references' : null,
-                    item.flags.hasScripts ? 'scripts' : null,
-                    item.flags.hasAssets ? 'assets' : null,
+                    item.flags.hasReferences ? '参考资料' : null,
+                    item.flags.hasScripts ? '脚本' : null,
+                    item.flags.hasAssets ? '资源文件' : null,
                   ]
                     .filter(Boolean)
-                    .join(', ') || 'Just the skill instructions'}
+                    .join('、') || '仅技能说明'}
                 </p>
               </div>
             </div>
@@ -253,7 +251,7 @@ export const SkillDetailDialog = ({
             <div className="flex flex-wrap gap-2">
               <Button variant="secondary" size="sm" onClick={onEdit}>
                 <Pencil className="mr-1.5 size-3.5" />
-                Edit Skill
+                编辑技能
               </Button>
               <Button
                 variant="outline"
@@ -262,7 +260,7 @@ export const SkillDetailDialog = ({
                 disabled={deleteLoading}
               >
                 <Trash2 className="mr-1.5 size-3.5" />
-                {deleteLoading ? 'Deleting...' : 'Delete'}
+                {deleteLoading ? '正在删除...' : '删除'}
               </Button>
             </div>
 
@@ -279,13 +277,13 @@ export const SkillDetailDialog = ({
               <div className="space-y-4">
                 <div className="rounded-lg border border-border p-3 text-sm text-text-secondary">
                   <div className="space-y-2">
-                    <p className="font-medium text-text">Stored at</p>
+                    <p className="font-medium text-text">存储位置</p>
                     <p className="break-all text-xs text-text-muted">{item.skillDir}</p>
                   </div>
 
                   {detail.scriptFiles.length > 0 && (
                     <div className="mt-4 space-y-1">
-                      <p className="font-medium text-text">Scripts</p>
+                      <p className="font-medium text-text">脚本</p>
                       {detail.scriptFiles.map((file) => (
                         <p key={file} className="text-xs text-text-muted">
                           {file}
@@ -296,7 +294,7 @@ export const SkillDetailDialog = ({
 
                   {detail.referencesFiles.length > 0 && (
                     <div className="mt-4 space-y-1">
-                      <p className="font-medium text-text">References</p>
+                      <p className="font-medium text-text">参考资料</p>
                       {detail.referencesFiles.map((file) => (
                         <p key={file} className="text-xs text-text-muted">
                           {file}
@@ -307,7 +305,7 @@ export const SkillDetailDialog = ({
 
                   {detail.assetFiles.length > 0 && (
                     <div className="mt-4 space-y-1">
-                      <p className="font-medium text-text">Assets</p>
+                      <p className="font-medium text-text">资源文件</p>
                       {detail.assetFiles.map((file) => (
                         <p key={file} className="text-xs text-text-muted">
                           {file}
@@ -318,9 +316,7 @@ export const SkillDetailDialog = ({
                 </div>
 
                 <details className="rounded-lg border border-border p-3 text-sm text-text-secondary">
-                  <summary className="cursor-pointer font-medium text-text">
-                    Advanced file details
-                  </summary>
+                  <summary className="cursor-pointer font-medium text-text">高级文件详情</summary>
                   <div className="mt-3 space-y-3">
                     <div className="flex flex-wrap gap-2">
                       <Button
@@ -329,7 +325,7 @@ export const SkillDetailDialog = ({
                         onClick={() => void api.showInFolder(item.skillFile)}
                       >
                         <FolderOpen className="mr-1.5 size-3.5" />
-                        Open Folder
+                        打开文件夹
                       </Button>
                       <Button
                         variant="outline"
@@ -337,7 +333,7 @@ export const SkillDetailDialog = ({
                         onClick={() => void api.openPath(item.skillFile, effectiveProjectPath)}
                       >
                         <ExternalLink className="mr-1.5 size-3.5" />
-                        Open SKILL.md
+                        打开 SKILL.md
                       </Button>
                     </div>
                     <CodeBlockViewer
@@ -356,17 +352,17 @@ export const SkillDetailDialog = ({
       <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete skill?</AlertDialogTitle>
+            <AlertDialogTitle>删除技能？</AlertDialogTitle>
             <AlertDialogDescription>
               {item
-                ? `Delete "${item.name}" and move it to Trash? You can restore it later from Trash if needed.`
-                : 'Delete this skill and move it to Trash?'}
+                ? `删除“${item.name}”并移入废纸篓？需要时可以稍后从废纸篓恢复。`
+                : '删除此技能并移入废纸篓？'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteLoading}>取消</AlertDialogCancel>
             <AlertDialogAction onClick={() => void handleDelete()} disabled={deleteLoading}>
-              {deleteLoading ? 'Deleting...' : 'Delete Skill'}
+              {deleteLoading ? '正在删除...' : '删除技能'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

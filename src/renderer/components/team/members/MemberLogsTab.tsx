@@ -723,7 +723,7 @@ export const MemberLogsTab = ({
           {taskId != null
             ? taskStatus === 'in_progress'
               ? 'Task is in progress — waiting for session activity (auto-refreshing)...'
-              : 'No session activity for this task yet'
+              : '此任务暂无会话活动'
             : 'This member has no recorded session activity yet'}
         </p>
       </div>
@@ -820,7 +820,7 @@ const LogCard = ({
                     <TooltipContent side="top" className="max-w-[240px] text-center">
                       {log.kind === 'lead_session'
                         ? 'Full team lead session logs - useful for global orchestration context, not specific to this agent'
-                        : 'Full persistent teammate session logs - useful when work runs in a root member session instead of a subagent file'}
+                        : '完整的持久成员会话日志，适用于工作运行在根成员会话而非子代理文件中的情况'}
                     </TooltipContent>
                   </Tooltip>
                 )}

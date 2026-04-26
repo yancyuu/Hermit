@@ -183,7 +183,7 @@ export function useAttachments(options?: UseAttachmentsOptions): UseAttachmentsR
         if (onUnsupportedRef.current) {
           onUnsupportedRef.current(unsupported);
         } else {
-          setError(`Unsupported file type: ${unsupported[0].name}`);
+          setError(`不支持的文件类型：${unsupported[0].name}`);
         }
       }
 

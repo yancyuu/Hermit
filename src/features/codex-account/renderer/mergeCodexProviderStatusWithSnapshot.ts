@@ -85,6 +85,10 @@ function getProviderStatusMessage(
   snapshot: CodexAccountSnapshotDto,
   fallback: string | null | undefined
 ): string | null {
+  if (snapshot.launchReadinessState === 'runtime_missing') {
+    return fallback ?? null;
+  }
+
   if (snapshot.launchAllowed) {
     if (snapshot.effectiveAuthMode === 'chatgpt') {
       return snapshot.appServerState === 'degraded'

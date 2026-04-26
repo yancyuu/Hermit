@@ -1,13 +1,13 @@
 import type { CliProviderAuthMode, CliProviderStatus } from '@shared/types';
 
 const CODEX_NATIVE_LABEL = 'Codex native';
-const ANTHROPIC_SUBSCRIPTION_LABEL = 'Anthropic subscription';
+const ANTHROPIC_SUBSCRIPTION_LABEL = 'Anthropic 订阅';
 
 const AUTH_MODE_LABELS: Record<CliProviderAuthMode, string> = {
-  auto: 'Auto',
-  oauth: 'Subscription / OAuth',
-  chatgpt: 'ChatGPT account',
-  api_key: 'API key',
+  auto: '自动',
+  oauth: '订阅 / OAuth',
+  chatgpt: 'ChatGPT 账号',
+  api_key: 'API 密钥',
 };
 
 export function formatProviderAuthModeLabel(authMode: CliProviderAuthMode | null): string | null {
@@ -32,21 +32,21 @@ export function formatProviderAuthModeLabelForProvider(
 export function formatProviderAuthMethodLabel(authMethod: string | null): string {
   switch (authMethod) {
     case 'api_key':
-      return 'API key';
+      return 'API 密钥';
     case 'api_key_helper':
-      return 'API key helper';
+      return 'API 密钥助手';
     case 'oauth_token':
       return 'OAuth';
     case 'claude.ai':
-      return 'Claude subscription';
+      return 'Claude 订阅';
     case 'cli_oauth_personal':
       return 'Gemini CLI';
     case 'gemini_adc_authorized_user':
-      return 'Google account';
+      return 'Google 账号';
     case 'gemini_adc_service_account':
-      return 'service account';
+      return '服务账号';
     default:
-      return authMethod ? authMethod.replaceAll('_', ' ') : 'Not connected';
+      return authMethod ? authMethod.replaceAll('_', ' ') : '未连接';
   }
 }
 
@@ -113,10 +113,10 @@ function getCodexApiKeyAvailabilitySummary(provider: CliProviderStatus): string 
   }
 
   if (provider.connection.apiKeySource === 'stored') {
-    return 'Saved API key available in Manage';
+    return '管理页中已有保存的 API 密钥';
   }
 
-  return provider.connection.apiKeySourceLabel ?? 'API key is configured';
+  return provider.connection.apiKeySourceLabel ?? '已配置 API 密钥';
 }
 
 function getCodexMissingManagedAccountStatus(provider: CliProviderStatus): string | null {
@@ -135,18 +135,15 @@ function getCodexMissingManagedAccountStatus(provider: CliProviderStatus): strin
 
   if (codexConnection.requiresOpenaiAuth) {
     if (codexConnection.localActiveChatgptAccountPresent) {
-      return 'Codex has a locally selected ChatGPT account, but the current session needs reconnect.';
+      return 'Codex 本地已有选中的 ChatGPT 账号，但当前会话需要重新连接。';
     }
 
     return codexConnection.localAccountArtifactsPresent
-      ? 'Codex CLI reports no active ChatGPT login. Local Codex account data exists, but no active managed session is selected.'
-      : 'Codex CLI reports no active ChatGPT login';
+      ? 'Codex CLI 报告没有活跃的 ChatGPT 登录。本地存在 Codex 账号数据，但未选中活跃托管会话。'
+      : 'Codex CLI 报告没有活跃的 ChatGPT 登录';
   }
 
-  return (
-    codexConnection.launchIssueMessage ??
-    'Connect a ChatGPT account to use your Codex subscription.'
-  );
+  return codexConnection.launchIssueMessage ?? '连接 ChatGPT 账号以使用你的 Codex 订阅。';
 }
 
 export function getProviderCurrentRuntimeSummary(provider: CliProviderStatus): string | null {
@@ -154,24 +151,24 @@ export function getProviderCurrentRuntimeSummary(provider: CliProviderStatus): s
     return null;
   }
 
-  const prefix = provider.authenticated ? 'Current runtime' : 'Selected runtime';
+  const prefix = provider.authenticated ? '当前运行时' : '所选运行时';
   return `${prefix}: ${getCodexCurrentRuntimeLabel(provider)}`;
 }
 
 export function formatProviderStatusText(provider: CliProviderStatus): string {
   if (isProviderInventoryOnlyFallback(provider)) {
-    return 'Checking...';
+    return '检查中...';
   }
 
   const selectedBackendOption = getSelectedRuntimeBackendOption(provider);
 
   if (provider.providerId === 'codex') {
     if (provider.connection?.codex?.login.status === 'starting') {
-      return 'Starting ChatGPT login...';
+      return '正在启动 ChatGPT 登录...';
     }
 
     if (provider.connection?.codex?.login.status === 'pending') {
-      return 'Waiting for ChatGPT account login...';
+      return '等待 ChatGPT 账号登录...';
     }
 
     if (
@@ -188,17 +185,17 @@ export function formatProviderStatusText(provider: CliProviderStatus): string {
     ) {
       return (
         provider.connection.codex.launchIssueMessage ??
-        'ChatGPT account detected - account verification is currently degraded.'
+        '已检测到 ChatGPT 账号，但账号验证当前处于降级状态。'
       );
     }
 
     if (provider.connection?.codex?.launchAllowed) {
       if (provider.connection.codex.effectiveAuthMode === 'chatgpt') {
-        return 'ChatGPT account ready';
+        return 'ChatGPT 账号已就绪';
       }
 
       if (provider.connection.codex.effectiveAuthMode === 'api_key') {
-        return 'API key ready';
+        return 'API 密钥已就绪';
       }
     }
 
@@ -214,9 +211,7 @@ export function formatProviderStatusText(provider: CliProviderStatus): string {
     if (selectedBackendOption?.statusMessage) {
       return selectedBackendOption.statusMessage;
     }
-    return (
-      provider.statusMessage ?? (provider.authenticated ? 'Codex native ready' : 'Not connected')
-    );
+    return provider.statusMessage ?? (provider.authenticated ? 'Codex 原生运行时已就绪' : '未连接');
   }
 
   if (
@@ -225,7 +220,7 @@ export function formatProviderStatusText(provider: CliProviderStatus): string {
     selectedBackendOption.state !== 'ready'
   ) {
     return (
-      selectedBackendOption.statusMessage ?? provider.statusMessage ?? 'Codex native unavailable'
+      selectedBackendOption.statusMessage ?? provider.statusMessage ?? 'Codex 原生运行时不可用'
     );
   }
 
@@ -238,21 +233,21 @@ export function formatProviderStatusText(provider: CliProviderStatus): string {
   }
 
   if (!provider.supported) {
-    return provider.statusMessage ?? 'Unavailable in current runtime';
+    return provider.statusMessage ?? '当前运行时不可用';
   }
 
   if (provider.authenticated) {
-    return `Connected via ${formatProviderAuthMethodLabelForProvider(
+    return `已通过 ${formatProviderAuthMethodLabelForProvider(
       provider.providerId,
       provider.authMethod
     )}`;
   }
 
   if (provider.verificationState === 'offline') {
-    return provider.statusMessage ?? 'Unable to verify';
+    return provider.statusMessage ?? '无法验证';
   }
 
-  return provider.statusMessage ?? 'Not connected';
+  return provider.statusMessage ?? '未连接';
 }
 
 export function getProviderConnectionModeSummary(provider: CliProviderStatus): string | null {
@@ -297,19 +292,19 @@ export function getProviderCredentialSummary(provider: CliProviderStatus): strin
     provider.connection.apiKeySource === 'stored' &&
     provider.connection.configuredAuthMode === 'auto'
   ) {
-    return 'Saved API key available in Manage';
+    return '管理中已有保存的 API 密钥';
   }
 
   if (provider.authMethod !== 'api_key' && provider.providerId === 'anthropic') {
     return provider.connection.apiKeySource === 'stored'
-      ? 'API key also configured in Manage'
-      : (provider.connection.apiKeySourceLabel ?? 'API key is configured');
+      ? '管理中也已配置 API 密钥'
+      : (provider.connection.apiKeySourceLabel ?? 'API 密钥已配置');
   }
 
   if (provider.authMethod !== 'api_key' && provider.providerId === 'gemini') {
     return provider.connection.apiKeySource === 'stored'
-      ? 'API key is configured in Manage'
-      : (provider.connection.apiKeySourceLabel ?? 'API key is configured');
+      ? '管理中已配置 API 密钥'
+      : (provider.connection.apiKeySourceLabel ?? 'API 密钥已配置');
   }
 
   if (provider.providerId === 'codex') {
@@ -323,18 +318,18 @@ export function getProviderCredentialSummary(provider: CliProviderStatus): strin
       provider.connection.codex?.effectiveAuthMode === 'chatgpt'
     ) {
       return provider.connection.apiKeySource === 'stored'
-        ? 'API key also available in Manage as fallback'
-        : `${apiKeyAvailabilitySummary} - available as fallback`;
+        ? '管理中的 API 密钥也可作为备用'
+        : `${apiKeyAvailabilitySummary} - 可作为备用`;
     }
 
     if (provider.connection.configuredAuthMode === 'chatgpt') {
       return provider.connection.apiKeySource === 'stored'
-        ? 'Saved API key available in Manage if you switch to API key mode'
-        : `${apiKeyAvailabilitySummary} - available if you switch to API key mode`;
+        ? '切换到 API 密钥模式后可使用管理中保存的 API 密钥'
+        : `${apiKeyAvailabilitySummary} - 切换到 API 密钥模式后可用`;
     }
 
     if (provider.connection.configuredAuthMode === 'auto') {
-      return `${apiKeyAvailabilitySummary} - Auto will use this until ChatGPT is connected`;
+      return `${apiKeyAvailabilitySummary} - 自动模式会在 ChatGPT 连接前使用它`;
     }
 
     return apiKeyAvailabilitySummary;
@@ -359,22 +354,21 @@ export function getProviderDisconnectAction(provider: CliProviderStatus): {
     }
 
     return {
-      label: 'Disconnect',
-      confirmLabel: 'Disconnect',
-      title: 'Disconnect Anthropic subscription?',
+      label: '断开连接',
+      confirmLabel: '断开连接',
+      title: '断开 Anthropic 订阅？',
       message: provider.connection?.apiKeyConfigured
-        ? 'This removes the local Anthropic subscription session from the Claude CLI runtime. Saved API keys in Manage stay available.'
-        : 'This removes the local Anthropic subscription session from the Claude CLI runtime.',
+        ? '这会从 Claude CLI 运行时移除本地 Anthropic 订阅会话。管理中保存的 API 密钥仍会保留。'
+        : '这会从 Claude CLI 运行时移除本地 Anthropic 订阅会话。',
     };
   }
 
   if (provider.providerId === 'gemini' && provider.authMethod === 'cli_oauth_personal') {
     return {
-      label: 'Disconnect',
-      confirmLabel: 'Disconnect',
-      title: 'Disconnect Gemini CLI?',
-      message:
-        'This clears the local Gemini CLI session metadata. External ADC credentials and saved API keys are not removed.',
+      label: '断开连接',
+      confirmLabel: '断开连接',
+      title: '断开 Gemini CLI？',
+      message: '这会清除本地 Gemini CLI 会话元数据。外部 ADC 凭据和已保存 API 密钥不会被移除。',
     };
   }
 
@@ -383,18 +377,18 @@ export function getProviderDisconnectAction(provider: CliProviderStatus): {
 
 export function getProviderConnectLabel(provider: CliProviderStatus): string {
   if (provider.providerId === 'anthropic') {
-    return 'Connect Anthropic';
+    return '连接 Anthropic';
   }
 
   if (provider.providerId === 'codex') {
-    return 'Connect ChatGPT';
+    return '连接 ChatGPT';
   }
 
   if (provider.providerId === 'gemini') {
-    return 'Open Login';
+    return '打开登录';
   }
 
-  return 'Connect';
+  return '连接';
 }
 
 export function shouldShowProviderConnectAction(provider: CliProviderStatus): boolean {

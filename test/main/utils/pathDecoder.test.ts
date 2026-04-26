@@ -354,7 +354,7 @@ describe('pathDecoder', () => {
     it('should use the new fallback app data path when no legacy data exists', () => {
       const home = createTempHome();
 
-      expect(getAppDataPath()).toBe(path.join(home, '.agent-teams-ai', 'data'));
+      expect(getAppDataPath()).toBe(path.join(home, '.multi-agent-teams', 'data'));
     });
 
     it('should migrate legacy fallback app data when the new path is absent', () => {
@@ -375,9 +375,9 @@ describe('pathDecoder', () => {
         fs.writeFileSync(legacyFile, content);
       }
 
-      expect(getAppDataPath()).toBe(path.join(home, '.agent-teams-ai', 'data'));
+      expect(getAppDataPath()).toBe(path.join(home, '.multi-agent-teams', 'data'));
       for (const [relativePath, content] of files) {
-        expect(fs.readFileSync(path.join(home, '.agent-teams-ai', relativePath), 'utf8')).toBe(
+        expect(fs.readFileSync(path.join(home, '.multi-agent-teams', relativePath), 'utf8')).toBe(
           content
         );
       }
@@ -386,20 +386,22 @@ describe('pathDecoder', () => {
 
     it('should prefer populated new fallback app data over legacy data', () => {
       const home = createTempHome();
-      const currentFile = path.join(home, '.agent-teams-ai', 'data', 'current.txt');
+      const currentFile = path.join(home, '.multi-agent-teams', 'data', 'current.txt');
       const legacyFile = path.join(home, '.claude-agent-teams-ui', 'data', 'legacy.txt');
       fs.mkdirSync(path.dirname(currentFile), { recursive: true });
       fs.mkdirSync(path.dirname(legacyFile), { recursive: true });
       fs.writeFileSync(currentFile, 'current data');
       fs.writeFileSync(legacyFile, 'legacy data');
 
-      expect(getAppDataPath()).toBe(path.join(home, '.agent-teams-ai', 'data'));
-      expect(fs.existsSync(path.join(home, '.agent-teams-ai', 'data', 'legacy.txt'))).toBe(false);
+      expect(getAppDataPath()).toBe(path.join(home, '.multi-agent-teams', 'data'));
+      expect(fs.existsSync(path.join(home, '.multi-agent-teams', 'data', 'legacy.txt'))).toBe(
+        false
+      );
     });
 
     it('should fall back to legacy fallback app data when copying fails and new path is empty', () => {
       const home = createTempHome();
-      const currentRoot = path.join(home, '.agent-teams-ai');
+      const currentRoot = path.join(home, '.multi-agent-teams');
       const legacyRoot = path.join(home, '.claude-agent-teams-ui');
 
       fs.mkdirSync(currentRoot, { recursive: true });

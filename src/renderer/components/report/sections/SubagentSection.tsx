@@ -20,22 +20,22 @@ interface SubagentSectionProps {
 
 export const SubagentSection = ({ data, defaultCollapsed }: SubagentSectionProps) => {
   return (
-    <ReportSection title="Subagents" icon={Users} defaultCollapsed={defaultCollapsed}>
+    <ReportSection title="子 Agent" icon={Users} defaultCollapsed={defaultCollapsed}>
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div>
-          <div className="text-xs text-text-muted">Count</div>
+          <div className="text-xs text-text-muted">数量</div>
           <div className="text-sm font-medium text-text">{data.count}</div>
         </div>
         <div>
-          <div className="text-xs text-text-muted">Total Tokens</div>
+          <div className="text-xs text-text-muted">总 Token</div>
           <div className="text-sm font-medium text-text">{data.totalTokens.toLocaleString()}</div>
         </div>
         <div>
-          <div className="text-xs text-text-muted">Total Duration</div>
+          <div className="text-xs text-text-muted">总时长</div>
           <div className="text-sm font-medium text-text">{fmtDuration(data.totalDurationMs)}</div>
         </div>
         <div>
-          <div className="text-xs text-text-muted">Total Cost</div>
+          <div className="text-xs text-text-muted">总费用</div>
           <div className="text-sm font-medium text-text">{fmtCost(data.totalCostUsd)}</div>
         </div>
       </div>
@@ -45,11 +45,11 @@ export const SubagentSection = ({ data, defaultCollapsed }: SubagentSectionProps
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-border text-left text-text-muted">
-                <th className="pb-2 pr-4">Description</th>
-                <th className="pb-2 pr-4">Type</th>
-                <th className="pb-2 pr-4 text-right">Tokens</th>
-                <th className="pb-2 pr-4 text-right">Duration</th>
-                <th className="pb-2 text-right">Cost</th>
+                <th className="pb-2 pr-4">描述</th>
+                <th className="pb-2 pr-4">类型</th>
+                <th className="pb-2 pr-4 text-right">Token</th>
+                <th className="pb-2 pr-4 text-right">时长</th>
+                <th className="pb-2 text-right">费用</th>
               </tr>
             </thead>
             <tbody>

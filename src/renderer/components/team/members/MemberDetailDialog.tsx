@@ -326,9 +326,7 @@ export const MemberDetailDialog = ({
                       try {
                         await onRestartMember(member.name);
                       } catch (error) {
-                        setRestartError(
-                          error instanceof Error ? error.message : 'Failed to restart member'
-                        );
+                        setRestartError(error instanceof Error ? error.message : '重启成员失败');
                       } finally {
                         setRestarting(false);
                       }

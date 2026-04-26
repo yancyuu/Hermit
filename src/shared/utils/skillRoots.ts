@@ -56,7 +56,7 @@ export function getSkillAudience(rootKind: SkillRootKind): SkillAudience {
 }
 
 export function getSkillAudienceLabel(rootKind: SkillRootKind): string {
-  return getSkillAudience(rootKind) === 'codex' ? 'Codex only' : 'Shared';
+  return getSkillAudience(rootKind) === 'codex' ? 'Codex 专用' : '共享';
 }
 
 export function isSkillAvailableForProvider(
