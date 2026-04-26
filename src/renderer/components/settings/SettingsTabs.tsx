@@ -7,7 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@renderer/components/ui/tooltip';
-import { Bell, Info, Settings, Wrench } from 'lucide-react';
+import { Bell, Info, Server, Settings, Wrench } from 'lucide-react';
 
 import type { LucideIcon } from 'lucide-react';
 
@@ -33,7 +33,13 @@ const tabs: TabConfig[] = [
     icon: Settings,
     description: '主题、语言、显示密度和启动行为等核心应用偏好。',
   },
-  // { id: 'connection', label: 'Connection', icon: Server, description: 'Manage CLI connection and authentication settings.', electronOnly: true },
+  {
+    id: 'connection',
+    label: '连接',
+    icon: Server,
+    description: '管理 SSH 主机、远程机器和连接状态。',
+    electronOnly: true,
+  },
   {
     id: 'notifications',
     label: '通知',
