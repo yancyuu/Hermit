@@ -28,10 +28,10 @@ function formatRelativeTime(isoString: string): string {
   const diffDays = Math.floor(diffHours / 24);
 
   if (!Number.isFinite(diffMs)) return '--';
-  if (diffMin < 1) return 'just now';
-  if (diffMin < 60) return `${diffMin}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  return `${diffDays}d ago`;
+  if (diffMin < 1) return '刚刚';
+  if (diffMin < 60) return `${diffMin} 分钟前`;
+  if (diffHours < 24) return `${diffHours} 小时前`;
+  return `${diffDays} 天前`;
 }
 
 function actorLabel(actor: BoardTaskLogActor): string {
@@ -39,12 +39,12 @@ function actorLabel(actor: BoardTaskLogActor): string {
     return actor.memberName;
   }
   if (actor.role === 'lead' || actor.isSidechain === false) {
-    return 'lead session';
+    return '负责人会话';
   }
   if (actor.agentId) {
-    return `member ${actor.agentId.slice(0, 8)}`;
+    return `成员 ${actor.agentId.slice(0, 8)}`;
   }
-  return `member session ${actor.sessionId.slice(0, 8)}`;
+  return `成员会话 ${actor.sessionId.slice(0, 8)}`;
 }
 
 function normalizeResponse(response: BoardTaskLogStreamResponse): BoardTaskLogStreamResponse {
@@ -70,18 +70,18 @@ function buildStableSegmentRenderKey(segment: BoardTaskLogSegment): string {
 
 function describeStreamSource(stream: BoardTaskLogStreamResponse | null): string {
   if (stream?.source === 'opencode_runtime_attribution') {
-    return 'Task-scoped OpenCode runtime logs projected from explicit task attribution into the same execution-log components used in Logs.';
+    return '按任务归属聚合的 OpenCode 运行日志，使用与日志页相同的执行日志视图展示。';
   }
   if (stream?.source === 'opencode_runtime_fallback') {
     if (stream.runtimeProjection?.fallbackReason === 'task_tool_markers') {
       const spanCount = stream.runtimeProjection.markerSpanCount;
       const spanDetails =
-        typeof spanCount === 'number' && spanCount > 1 ? ` across ${spanCount} spans` : '';
-      return `Task-scoped OpenCode runtime logs projected from matched task tool markers${spanDetails} into the same execution-log components used in Logs.`;
+        typeof spanCount === 'number' && spanCount > 1 ? `，覆盖 ${spanCount} 个片段` : '';
+      return `根据匹配到的任务工具标记聚合 OpenCode 运行日志${spanDetails}，使用与日志页相同的执行日志视图展示。`;
     }
-    return 'Task-scoped OpenCode runtime logs projected into the same execution-log components used in Logs.';
+    return '按任务聚合的 OpenCode 运行日志，使用与日志页相同的执行日志视图展示。';
   }
-  return 'Task-scoped transcript logs rendered with the same execution-log components used in Logs.';
+  return '按任务聚合的转录日志，使用与日志页相同的执行日志视图展示。';
 }
 
 const SegmentMarker = ({ segment }: { segment: BoardTaskLogSegment }): React.JSX.Element => {
@@ -332,7 +332,7 @@ export const TaskLogStreamSection = ({
             }`}
             onClick={() => setSelectedParticipantKey('all')}
           >
-            All
+            全部
           </button>
           {participants.map((participant) => (
             <button
@@ -354,10 +354,9 @@ export const TaskLogStreamSection = ({
       {visibleSegments.length === 0 ? (
         <div className="py-8 text-center text-xs text-[var(--color-text-muted)]">
           <FileText size={20} className="mx-auto mb-2 opacity-40" />
-          No task log stream yet
+          暂无任务日志流
           <p className="mt-1 text-[10px] opacity-60">
-            Task-linked logs will appear here when transcript metadata or runtime projection is
-            available.
+            当转录元数据或运行时投影可用时，任务相关日志会显示在这里。
           </p>
         </div>
       ) : (

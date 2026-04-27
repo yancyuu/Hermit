@@ -221,6 +221,9 @@ importers:
       isbinaryfile:
         specifier: ^6.0.0
         version: 6.0.0
+      json-schema-ref-resolver:
+        specifier: ^3.0.0
+        version: 3.0.0
       lucide-react:
         specifier: ^0.577.0
         version: 0.577.0(react@19.2.4)

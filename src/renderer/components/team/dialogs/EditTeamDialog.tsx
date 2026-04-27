@@ -631,7 +631,7 @@ export const EditTeamDialog = ({
 
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={onClose} disabled={saving}>
-            Cancel
+            取消
           </Button>
           <Button
             size="sm"

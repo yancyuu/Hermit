@@ -8,6 +8,8 @@ dist-standalone/
 out/
 release/
 coverage/
+.electron-builder-cache/
+resources/runtime/claude-multimodel
 
 # IDE
 .vscode/

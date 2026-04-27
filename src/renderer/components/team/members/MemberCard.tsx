@@ -474,7 +474,7 @@ export const MemberCard = ({
                   <TooltipTrigger asChild>
                     <button
                       type="button"
-                      aria-label={skippingLaunch ? 'Skipping teammate' : 'Skip for this launch'}
+                      aria-label={skippingLaunch ? '正在跳过成员' : '本次启动跳过'}
                       className="rounded p-1 text-red-300 transition-colors hover:bg-red-500/10 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-60"
                       disabled={skippingLaunch || retryingLaunch}
                       onClick={handleSkipFailedLaunch}
@@ -487,8 +487,7 @@ export const MemberCard = ({
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
-                    {skipLaunchError ??
-                      (skippingLaunch ? 'Skipping teammate...' : 'Skip for this launch')}
+                    {skipLaunchError ?? (skippingLaunch ? '正在跳过成员...' : '本次启动跳过')}
                   </TooltipContent>
                 </Tooltip>
               ) : null}
@@ -497,7 +496,7 @@ export const MemberCard = ({
                   <TooltipTrigger asChild>
                     <button
                       type="button"
-                      aria-label={retryingLaunch ? 'Retrying teammate' : 'Retry teammate'}
+                      aria-label={retryingLaunch ? '正在重试成员' : '重试成员'}
                       className="rounded p-1 text-red-300 transition-colors hover:bg-red-500/10 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-60"
                       disabled={retryingLaunch || skippingLaunch}
                       onClick={handleRetryFailedLaunch}
@@ -510,8 +509,7 @@ export const MemberCard = ({
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
-                    {retryLaunchError ??
-                      (retryingLaunch ? 'Retrying teammate...' : 'Retry teammate')}
+                    {retryLaunchError ?? (retryingLaunch ? '正在重试成员...' : '重试成员')}
                   </TooltipContent>
                 </Tooltip>
               ) : null}
@@ -531,7 +529,7 @@ export const MemberCard = ({
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="bottom">
-                  {spawnEntry?.skipReason ?? 'Skipped for this launch'}
+                  {spawnEntry?.skipReason ?? '本次启动已跳过'}
                 </TooltipContent>
               </Tooltip>
               {canRetryLaunch ? (
@@ -539,7 +537,7 @@ export const MemberCard = ({
                   <TooltipTrigger asChild>
                     <button
                       type="button"
-                      aria-label={retryingLaunch ? 'Retrying teammate' : 'Retry teammate'}
+                      aria-label={retryingLaunch ? '正在重试成员' : '重试成员'}
                       className="rounded p-1 text-zinc-300 transition-colors hover:bg-zinc-500/10 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-60"
                       disabled={retryingLaunch}
                       onClick={handleRetryFailedLaunch}
@@ -552,8 +550,7 @@ export const MemberCard = ({
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
-                    {retryLaunchError ??
-                      (retryingLaunch ? 'Retrying teammate...' : 'Retry teammate')}
+                    {retryLaunchError ?? (retryingLaunch ? '正在重试成员...' : '重试成员')}
                   </TooltipContent>
                 </Tooltip>
               ) : null}
@@ -588,9 +585,9 @@ export const MemberCard = ({
             <Badge
               variant="secondary"
               className={`shrink-0 px-1.5 py-0.5 text-[10px] font-normal leading-none ${isRemoved ? 'bg-zinc-600 text-zinc-300' : 'text-[var(--color-text-muted)]'}`}
-              title={isRemoved ? 'This member has been removed' : activityTitle}
+              title={isRemoved ? '该成员已被移除' : activityTitle}
             >
-              {isRemoved ? 'removed' : displayPresenceLabel}
+              {isRemoved ? '已移除' : displayPresenceLabel}
             </Badge>
           ) : null}
           {showStartingSkeleton ? (

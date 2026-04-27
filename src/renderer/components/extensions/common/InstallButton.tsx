@@ -77,7 +77,7 @@ export const InstallButton = ({
       <Button size={size} variant="outline" disabled>
         <Loader2 className="size-3.5 animate-spin" />
         <span className="ml-1.5">
-          {pendingAction === 'uninstall' ? 'Removing...' : 'Installing...'}
+          {pendingAction === 'uninstall' ? '正在移除...' : '正在安装...'}
         </span>
       </Button>
     );
@@ -87,7 +87,7 @@ export const InstallButton = ({
     return (
       <Button size={size} variant="outline" disabled className="text-green-400">
         <Check className="size-3.5" />
-        <span className="ml-1.5">Done</span>
+        <span className="ml-1.5">完成</span>
       </Button>
     );
   }
@@ -111,7 +111,7 @@ export const InstallButton = ({
         }}
         disabled={isDisabled}
       >
-        <span>Retry</span>
+        <span>重试</span>
       </Button>
     );
 
@@ -152,7 +152,7 @@ export const InstallButton = ({
       disabled={isDisabled}
     >
       <Trash2 className="size-3.5" />
-      <span className="ml-1.5">Uninstall</span>
+      <span className="ml-1.5">卸载</span>
     </Button>
   ) : (
     <Button
@@ -165,7 +165,7 @@ export const InstallButton = ({
       }}
       disabled={isDisabled}
     >
-      Install
+      安装
     </Button>
   );
 

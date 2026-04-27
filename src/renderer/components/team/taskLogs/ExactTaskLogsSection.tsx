@@ -194,12 +194,12 @@ export const ExactTaskLogsSection = ({
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
-            Exact Task Logs
+            精确任务日志
           </h4>
         </div>
         <div className="flex items-center gap-2 py-4 text-xs text-[var(--color-text-muted)]">
           <Loader2 size={12} className="animate-spin" />
-          Loading exact task logs...
+          正在加载精确任务日志...
         </div>
       </div>
     );
@@ -210,7 +210,7 @@ export const ExactTaskLogsSection = ({
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
-            Exact Task Logs
+            精确任务日志
           </h4>
         </div>
         <div className="flex items-center gap-2 py-4 text-xs text-red-400">
@@ -225,20 +225,19 @@ export const ExactTaskLogsSection = ({
     <div className="space-y-2">
       <div className="flex items-center gap-2">
         <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
-          Exact Task Logs
+          精确任务日志
         </h4>
       </div>
       <p className="text-xs text-[var(--color-text-muted)]">
-        Exact transcript slices rendered with the same execution-log components used in Logs.
+        精确匹配的转录片段会使用与日志页相同的执行日志视图展示。
       </p>
 
       {visibleSummaries.length === 0 ? (
         <div className="py-8 text-center text-xs text-[var(--color-text-muted)]">
           <FileText size={20} className="mx-auto mb-2 opacity-40" />
-          No exact task logs yet
+          暂无精确任务日志
           <p className="mt-1 text-[10px] opacity-60">
-            Exact transcript bundles will appear here when explicit task-linked transcript metadata
-            is available.
+            当明确关联任务的转录元数据可用时，精确转录片段会显示在这里。
           </p>
         </div>
       ) : (

@@ -286,7 +286,7 @@ export const NotificationsView = (): React.JSX.Element => {
                     : '1px solid var(--color-border)',
               }}
             >
-              All
+              全部
               <span className="opacity-60">({sortedNotifications.length})</span>
             </button>
             {/* Trigger chips */}

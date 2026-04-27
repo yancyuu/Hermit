@@ -835,12 +835,10 @@ export const SkillEditorDialog = ({
             <div className="sticky bottom-0 z-10 flex flex-wrap items-center gap-3 border-t border-border bg-surface px-6 py-4 shadow-[0_-8px_24px_rgba(0,0,0,0.08)]">
               <Button variant="outline" onClick={onClose}>
                 <X className="mr-1.5 size-3.5" />
-                Cancel
+                取消
               </Button>
               <div className="min-w-64 flex-1">
-                <p className="text-sm text-text-muted">
-                  Review the file changes first, then confirm save in the next step.
-                </p>
+                <p className="text-sm text-text-muted">请先检查文件变更，然后在下一步确认保存。</p>
                 {mutationError && <p className="mt-1 text-sm text-red-400">{mutationError}</p>}
               </div>
               <Button onClick={() => void handleReview()} disabled={reviewLoading || saveLoading}>

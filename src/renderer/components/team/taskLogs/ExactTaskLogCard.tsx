@@ -19,10 +19,10 @@ function formatRelativeTime(isoString: string): string {
   const diffDays = Math.floor(diffHours / 24);
 
   if (!Number.isFinite(diffMs)) return '--';
-  if (diffMin < 1) return 'just now';
-  if (diffMin < 60) return `${diffMin}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  return `${diffDays}d ago`;
+  if (diffMin < 1) return '刚刚';
+  if (diffMin < 60) return `${diffMin} 分钟前`;
+  if (diffHours < 24) return `${diffHours} 小时前`;
+  return `${diffDays} 天前`;
 }
 
 function actorLabel(summary: BoardTaskExactLogSummary): string {
@@ -30,9 +30,9 @@ function actorLabel(summary: BoardTaskExactLogSummary): string {
     return summary.actor.memberName;
   }
   if (summary.actor.role === 'lead' || summary.actor.isSidechain === false) {
-    return 'lead session';
+    return '负责人会话';
   }
-  return 'unknown actor';
+  return '未知参与者';
 }
 
 function describeSummary(summary: BoardTaskExactLogSummary): string {
@@ -40,7 +40,7 @@ function describeSummary(summary: BoardTaskExactLogSummary): string {
 }
 
 function anchorKindLabel(summary: BoardTaskExactLogSummary): string {
-  return summary.anchorKind === 'tool' ? 'tool' : 'message';
+  return summary.anchorKind === 'tool' ? '工具' : '消息';
 }
 
 function describeDetailState(state: ExactTaskLogDetailState | undefined): string | null {

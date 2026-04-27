@@ -46,14 +46,14 @@ export class EditorErrorBoundary extends React.Component<Props, State> {
         >
           <AlertTriangle aria-hidden="true" className="size-12 text-red-400 opacity-50" />
           <p className="max-w-md text-center text-sm text-text-secondary">
-            Editor crashed: {this.state.error ?? 'Unknown error'}
+            编辑器崩溃：{this.state.error ?? '未知错误'}
           </p>
           <button
             type="button"
             onClick={this.handleRetry}
             className="rounded border border-border px-3 py-1.5 text-xs text-text-secondary transition-colors hover:bg-surface-raised"
           >
-            Retry
+            重试
           </button>
         </div>
       );

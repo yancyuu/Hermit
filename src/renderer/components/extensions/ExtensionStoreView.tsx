@@ -585,7 +585,7 @@ export const ExtensionStoreView = (): React.JSX.Element => {
                           disabled={Boolean(mcpMutationDisableReason)}
                         >
                           <Plus className="mr-1 size-3.5" />
-                          Add Custom
+                          添加自定义
                         </Button>
                       </span>
                     </TooltipTrigger>

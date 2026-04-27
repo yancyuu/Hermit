@@ -93,7 +93,7 @@ export const SettingsView = (): React.JSX.Element | null => {
               color: 'var(--color-text-secondary)',
             }}
           >
-            Retry
+            重试
           </button>
         </div>
       </div>

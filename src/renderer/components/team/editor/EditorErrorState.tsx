@@ -27,12 +27,12 @@ export const EditorErrorState = ({
       <div className="flex gap-2">
         {onRetry && (
           <Button variant="outline" size="sm" onClick={onRetry}>
-            Retry
+            重试
           </Button>
         )}
         {onClose && (
           <Button variant="outline" size="sm" onClick={onClose}>
-            Close Tab
+            关闭标签页
           </Button>
         )}
       </div>

@@ -74,24 +74,24 @@ export function getProvisioningProviderBackendSummary(
 
   const suffixes: string[] = [];
   if (effectiveOption?.audience === 'internal') {
-    suffixes.push('internal');
+    suffixes.push('内部');
   }
   if (effectiveOption?.state && effectiveOption.state !== 'ready') {
     switch (effectiveOption.state) {
       case 'locked':
-        suffixes.push('locked');
+        suffixes.push('已锁定');
         break;
       case 'disabled':
-        suffixes.push('disabled');
+        suffixes.push('已禁用');
         break;
       case 'authentication-required':
-        suffixes.push('auth required');
+        suffixes.push('需要认证');
         break;
       case 'runtime-missing':
-        suffixes.push('runtime missing');
+        suffixes.push('运行时缺失');
         break;
       case 'degraded':
-        suffixes.push('degraded');
+        suffixes.push('能力受限');
         break;
       default:
         break;

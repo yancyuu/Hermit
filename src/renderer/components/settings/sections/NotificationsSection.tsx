@@ -507,13 +507,13 @@ export const NotificationsSection = ({
 };
 
 const STATUS_OPTIONS: { value: NotifiableStatus; label: string }[] = [
-  { value: 'in_progress', label: 'Started' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'review', label: 'Review' },
-  { value: 'needsFix', label: 'Needs Fixes' },
-  { value: 'approved', label: 'Approved' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'deleted', label: 'Deleted' },
+  { value: 'in_progress', label: '已开始' },
+  { value: 'completed', label: '已完成' },
+  { value: 'review', label: '待审查' },
+  { value: 'needsFix', label: '需要修改' },
+  { value: 'approved', label: '已批准' },
+  { value: 'pending', label: '待处理' },
+  { value: 'deleted', label: '已删除' },
 ];
 
 const StatusCheckboxGroup = ({

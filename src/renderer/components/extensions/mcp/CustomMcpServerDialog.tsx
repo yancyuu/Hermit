@@ -284,7 +284,7 @@ export const CustomMcpServerDialog = ({
       await installCustomMcpServer(request);
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Install failed');
+      setError(err instanceof Error ? err.message : '安装失败');
     } finally {
       setInstalling(false);
     }
@@ -316,8 +316,8 @@ export const CustomMcpServerDialog = ({
               <Server className="size-4 text-text-muted" />
             </div>
             <div>
-              <DialogTitle>Add Custom MCP Server</DialogTitle>
-              <DialogDescription>Add a server manually without the catalog.</DialogDescription>
+              <DialogTitle>添加自定义 MCP 服务器</DialogTitle>
+              <DialogDescription>不通过目录，手动添加一个服务器。</DialogDescription>
             </div>
           </div>
         </DialogHeader>
@@ -326,7 +326,7 @@ export const CustomMcpServerDialog = ({
           {/* Server name */}
           <div className="space-y-1.5">
             <Label htmlFor="custom-name" className="text-xs">
-              Server Name
+              服务器名称
             </Label>
             <Input
               id="custom-name"
@@ -340,7 +340,7 @@ export const CustomMcpServerDialog = ({
 
           {/* Transport toggle */}
           <div className="space-y-1.5">
-            <Label className="text-xs">Transport</Label>
+            <Label className="text-xs">传输方式</Label>
             <div className="flex gap-2">
               <Button
                 type="button"
@@ -366,7 +366,7 @@ export const CustomMcpServerDialog = ({
             <div className="space-y-3">
               <div className="space-y-1.5">
                 <Label htmlFor="custom-npm" className="text-xs">
-                  npm Package
+                  npm 包
                 </Label>
                 <Input
                   id="custom-npm"
@@ -378,7 +378,7 @@ export const CustomMcpServerDialog = ({
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="custom-version" className="text-xs">
-                  Version (optional)
+                  版本（可选）
                 </Label>
                 <Input
                   id="custom-version"
@@ -396,7 +396,7 @@ export const CustomMcpServerDialog = ({
             <div className="space-y-3">
               <div className="space-y-1.5">
                 <Label htmlFor="custom-url" className="text-xs">
-                  Server URL
+                  服务器 URL
                 </Label>
                 <Input
                   id="custom-url"
@@ -407,7 +407,7 @@ export const CustomMcpServerDialog = ({
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs">Transport Type</Label>
+                <Label className="text-xs">传输类型</Label>
                 <Select
                   value={httpTransport}
                   onValueChange={(v) => setHttpTransport(v as HttpTransport)}
@@ -428,7 +428,7 @@ export const CustomMcpServerDialog = ({
               {/* Headers */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs">Headers</Label>
+                  <Label className="text-xs">请求头</Label>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -436,7 +436,7 @@ export const CustomMcpServerDialog = ({
                     className="h-6 px-1.5 text-xs"
                   >
                     <Plus className="mr-1 size-3" />
-                    Add
+                    添加
                   </Button>
                 </div>
                 {headers.length > 0 && (
@@ -473,7 +473,7 @@ export const CustomMcpServerDialog = ({
 
           {/* Scope */}
           <div className="space-y-1.5">
-            <Label className="text-xs">Scope</Label>
+            <Label className="text-xs">作用域</Label>
             <Select value={scope} onValueChange={(v) => setScope(v as Scope)}>
               <SelectTrigger className="h-8 text-sm">
                 <SelectValue />
@@ -495,10 +495,10 @@ export const CustomMcpServerDialog = ({
           {/* Environment variables */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label className="text-xs">Environment Variables</Label>
+              <Label className="text-xs">环境变量</Label>
               <Button variant="ghost" size="sm" onClick={addEnvVar} className="h-6 px-1.5 text-xs">
                 <Plus className="mr-1 size-3" />
-                Add
+                添加
               </Button>
             </div>
             {envVars.length > 0 && (
@@ -547,10 +547,10 @@ export const CustomMcpServerDialog = ({
           {/* Actions */}
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="ghost" size="sm" onClick={onClose}>
-              Cancel
+              取消
             </Button>
             <Button size="sm" disabled={!canSubmit} onClick={() => void handleInstall()}>
-              {installing ? 'Installing...' : 'Install'}
+              {installing ? '正在安装...' : '安装'}
             </Button>
           </div>
         </div>

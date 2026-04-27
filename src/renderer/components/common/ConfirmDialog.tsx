@@ -156,7 +156,7 @@ export const ConfirmDialog = (): React.JSX.Element | null => {
               color: 'var(--color-text-secondary)',
             }}
           >
-            {state.cancelLabel ?? 'Cancel'}
+            {state.cancelLabel ?? '取消'}
           </button>
           <button
             data-confirm-btn

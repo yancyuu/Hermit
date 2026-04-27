@@ -1487,20 +1487,19 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
         }
         if (prepareRequestSeqRef.current !== requestSeq) return;
         const failureMessage =
-          getPrimaryProvisioningFailureDetail(checks) ?? 'Some selected providers need attention.';
+          getPrimaryProvisioningFailureDetail(checks) ?? '部分所选提供商需要处理。';
         setPrepareState(anyFailure ? 'failed' : 'ready');
         setPrepareMessage(
           anyFailure
             ? failureMessage
             : anyNotes
-              ? 'Selected providers are ready with notes.'
-              : 'Selected providers are ready.'
+              ? '所选提供商已就绪（含提示）。'
+              : '所选提供商已就绪。'
         );
         setPrepareWarnings(collectedWarnings);
       } catch (error) {
         if (prepareRequestSeqRef.current !== requestSeq) return;
-        const failureMessage =
-          error instanceof Error ? error.message : 'Failed to warm up Claude CLI environment';
+        const failureMessage = error instanceof Error ? error.message : '预热 Claude CLI 环境失败';
         setPrepareState('failed');
         setPrepareWarnings([]);
         setPrepareChecks(failIncompleteProviderChecks(checks, failureMessage));

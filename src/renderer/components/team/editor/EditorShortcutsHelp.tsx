@@ -30,50 +30,50 @@ interface ShortcutDef {
 
 const SHORTCUT_GROUPS: { title: string; shortcuts: ShortcutDef[] }[] = [
   {
-    title: 'File Operations',
+    title: '文件操作',
     shortcuts: [
-      { mac: '⌘ P', other: 'Ctrl+P', description: 'Quick Open' },
-      { mac: '⌘ S', other: 'Ctrl+S', description: 'Save' },
-      { mac: '⌘ ⇧ S', other: 'Ctrl+Shift+S', description: 'Save All' },
-      { mac: '⌘ W', other: 'Ctrl+W', description: 'Close Tab' },
+      { mac: '⌘ P', other: 'Ctrl+P', description: '快速打开' },
+      { mac: '⌘ S', other: 'Ctrl+S', description: '保存' },
+      { mac: '⌘ ⇧ S', other: 'Ctrl+Shift+S', description: '全部保存' },
+      { mac: '⌘ W', other: 'Ctrl+W', description: '关闭标签页' },
     ],
   },
   {
-    title: 'Search',
+    title: '搜索',
     shortcuts: [
-      { mac: '⌘ F', other: 'Ctrl+F', description: 'Find in File' },
-      { mac: '⌘ ⇧ F', other: 'Ctrl+Shift+F', description: 'Search in Files' },
-      { mac: '⌘ G', other: 'Ctrl+G', description: 'Go to Line' },
+      { mac: '⌘ F', other: 'Ctrl+F', description: '在文件中查找' },
+      { mac: '⌘ ⇧ F', other: 'Ctrl+Shift+F', description: '在文件中搜索' },
+      { mac: '⌘ G', other: 'Ctrl+G', description: '跳转到行' },
     ],
   },
   {
-    title: 'Navigation',
+    title: '导航',
     shortcuts: [
-      { mac: '⌘ ⇧ ]', other: 'Ctrl+Shift+]', description: 'Next Tab' },
-      { mac: '⌘ ⇧ [', other: 'Ctrl+Shift+[', description: 'Previous Tab' },
-      { mac: '⌃ Tab', other: 'Ctrl+Tab', description: 'Cycle Tabs' },
-      { mac: '⌘ B', other: 'Ctrl+B', description: 'Toggle Sidebar' },
+      { mac: '⌘ ⇧ ]', other: 'Ctrl+Shift+]', description: '下一个标签页' },
+      { mac: '⌘ ⇧ [', other: 'Ctrl+Shift+[', description: '上一个标签页' },
+      { mac: '⌃ Tab', other: 'Ctrl+Tab', description: '循环切换标签页' },
+      { mac: '⌘ B', other: 'Ctrl+B', description: '切换侧边栏' },
     ],
   },
   {
-    title: 'Editing',
+    title: '编辑',
     shortcuts: [
-      { mac: '⌘ Z', other: 'Ctrl+Z', description: 'Undo' },
-      { mac: '⌘ ⇧ Z', other: 'Ctrl+Y', description: 'Redo' },
-      { mac: '⌘ D', other: 'Ctrl+D', description: 'Select Next Match' },
-      { mac: '⌘ /', other: 'Ctrl+/', description: 'Toggle Comment' },
+      { mac: '⌘ Z', other: 'Ctrl+Z', description: '撤销' },
+      { mac: '⌘ ⇧ Z', other: 'Ctrl+Y', description: '重做' },
+      { mac: '⌘ D', other: 'Ctrl+D', description: '选择下一个匹配项' },
+      { mac: '⌘ /', other: 'Ctrl+/', description: '切换注释' },
     ],
   },
   {
     title: 'Markdown',
     shortcuts: [
-      { mac: '⌘ ⇧ M', other: 'Ctrl+Shift+M', description: 'Split Preview' },
-      { mac: '⌘ ⇧ V', other: 'Ctrl+Shift+V', description: 'Full Preview' },
+      { mac: '⌘ ⇧ M', other: 'Ctrl+Shift+M', description: '拆分预览' },
+      { mac: '⌘ ⇧ V', other: 'Ctrl+Shift+V', description: '完整预览' },
     ],
   },
   {
-    title: 'General',
-    shortcuts: [{ mac: 'Esc', other: 'Esc', description: 'Close Editor' }],
+    title: '通用',
+    shortcuts: [{ mac: 'Esc', other: 'Esc', description: '关闭编辑器' }],
   },
 ];
 

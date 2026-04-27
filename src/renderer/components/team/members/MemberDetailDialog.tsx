@@ -292,7 +292,7 @@ export const MemberDetailDialog = ({
               {launchDiagnosticsPayload && showCopyDiagnostics ? (
                 <MemberLaunchDiagnosticsButton
                   payload={launchDiagnosticsPayload}
-                  label="Copy diagnostics"
+                  label="复制诊断信息"
                   className="h-auto shrink-0 gap-1.5 px-2 py-1 text-red-300 hover:bg-red-500/10 hover:text-red-200"
                 />
               ) : null}
@@ -307,7 +307,7 @@ export const MemberDetailDialog = ({
           )}
           {member.removedAt ? (
             <span className="text-xs text-[var(--color-text-muted)]">
-              Removed {new Date(member.removedAt).toLocaleDateString()}
+              已移除 {new Date(member.removedAt).toLocaleDateString()}
             </span>
           ) : (
             <>

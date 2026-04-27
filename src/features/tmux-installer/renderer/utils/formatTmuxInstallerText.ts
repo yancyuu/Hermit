@@ -2,23 +2,23 @@ import type { TmuxInstallerPhase } from '@features/tmux-installer/contracts';
 import type { TmuxPlatform } from '@features/tmux-installer/contracts';
 
 export function formatTmuxInstallerTitle(phase: TmuxInstallerPhase): string {
-  if (phase === 'preparing' || phase === 'checking') return 'Preparing tmux installation';
-  if (phase === 'pending_external_elevation') return 'Waiting for an administrator step';
-  if (phase === 'waiting_for_external_step') return 'Finish the external setup step';
-  if (phase === 'installing') return 'Installing tmux';
-  if (phase === 'verifying') return 'Verifying tmux installation';
-  if (phase === 'needs_restart') return 'Restart required before tmux setup can continue';
-  if (phase === 'error') return 'tmux installation failed';
-  if (phase === 'needs_manual_step') return 'tmux needs a manual step';
-  if (phase === 'completed') return 'tmux installed';
-  if (phase === 'cancelled') return 'tmux installation cancelled';
-  return 'tmux is not installed';
+  if (phase === 'preparing' || phase === 'checking') return '正在准备安装 tmux';
+  if (phase === 'pending_external_elevation') return '等待管理员操作';
+  if (phase === 'waiting_for_external_step') return '请完成外部安装步骤';
+  if (phase === 'installing') return '正在安装 tmux';
+  if (phase === 'verifying') return '正在验证 tmux 安装';
+  if (phase === 'needs_restart') return '需要重启后继续 tmux 设置';
+  if (phase === 'error') return 'tmux 安装失败';
+  if (phase === 'needs_manual_step') return 'tmux 需要手动处理';
+  if (phase === 'completed') return 'tmux 已安装';
+  if (phase === 'cancelled') return 'tmux 安装已取消';
+  return 'tmux 未安装';
 }
 
 export function formatInstallButtonLabel(phase: TmuxInstallerPhase): string {
-  if (phase === 'error') return 'Retry install';
-  if (phase === 'needs_manual_step') return 'Re-check';
-  if (phase === 'needs_restart') return 'Re-check after restart';
+  if (phase === 'error') return '重试安装';
+  if (phase === 'needs_manual_step') return '重新检查';
+  if (phase === 'needs_restart') return '重启后重新检查';
   if (
     phase === 'preparing' ||
     phase === 'checking' ||
@@ -27,9 +27,9 @@ export function formatInstallButtonLabel(phase: TmuxInstallerPhase): string {
     phase === 'installing' ||
     phase === 'verifying'
   ) {
-    return 'Installing...';
+    return '正在安装...';
   }
-  return 'Install tmux';
+  return '安装 tmux';
 }
 
 export function formatTmuxInstallerProgress(phase: TmuxInstallerPhase): number | null {
@@ -52,13 +52,13 @@ export function formatTmuxPlatformLabel(platform: TmuxPlatform | null): string |
   if (platform === 'darwin') return 'macOS';
   if (platform === 'linux') return 'Linux';
   if (platform === 'win32') return 'Windows';
-  if (platform === 'unknown') return 'Unknown OS';
+  if (platform === 'unknown') return '未知系统';
   return null;
 }
 
 export function formatTmuxLocationLabel(location: 'host' | 'wsl' | null): string | null {
-  if (location === 'host') return 'Host runtime';
-  if (location === 'wsl') return 'WSL runtime';
+  if (location === 'host') return '主机运行时';
+  if (location === 'wsl') return 'WSL 运行时';
   return null;
 }
 
@@ -67,12 +67,11 @@ export function formatTmuxOptionalBenefits(platform: TmuxPlatform | null): strin
     return null;
   }
 
-  const mixedProviderLimit =
-    'Without tmux, creating multi-agent teams that mix providers may be blocked.';
+  const mixedProviderLimit = '没有 tmux 时，混合不同提供商的多智能体团队可能会被阻止启动。';
 
   if (platform === 'win32') {
-    return `Optional, but recommended. The app works without tmux. With tmux in WSL, teammates are more reliable for long-running work, restarts are cleaner, and recovery after reconnects is better. ${mixedProviderLimit}`;
+    return `可选，但建议安装。应用不依赖 tmux 也能运行；在 WSL 中使用 tmux 后，成员长时间运行更稳定，重启更干净，断线重连后的恢复也更可靠。${mixedProviderLimit}`;
   }
 
-  return `Optional, but recommended. The app works without tmux. With tmux, teammates are more reliable for long-running work, restarts are cleaner, and recovery after reconnects is better. ${mixedProviderLimit}`;
+  return `可选，但建议安装。应用不依赖 tmux 也能运行；使用 tmux 后，成员长时间运行更稳定，重启更干净，断线重连后的恢复也更可靠。${mixedProviderLimit}`;
 }

@@ -310,10 +310,10 @@ export const SkillImportDialog = ({
             <div className="sticky bottom-0 z-10 flex flex-wrap items-center gap-3 border-t border-border bg-surface px-6 py-4 shadow-[0_-8px_24px_rgba(0,0,0,0.08)]">
               <Button variant="outline" onClick={onClose}>
                 <X className="mr-1.5 size-3.5" />
-                Cancel
+                取消
               </Button>
               <p className="min-w-64 flex-1 text-sm text-text-muted">
-                Review the copied files first, then confirm the import in the next step.
+                请先检查复制的文件，然后在下一步确认导入。
               </p>
               <Button
                 onClick={() => void handleReview()}

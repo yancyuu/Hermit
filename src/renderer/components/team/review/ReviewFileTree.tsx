@@ -74,10 +74,10 @@ function getFileStatus(
 }
 
 const statusLabels: Record<FileStatus, string> = {
-  accepted: 'All changes accepted',
-  rejected: 'All changes rejected',
-  mixed: 'Partially reviewed',
-  pending: 'Pending review',
+  accepted: '所有变更已接受',
+  rejected: '所有变更已拒绝',
+  mixed: '部分已审查',
+  pending: '待审查',
 };
 
 const FileStatusIcon = ({ status }: { status: FileStatus }): JSX.Element => {

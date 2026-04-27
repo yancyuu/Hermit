@@ -38,14 +38,14 @@ function getEffectiveColumn(task: TeamTaskWithKanban): string {
 
 function getStatusLabel(column: string): string {
   const labels: Record<string, string> = {
-    todo: 'To Do',
-    pending: 'To Do',
-    in_progress: 'In Progress',
-    done: 'Done',
-    completed: 'Done',
-    review: 'Review',
-    approved: 'Approved',
-    deleted: 'Deleted',
+    todo: '待办',
+    pending: '待办',
+    in_progress: '进行中',
+    done: '已完成',
+    completed: '已完成',
+    review: '待审查',
+    approved: '已批准',
+    deleted: '已删除',
   };
   return labels[column] ?? column;
 }

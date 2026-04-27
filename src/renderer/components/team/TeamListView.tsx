@@ -1114,7 +1114,7 @@ export const TeamListView = (): React.JSX.Element => {
                           {team.displayName}
                         </h3>
                         <span className="inline-flex items-center gap-1 rounded-full bg-zinc-500/15 px-2 py-0.5 text-[10px] font-medium text-zinc-500">
-                          Deleted
+                          已删除
                         </span>
                       </div>
                       <div className="flex shrink-0 gap-1">

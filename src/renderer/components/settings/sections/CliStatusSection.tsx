@@ -297,7 +297,7 @@ export const CliStatusSection = (): React.JSX.Element | null => {
         title: disconnectAction.title,
         message: disconnectAction.message,
         confirmLabel: disconnectAction.confirmLabel,
-        cancelLabel: 'Cancel',
+        cancelLabel: '取消',
         variant: 'danger',
       });
 
@@ -794,7 +794,7 @@ export const CliStatusSection = (): React.JSX.Element | null => {
             style={{ color: 'var(--color-text-secondary)' }}
           >
             <Loader2 className="size-4 animate-spin" />
-            Installing...
+            正在安装...
           </div>
         )}
 
@@ -802,7 +802,7 @@ export const CliStatusSection = (): React.JSX.Element | null => {
         {installerState === 'completed' && (
           <div className="flex items-center gap-2 text-sm" style={{ color: '#4ade80' }}>
             <CheckCircle className="size-4" />
-            Installed v{completedVersion ?? 'latest'}
+            已安装 v{completedVersion ?? 'latest'}
           </div>
         )}
 
@@ -811,7 +811,7 @@ export const CliStatusSection = (): React.JSX.Element | null => {
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm" style={{ color: '#f87171' }}>
               <AlertTriangle className="size-4" />
-              {installerError ?? 'Installation failed'}
+              {installerError ?? '安装失败'}
             </div>
             <button
               onClick={handleInstall}
@@ -822,7 +822,7 @@ export const CliStatusSection = (): React.JSX.Element | null => {
               }}
             >
               <RefreshCw className="size-3.5" />
-              Retry
+              重试
             </button>
           </div>
         )}
