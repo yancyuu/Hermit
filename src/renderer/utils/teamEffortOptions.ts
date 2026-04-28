@@ -1,7 +1,5 @@
-import { resolveAnthropicRuntimeSelection } from '@features/anthropic-runtime-profile/renderer';
 import { isTeamEffortLevelForProvider } from '@shared/utils/effortLevels';
 
-import type { AnthropicRuntimeSelection } from '@features/anthropic-runtime-profile/renderer';
 import type { CliProviderStatus, EffortLevel, TeamProviderId } from '@shared/types';
 
 const BASE_EFFORT_OPTIONS = [{ value: '', label: '默认' }] as const;
@@ -73,23 +71,11 @@ export function getTeamEffortOptions(params: {
   }
 
   if (providerId === 'anthropic') {
-    const selection = resolveAnthropicRuntimeSelection({
-      source: {
-        modelCatalog: params.providerStatus?.modelCatalog,
-        runtimeCapabilities: params.providerStatus?.runtimeCapabilities,
-      },
-      selectedModel: params.model,
-      limitContext: params.limitContext === true,
-    });
-    const defaultLabel = selection.defaultEffort
-      ? `默认（${TEAM_EFFORT_LABELS[selection.defaultEffort]}）`
-      : '默认';
     return [
-      { value: '', label: defaultLabel },
-      ...selection.supportedEfforts.map((effort) => ({
-        value: effort,
-        label: TEAM_EFFORT_LABELS[effort],
-      })),
+      { value: '', label: '默认' },
+      { value: 'low', label: TEAM_EFFORT_LABELS.low },
+      { value: 'medium', label: TEAM_EFFORT_LABELS.medium },
+      { value: 'high', label: TEAM_EFFORT_LABELS.high },
     ];
   }
 
@@ -132,17 +118,10 @@ export function getTeamEffortOptions(params: {
 export function resolveTeamEffortForLaunch(params: {
   providerId?: TeamProviderId;
   selectedEffort?: string | null;
-  anthropicSelection?: AnthropicRuntimeSelection | null;
 }): EffortLevel | undefined {
   const providerId = params.providerId;
   if (!providerId || !isTeamEffortLevelForProvider(params.selectedEffort, providerId)) {
     return undefined;
-  }
-
-  if (providerId === 'anthropic') {
-    return params.anthropicSelection?.supportedEfforts.includes(params.selectedEffort)
-      ? params.selectedEffort
-      : undefined;
   }
 
   return params.selectedEffort;

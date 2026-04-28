@@ -178,7 +178,9 @@ export function reconcileAnthropicRuntimeSelections(params: {
   }
 
   const nextEffort =
-    selectedEffort && !params.selection.supportedEfforts.includes(selectedEffort)
+    selectedEffort &&
+    params.selection.supportedEfforts.length > 0 &&
+    !params.selection.supportedEfforts.includes(selectedEffort)
       ? ''
       : (selectedEffort ?? '');
   const effortResetReason =

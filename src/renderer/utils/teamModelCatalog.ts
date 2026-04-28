@@ -49,42 +49,18 @@ const TEAM_PROVIDER_LABELS: Record<SupportedProviderId, string> = {
 };
 
 const ANTHROPIC_ALIAS_LABELS = {
-  opus: 'Opus 4.7',
-  'opus[1m]': 'Opus 4.7 (1M)',
-  sonnet: 'Sonnet 4.6',
-  'sonnet[1m]': 'Sonnet 4.6 (1M)',
-  haiku: 'Haiku 4.5',
+  opus: 'Opus',
+  sonnet: 'Sonnet',
+  haiku: 'Haiku',
 } as const;
 
-const ANTHROPIC_VISIBLE_MODEL_FALLBACKS = ['claude-opus-4-7', 'claude-opus-4-7[1m]'] as const;
+const ANTHROPIC_VISIBLE_MODEL_FALLBACKS = ['opus', 'sonnet', 'haiku'] as const;
 
-const ANTHROPIC_MODEL_ORDER = [
-  'haiku',
-  'claude-haiku-4-5-20251001',
-  'claude-haiku-4-5',
-  'opus',
-  'opus[1m]',
-  'claude-opus-4-7',
-  'claude-opus-4-7[1m]',
-  'claude-opus-4-6',
-  'claude-opus-4-6[1m]',
-  'sonnet',
-  'sonnet[1m]',
-  'claude-sonnet-4-6',
-  'claude-sonnet-4-6[1m]',
-] as const;
+const ANTHROPIC_MODEL_ORDER = ['haiku', 'opus', 'sonnet'] as const;
 
 const TEAM_MODEL_LABEL_OVERRIDES: Record<string, string> = {
   default: '默认',
   ...ANTHROPIC_ALIAS_LABELS,
-  'claude-opus-4-7': 'Opus 4.7',
-  'claude-opus-4-7[1m]': 'Opus 4.7 (1M)',
-  'claude-sonnet-4-6': 'Sonnet 4.6',
-  'claude-sonnet-4-6[1m]': 'Sonnet 4.6 (1M)',
-  'claude-opus-4-6': 'Opus 4.6',
-  'claude-opus-4-6[1m]': 'Opus 4.6 (1M)',
-  'claude-haiku-4-5': 'Haiku 4.5',
-  'claude-haiku-4-5-20251001': 'Haiku 4.5',
   'gpt-5.4': 'GPT-5.4',
   'gpt-5.4-mini': 'GPT-5.4 Mini',
   'gpt-5.3-codex': 'GPT-5.3 Codex',
@@ -102,10 +78,9 @@ const TEAM_PROVIDER_MODEL_OPTIONS: Record<SupportedProviderId, readonly TeamProv
   {
     anthropic: [
       { value: '', label: '默认', badgeLabel: '默认' },
-      { value: 'opus', label: 'Opus 4.7', badgeLabel: 'Opus 4.7' },
-      { value: 'claude-opus-4-6', label: 'Opus 4.6', badgeLabel: 'Opus 4.6' },
-      { value: 'sonnet', label: 'Sonnet 4.6', badgeLabel: 'Sonnet 4.6' },
-      { value: 'haiku', label: 'Haiku 4.5', badgeLabel: 'Haiku 4.5' },
+      { value: 'opus', label: 'Opus', badgeLabel: 'Opus' },
+      { value: 'sonnet', label: 'Sonnet', badgeLabel: 'Sonnet' },
+      { value: 'haiku', label: 'Haiku', badgeLabel: 'Haiku' },
     ],
     codex: [
       { value: '', label: '默认', badgeLabel: '默认' },
@@ -204,21 +179,7 @@ function formatParsedClaudeModelLabel(model: string): string | null {
   return `${familyLabel} ${versionLabel}${hasOneMillion ? ' (1M)' : ''}`;
 }
 
-const SUPPORTED_ANTHROPIC_TEAM_MODELS = new Set<string>([
-  'opus',
-  'opus[1m]',
-  'sonnet',
-  'sonnet[1m]',
-  'haiku',
-  'claude-opus-4-7',
-  'claude-opus-4-7[1m]',
-  'claude-opus-4-6',
-  'claude-opus-4-6[1m]',
-  'claude-sonnet-4-6',
-  'claude-sonnet-4-6[1m]',
-  'claude-haiku-4-5',
-  'claude-haiku-4-5-20251001',
-]);
+const SUPPORTED_ANTHROPIC_TEAM_MODELS = new Set<string>(['opus', 'sonnet', 'haiku']);
 
 export function isSupportedAnthropicTeamModel(model: string | undefined): boolean {
   const trimmed = model?.trim();
@@ -235,8 +196,7 @@ export function isAnthropicHaikuTeamModel(model: string | undefined): boolean {
     return false;
   }
 
-  const { baseModel } = splitOneMillionContextSuffix(trimmed);
-  return baseModel === 'haiku' || baseModel.startsWith('claude-haiku-');
+  return trimmed === 'haiku';
 }
 
 export function getTeamProviderLabel(
