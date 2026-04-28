@@ -7,6 +7,7 @@ import * as path from 'path';
 import { atomicWriteAsync } from './atomicWrite';
 import { TeamInboxWriter } from './TeamInboxWriter';
 import { TeamConfigReader } from './TeamConfigReader';
+import { withFileLock } from './fileLock';
 
 import type {
   LeadChannelConfig,
@@ -28,6 +29,19 @@ const DEFAULT_CONFIG: LeadChannelConfig = {
     appSecret: '',
   },
 };
+
+const CHANNEL_EVENT_LEDGER_MAX_ENTRIES = 2000;
+const CHANNEL_EVENT_PROCESSING_STALE_MS = 10 * 60 * 1000;
+
+interface LeadChannelEventLedgerEntry {
+  eventKey: string;
+  status: 'processing' | 'handled';
+  firstSeenAt: string;
+  lastSeenAt: string;
+  updatedAt: string;
+  channelId: string;
+  messageId: string;
+}
 
 export interface LeadChannelInboundMessage {
   channelId: string;
@@ -61,6 +75,10 @@ function createStoppedStatus(
 
 function getLeadChannelConfigPath(teamName: string): string {
   return path.join(getTeamsBasePath(), teamName, 'lead-channel.json');
+}
+
+function getLeadChannelEventLedgerPath(teamName: string): string {
+  return path.join(getTeamsBasePath(), teamName, 'lead-channel-events.json');
 }
 
 function getGlobalLeadChannelConfigPath(): string {
@@ -288,6 +306,16 @@ export class LeadChannelListenerService {
           text,
           from: `${channel.name}:${senderId}`,
         };
+        const eventClaim = await this.claimInboundEvent(teamName, channel.id, inboundMessage);
+        if (!eventClaim.shouldProcess) {
+          this.patchStatus(teamName, channel.id, {
+            running: true,
+            state: 'connected',
+            message: `${channel.name} 已忽略飞书重复消息。`,
+            lastEventAt: new Date().toISOString(),
+          });
+          return;
+        }
         const deliveredDirect =
           (await Promise.resolve(this.inboundMessageHandler?.(teamName, inboundMessage)).catch(
             (error: unknown) => {
@@ -315,6 +343,9 @@ export class LeadChannelListenerService {
               senderId,
             },
           });
+        }
+        if (eventClaim.eventKey) {
+          await this.markInboundEventHandled(teamName, eventClaim.eventKey);
         }
         this.patchStatus(teamName, channel.id, {
           running: true,
@@ -481,6 +512,108 @@ export class LeadChannelListenerService {
     const client = new Lark.Client({ appId, appSecret });
     this.apiClientByTeamChannel.set(key, client);
     return client;
+  }
+
+  private async claimInboundEvent(
+    teamName: string,
+    channelId: string,
+    message: LeadChannelInboundMessage
+  ): Promise<{ eventKey: string | null; shouldProcess: boolean }> {
+    const messageId = message.messageId?.trim();
+    if (!messageId) {
+      return { eventKey: null, shouldProcess: true };
+    }
+
+    const eventKey = `${channelId}:${messageId}`;
+    const ledgerPath = getLeadChannelEventLedgerPath(teamName);
+    const now = new Date();
+    const nowIso = now.toISOString();
+    let shouldProcess = true;
+
+    await withFileLock(ledgerPath, async () => {
+      const ledger = await this.readInboundEventLedger(ledgerPath);
+      const existing = ledger.find((entry) => entry.eventKey === eventKey);
+      if (existing) {
+        existing.lastSeenAt = nowIso;
+        const updatedAtMs = Date.parse(existing.updatedAt);
+        const isStaleProcessing =
+          existing.status === 'processing' &&
+          Number.isFinite(updatedAtMs) &&
+          now.getTime() - updatedAtMs > CHANNEL_EVENT_PROCESSING_STALE_MS;
+        if (existing.status === 'handled' || !isStaleProcessing) {
+          shouldProcess = false;
+        } else {
+          existing.status = 'processing';
+          existing.updatedAt = nowIso;
+        }
+      } else {
+        ledger.push({
+          eventKey,
+          status: 'processing',
+          firstSeenAt: nowIso,
+          lastSeenAt: nowIso,
+          updatedAt: nowIso,
+          channelId,
+          messageId,
+        });
+      }
+      await this.writeInboundEventLedger(ledgerPath, ledger);
+    });
+
+    return { eventKey, shouldProcess };
+  }
+
+  private async markInboundEventHandled(teamName: string, eventKey: string): Promise<void> {
+    const ledgerPath = getLeadChannelEventLedgerPath(teamName);
+    const nowIso = new Date().toISOString();
+    await withFileLock(ledgerPath, async () => {
+      const ledger = await this.readInboundEventLedger(ledgerPath);
+      const existing = ledger.find((entry) => entry.eventKey === eventKey);
+      if (existing) {
+        existing.status = 'handled';
+        existing.updatedAt = nowIso;
+        existing.lastSeenAt = nowIso;
+      }
+      await this.writeInboundEventLedger(ledgerPath, ledger);
+    });
+  }
+
+  private async readInboundEventLedger(ledgerPath: string): Promise<LeadChannelEventLedgerEntry[]> {
+    try {
+      const raw = await fs.promises.readFile(ledgerPath, 'utf8');
+      const parsed = JSON.parse(raw) as unknown;
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter((entry): entry is LeadChannelEventLedgerEntry => {
+        if (!entry || typeof entry !== 'object') return false;
+        const row = entry as Partial<LeadChannelEventLedgerEntry>;
+        return (
+          typeof row.eventKey === 'string' &&
+          (row.status === 'processing' || row.status === 'handled') &&
+          typeof row.firstSeenAt === 'string' &&
+          typeof row.lastSeenAt === 'string' &&
+          typeof row.updatedAt === 'string' &&
+          typeof row.channelId === 'string' &&
+          typeof row.messageId === 'string'
+        );
+      });
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+        return [];
+      }
+      throw error;
+    }
+  }
+
+  private async writeInboundEventLedger(
+    ledgerPath: string,
+    ledger: LeadChannelEventLedgerEntry[]
+  ): Promise<void> {
+    const trimmed = ledger
+      .slice()
+      .sort((a, b) => Date.parse(a.updatedAt) - Date.parse(b.updatedAt))
+      .slice(-CHANNEL_EVENT_LEDGER_MAX_ENTRIES);
+    await fs.promises.mkdir(path.dirname(ledgerPath), { recursive: true });
+    await atomicWriteAsync(ledgerPath, `${JSON.stringify(trimmed, null, 2)}\n`);
   }
 
   private scheduleConnectingHint(

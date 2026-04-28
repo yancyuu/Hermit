@@ -18940,7 +18940,7 @@ export class TeamProvisioningService {
         this.handleAuthFailureInOutput(run, text, 'assistant');
         assistantIsRateLimitApiError = this.isRateLimitApiError(text);
         if (this.hasApiError(text) && !this.isAuthFailureWarning(text, 'assistant')) {
-          if (assistantIsRateLimitApiError) {
+          if (assistantIsRateLimitApiError && !run.provisioningComplete) {
             this.teamSendBlockReasonByTeam.set(
               run.teamName,
               '负责人当前处于请求限流状态。请稍后重试，或先停止部分团队/成员。'
@@ -18948,6 +18948,13 @@ export class TeamProvisioningService {
           }
           if (!run.provisioningComplete) {
             this.failProvisioningWithApiError(run, text);
+          } else {
+            if (run.leadRelayCapture) {
+              run.leadRelayCapture.rejectOnce(text);
+            }
+            this.resetRuntimeToolActivity(run, this.getRunLeadName(run));
+            this.setLeadActivity(run, 'idle');
+            this.teamSendBlockReasonByTeam.delete(run.teamName);
           }
           return;
         }
@@ -19261,6 +19268,7 @@ export class TeamProvisioningService {
           }
           this.resetRuntimeToolActivity(run, this.getRunLeadName(run));
           this.setLeadActivity(run, 'idle');
+          this.teamSendBlockReasonByTeam.delete(run.teamName);
         }
       }
     }
@@ -19278,10 +19286,12 @@ export class TeamProvisioningService {
           const delayLabel = retryInMs ? `，约 ${Math.round(retryInMs / 1000)} 秒后重试` : '';
           const message = `请求限流${retryLabel}${delayLabel}`;
 
-          this.teamSendBlockReasonByTeam.set(
-            run.teamName,
-            '负责人当前处于请求限流状态。请稍后重试，或先停止部分团队/成员。'
-          );
+          if (!run.provisioningComplete) {
+            this.teamSendBlockReasonByTeam.set(
+              run.teamName,
+              '负责人当前处于请求限流状态。请稍后重试，或先停止部分团队/成员。'
+            );
+          }
 
           if (
             !run.provisioningComplete &&

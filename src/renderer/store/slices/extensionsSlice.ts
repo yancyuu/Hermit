@@ -1372,14 +1372,14 @@ export const createExtensionsSlice: StateCreator<AppState, [], [], ExtensionsSli
     const existingTab = focusedPane?.tabs.find((tab) => tab.type === 'extensions');
     if (existingTab) {
       // Update projectId to reflect the currently selected project
-      if (existingTab.projectId !== currentProjectId) {
+      if (existingTab.projectId !== currentProjectId || existingTab.label !== '扩展') {
         const pane = findPaneByTabId(state.paneLayout, existingTab.id);
         if (pane) {
           set({
             paneLayout: updatePane(state.paneLayout, {
               ...pane,
               tabs: pane.tabs.map((t) =>
-                t.id === existingTab.id ? { ...t, projectId: currentProjectId } : t
+                t.id === existingTab.id ? { ...t, label: '扩展', projectId: currentProjectId } : t
               ),
             }),
           });
@@ -1391,7 +1391,7 @@ export const createExtensionsSlice: StateCreator<AppState, [], [], ExtensionsSli
 
     state.openTab({
       type: 'extensions',
-      label: 'Extensions',
+      label: '扩展',
       projectId: currentProjectId,
     });
   },

@@ -1063,9 +1063,9 @@ export const MentionableTextarea = React.forwardRef<HTMLTextAreaElement, Mention
     // --- Rotating tips ---
     const rotatingTips = React.useMemo(
       () => [
-        'Tip: Use @ for members/files and # for tasks',
-        'Tip: Mention "create a task" to add it to the kanban',
-        "Tip: Don't overload the team lead with tasks — ask them to delegate to teammates",
+        '提示：输入 @ 可提及成员、团队或文件，输入 # 可引用任务。',
+        '提示：输入“创建任务”可以把事项加入任务看板。',
+        '提示：不要把所有工作都堆给团队负责人，可以让负责人分配给合适的成员。',
         ...extraTips,
       ],
       [extraTips]

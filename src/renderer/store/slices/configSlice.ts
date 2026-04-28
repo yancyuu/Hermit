@@ -91,6 +91,9 @@ export const createConfigSlice: StateCreator<AppState, [], [], ConfigSlice> = (s
     const focusedPane = state.paneLayout.panes.find((p) => p.id === state.paneLayout.focusedPaneId);
     const settingsTab = focusedPane?.tabs.find((t) => t.type === 'settings');
     if (settingsTab) {
+      if (settingsTab.label !== '设置') {
+        state.updateTabLabel(settingsTab.id, '设置');
+      }
       state.setActiveTab(settingsTab.id);
       return;
     }
@@ -98,7 +101,7 @@ export const createConfigSlice: StateCreator<AppState, [], [], ConfigSlice> = (s
     // Create new settings tab via openTab (which adds to focused pane)
     state.openTab({
       type: 'settings',
-      label: 'Settings',
+      label: '设置',
     });
   },
 
