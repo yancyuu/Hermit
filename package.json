@@ -8,13 +8,13 @@
     "name": "yancyyu",
     "email": "yancyyu.ok@gmail.com"
   },
-  "homepage": "https://github.com/lazy-agent/hermit",
+  "homepage": "https://github.com/yancyuu/Hermit",
   "repository": {
     "type": "git",
-    "url": "https://github.com/lazy-agent/hermit.git"
+    "url": "https://github.com/yancyuu/Hermit.git"
   },
   "bugs": {
-    "url": "https://github.com/lazy-agent/hermit/issues"
+    "url": "https://github.com/yancyuu/Hermit/issues"
   },
   "main": "dist-electron/main/index.cjs",
   "scripts": {
@@ -313,8 +313,8 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "lazy-agent",
-        "repo": "hermit",
+        "owner": "yancyuu",
+        "repo": "Hermit",
         "releaseType": "release"
       }
     ]

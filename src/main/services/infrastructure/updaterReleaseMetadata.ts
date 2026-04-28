@@ -1,5 +1,5 @@
-const REPO_OWNER = 'lazy-agent';
-const REPO_NAME = 'hermit';
+const REPO_OWNER = 'yancyuu';
+const REPO_NAME = 'Hermit';
 
 export function buildReleaseAssetBase(version: string, repoName = REPO_NAME): string {
   return `https://github.com/${REPO_OWNER}/${repoName}/releases/download/v${version}`;

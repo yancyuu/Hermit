@@ -113,11 +113,11 @@ export const TabBarActions = (): React.JSX.Element => {
           <button
             onClick={async () => {
               if (isElectronMode()) {
-                await window.electronAPI.openExternal('https://github.com/lazy-agent/hermit');
+                await window.electronAPI.openExternal('https://github.com/yancyuu/Hermit');
                 return;
               }
 
-              window.open('https://github.com/lazy-agent/hermit', '_blank', 'noopener,noreferrer');
+              window.open('https://github.com/yancyuu/Hermit', '_blank', 'noopener,noreferrer');
             }}
             onMouseEnter={() => setGithubHover(true)}
             onMouseLeave={() => setGithubHover(false)}

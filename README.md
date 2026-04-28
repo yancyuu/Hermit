@@ -10,20 +10,22 @@
   <a href="docs/screenshots/6.png"><img src="docs/screenshots/6.png" width="65" alt="设置" /></a>
 </p>
 
-<h1 align="center"><a href="https://github.com/lazy-agent/hermit">Hermit</a></h1>
+<h1 align="center"><a href="https://github.com/yancyuu/Hermit">Hermit</a></h1>
 
 <p align="center">
   <strong><code>拥有编程能力 + 编程环境 = 拥有一切。</code></strong>
 </p>
 
 <p align="center">
-  <a href="https://github.com/lazy-agent/hermit/releases/latest"><img src="https://img.shields.io/github/v/release/lazy-agent/hermit?style=flat-square&label=version&color=blue" alt="最新版本" /></a>&nbsp;
-  <a href="https://github.com/lazy-agent/hermit/actions/workflows/ci.yml"><img src="https://github.com/lazy-agent/hermit/actions/workflows/ci.yml/badge.svg" alt="CI 状态" /></a>
+  <a href="https://github.com/yancyuu/Hermit/releases/latest"><img src="https://img.shields.io/github/v/release/yancyuu/Hermit?style=flat-square&label=version&color=blue" alt="最新版本" /></a>&nbsp;
+  <a href="https://github.com/yancyuu/Hermit/actions/workflows/ci.yml"><img src="https://github.com/yancyuu/Hermit/actions/workflows/ci.yml/badge.svg" alt="CI 状态" /></a>
 </p>
 
 <p align="center">
   <sub>基于 Claude Code 的极简多智能体协同看板。我们不造大模型网关，我们为具备通用执行能力的数字劳动力提供最强的工作台。</sub>
 </p>
+
+> Hermit 基于 `claude_agent_teams_ui` 二次开发，保留其本地优先的 Claude Code 团队协作能力，并在此基础上强化中文体验、成员启动模式、远程多机运行和进程治理。
 
 <img width="1304" height="820" alt="界面预览" src="https://github.com/user-attachments/assets/dea53a01-68b3-4c36-bcf6-e4d1ad4cdb31" />
 
@@ -144,17 +146,17 @@ Hermit 的核心取舍是：不重新发明 Agent 大脑，而是在 Claude Code
 <table align="center">
 <tr>
 <td align="center">
-  <a href="https://github.com/lazy-agent/hermit/releases/latest">
+  <a href="https://github.com/yancyuu/Hermit/releases/latest">
     <img src="https://img.shields.io/badge/macOS-下载最新版本-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS" />
   </a>
 </td>
 <td align="center">
-  <a href="https://github.com/lazy-agent/hermit/releases/latest">
+  <a href="https://github.com/yancyuu/Hermit/releases/latest">
     <img src="https://img.shields.io/badge/Windows-下载最新版本-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Windows" />
   </a>
 </td>
 <td align="center">
-  <a href="https://github.com/lazy-agent/hermit/releases/latest">
+  <a href="https://github.com/yancyuu/Hermit/releases/latest">
     <img src="https://img.shields.io/badge/Linux-下载最新版本-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux" />
   </a>
 </td>
@@ -184,7 +186,7 @@ Hermit 的核心取舍是：不重新发明 Agent 大脑，而是在 Claude Code
 依赖：Node.js 20+、pnpm 10+。
 
 ```bash
-git clone https://github.com/lazy-agent/hermit.git
+git clone https://github.com/yancyuu/Hermit.git
 cd hermit
 pnpm install
 pnpm dev
@@ -224,6 +226,7 @@ pnpm dist:mac:arm64
 - 团队渠道模板：按团队/负责人快速复用渠道配置。
 - 更稳定的远程执行状态监控。
 - 成员级远程调度。
+- Master 分发：后续将 Skills 与 MCP 能力统一通过 master 下发，团队成员只接收经过负责人编排和授权的工具/技能配置。
 - 计划模式：执行前先生成并审查团队计划。
 - 更细粒度的成员上下文权限。
 - CLI / Web 控制台。
