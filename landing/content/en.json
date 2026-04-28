@@ -1,0 +1,102 @@
+{
+  "hero": {
+    "title": "Agent Teams",
+    "subtitle": "You're the CTO, agents are your team. They handle tasks themselves, message each other, review each other's code. You just look at the kanban board and drink coffee."
+  },
+  "features": [
+    {
+      "id": "agentTeams",
+      "title": "Agent Teams",
+      "description": "Create teams with different roles. Agents work autonomously in parallel, communicate with each other, and collaborate across teams."
+    },
+    {
+      "id": "kanban",
+      "title": "Kanban Board",
+      "description": "Tasks change status in real-time as agents work. Drag, assign, review — all on a visual board."
+    },
+    {
+      "id": "codeReview",
+      "title": "Code Review",
+      "description": "Diff view per task with accept, reject, and comment. Built-in code editor with Git support."
+    },
+    {
+      "id": "crossTeam",
+      "title": "Cross-Team Communication",
+      "description": "Agents message each other within and across teams. Direct messaging, task comments, and quick actions."
+    },
+    {
+      "id": "soloMode",
+      "title": "Solo Mode",
+      "description": "Start with a single agent that self-manages tasks. Expand to a full team whenever you need more power."
+    },
+    {
+      "id": "liveProcesses",
+      "title": "Live Processes",
+      "description": "See running agents, open URLs in browser, monitor token usage and session context in real-time."
+    }
+  ],
+  "faq": [
+    {
+      "id": "whatIsIt",
+      "question": "What is Agent Teams?",
+      "answer": "A desktop app for orchestrating AI agent teams with our own local coordination layer. Agents have roles, work autonomously, collaborate through a kanban board, and can run on Anthropic or Codex."
+    },
+    {
+      "id": "isFree",
+      "question": "Is it really free?",
+      "answer": "Yes. The app itself is 100% free and open source. The app has no paid tier of its own. To run agents, you only need access to a supported provider/runtime, such as Anthropic or Codex."
+    },
+    {
+      "id": "platforms",
+      "question": "Which platforms are supported?",
+      "answer": "macOS (Apple Silicon and Intel), Windows, and Linux."
+    },
+    {
+      "id": "howItWorks",
+      "question": "How does it work?",
+      "answer": "Install the app, create a team, assign roles — agents start working in parallel. You monitor progress on the kanban board, review code diffs, and communicate with agents directly."
+    },
+    {
+      "id": "privacy",
+      "question": "Is my code private?",
+      "answer": "Everything runs locally on your machine. No data is sent to external servers. Your code, conversations, and agent activity stay entirely private."
+    },
+    {
+      "id": "requirements",
+      "question": "What do I need to get started?",
+      "answer": "Just install the app - it guides runtime detection and provider authentication from the UI. Zero-setup onboarding gets you running in minutes."
+    }
+  ],
+  "download": {
+    "title": "Download",
+    "note": "Choose your platform and start building with AI agent teams."
+  },
+  "testimonials": [
+    { "id": "user1", "name": "Alex K.", "role": "Tech Lead", "text": "Finally, a tool that lets me manage AI agents like I manage my engineering team. The kanban board is a game-changer for keeping track of parallel agent work." },
+    { "id": "user2", "name": "Sarah M.", "role": "Full-stack Developer", "text": "Solo mode is perfect for quick tasks. When I need more firepower, I spin up a full team in seconds. The cross-team communication just works." },
+    { "id": "user3", "name": "David R.", "role": "Senior Engineer", "text": "The code review workflow is brilliant — diff view per task, accept/reject, comments. It's like having a team of junior devs that actually follow instructions." },
+    { "id": "user4", "name": "Yuki T.", "role": "DevOps Engineer", "text": "Live process monitoring and context tracking are incredibly useful. I can see exactly what each agent is doing and how much context they're using." },
+    { "id": "user5", "name": "Maria S.", "role": "Indie Developer", "text": "Zero-setup onboarding is real — installed the app, authenticated once, and had agents working on my codebase within 5 minutes. No API keys, no config files." },
+    { "id": "user6", "name": "Chris L.", "role": "Startup CTO", "text": "This completely changed how I prototype. I set up agent teams for different parts of the stack and let them work in parallel. 10x productivity boost, no joke." }
+  ],
+  "pricing": [
+    {
+      "id": "free",
+      "name": "Free Forever",
+      "price": "$0",
+      "period": "forever",
+      "description": "Everything included. No limits, no API keys, no credit card.",
+      "features": [
+        "Unlimited agent teams",
+        "Kanban board with real-time updates",
+        "Code review with diff view",
+        "Cross-team communication",
+        "Solo & team modes",
+        "Live process monitoring",
+        "Built-in code editor",
+        "MCP integration"
+      ],
+      "highlighted": true
+    }
+  ]
+}

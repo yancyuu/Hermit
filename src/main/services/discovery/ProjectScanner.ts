@@ -1,0 +1,1567 @@
+/**
+ * ProjectScanner service - Scans ~/.claude/projects/ directory and lists all projects.
+ *
+ * Responsibilities:
+ * - Read project directories from ~/.claude/projects/
+ * - Decode directory names to original paths (with cwd fallback)
+ * - List session files for each project
+ * - Read task list data from ~/.claude/todos/
+ * - Return sorted list of projects by recent activity
+ *
+ * Delegates to specialized services:
+ * - SessionContentFilter: Noise detection and message filtering
+ * - WorktreeGrouper: Git repository grouping
+ * - SubagentLocator: Subagent file lookup
+ * - SessionSearcher: Search functionality
+ */
+
+import {
+  AUTO_CLAUDE_DIR,
+  CCSWITCH_DIR,
+  CLAUDE_CODE_DIR,
+  CLAUDE_WORKTREES_DIR,
+  CONDUCTOR_DIR,
+  CURSOR_DIR,
+  TWENTYFIRST_DIR,
+  VIBE_KANBAN_DIR,
+  WORKSPACES_DIR,
+  WORKTREES_DIR,
+} from '@main/constants/worktreePatterns';
+import {
+  type PaginatedSessionsResult,
+  type Project,
+  type RepositoryGroup,
+  type SearchSessionsResult,
+  type Session,
+  type SessionCursor,
+  type SessionMetadataLevel,
+  type SessionsByIdsOptions,
+  type SessionsPaginationOptions,
+  type WorktreeSource,
+} from '@main/types';
+import { analyzeSessionFileMetadata, extractCwd } from '@main/utils/jsonl';
+import {
+  buildSessionPath,
+  buildSubagentsPath,
+  buildTodoPath,
+  extractBaseDir,
+  extractProjectName,
+  extractSessionId,
+  getProjectsBasePath,
+  getTodosBasePath,
+  isValidEncodedPath,
+} from '@main/utils/pathDecoder';
+import { createLogger } from '@shared/utils/logger';
+import * as path from 'path';
+
+import { configManager } from '../infrastructure/ConfigManager';
+import { LocalFileSystemProvider } from '../infrastructure/LocalFileSystemProvider';
+
+import { ProjectPathResolver } from './ProjectPathResolver';
+import { resolveProjectStorageDir as resolveProjectStorageDirFromCandidates } from './projectStorageDir';
+import { SessionContentFilter } from './SessionContentFilter';
+import { SessionSearcher } from './SessionSearcher';
+import { SubagentLocator } from './SubagentLocator';
+import { subprojectRegistry } from './SubprojectRegistry';
+
+import type { FileSystemProvider, FsDirent } from '../infrastructure/FileSystemProvider';
+
+const logger = createLogger('Discovery:ProjectScanner');
+
+/** How long to reuse the cached project list for search (ms) */
+const SEARCH_PROJECT_CACHE_TTL_MS = 30_000;
+
+// IPC payload safety: session ID arrays can be extremely large for long-lived projects.
+// Keep counts accurate via totalSessions, but truncate ID lists to keep renderer responsive.
+// Keep this non-zero because parts of the renderer still rely on a (partial) sessionId list
+// for lookups and navigation; a small cap preserves that behavior without huge payloads.
+const MAX_SESSION_IDS_EXPORTED = 200;
+
+function splitPathSegments(value: string): string[] {
+  return value.split(/[/\\]+/).filter(Boolean);
+}
+
+/**
+ * Fast, zero-I/O worktree detection based on path patterns only.
+ * Used by scanWithWorktreeGrouping to provide accurate worktree metadata
+ * without expensive git filesystem operations.
+ */
+function detectWorktreeFromPath(projectPath: string): {
+  isWorktree: boolean;
+  source: WorktreeSource;
+} {
+  const parts = splitPathSegments(projectPath);
+
+  if (parts.includes(VIBE_KANBAN_DIR) && parts.includes(WORKTREES_DIR)) {
+    return { isWorktree: true, source: 'vibe-kanban' };
+  }
+  if (parts.includes(CONDUCTOR_DIR) && parts.includes(WORKSPACES_DIR)) {
+    // Only subpaths after workspaces/{repo} are worktrees
+    const idx = parts.indexOf(CONDUCTOR_DIR);
+    if (idx >= 0 && parts.length > idx + 3) {
+      return { isWorktree: true, source: 'conductor' };
+    }
+  }
+  if (parts.includes(AUTO_CLAUDE_DIR) && parts.includes(WORKTREES_DIR)) {
+    return { isWorktree: true, source: 'auto-claude' };
+  }
+  if (parts.includes(TWENTYFIRST_DIR) && parts.includes(WORKTREES_DIR)) {
+    return { isWorktree: true, source: '21st' };
+  }
+  if (parts.includes(CLAUDE_WORKTREES_DIR)) {
+    return { isWorktree: true, source: 'claude-desktop' };
+  }
+  if (parts.includes(CCSWITCH_DIR) && parts.includes(WORKTREES_DIR)) {
+    return { isWorktree: true, source: 'ccswitch' };
+  }
+  if (parts.includes(CURSOR_DIR) && parts.includes(WORKTREES_DIR)) {
+    return { isWorktree: true, source: 'git' };
+  }
+  {
+    const claudeCodeIdx = parts.indexOf(CLAUDE_CODE_DIR);
+    if (claudeCodeIdx >= 0 && parts[claudeCodeIdx + 1] === WORKTREES_DIR) {
+      return { isWorktree: true, source: 'claude-code' };
+    }
+  }
+  return { isWorktree: false, source: 'unknown' };
+}
+
+export class ProjectScanner {
+  private readonly projectsDir: string;
+  private readonly todosDir: string;
+  private readonly contentPresenceCache = new Map<
+    string,
+    { mtimeMs: number; size: number; hasContent: boolean }
+  >();
+  private readonly sessionMetadataCache = new Map<
+    string,
+    {
+      mtimeMs: number;
+      size: number;
+      metadata: Awaited<ReturnType<typeof analyzeSessionFileMetadata>>;
+    }
+  >();
+  private readonly sessionPreviewCache = new Map<
+    string,
+    { mtimeMs: number; size: number; preview: { text: string; timestamp: string } | null }
+  >();
+
+  // Short-lived scan cache to prevent duplicate scans within the same request cycle.
+  // Both getProjects() and getRepositoryGroups() call scan() — the cache deduplicates.
+  private scanCache: { projects: Project[]; timestamp: number } | null = null;
+  private static readonly SCAN_CACHE_TTL_MS = 2000;
+
+  /** Cached project list for search — avoids re-scanning disk on every query */
+  private searchProjectCache: { projects: Project[]; timestamp: number } | null = null;
+
+  // Platform-aware batch sizes to avoid UV thread pool saturation on Windows
+  private static readonly LOCAL_SESSION_BATCH = process.platform === 'win32' ? 16 : 64;
+  private static readonly LOCAL_PROJECT_BATCH = process.platform === 'win32' ? 4 : 12;
+
+  // Delegated services
+  private readonly fsProvider: FileSystemProvider;
+  private readonly sessionContentFilter: typeof SessionContentFilter;
+  private readonly subagentLocator: SubagentLocator;
+  private readonly sessionSearcher: SessionSearcher;
+  private readonly projectPathResolver: ProjectPathResolver;
+
+  constructor(projectsDir?: string, todosDir?: string, fsProvider?: FileSystemProvider) {
+    this.projectsDir = projectsDir ?? getProjectsBasePath();
+    this.todosDir = todosDir ?? getTodosBasePath();
+    this.fsProvider = fsProvider ?? new LocalFileSystemProvider();
+
+    // Initialize delegated services
+    this.sessionContentFilter = SessionContentFilter;
+    this.subagentLocator = new SubagentLocator(this.projectsDir, this.fsProvider);
+    this.sessionSearcher = new SessionSearcher(this.projectsDir, this.fsProvider);
+    this.projectPathResolver = new ProjectPathResolver(this.projectsDir, this.fsProvider);
+  }
+
+  // ===========================================================================
+  // Project Scanning
+  // ===========================================================================
+
+  /**
+   * Scans the projects directory and returns a list of all projects.
+   * @returns Promise resolving to projects sorted by most recent activity
+   */
+  async scan(): Promise<Project[]> {
+    // Short-lived cache: prevents duplicate scans when getProjects() and
+    // getRepositoryGroups() fire in Promise.all() on startup/context switch.
+    if (
+      this.scanCache &&
+      Date.now() - this.scanCache.timestamp < ProjectScanner.SCAN_CACHE_TTL_MS
+    ) {
+      return this.scanCache.projects;
+    }
+
+    const startedAt = Date.now();
+    let stage = 'start';
+    const slowWarnAfterMs = 10_000;
+    const slowWarnTimer = setTimeout(() => {
+      logger.warn(
+        `[scan] still running after ${slowWarnAfterMs}ms stage=${stage} projectsDir=${this.projectsDir}`
+      );
+    }, slowWarnAfterMs);
+    try {
+      stage = 'exists';
+      if (!(await this.fsProvider.exists(this.projectsDir))) {
+        logger.warn(`Projects directory does not exist: ${this.projectsDir}`);
+        return [];
+      }
+
+      // Clear the subproject registry on full re-scan
+      subprojectRegistry.clear();
+
+      stage = 'readdirProjectsDir';
+      const readdirStartedAt = Date.now();
+      const entries = await this.fsProvider.readdir(this.projectsDir);
+      const readdirMs = Date.now() - readdirStartedAt;
+      if (readdirMs >= 2000) {
+        logger.warn(`[scan] readdir slow ms=${readdirMs} entries=${entries.length}`);
+      }
+
+      // Filter to only directories with valid encoding pattern
+      const projectDirs = entries.filter(
+        (entry) => entry.isDirectory() && isValidEncodedPath(entry.name)
+      );
+
+      // Process each project directory (may return multiple projects per dir)
+      stage = 'scanProjects';
+      const projectArrays = await this.collectFulfilledInBatches(
+        projectDirs,
+        this.fsProvider.type === 'ssh' ? 8 : ProjectScanner.LOCAL_PROJECT_BATCH,
+        async (dir) => this.scanProjectWithTimeout(dir.name)
+      );
+
+      // Flatten and sort by most recent
+      const validProjects = projectArrays.flat();
+      validProjects.sort((a, b) => (b.mostRecentSession ?? 0) - (a.mostRecentSession ?? 0));
+
+      if (this.fsProvider.type === 'ssh') {
+        logger.debug(
+          `SSH scan completed: ${validProjects.length} projects in ${Date.now() - startedAt}ms`
+        );
+      }
+
+      const ms = Date.now() - startedAt;
+      if (ms >= 5000) {
+        logger.warn(
+          `[scan] completed slow ms=${ms} projectDirs=${projectDirs.length} projects=${validProjects.length}`
+        );
+      }
+      this.scanCache = { projects: validProjects, timestamp: Date.now() };
+      return validProjects;
+    } catch (error) {
+      logger.error('Error scanning projects directory:', error);
+      return [];
+    } finally {
+      clearTimeout(slowWarnTimer);
+    }
+  }
+
+  /**
+   * Clears the scan cache so the next scan() call reads fresh data.
+   * Call this when a file change is detected by FileWatcher.
+   */
+  clearScanCache(): void {
+    this.scanCache = null;
+  }
+
+  // ===========================================================================
+  // Repository Grouping (Worktree Support)
+  // ===========================================================================
+
+  /**
+   * Scans projects and groups them by git repository.
+   * Projects belonging to the same git repository (main repo + worktrees)
+   * are grouped together under a single RepositoryGroup.
+   * Non-git projects are represented as single-worktree groups.
+   *
+   * Sessions are filtered to exclude noise-only sessions, so counts
+   * accurately reflect visible sessions in the UI.
+   *
+   * @returns Promise resolving to RepositoryGroups sorted by most recent activity
+   */
+  async scanWithWorktreeGrouping(): Promise<RepositoryGroup[]> {
+    try {
+      // 1. Scan all projects using existing logic
+      const projects = await this.scan();
+
+      // 2. Convert each project to a simple RepositoryGroup (git resolution disabled)
+      // Git identity resolution is bypassed to avoid blocking I/O on startup.
+      // Each project becomes a single-worktree group.
+      const groups: RepositoryGroup[] = projects.map((project) => {
+        const totalSessions = project.totalSessions ?? project.sessions.length;
+        const worktreeInfo = detectWorktreeFromPath(project.path);
+        return {
+          id: project.id,
+          identity: null,
+          worktrees: [
+            {
+              id: project.id,
+              path: project.path,
+              name: project.name,
+              isMainWorktree: !worktreeInfo.isWorktree,
+              source: worktreeInfo.source,
+              sessions: project.sessions,
+              totalSessions,
+              createdAt: project.createdAt,
+              mostRecentSession: project.mostRecentSession,
+            },
+          ],
+          name: project.name,
+          mostRecentSession: project.mostRecentSession,
+          totalSessions,
+        };
+      });
+
+      // 3. Merge custom project paths from config (persisted "Select Folder" picks)
+      const customPaths = configManager.getCustomProjectPaths();
+      const existingPaths = new Set(groups.flatMap((g) => g.worktrees.map((w) => w.path)));
+
+      for (const customPath of customPaths) {
+        if (existingPaths.has(customPath)) {
+          continue; // Already discovered by scanner — skip
+        }
+
+        const encodedId = customPath.replace(/[/\\]/g, '-');
+        const folderName = customPath.split(/[/\\]/).filter(Boolean).pop() ?? customPath;
+        const now = Date.now();
+
+        groups.push({
+          id: encodedId,
+          identity: null,
+          worktrees: [
+            {
+              id: encodedId,
+              path: customPath,
+              name: folderName,
+              isMainWorktree: true,
+              source: 'unknown' as const,
+              sessions: [],
+              totalSessions: 0,
+              createdAt: now,
+            },
+          ],
+          name: folderName,
+          mostRecentSession: undefined,
+          totalSessions: 0,
+        });
+      }
+
+      // Sort by most recent activity (same order as the full git-aware version)
+      groups.sort((a, b) => (b.mostRecentSession ?? 0) - (a.mostRecentSession ?? 0));
+
+      return groups;
+    } catch (error) {
+      logger.error('Error scanning with worktree grouping:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Lists sessions for a specific worktree within a repository group.
+   * This is a convenience method that delegates to listSessions since
+   * worktree.id is the same as project.id.
+   *
+   * @param worktreeId - The worktree ID (same as project ID)
+   */
+  async listWorktreeSessions(worktreeId: string): Promise<Session[]> {
+    return this.listSessions(worktreeId);
+  }
+
+  // ===========================================================================
+  // Project Scanning (continued)
+  // ===========================================================================
+
+  // Per-project scan timeout: prevents a single slow directory from blocking
+  // the entire scan batch (e.g. a project with 1000+ session files on slow I/O).
+  private static readonly SCAN_PROJECT_TIMEOUT_MS = 15_000;
+
+  /**
+   * Scans a single project directory with a timeout guard.
+   * Returns empty array if the scan exceeds the timeout.
+   */
+  private async scanProjectWithTimeout(encodedName: string): Promise<Project[]> {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const timeout = new Promise<Project[]>((resolve) => {
+      timer = setTimeout(() => {
+        logger.warn(
+          `[scanProject] timeout after ${ProjectScanner.SCAN_PROJECT_TIMEOUT_MS}ms project=${encodedName}`
+        );
+        resolve([]);
+      }, ProjectScanner.SCAN_PROJECT_TIMEOUT_MS);
+    });
+    try {
+      return await Promise.race([this.scanProject(encodedName), timeout]);
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  }
+
+  /**
+   * Scans a single project directory and returns project metadata.
+   * If sessions have different cwd values, splits into multiple projects.
+   */
+  private async scanProject(encodedName: string): Promise<Project[]> {
+    try {
+      const projectPath = path.join(this.projectsDir, encodedName);
+      const readdirStart = Date.now();
+      const entries = await this.fsProvider.readdir(projectPath);
+      const readdirMs = Date.now() - readdirStart;
+
+      // Get session files (.jsonl at root level)
+      const sessionFiles = entries.filter(
+        (entry) => entry.isFile() && entry.name.endsWith('.jsonl')
+      );
+
+      if (sessionFiles.length === 0) {
+        return [];
+      }
+
+      if (sessionFiles.length > 200 || readdirMs > 500) {
+        logger.debug(
+          `[scanProject] ${encodedName} readdir=${readdirMs}ms entries=${entries.length} jsonl=${sessionFiles.length}`
+        );
+      }
+
+      // Collect file stats and cwd for each session
+      interface SessionInfo {
+        sessionId: string;
+        filePath: string;
+        mtimeMs: number;
+        birthtimeMs: number;
+        cwd: string | null;
+      }
+
+      // Reading JSONL heads for cwd across hundreds/thousands of sessions can saturate I/O and
+      // make the renderer appear frozen while waiting for repository groups.
+      // Prefer correctness for small projects; for large ones, skip cwd splitting and fall back
+      // to encoded-path decoding / limited path probing.
+      const MAX_CWD_SPLIT_FILES = 80;
+      const shouldSplitByCwd =
+        this.fsProvider.type !== 'ssh' && sessionFiles.length <= MAX_CWD_SPLIT_FILES;
+
+      const sessionStatStart = Date.now();
+      const sessionInfos = await this.collectFulfilledInBatches(
+        sessionFiles,
+        this.fsProvider.type === 'ssh' ? 32 : ProjectScanner.LOCAL_SESSION_BATCH,
+        async (file) => {
+          const filePath = path.join(projectPath, file.name);
+          const { mtimeMs, birthtimeMs } = await this.resolveFileDetails(file, filePath);
+          let cwd: string | null = null;
+
+          // Over SSH, avoid reading every file body during project discovery.
+          if (shouldSplitByCwd) {
+            try {
+              cwd = await extractCwd(filePath, this.fsProvider);
+            } catch {
+              // Ignore unreadable files
+            }
+          }
+
+          return {
+            sessionId: extractSessionId(file.name),
+            filePath,
+            mtimeMs,
+            birthtimeMs,
+            cwd,
+          } satisfies SessionInfo;
+        }
+      );
+
+      if (sessionInfos.length === 0) {
+        return [];
+      }
+
+      const sessionStatMs = Date.now() - sessionStatStart;
+      if (sessionFiles.length > 200 || sessionStatMs > 1000) {
+        logger.debug(
+          `[scanProject] ${encodedName} sessionStat=${sessionStatMs}ms files=${sessionFiles.length} infos=${sessionInfos.length}`
+        );
+      }
+
+      // Group sessions by cwd
+      const cwdGroups = new Map<string, SessionInfo[]>();
+      const firstCwd = sessionInfos.find((s) => s.cwd)?.cwd ?? undefined;
+      const baseName = extractProjectName(encodedName, firstCwd);
+      const decodedFallback = baseName; // Used when cwd is null
+
+      for (const info of sessionInfos) {
+        const key = shouldSplitByCwd ? (info.cwd ?? `__decoded__${decodedFallback}`) : encodedName;
+        const group = cwdGroups.get(key) ?? [];
+        group.push(info);
+        cwdGroups.set(key, group);
+      }
+
+      // If only 1 unique real cwd, return single project (current behavior)
+      // Sessions without cwd (older format) are implicitly from the same project,
+      // so we only count distinct real cwds to decide whether to split.
+      const realCwdKeys = [...cwdGroups.keys()].filter((k) => !k.startsWith('__decoded__'));
+      if (realCwdKeys.length <= 1) {
+        const allSessionIds = sessionInfos.map((s) => s.sessionId);
+        const exportedSessionIds = allSessionIds.slice(0, MAX_SESSION_IDS_EXPORTED);
+        let mostRecentSession: number | undefined;
+        let createdAt = Date.now();
+        for (const info of sessionInfos) {
+          if (!mostRecentSession || info.mtimeMs > mostRecentSession) {
+            mostRecentSession = info.mtimeMs;
+          }
+          if (info.birthtimeMs < createdAt) {
+            createdAt = info.birthtimeMs;
+          }
+        }
+
+        const sessionPaths = sessionInfos.map((s) => s.filePath);
+        const actualPath = await this.projectPathResolver.resolveProjectPath(encodedName, {
+          cwdHint: firstCwd ?? undefined,
+          sessionPaths,
+        });
+
+        // Derive name from resolved path — more reliable than decodePath for
+        // paths containing dashes (e.g. "test-project" encodes lossily).
+        const resolvedName = path.basename(actualPath) || baseName;
+
+        return [
+          {
+            id: encodedName,
+            path: actualPath,
+            name: resolvedName,
+            sessions: exportedSessionIds,
+            totalSessions: allSessionIds.length,
+            createdAt: Math.floor(createdAt),
+            mostRecentSession: mostRecentSession ? Math.floor(mostRecentSession) : undefined,
+          },
+        ];
+      }
+
+      // Multiple unique cwds: split into subprojects
+      const projects: Project[] = [];
+
+      // Find the "root" cwd (shortest path, or the one matching the decoded name)
+      const cwdKeys = [...cwdGroups.keys()].filter((k) => !k.startsWith('__decoded__'));
+      const rootCwd = cwdKeys.reduce(
+        (shortest, cwd) => (cwd.length <= shortest.length ? cwd : shortest),
+        cwdKeys[0] ?? ''
+      );
+      // Derive root name from actual cwd path (more reliable than decodePath)
+      const rootName = path.basename(rootCwd) || baseName;
+
+      for (const [cwdKey, sessions] of cwdGroups) {
+        const isDecodedFallback = cwdKey.startsWith('__decoded__');
+        const actualCwd = isDecodedFallback ? null : cwdKey;
+
+        // Register in subproject registry
+        const sessionIds = sessions.map((s) => s.sessionId);
+        const compositeId = subprojectRegistry.register(
+          encodedName,
+          actualCwd ?? decodedFallback,
+          sessionIds
+        );
+        const exportedSessionIds = sessionIds.slice(0, MAX_SESSION_IDS_EXPORTED);
+
+        // Compute timestamps
+        let mostRecentSession: number | undefined;
+        let createdAt = Date.now();
+        for (const info of sessions) {
+          if (!mostRecentSession || info.mtimeMs > mostRecentSession) {
+            mostRecentSession = info.mtimeMs;
+          }
+          if (info.birthtimeMs < createdAt) {
+            createdAt = info.birthtimeMs;
+          }
+        }
+
+        // Build display name from actual cwd paths
+        let displayName: string;
+        if (!actualCwd || actualCwd === rootCwd) {
+          displayName = rootName;
+        } else {
+          // Use last segment of cwd for disambiguation
+          const lastSegment = path.basename(actualCwd);
+          displayName = `${rootName} (${lastSegment})`;
+        }
+
+        projects.push({
+          id: compositeId,
+          path: actualCwd ?? decodedFallback,
+          name: displayName,
+          sessions: exportedSessionIds,
+          totalSessions: sessionIds.length,
+          createdAt: Math.floor(createdAt),
+          mostRecentSession: mostRecentSession ? Math.floor(mostRecentSession) : undefined,
+        });
+      }
+
+      return projects;
+    } catch (error) {
+      logger.error(`Error scanning project ${encodedName}:`, error);
+      return [];
+    }
+  }
+
+  /**
+   * Gets details for a specific project by ID.
+   * Handles composite IDs by scanning the base directory and finding the matching subproject.
+   */
+  async getProject(projectId: string): Promise<Project | null> {
+    const projectPath = await this.resolveProjectStorageDir(projectId);
+
+    if (!projectPath) {
+      return null;
+    }
+    const baseDir = path.basename(projectPath);
+
+    // For composite IDs, scan and find the matching subproject
+    if (subprojectRegistry.isComposite(projectId)) {
+      const projects = await this.scanProject(baseDir);
+      return projects.find((p) => p.id === projectId) ?? null;
+    }
+
+    const projects = await this.scanProject(baseDir);
+    return projects.find((p) => p.id === projectId) ?? projects[0] ?? null;
+  }
+
+  // ===========================================================================
+  // Session Listing
+  // ===========================================================================
+
+  /**
+   * Lists all sessions for a given project with metadata.
+   * Filters out sessions that contain only noise messages.
+   */
+  async listSessions(projectId: string): Promise<Session[]> {
+    try {
+      const projectPath = await this.resolveProjectStorageDir(projectId);
+      const sessionFilter = await this.getSessionFilterForProject(projectId);
+      const shouldFilterNoise = this.fsProvider.type !== 'ssh';
+      const metadataLevel: SessionMetadataLevel = this.fsProvider.type === 'ssh' ? 'light' : 'deep';
+
+      if (!projectPath) {
+        return [];
+      }
+
+      const entries = await this.fsProvider.readdir(projectPath);
+      let sessionFiles = entries.filter((entry) => entry.isFile() && entry.name.endsWith('.jsonl'));
+
+      // Filter to only sessions belonging to this subproject
+      if (sessionFilter) {
+        sessionFiles = sessionFiles.filter((f) => sessionFilter.has(extractSessionId(f.name)));
+      }
+
+      const sessionPaths = sessionFiles.map((file) => path.join(projectPath, file.name));
+      const decodedPath = await this.resolveProjectPathForId(projectId, sessionPaths);
+
+      const sessions = await this.collectFulfilledInBatches(
+        sessionFiles,
+        this.fsProvider.type === 'ssh' ? 8 : 16,
+        async (file) => {
+          const sessionId = extractSessionId(file.name);
+          const filePath = path.join(projectPath, file.name);
+          const fileDetails = await this.resolveFileDetails(file, filePath);
+          const prefetchedMtimeMs = fileDetails.mtimeMs;
+          const prefetchedSize = fileDetails.size;
+          const prefetchedBirthtimeMs = fileDetails.birthtimeMs;
+
+          if (shouldFilterNoise) {
+            // Check if session has non-noise messages (delegated to SessionContentFilter)
+            const hasContent = await this.hasDisplayableContent(
+              filePath,
+              prefetchedMtimeMs,
+              prefetchedSize
+            );
+            if (!hasContent) {
+              return null; // Filter out noise-only sessions
+            }
+          }
+
+          return this.buildSessionForListing(
+            metadataLevel,
+            projectId,
+            sessionId,
+            filePath,
+            decodedPath,
+            prefetchedMtimeMs,
+            prefetchedSize,
+            prefetchedBirthtimeMs
+          );
+        }
+      );
+
+      // Filter out null results (noise-only sessions)
+      const validSessions = sessions.filter((s): s is Session => s !== null);
+
+      // Sort by created date (most recent first)
+      validSessions.sort((a, b) => b.createdAt - a.createdAt);
+
+      return validSessions;
+    } catch (error) {
+      logger.error(`Error listing sessions for project ${projectId}:`, error);
+      return [];
+    }
+  }
+
+  /**
+   * Lists sessions for a project with cursor-based pagination.
+   * Efficiently fetches only the sessions needed for the current page.
+   *
+   * @param projectId - The project ID to list sessions for
+   * @param cursor - Base64-encoded cursor from previous page (null for first page)
+   * @param limit - Number of sessions to return (default 20)
+   * @returns Paginated result with sessions, cursor, and metadata
+   */
+  async listSessionsPaginated(
+    projectId: string,
+    cursor: string | null,
+    limit: number = 20,
+    options?: SessionsPaginationOptions
+  ): Promise<PaginatedSessionsResult> {
+    const startedAt = Date.now();
+    try {
+      const includeTotalCount = options?.includeTotalCount ?? false;
+      const prefilterAll = options?.prefilterAll ?? false;
+      const projectPath = await this.resolveProjectStorageDir(projectId);
+      const sessionFilter = await this.getSessionFilterForProject(projectId);
+      const shouldFilterNoise = this.fsProvider.type !== 'ssh';
+      const metadataLevel: SessionMetadataLevel =
+        options?.metadataLevel ?? (this.fsProvider.type === 'ssh' ? 'light' : 'deep');
+
+      if (!projectPath) {
+        return { sessions: [], nextCursor: null, hasMore: false, totalCount: 0 };
+      }
+
+      // Step 1: Get all session files with their timestamps (lightweight stat calls)
+      const entries = await this.fsProvider.readdir(projectPath);
+      let sessionFiles = entries.filter((entry) => entry.isFile() && entry.name.endsWith('.jsonl'));
+
+      // Filter to only sessions belonging to this subproject
+      if (sessionFilter) {
+        sessionFiles = sessionFiles.filter((f) => sessionFilter.has(extractSessionId(f.name)));
+      }
+
+      // Get stats for all session files (parallel for SSH performance)
+      interface SessionFileInfo {
+        name: string;
+        sessionId: string;
+        timestamp: number;
+        filePath: string;
+        mtimeMs: number;
+        size: number;
+        birthtimeMs: number;
+      }
+
+      const fileInfos = await this.collectFulfilledInBatches(
+        sessionFiles,
+        this.fsProvider.type === 'ssh' ? 48 : 200,
+        async (file) => {
+          const filePath = path.join(projectPath, file.name);
+          const fileDetails = await this.resolveFileDetails(file, filePath);
+          return {
+            name: file.name,
+            sessionId: extractSessionId(file.name),
+            timestamp: fileDetails.mtimeMs,
+            filePath,
+            mtimeMs: fileDetails.mtimeMs,
+            size: fileDetails.size,
+            birthtimeMs: fileDetails.birthtimeMs,
+          } satisfies SessionFileInfo;
+        }
+      );
+
+      // Step 2: Sort by timestamp descending (most recent first)
+      fileInfos.sort((a, b) => {
+        if (b.timestamp !== a.timestamp) {
+          return b.timestamp - a.timestamp;
+        }
+        // Tie-breaker: sort by sessionId alphabetically
+        return a.sessionId.localeCompare(b.sessionId);
+      });
+
+      // Step 3: Optionally pre-filter all sessions for accurate total count
+      // This is slower but provides exact totalCount.
+      let validSessionIds: Set<string> | null = null;
+      let totalCount = 0;
+      if (prefilterAll && shouldFilterNoise && metadataLevel === 'deep') {
+        const contentResults = await Promise.allSettled(
+          fileInfos.map(async (fileInfo) => ({
+            sessionId: fileInfo.sessionId,
+            hasContent: await this.hasDisplayableContent(
+              fileInfo.filePath,
+              fileInfo.mtimeMs,
+              fileInfo.size
+            ),
+          }))
+        );
+        validSessionIds = new Set<string>();
+        for (const result of contentResults) {
+          if (result.status === 'fulfilled' && result.value.hasContent) {
+            validSessionIds.add(result.value.sessionId);
+          }
+        }
+        totalCount = validSessionIds.size;
+      }
+
+      // Step 4: Apply cursor filter to find starting position
+      let startIndex = 0;
+      if (cursor) {
+        try {
+          // Defensive limit: cursor originates from a query param / IPC input and should be tiny.
+          // Prevent pathological memory allocation on Buffer.from(cursor, 'base64').
+          if (cursor.length > 4096) {
+            throw new Error('cursor too large');
+          }
+          const decoded = JSON.parse(
+            Buffer.from(cursor, 'base64').toString('utf8')
+          ) as SessionCursor;
+          startIndex = fileInfos.findIndex((info) => {
+            // Find the first item that comes AFTER the cursor
+            if (info.timestamp < decoded.timestamp) return true;
+            if (info.timestamp === decoded.timestamp && info.sessionId > decoded.sessionId)
+              return true;
+            return false;
+          });
+          // If cursor not found, start from beginning
+          if (startIndex === -1) startIndex = fileInfos.length;
+        } catch {
+          // Invalid cursor, start from beginning
+          startIndex = 0;
+        }
+      }
+
+      // Step 5: Fetch sessions for this page
+      const decodedPath = await this.resolveProjectPathForId(
+        projectId,
+        fileInfos.map((fileInfo) => fileInfo.filePath)
+      );
+      const sessions: Session[] = [];
+      let scannedCandidates = 0;
+
+      // Fetch page items in parallel batches for SSH performance.
+      // Process candidates in chunks, checking content + building metadata concurrently.
+      const BATCH_SIZE = limit + 1; // One extra to detect hasMore
+      let batchStart = startIndex;
+
+      while (sessions.length < limit + 1 && batchStart < fileInfos.length) {
+        // Take a batch of candidates (overshoot to account for filtered-out items)
+        const batchEnd = Math.min(batchStart + BATCH_SIZE * 2, fileInfos.length);
+        const batch = fileInfos.slice(batchStart, batchEnd);
+        scannedCandidates += batch.length;
+
+        // Step 5a: Check content in parallel
+        let contentBatch: { fileInfo: SessionFileInfo; hasContent: boolean }[];
+        if (validSessionIds) {
+          contentBatch = batch.map((fileInfo) => ({
+            fileInfo,
+            hasContent: validSessionIds.has(fileInfo.sessionId),
+          }));
+        } else if (!shouldFilterNoise) {
+          contentBatch = batch.map((fileInfo) => ({ fileInfo, hasContent: true }));
+        } else {
+          const contentResults = await Promise.allSettled(
+            batch.map(async (fileInfo) => ({
+              fileInfo,
+              hasContent: await this.hasDisplayableContent(
+                fileInfo.filePath,
+                fileInfo.mtimeMs,
+                fileInfo.size
+              ),
+            }))
+          );
+          contentBatch = contentResults
+            .filter(
+              (
+                r
+              ): r is PromiseFulfilledResult<{ fileInfo: SessionFileInfo; hasContent: boolean }> =>
+                r.status === 'fulfilled'
+            )
+            .map((r) => r.value);
+        }
+
+        // Step 5b: Build metadata in parallel for items with content
+        const withContent = contentBatch.filter((c) => c.hasContent);
+        const needed = limit + 1 - sessions.length;
+        const toBuild = withContent.slice(0, needed);
+
+        const builtSessions = await this.collectFulfilledInBatches(
+          toBuild,
+          this.fsProvider.type === 'ssh' ? 4 : 16,
+          async ({ fileInfo }) =>
+            this.buildSessionForListing(
+              metadataLevel,
+              projectId,
+              fileInfo.sessionId,
+              fileInfo.filePath,
+              decodedPath,
+              fileInfo.mtimeMs,
+              fileInfo.size,
+              fileInfo.birthtimeMs
+            )
+        );
+        sessions.push(...builtSessions);
+
+        batchStart = batchEnd;
+      }
+
+      // Step 6: Build next cursor
+      let nextCursor: string | null = null;
+      const hasMore = sessions.length > limit || startIndex + scannedCandidates < fileInfos.length;
+
+      const pageSessions = hasMore ? sessions.slice(0, limit) : sessions;
+
+      // If total count wasn't precomputed, keep UI-safe lower bound
+      if (!includeTotalCount) {
+        // Lightweight mode: return a lower-bound count to avoid full scans.
+        totalCount = pageSessions.length + (hasMore ? 1 : 0);
+      }
+
+      if (pageSessions.length > 0 && hasMore) {
+        const lastSession = pageSessions[pageSessions.length - 1];
+        const lastFileInfo = fileInfos.find((f) => f.sessionId === lastSession.id);
+        if (lastFileInfo) {
+          const cursorData: SessionCursor = {
+            timestamp: lastFileInfo.timestamp,
+            sessionId: lastFileInfo.sessionId,
+          };
+          nextCursor = Buffer.from(JSON.stringify(cursorData)).toString('base64');
+        }
+      }
+
+      const result: PaginatedSessionsResult = {
+        sessions: pageSessions,
+        nextCursor,
+        hasMore: nextCursor !== null,
+        totalCount,
+      };
+
+      if (this.fsProvider.type === 'ssh') {
+        logger.debug(
+          `SSH listSessionsPaginated(${projectId}) returned ${result.sessions.length} sessions in ${Date.now() - startedAt}ms (hasMore=${result.hasMore})`
+        );
+      }
+
+      return result;
+    } catch (error) {
+      logger.error(`Error listing paginated sessions for project ${projectId}:`, error);
+      return { sessions: [], nextCursor: null, hasMore: false, totalCount: 0 };
+    }
+  }
+
+  /**
+   * Build session metadata from a session file.
+   */
+  private async buildSessionMetadata(
+    projectId: string,
+    sessionId: string,
+    filePath: string,
+    projectPath: string,
+    prefetchedMtimeMs?: number,
+    prefetchedSize?: number,
+    prefetchedBirthtimeMs?: number
+  ): Promise<Session> {
+    const hasPrefetchedCoreStats =
+      typeof prefetchedMtimeMs === 'number' && typeof prefetchedSize === 'number';
+    const needsBirthtimeStat = typeof prefetchedBirthtimeMs !== 'number';
+    const stats =
+      hasPrefetchedCoreStats && !needsBirthtimeStat ? null : await this.fsProvider.stat(filePath);
+    const effectiveMtime = prefetchedMtimeMs ?? stats?.mtimeMs ?? Date.now();
+    const effectiveSize = prefetchedSize ?? stats?.size ?? -1;
+    const birthtimeMs = prefetchedBirthtimeMs ?? stats?.birthtimeMs ?? effectiveMtime;
+    const cachedMetadata = this.sessionMetadataCache.get(filePath);
+    const metadata =
+      cachedMetadata?.mtimeMs === effectiveMtime && cachedMetadata.size === effectiveSize
+        ? cachedMetadata.metadata
+        : await analyzeSessionFileMetadata(filePath, this.fsProvider);
+    if (cachedMetadata?.mtimeMs !== effectiveMtime || cachedMetadata.size !== effectiveSize) {
+      this.sessionMetadataCache.set(filePath, {
+        mtimeMs: effectiveMtime,
+        size: effectiveSize,
+        metadata,
+      });
+    }
+
+    // Check for subagents (todoData skipped here — loaded on-demand in detail view)
+    const hasSubagents = await this.subagentLocator.hasSubagents(projectId, sessionId);
+    const metadataLevel: SessionMetadataLevel = 'deep';
+    const firstMessageTimestampMs = this.parseTimestampMs(metadata.firstUserMessage?.timestamp);
+    const createdAt =
+      firstMessageTimestampMs !== null && Number.isFinite(firstMessageTimestampMs)
+        ? firstMessageTimestampMs
+        : birthtimeMs;
+
+    // If messages suggest ongoing but the file hasn't been written to in 5+ minutes,
+    // the session likely crashed/was killed (upstream fix #94)
+    const STALE_SESSION_THRESHOLD_MS = 5 * 60 * 1000;
+    const isOngoing =
+      metadata.isOngoing && Date.now() - effectiveMtime < STALE_SESSION_THRESHOLD_MS;
+
+    return {
+      id: sessionId,
+      projectId,
+      projectPath,
+      createdAt: Math.floor(createdAt),
+      firstMessage: metadata.firstUserMessage?.text,
+      messageTimestamp: metadata.firstUserMessage?.timestamp,
+      hasSubagents,
+      messageCount: metadata.messageCount,
+      isOngoing,
+      model: metadata.model ?? undefined,
+      gitBranch: metadata.gitBranch ?? undefined,
+      metadataLevel,
+      contextConsumption: metadata.contextConsumption,
+      compactionCount: metadata.compactionCount,
+      phaseBreakdown: metadata.phaseBreakdown,
+    };
+  }
+
+  /**
+   * Build a lightweight session record using filesystem metadata only.
+   * Used as SSH fallback when deep parsing fails transiently.
+   */
+  private async buildLightSessionMetadata(
+    projectId: string,
+    sessionId: string,
+    filePath: string,
+    projectPath: string,
+    prefetchedMtimeMs?: number,
+    prefetchedSize?: number,
+    prefetchedBirthtimeMs?: number
+  ): Promise<Session> {
+    const hasPrefetchedCoreStats =
+      typeof prefetchedMtimeMs === 'number' && typeof prefetchedSize === 'number';
+    const needsBirthtimeStat = typeof prefetchedBirthtimeMs !== 'number';
+    const stats =
+      hasPrefetchedCoreStats && !needsBirthtimeStat ? null : await this.fsProvider.stat(filePath);
+    const effectiveMtime = prefetchedMtimeMs ?? stats?.mtimeMs ?? Date.now();
+    const effectiveSize = prefetchedSize ?? stats?.size ?? -1;
+    const birthtimeMs = prefetchedBirthtimeMs ?? stats?.birthtimeMs ?? effectiveMtime;
+    let metadata: Awaited<ReturnType<typeof analyzeSessionFileMetadata>>;
+    const cachedMetadata = this.sessionMetadataCache.get(filePath);
+    if (cachedMetadata?.mtimeMs === effectiveMtime && cachedMetadata.size === effectiveSize) {
+      metadata = cachedMetadata.metadata;
+    } else {
+      try {
+        metadata = await analyzeSessionFileMetadata(filePath, this.fsProvider);
+        this.sessionMetadataCache.set(filePath, {
+          mtimeMs: effectiveMtime,
+          size: effectiveSize,
+          metadata,
+        });
+      } catch (error) {
+        logger.debug(`Failed to analyze session metadata for ${filePath}:`, error);
+        metadata = {
+          firstUserMessage: null,
+          messageCount: 0,
+          isOngoing: false,
+          gitBranch: null,
+          model: null,
+        };
+      }
+    }
+    const metadataLevel: SessionMetadataLevel = 'light';
+    const previewTimestampMs = this.parseTimestampMs(metadata.firstUserMessage?.timestamp);
+    const createdAt =
+      previewTimestampMs !== null && Number.isFinite(previewTimestampMs)
+        ? previewTimestampMs
+        : birthtimeMs;
+
+    return {
+      id: sessionId,
+      projectId,
+      projectPath,
+      createdAt: Math.floor(createdAt),
+      firstMessage: metadata.firstUserMessage?.text,
+      messageTimestamp: metadata.firstUserMessage?.timestamp,
+      hasSubagents: false,
+      messageCount: metadata.messageCount,
+      model: metadata.model ?? undefined,
+      metadataLevel,
+    };
+  }
+
+  /**
+   * Build session metadata according to requested listing depth.
+   * In SSH mode, deep parse failures degrade gracefully to light metadata.
+   */
+  private async buildSessionForListing(
+    metadataLevel: SessionMetadataLevel,
+    projectId: string,
+    sessionId: string,
+    filePath: string,
+    projectPath: string,
+    prefetchedMtimeMs?: number,
+    prefetchedSize?: number,
+    prefetchedBirthtimeMs?: number
+  ): Promise<Session> {
+    if (metadataLevel === 'light') {
+      return this.buildLightSessionMetadata(
+        projectId,
+        sessionId,
+        filePath,
+        projectPath,
+        prefetchedMtimeMs,
+        prefetchedSize,
+        prefetchedBirthtimeMs
+      );
+    }
+
+    try {
+      return await this.buildSessionMetadata(
+        projectId,
+        sessionId,
+        filePath,
+        projectPath,
+        prefetchedMtimeMs,
+        prefetchedSize,
+        prefetchedBirthtimeMs
+      );
+    } catch (error) {
+      // In SSH mode, never drop a visible session row due to transient deep-parse failures.
+      if (this.fsProvider.type !== 'ssh') {
+        throw error;
+      }
+
+      logger.debug(`SSH metadata parse failed for ${sessionId}, using light fallback`, error);
+      return this.buildLightSessionMetadata(
+        projectId,
+        sessionId,
+        filePath,
+        projectPath,
+        prefetchedMtimeMs,
+        prefetchedSize,
+        prefetchedBirthtimeMs
+      );
+    }
+  }
+
+  /**
+   * Gets a single session's metadata.
+   */
+  async getSession(projectId: string, sessionId: string): Promise<Session | null> {
+    const filePath = await this.resolveSessionPath(projectId, sessionId);
+
+    if (!filePath || !(await this.fsProvider.exists(filePath))) {
+      return null;
+    }
+
+    const metadataLevel: SessionMetadataLevel = 'deep';
+    const decodedPath = await this.resolveProjectPathForId(projectId);
+    return this.buildSessionForListing(metadataLevel, projectId, sessionId, filePath, decodedPath);
+  }
+
+  /**
+   * Gets a single session's metadata with optional depth override.
+   */
+  async getSessionWithOptions(
+    projectId: string,
+    sessionId: string,
+    options?: SessionsByIdsOptions
+  ): Promise<Session | null> {
+    const filePath = await this.resolveSessionPath(projectId, sessionId);
+
+    if (!filePath || !(await this.fsProvider.exists(filePath))) {
+      return null;
+    }
+
+    const metadataLevel: SessionMetadataLevel =
+      options?.metadataLevel ?? (this.fsProvider.type === 'ssh' ? 'light' : 'deep');
+    const decodedPath = await this.resolveProjectPathForId(projectId);
+    return this.buildSessionForListing(metadataLevel, projectId, sessionId, filePath, decodedPath);
+  }
+
+  // ===========================================================================
+  // Task List Data
+  // ===========================================================================
+
+  /**
+   * Loads task list data for a session from ~/.claude/todos/{sessionId}.json
+   */
+  async loadTodoData(sessionId: string): Promise<unknown> {
+    try {
+      const todoPath = buildTodoPath(path.dirname(this.projectsDir), sessionId);
+      const content = await this.fsProvider.readFile(todoPath);
+      return JSON.parse(content) as unknown;
+    } catch (error: unknown) {
+      // ENOENT/EACCES = file missing or inaccessible — normal when no todos exist
+      if (error instanceof Error && 'code' in error) {
+        const code = (error as NodeJS.ErrnoException).code;
+        if (code === 'ENOENT' || code === 'EACCES') {
+          return undefined;
+        }
+      }
+      logger.debug(`Failed to load task list data for session ${sessionId}:`, error);
+      return undefined;
+    }
+  }
+
+  // ===========================================================================
+  // Path Helpers
+  // ===========================================================================
+
+  /**
+   * Gets the path to the session JSONL file.
+   */
+  getSessionPath(projectId: string, sessionId: string): string {
+    return buildSessionPath(this.projectsDir, projectId, sessionId);
+  }
+
+  /**
+   * Resolves a session path using all known project storage directory codecs.
+   */
+  async resolveSessionPath(projectId: string, sessionId: string): Promise<string | null> {
+    const projectPath = await this.resolveProjectStorageDir(projectId);
+    return projectPath ? path.join(projectPath, `${sessionId}.jsonl`) : null;
+  }
+
+  /**
+   * Gets the path to the subagents directory.
+   */
+  getSubagentsPath(projectId: string, sessionId: string): string {
+    return buildSubagentsPath(this.projectsDir, projectId, sessionId);
+  }
+
+  /**
+   * Lists all session file paths for a project.
+   */
+  async listSessionFiles(projectId: string): Promise<string[]> {
+    try {
+      const projectPath = await this.resolveProjectStorageDir(projectId);
+      const sessionFilter = await this.getSessionFilterForProject(projectId);
+
+      if (!projectPath) {
+        return [];
+      }
+
+      const entries = await this.fsProvider.readdir(projectPath);
+
+      let files = entries.filter((entry) => entry.isFile() && entry.name.endsWith('.jsonl'));
+
+      if (sessionFilter) {
+        files = files.filter((entry) => sessionFilter.has(extractSessionId(entry.name)));
+      }
+
+      return files.map((entry) => path.join(projectPath, entry.name));
+    } catch (error) {
+      logger.error(`Error listing session files for project ${projectId}:`, error);
+      return [];
+    }
+  }
+
+  private async resolveProjectStorageDir(projectId: string): Promise<string | null> {
+    return resolveProjectStorageDirFromCandidates(this.projectsDir, projectId, this.fsProvider);
+  }
+
+  /**
+   * Returns the session filter set for a project.
+   * In local mode, composite IDs are refreshed from disk first so newly created
+   * sessions are not hidden by stale registry entries.
+   */
+  private async getSessionFilterForProject(projectId: string): Promise<Set<string> | null> {
+    if (this.fsProvider.type === 'local' && subprojectRegistry.isComposite(projectId)) {
+      const baseDir = extractBaseDir(projectId);
+      await this.scanProject(baseDir);
+    }
+    return subprojectRegistry.getSessionFilter(projectId);
+  }
+
+  // ===========================================================================
+  // Subagent Detection (delegated to SubagentLocator)
+  // ===========================================================================
+
+  /**
+   * Checks if a session has a subagents directory (async).
+   */
+  async hasSubagents(projectId: string, sessionId: string): Promise<boolean> {
+    return this.subagentLocator.hasSubagents(projectId, sessionId);
+  }
+
+  /**
+   * Checks if a session has subagent files (session-specific only).
+   * Only checks the NEW structure: {projectId}/{sessionId}/subagents/
+   * Verifies that at least one subagent file has non-empty content.
+   */
+  hasSubagentsSync(projectId: string, sessionId: string): boolean {
+    return this.subagentLocator.hasSubagentsSync(projectId, sessionId);
+  }
+
+  /**
+   * Lists all subagent files for a session from both NEW and OLD structures.
+   * Returns NEW structure files first, then OLD structure files.
+   */
+  async listSubagentFiles(projectId: string, sessionId: string): Promise<string[]> {
+    return this.subagentLocator.listSubagentFiles(projectId, sessionId);
+  }
+
+  // ===========================================================================
+  // Utility Methods
+  // ===========================================================================
+
+  /**
+   * Gets the base projects directory path.
+   */
+  getProjectsDir(): string {
+    return this.projectsDir;
+  }
+
+  /**
+   * Gets the base todos directory path.
+   */
+  getTodosDir(): string {
+    return this.todosDir;
+  }
+
+  /**
+   * Gets the FileSystemProvider instance used by this scanner.
+   */
+  getFileSystemProvider(): FileSystemProvider {
+    return this.fsProvider;
+  }
+
+  /**
+   * Checks if the projects directory exists.
+   */
+  async projectsDirExists(): Promise<boolean> {
+    return this.fsProvider.exists(this.projectsDir);
+  }
+
+  // ===========================================================================
+  // Search (delegated to SessionSearcher)
+  // ===========================================================================
+
+  /**
+   * Searches sessions in a project for a query string.
+   * Filters out noise messages and returns matching content.
+   *
+   * @param projectId - The project ID to search in
+   * @param query - Search query string
+   * @param maxResults - Maximum number of results to return (default 50)
+   */
+  async searchSessions(
+    projectId: string,
+    query: string,
+    maxResults: number = 50
+  ): Promise<SearchSessionsResult> {
+    return this.sessionSearcher.searchSessions(projectId, query, maxResults);
+  }
+
+  /**
+   * Searches sessions across all projects for a query string.
+   * Filters out noise messages and returns matching content.
+   *
+   * @param query - Search query string
+   * @param maxResults - Maximum number of results to return (default 50)
+   */
+  async searchAllProjects(query: string, maxResults: number = 50): Promise<SearchSessionsResult> {
+    const startedAt = Date.now();
+    try {
+      if (!query || query.trim().length === 0) {
+        return { results: [], totalMatches: 0, sessionsSearched: 0, query };
+      }
+
+      // Use cached project list to avoid re-scanning disk on every keystroke
+      let projects: Project[];
+      if (
+        this.searchProjectCache &&
+        Date.now() - this.searchProjectCache.timestamp < SEARCH_PROJECT_CACHE_TTL_MS
+      ) {
+        projects = this.searchProjectCache.projects;
+      } else {
+        projects = await this.scan();
+        this.searchProjectCache = { projects, timestamp: Date.now() };
+      }
+
+      if (projects.length === 0) {
+        return { results: [], totalMatches: 0, sessionsSearched: 0, query };
+      }
+
+      // Search across all projects with bounded concurrency
+      const allResults: SearchSessionsResult[] = [];
+      const searchBatchSize = this.fsProvider.type === 'ssh' ? 2 : 8;
+
+      for (let i = 0; i < projects.length; i += searchBatchSize) {
+        const batch = projects.slice(i, i + searchBatchSize);
+        const batchResults = await Promise.allSettled(
+          batch.map((project) => this.sessionSearcher.searchSessions(project.id, query, maxResults))
+        );
+
+        for (const result of batchResults) {
+          if (result.status === 'fulfilled') {
+            allResults.push(result.value);
+          }
+        }
+
+        // Check if we have enough results already
+        const totalMatches = allResults.reduce((sum, r) => sum + r.totalMatches, 0);
+        if (totalMatches >= maxResults) {
+          break;
+        }
+      }
+
+      // Merge results from all projects
+      const mergedResults = allResults.flatMap((r) => r.results);
+      const totalSessionsSearched = allResults.reduce((sum, r) => sum + r.sessionsSearched, 0);
+
+      // Sort by timestamp (most recent first) and limit to maxResults
+      mergedResults.sort((a, b) => b.timestamp - a.timestamp);
+      const limitedResults = mergedResults.slice(0, maxResults);
+
+      logger.debug(
+        `Global search completed: ${limitedResults.length} results from ${totalSessionsSearched} sessions across ${projects.length} projects in ${Date.now() - startedAt}ms`
+      );
+
+      return {
+        results: limitedResults,
+        totalMatches: limitedResults.length,
+        sessionsSearched: totalSessionsSearched,
+        query,
+      };
+    } catch (error) {
+      logger.error('Error searching all projects:', error);
+      return { results: [], totalMatches: 0, sessionsSearched: 0, query };
+    }
+  }
+
+  /**
+   * Resolve best-available file timestamps from directory entry metadata or stat fallback.
+   */
+  private async resolveFileDetails(
+    entry: FsDirent | undefined,
+    filePath: string
+  ): Promise<{ mtimeMs: number; birthtimeMs: number; size: number }> {
+    if (
+      entry &&
+      typeof entry.mtimeMs === 'number' &&
+      typeof entry.birthtimeMs === 'number' &&
+      typeof entry.size === 'number'
+    ) {
+      return {
+        mtimeMs: entry.mtimeMs,
+        birthtimeMs: entry.birthtimeMs,
+        size: entry.size,
+      };
+    }
+
+    const stats = await this.fsProvider.stat(filePath);
+    return {
+      mtimeMs: stats.mtimeMs,
+      birthtimeMs: stats.birthtimeMs,
+      size: stats.size,
+    };
+  }
+
+  private parseTimestampMs(timestamp: string | undefined): number | null {
+    if (!timestamp) {
+      return null;
+    }
+    const parsed = Date.parse(timestamp);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  /**
+   * Runs async mapping in bounded batches and returns only fulfilled results.
+   * This prevents overwhelming SFTP servers with unbounded parallel requests.
+   */
+  private async collectFulfilledInBatches<T, R>(
+    items: T[],
+    batchSize: number,
+    mapper: (item: T) => Promise<R>
+  ): Promise<R[]> {
+    const safeBatchSize = Math.max(1, batchSize);
+    const results: R[] = [];
+
+    for (let i = 0; i < items.length; i += safeBatchSize) {
+      const batch = items.slice(i, i + safeBatchSize);
+      const settled = await Promise.allSettled(batch.map((item) => mapper(item)));
+      for (const result of settled) {
+        if (result.status === 'fulfilled') {
+          results.push(result.value);
+        }
+      }
+    }
+
+    return results;
+  }
+
+  private getErrorCode(error: unknown): string {
+    if (typeof error === 'object' && error !== null && 'code' in error) {
+      const code = (error as { code?: unknown }).code;
+      if (typeof code === 'number') {
+        return String(code);
+      }
+      if (typeof code === 'string') {
+        return code;
+      }
+    }
+    return '';
+  }
+
+  private isTransientFsError(error: unknown): boolean {
+    const code = this.getErrorCode(error);
+    return (
+      code === '4' ||
+      code === 'EAGAIN' ||
+      code === 'ECONNRESET' ||
+      code === 'ETIMEDOUT' ||
+      code === 'EPIPE'
+    );
+  }
+
+  private async sleep(ms: number): Promise<void> {
+    await new Promise<void>((resolve) => {
+      setTimeout(resolve, ms);
+    });
+  }
+
+  /**
+   * Resolves the project path for a given project ID.
+   * For composite IDs, uses the registry's cwd directly.
+   * For plain IDs, delegates to ProjectPathResolver.
+   */
+  private async resolveProjectPathForId(
+    projectId: string,
+    sessionPaths?: string[]
+  ): Promise<string> {
+    const registryCwd = subprojectRegistry.getCwd(projectId);
+    if (registryCwd) {
+      return registryCwd;
+    }
+    const baseDir = extractBaseDir(projectId);
+    return this.projectPathResolver.resolveProjectPath(baseDir, {
+      sessionPaths,
+    });
+  }
+
+  /**
+   * Checks whether a session file has non-noise displayable content.
+   * Uses mtime+size memoization to avoid expensive re-parsing on repeated requests.
+   */
+  private async hasDisplayableContent(
+    filePath: string,
+    mtimeMs?: number,
+    size?: number
+  ): Promise<boolean> {
+    try {
+      const hasPrefetched = typeof mtimeMs === 'number' && typeof size === 'number';
+      const stats = hasPrefetched ? null : await this.fsProvider.stat(filePath);
+      const effectiveMtime = mtimeMs ?? stats?.mtimeMs ?? Date.now();
+      const effectiveSize = size ?? stats?.size ?? -1;
+      const cached = this.contentPresenceCache.get(filePath);
+      if (cached?.mtimeMs === effectiveMtime && cached.size === effectiveSize) {
+        return cached.hasContent;
+      }
+
+      const hasContent = await this.sessionContentFilter.hasNonNoiseMessages(
+        filePath,
+        this.fsProvider
+      );
+      this.contentPresenceCache.set(filePath, {
+        mtimeMs: effectiveMtime,
+        size: effectiveSize,
+        hasContent,
+      });
+      return hasContent;
+    } catch {
+      return false;
+    }
+  }
+}

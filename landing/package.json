@@ -1,0 +1,37 @@
+{
+  "name": "agent-teams-landing",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier . --check",
+    "format:fix": "prettier . --write"
+  },
+  "dependencies": {
+    "@mdi/js": "^7.4.47",
+    "@nuxtjs/i18n": "^9.5.6",
+    "@pinia/nuxt": "^0.11.3",
+    "@vueuse/nuxt": "^10.11.1",
+    "nuxt": "^3.20.2",
+    "nuxt-icon": "^0.6.10",
+    "pinia": "^3.0.4",
+    "swiper": "^12.1.2",
+    "vue": "^3.5.27",
+    "vue-i18n": "^11.2.8",
+    "vue-router": "^4.6.4",
+    "vuetify": "^3.11.6"
+  },
+  "devDependencies": {
+    "@mdi/font": "^7.4.47",
+    "@nuxt/eslint": "^1.12.1",
+    "eslint": "^9.39.2",
+    "prettier": "^3.8.0",
+    "sass": "^1.97.2",
+    "vite-plugin-vuetify": "^2.1.3"
+  }
+}

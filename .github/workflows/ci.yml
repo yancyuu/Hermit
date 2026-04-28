@@ -1,0 +1,127 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - 'src/**'
+      - 'scripts/**'
+      - 'agent-teams-controller/**'
+      - 'mcp-server/**'
+      - 'packages/**'
+      - 'resources/runtime/**'
+      - 'runtime.lock.json'
+      - 'test/**'
+      - '.github/workflows/**'
+      - 'pnpm-workspace.yaml'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'tsconfig*.json'
+      - 'vite*.config.*'
+      - 'vitest*.config.*'
+      - 'tailwind.config.*'
+      - 'eslint.config.*'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'scripts/**'
+      - 'agent-teams-controller/**'
+      - 'mcp-server/**'
+      - 'packages/**'
+      - 'resources/runtime/**'
+      - 'runtime.lock.json'
+      - 'test/**'
+      - '.github/workflows/**'
+      - 'pnpm-workspace.yaml'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'tsconfig*.json'
+      - 'vite*.config.*'
+      - 'vitest*.config.*'
+      - 'tailwind.config.*'
+      - 'eslint.config.*'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Restore ESLint cache
+        uses: actions/cache@v4
+        with:
+          path: .eslintcache
+          key: eslint-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'eslint.config.*', 'src/**/*.ts', 'src/**/*.tsx') }}
+
+      - name: Auto-fix import sort (Node version parity)
+        run: npx eslint src/ --fix --no-cache || true
+
+      - name: Validate workspace truth gate
+        run: pnpm check:ci
+
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Test
+        run: pnpm test:workspace:ci
+
+  task-change-ledger-windows:
+    name: Task change ledger Windows smoke
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Enable Windows long paths
+        shell: pwsh
+        run: git config --global core.longpaths true
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Test task change ledger
+        run: pnpm test:task-change-ledger

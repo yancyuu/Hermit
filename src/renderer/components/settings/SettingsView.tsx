@@ -1,0 +1,172 @@
+/**
+ * SettingsView - Main settings panel with all app configuration options.
+ * Provides UI for managing notifications, display settings, and advanced options.
+ */
+
+import { useEffect, useState } from 'react';
+
+import { useStore } from '@renderer/store';
+import { Loader2 } from 'lucide-react';
+import { useShallow } from 'zustand/react/shallow';
+
+import { useSettingsConfig, useSettingsHandlers } from './hooks';
+import {
+  AdvancedSection,
+  ConnectionSection,
+  GeneralSection,
+  NotificationsSection,
+} from './sections';
+import { type SettingsSection, SettingsTabs } from './SettingsTabs';
+
+export const SettingsView = (): React.JSX.Element | null => {
+  const [activeSection, setActiveSection] = useState<SettingsSection>('general');
+  const { pendingSettingsSection, clearPendingSettingsSection } = useStore(
+    useShallow((s) => ({
+      pendingSettingsSection: s.pendingSettingsSection,
+      clearPendingSettingsSection: s.clearPendingSettingsSection,
+    }))
+  );
+
+  // Consume pending section (avoid setState during render)
+  useEffect(() => {
+    if (pendingSettingsSection) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional sync on prop change
+      setActiveSection(pendingSettingsSection as SettingsSection);
+      clearPendingSettingsSection();
+    }
+  }, [pendingSettingsSection, clearPendingSettingsSection]);
+
+  const {
+    config,
+    safeConfig,
+    loading,
+    saving,
+    error,
+    setError,
+    setSaving,
+    setConfig,
+    setOptimisticConfig,
+    updateConfig,
+    ignoredRepositoryItems,
+    excludedRepositoryIds,
+    isSnoozed,
+  } = useSettingsConfig();
+
+  const handlers = useSettingsHandlers({
+    config,
+    setSaving,
+    setError,
+    setConfig,
+    setOptimisticConfig,
+    updateConfig,
+  });
+
+  // Loading state
+  if (loading) {
+    return (
+      <div
+        className="flex flex-1 items-center justify-center"
+        style={{ backgroundColor: 'var(--color-surface)' }}
+      >
+        <div className="flex items-center gap-3" style={{ color: 'var(--color-text-muted)' }}>
+          <Loader2 className="size-5 animate-spin" />
+          <span>正在加载设置...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error && !config) {
+    return (
+      <div
+        className="flex flex-1 items-center justify-center"
+        style={{ backgroundColor: 'var(--color-surface)' }}
+      >
+        <div className="text-center">
+          <p className="mb-4 text-red-400">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="rounded-md px-4 py-2 transition-colors"
+            style={{
+              backgroundColor: 'var(--color-surface-raised)',
+              color: 'var(--color-text-secondary)',
+            }}
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!config) return null;
+
+  return (
+    <div className="flex-1 overflow-auto" style={{ backgroundColor: 'var(--color-surface)' }}>
+      <div className="mx-auto max-w-2xl px-6 py-8">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-lg font-medium" style={{ color: 'var(--color-text)' }}>
+            Settings
+          </h1>
+          <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+            Manage your app preferences
+          </p>
+          {error && (
+            <div className="mt-4 rounded-md border border-red-500/20 bg-red-500/10 px-3 py-2">
+              <p className="text-sm text-red-400">{error}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Tabs */}
+        <SettingsTabs activeSection={activeSection} onSectionChange={setActiveSection} />
+
+        {/* Content */}
+        <div className="mt-4">
+          {activeSection === 'general' && (
+            <GeneralSection
+              safeConfig={safeConfig}
+              saving={saving}
+              onGeneralToggle={handlers.handleGeneralToggle}
+              onThemeChange={handlers.handleThemeChange}
+              onLanguageChange={handlers.handleLanguageChange}
+            />
+          )}
+
+          {activeSection === 'connection' && <ConnectionSection />}
+
+          {activeSection === 'notifications' && (
+            <NotificationsSection
+              safeConfig={safeConfig}
+              saving={saving}
+              isSnoozed={isSnoozed}
+              ignoredRepositoryItems={ignoredRepositoryItems}
+              excludedRepositoryIds={excludedRepositoryIds}
+              onNotificationToggle={handlers.handleNotificationToggle}
+              onSnooze={handlers.handleSnooze}
+              onClearSnooze={handlers.handleClearSnooze}
+              onAddIgnoredRepository={handlers.handleAddIgnoredRepository}
+              onRemoveIgnoredRepository={handlers.handleRemoveIgnoredRepository}
+              onAddTrigger={handlers.handleAddTrigger}
+              onUpdateTrigger={handlers.handleUpdateTrigger}
+              onRemoveTrigger={handlers.handleRemoveTrigger}
+              onStatusChangeStatusesUpdate={handlers.handleStatusChangeStatusesUpdate}
+            />
+          )}
+
+          {activeSection === 'advanced' && (
+            <AdvancedSection
+              saving={saving}
+              onResetToDefaults={handlers.handleResetToDefaults}
+              onExportConfig={handlers.handleExportConfig}
+              onImportConfig={handlers.handleImportConfig}
+              onOpenInEditor={handlers.handleOpenInEditor}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};

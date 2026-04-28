@@ -1,0 +1,113 @@
+{
+  "nav": {
+    "features": "Features",
+    "screenshots": "Screenshots",
+    "comparison": "Compare",
+    "download": "Download",
+    "pricing": "Free",
+    "faq": "FAQ",
+    "viewOnGithub": "View on GitHub"
+  },
+  "hero": {
+    "badge": "Agent Teams",
+    "downloadNow": "Download Now",
+    "ctaPrimary": "Download for {platform}",
+    "ctaSecondary": "Compare",
+    "preview": "Product preview",
+    "trust": {
+      "agentTeams": "Agent Teams",
+      "kanban": "Kanban Board",
+      "openSource": "Open Source"
+    },
+    "watchDemo": "Watch Demo",
+    "videoUnavailable": "Video unavailable"
+  },
+  "download": {
+    "title": "Download",
+    "detected": "Detected",
+    "systemRequirements": "System requirements",
+    "version": "Version {version}"
+  },
+  "theme": {
+    "dark": "Dark",
+    "light": "Light"
+  },
+  "language": {
+    "label": "Language",
+    "search": "Search language…"
+  },
+  "features": {
+    "sectionTitle": "Everything you need for AI agent orchestration",
+    "sectionSubtitle": "Powerful tools that make multi-agent collaboration actually work."
+  },
+  "pricing": {
+    "sectionTitle": "100% Free. No strings attached.",
+    "sectionSubtitle": "Open source, no API keys, no configuration. Just install and go.",
+    "getStarted": "Download Now",
+    "popular": "Free Forever",
+    "note": "100% open source. No API keys. No configuration. Runs entirely locally."
+  },
+  "testimonials": {
+    "sectionTitle": "What developers say",
+    "sectionSubtitle": "Real feedback from real builders",
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "feedbackCta": "Want to share your experience? Open an issue on"
+  },
+  "faq": {
+    "sectionTitle": "Got questions? We've got answers",
+    "subtitle": "Everything you need to know about Agent Teams"
+  },
+  "comparison": {
+    "sectionTitle": "How we compare",
+    "sectionSubtitle": "Feature-by-feature comparison with other AI coding tools.",
+    "feature": "Feature",
+    "features": {
+      "crossTeam": "Cross-team communication",
+      "agentMessaging": "Agent-to-agent messaging",
+      "linkedTasks": "Linked tasks",
+      "sessionAnalysis": "Session analysis",
+      "taskAttachments": "Task attachments",
+      "hunkReview": "Hunk-level review",
+      "codeEditor": "Built-in code editor",
+      "fullAutonomy": "Full autonomy",
+      "taskDeps": "Task dependencies",
+      "reviewWorkflow": "Review workflow",
+      "zeroSetup": "Zero setup",
+      "kanban": "Kanban board",
+      "execLog": "Execution log viewer",
+      "liveProcesses": "Live processes",
+      "perTaskReview": "Per-task code review",
+      "flexAutonomy": "Flexible autonomy",
+      "worktree": "Git worktree isolation",
+      "multiAgent": "Multi-agent backend",
+      "price": "Price"
+    }
+  },
+  "screenshots": {
+    "sectionTitle": "See it in action",
+    "sectionSubtitle": "Real screenshots from the app — kanban board, code review, agent teams, and more."
+  },
+  "common": {
+    "learnMore": "Learn more"
+  },
+  "footer": {
+    "copyright": "© {year} Agent Teams",
+    "tagline": "AI agent orchestration for developers",
+    "links": {
+      "github": "GitHub",
+      "docs": "Documentation"
+    }
+  },
+  "meta": {
+    "homeTitle": "Agent Teams - AI Agent Orchestration for Developers",
+    "homeDescription": "Free, open-source desktop app for assembling AI agent teams. Kanban board, code review, cross-team communication. Runs entirely locally."
+  },
+  "error": {
+    "notFoundTitle": "Page not found",
+    "notFoundDescription": "The page you are looking for does not exist or has been moved.",
+    "genericTitle": "Something went wrong",
+    "genericDescription": "An unexpected error occurred. Please try again later.",
+    "goHome": "Go to homepage"
+  }
+}

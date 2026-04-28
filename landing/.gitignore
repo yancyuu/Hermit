@@ -1,0 +1,9 @@
+node_modules
+.nuxt
+.output
+.dist
+.env
+
+# Large video files
+public/video/*.mp4
+assets/video/*.mp4
