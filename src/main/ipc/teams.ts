@@ -3886,7 +3886,7 @@ async function handleAddMember(
       } catch {
         // Best-effort: fall back to default lead and team names
       }
-      const spawnMessage = buildAddMemberSpawnMessage(tn, displayName, leadName, {
+      const addedMember = {
         name: memberName,
         ...(typeof role === 'string' ? { role } : {}),
         ...(typeof workflow === 'string' ? { workflow } : {}),
@@ -3894,10 +3894,17 @@ async function handleAddMember(
         ...(providerValidation.value ? { providerId: providerValidation.value } : {}),
         ...(typeof model === 'string' && model.trim() ? { model: model.trim() } : {}),
         ...(effortValidation.value ? { effort: effortValidation.value } : {}),
-      });
+      };
+      const spawnMessage = buildAddMemberSpawnMessage(tn, displayName, leadName, addedMember);
       try {
+        await provisioning.markLiveMemberSpawnQueued(tn, addedMember);
         await provisioning.sendMessageToTeam(tn, spawnMessage);
-      } catch {
+      } catch (error) {
+        await provisioning.markLiveMemberSpawnQueueFailed(
+          tn,
+          memberName,
+          error instanceof Error ? error.message : String(error)
+        );
         // Best-effort: lead process may not be responsive
         logger.warn(`Failed to notify lead about new member "${memberName}" in ${tn}`);
       }

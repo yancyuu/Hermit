@@ -2776,6 +2776,8 @@ export function buildAddMemberSpawnMessage(
   return (
     `新成员 "${member.name}"${roleHint} 已添加到团队。` +
     `请立即使用 **Agent** 工具启动该成员，参数为 team_name="${teamName}", name="${member.name}", subagent_type="general-purpose"${agentArgs}，并使用下面的精确 prompt：${workflowHint}\n\n` +
+    `重要：Agent 工具返回只代表 spawn 请求已被 runtime 接受，不代表成员已完成注册。` +
+    `在看到该成员完成 member_briefing/check-in 之前，不要对用户或其他成员说 "${member.name}" 已成功启动，也不要把阻塞性任务分配给他。\n\n` +
     indentMultiline(prompt, '  ')
   );
 }
@@ -6159,6 +6161,18 @@ export class TeamProvisioningService {
     run.request.members = nextMembers;
   }
 
+  private upsertRunEffectiveMember(
+    run: ProvisioningRun,
+    member: TeamCreateRequest['members'][number]
+  ): void {
+    const normalizedName = member.name.trim().toLowerCase();
+    const nextMembers = run.effectiveMembers.filter(
+      (candidate) => candidate.name.trim().toLowerCase() !== normalizedName
+    );
+    nextMembers.push(member);
+    run.effectiveMembers = nextMembers;
+  }
+
   private removeRunAllEffectiveMember(run: ProvisioningRun, memberName: string): void {
     const normalizedName = memberName.trim().toLowerCase();
     const nextMembers = run.allEffectiveMembers.filter(
@@ -9476,6 +9490,45 @@ export class TeamProvisioningService {
       throw new Error(`Team "${teamName}" is not currently running`);
     }
     return run;
+  }
+
+  async markLiveMemberSpawnQueued(
+    teamName: string,
+    member: TeamCreateRequest['members'][number]
+  ): Promise<void> {
+    const run = this.getMutableAliveRunOrThrow(teamName);
+    const memberName = member.name.trim();
+    if (!memberName) return;
+
+    this.upsertRunAllEffectiveMember(run, member);
+    this.upsertRunEffectiveMember(run, member);
+    if (!run.expectedMembers.some((name) => matchesExactTeamMemberName(name, memberName))) {
+      run.expectedMembers.push(memberName);
+    }
+    this.agentRuntimeSnapshotCache.delete(teamName);
+    this.liveTeamAgentRuntimeMetadataCache.delete(teamName);
+    this.resetRuntimeToolActivity(run, memberName);
+    this.clearMemberSpawnToolTracking(run, memberName);
+    this.setMemberSpawnStatus(run, memberName, 'spawning');
+    this.appendMemberBootstrapDiagnostic(run, memberName, 'live member add requested from UI');
+    if (run.isLaunch) {
+      await this.persistLaunchStateSnapshot(run, run.provisioningComplete ? 'finished' : 'active');
+    }
+  }
+
+  async markLiveMemberSpawnQueueFailed(
+    teamName: string,
+    memberName: string,
+    reason: string
+  ): Promise<void> {
+    const runId = this.getAliveRunId(teamName);
+    if (!runId) return;
+    const run = this.runs.get(runId);
+    if (!run || run.processKilled || run.cancelRequested) return;
+    this.setMemberSpawnStatus(run, memberName, 'error', reason);
+    if (run.isLaunch) {
+      await this.persistLaunchStateSnapshot(run, run.provisioningComplete ? 'finished' : 'active');
+    }
   }
 
   async reattachOpenCodeOwnedMemberLane(
