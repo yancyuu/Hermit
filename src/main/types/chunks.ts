@@ -1,5 +1,5 @@
 /**
- * Chunk and visualization types for Multi Agent Teams.
+ * Chunk and visualization types for Hermit.
  *
  * This module contains:
  * - Chunk types (UserChunk, AIChunk, SystemChunk, CompactChunk)

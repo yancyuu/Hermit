@@ -28,12 +28,10 @@ export const RepositoryScopeSection = ({
   return (
     <details className="mt-4">
       <summary className="cursor-pointer text-xs uppercase tracking-widest text-text-muted hover:text-text-secondary">
-        Advanced: Repository Scope
+        高级：仓库范围
       </summary>
       <div className="mt-3 border-l border-border pl-4">
-        <span className="mb-2 block text-xs text-text-muted">
-          Limit to Repositories (applies only to selected repositories)
-        </span>
+        <span className="mb-2 block text-xs text-text-muted">限定仓库（仅对选中的仓库生效）</span>
         {selectedItems.length === 0 ? (
           <p className="mb-2 text-xs italic text-text-muted">未选择仓库，触发器将应用到所有仓库</p>
         ) : (

@@ -71,7 +71,7 @@ export const SlashItem: React.FC<SlashItemProps> = ({
       {hasInstructions && (
         <MarkdownViewer
           content={slash.instructions!}
-          label="Slash Output"
+          label="斜杠命令输出"
           maxHeight="max-h-96"
           copyable
         />

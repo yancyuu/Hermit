@@ -90,8 +90,8 @@ import { KanbanBoard } from './kanban/KanbanBoard';
 import { UNASSIGNED_OWNER } from './kanban/KanbanFilterPopover';
 import { KanbanSearchInput } from './kanban/KanbanSearchInput';
 import { TrashDialog } from './kanban/TrashDialog';
-import { MemberDetailDialog } from './members/MemberDetailDialog';
 import { LeadChannelPanel } from './members/LeadChannelPanel';
+import { MemberDetailDialog } from './members/MemberDetailDialog';
 import { type MemberActivityFilter, type MemberDetailTab } from './members/memberDetailTypes';
 
 import type { AddMemberEntry } from './dialogs/AddMemberDialog';

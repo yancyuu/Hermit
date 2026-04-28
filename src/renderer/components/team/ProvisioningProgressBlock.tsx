@@ -350,7 +350,7 @@ export const ProvisioningProgressBlock = ({
           <div
             ref={outputScrollRef}
             className={cn(
-              'mt-1 max-h-[400px] overflow-y-auto rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-2',
+              'mt-1 h-40 overflow-y-auto rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-2',
               isError && 'border-red-500/40'
             )}
           >

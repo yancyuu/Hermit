@@ -5,8 +5,8 @@ import { configManager } from './ConfigManager';
 import type { SshConnectionConfig, SshConnectionManager } from './SshConnectionManager';
 import type {
   MachineProfile,
-  MachineRuntimeProcess,
   MachineRuntimeKind,
+  MachineRuntimeProcess,
   MachineRuntimeStatus,
 } from '@shared/types/api';
 
@@ -85,7 +85,7 @@ export class MachineRegistryService {
       .split('\n')
       .map((line) => line.trim())
       .filter(Boolean)) {
-      const match = line.match(/^(\d+)\s+(.+?)\s{1,}(.+)$/);
+      const match = /^(\d+)\s+(.+?)\s{1,}(.+)$/.exec(line);
       if (!match) continue;
       const pid = Number(match[1]);
       if (!Number.isFinite(pid)) continue;

@@ -372,19 +372,19 @@ export function useComposerDraft(teamName: string): UseComposerDraftResult {
           const payload = await fileToAttachmentPayload(file);
           newPayloads.push(payload);
         } catch {
-          setAttachmentError(`Failed to read file: ${file.name}`);
+          setAttachmentError(`读取文件失败：${file.name}`);
           return;
         }
       }
 
       const prev = attachmentsRef.current;
       if (prev.length + newPayloads.length > MAX_FILES) {
-        setAttachmentError(`Maximum ${MAX_FILES} attachments allowed`);
+        setAttachmentError(`最多允许添加 ${MAX_FILES} 个附件`);
         return;
       }
       const currentTotal = prev.reduce((sum, a) => sum + a.size, 0);
       if (currentTotal + batchSize > MAX_TOTAL_SIZE) {
-        setAttachmentError('Total attachment size exceeds 20MB limit');
+        setAttachmentError('附件总大小超过 20MB 限制');
         return;
       }
 

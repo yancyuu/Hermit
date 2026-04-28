@@ -2,6 +2,7 @@ import {
   type ChildProcess,
   exec,
   execFile,
+  execFileSync,
   type ExecFileOptions,
   type ExecOptions,
   spawn,
@@ -353,8 +354,8 @@ export function spawnCli(
  * `cmd.exe` shell, leaving the actual process (e.g. `claude.cmd`) orphaned.
  * `taskkill /T /F /PID` recursively kills the entire process tree.
  *
- * On macOS/Linux, processes are killed directly (no shell wrapper), so
- * the standard `child.kill(signal)` works correctly.
+ * On macOS/Linux, kill descendants first. Otherwise killing only the parent
+ * can leave helper processes orphaned under launchd/systemd.
  */
 export function killProcessTree(
   child: ChildProcess | null | undefined,
@@ -381,5 +382,81 @@ export function killProcessTree(
     }
   }
 
+  if (process.platform !== 'win32') {
+    killUnixProcessTree(child, signal);
+    return;
+  }
+
   child.kill(signal);
+}
+
+function killUnixProcessTree(child: ChildProcess, signal: NodeJS.Signals = 'SIGTERM'): void {
+  const rootPid = child.pid;
+  if (!rootPid) return;
+  const descendants = collectUnixDescendantPids(rootPid);
+  for (const pid of [...descendants].reverse()) {
+    killPidBestEffort(pid, signal);
+  }
+  try {
+    child.kill(signal);
+  } catch (error) {
+    const code = error && typeof error === 'object' && 'code' in error ? error.code : undefined;
+    if (code !== 'ESRCH') {
+      throw error;
+    }
+  }
+}
+
+function collectUnixDescendantPids(rootPid: number): number[] {
+  const childrenByParent = new Map<number, number[]>();
+  let output = '';
+
+  try {
+    output = execFileSync('ps', ['-axo', 'pid=,ppid='], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+  } catch {
+    return [];
+  }
+
+  for (const rawLine of output.split('\n')) {
+    const line = rawLine.trim();
+    if (!line) continue;
+    const match = /^(\d+)\s+(\d+)$/u.exec(line);
+    if (!match) continue;
+    const pid = Number.parseInt(match[1] ?? '', 10);
+    const ppid = Number.parseInt(match[2] ?? '', 10);
+    if (!Number.isFinite(pid) || !Number.isFinite(ppid) || pid <= 0 || ppid <= 0) continue;
+    const siblings = childrenByParent.get(ppid);
+    if (siblings) {
+      siblings.push(pid);
+    } else {
+      childrenByParent.set(ppid, [pid]);
+    }
+  }
+
+  const descendants: number[] = [];
+  const stack = [...(childrenByParent.get(rootPid) ?? [])];
+  const seen = new Set<number>();
+  while (stack.length > 0) {
+    const pid = stack.pop();
+    if (!pid || seen.has(pid)) continue;
+    seen.add(pid);
+    descendants.push(pid);
+    stack.push(...(childrenByParent.get(pid) ?? []));
+  }
+
+  return descendants;
+}
+
+function killPidBestEffort(pid: number, signal: NodeJS.Signals): void {
+  try {
+    process.kill(pid, signal);
+  } catch (error) {
+    const code = error && typeof error === 'object' && 'code' in error ? error.code : undefined;
+    if (code !== 'ESRCH') {
+      throw error;
+    }
+  }
 }

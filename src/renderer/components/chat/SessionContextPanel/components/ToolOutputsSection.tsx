@@ -29,7 +29,7 @@ export const ToolOutputsSection = ({
 
   return (
     <CollapsibleSection
-      title="Tool Outputs"
+      title="工具输出"
       count={injections.length}
       tokenCount={tokenCount}
       isExpanded={isExpanded}

@@ -646,7 +646,7 @@ export const EditTeamDialog = ({
             }
           >
             {saving && <Loader2 size={14} className="mr-1.5 animate-spin" />}
-            Save
+            保存
           </Button>
         </DialogFooter>
       </DialogContent>

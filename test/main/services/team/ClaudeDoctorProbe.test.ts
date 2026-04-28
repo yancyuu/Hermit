@@ -24,15 +24,15 @@ describe('ClaudeDoctorProbe', () => {
     const output = `
 \u001B[2J────────────────────────────────────
   Diagnostics
-  └ Invoked: /Applications/Multi Agent${' '}
-  Teams.app/Contents/Resources/runtime/clau
+  └ Invoked: /Applications/Hermit.app/Cont
+  ents/Resources/runtime/clau
   de-multimodel
   └ Config install method: native
   Press Enter to continue…
 `;
 
     expect(extractDoctorInvokedCandidates(output)).toEqual([
-      '/Applications/Multi Agent Teams.app/Contents/Resources/runtime/claude-multimodel',
+      '/Applications/Hermit.app/Contents/Resources/runtime/claude-multimodel',
     ]);
   });
 

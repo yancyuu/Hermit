@@ -1,20 +1,20 @@
 {
-  "name": "multi-agent-teams",
+  "name": "hermit",
   "type": "module",
-  "version": "1.3.27",
-  "description": "Desktop app for managing AI agent teams, reviews, runtime logs, and provider-aware workflows",
+  "version": "1.3.31",
+  "description": "Claude Code powered multi-agent workbench for engineering teams",
   "license": "AGPL-3.0",
   "author": {
-    "name": "Илия (777genius)",
-    "email": "quantjumppro@gmail.com"
+    "name": "yancyyu",
+    "email": "yancyyu.ok@gmail.com"
   },
-  "homepage": "https://github.com/lazy-agent/multi-agent-workbench",
+  "homepage": "https://github.com/lazy-agent/hermit",
   "repository": {
     "type": "git",
-    "url": "https://github.com/lazy-agent/multi-agent-workbench.git"
+    "url": "https://github.com/lazy-agent/hermit.git"
   },
   "bugs": {
-    "url": "https://github.com/lazy-agent/multi-agent-workbench/issues"
+    "url": "https://github.com/lazy-agent/hermit/issues"
   },
   "main": "dist-electron/main/index.cjs",
   "scripts": {
@@ -54,7 +54,7 @@
     "test:noise": "tsx test/test-noise-filtering.ts",
     "test:task-filtering": "tsx test/test-task-filtering.ts",
     "test": "vitest run",
-    "test:ci": "vitest run --maxWorkers 1 --minWorkers 1",
+    "test:ci": "vitest run --config vitest.ci.config.ts --maxWorkers 1 --minWorkers 1",
     "test:task-change-ledger": "vitest run test/main/services/team/TaskChangeLedgerReader.test.ts test/main/services/team/taskChangeLedgerFixtures.integration.test.ts test/main/services/team/ReviewApplierService.test.ts test/main/services/team/FileContentResolver.test.ts test/main/services/team/ChangeExtractorService.test.ts test/renderer/store/changeReviewSlice.test.ts test/renderer/utils/reviewKey.test.ts test/main/services/team/TeamLogSourceTracker.test.ts test/main/services/team/stallMonitor/TeamTaskLogFreshnessReader.test.ts",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -224,8 +224,8 @@
     "vitest": "^3.1.4"
   },
   "build": {
-    "appId": "com.multiagentteams.app",
-    "productName": "Multi Agent Teams",
+    "appId": "com.lazyagent.hermit",
+    "productName": "Hermit",
     "directories": {
       "output": "release"
     },
@@ -264,7 +264,7 @@
       "main": "dist-electron/main/index.cjs"
     },
     "mac": {
-      "artifactName": "Multi.Agent.Teams-${version}-${arch}-mac.${ext}",
+      "artifactName": "Hermit-${version}-${arch}-mac.${ext}",
       "category": "public.app-category.developer-tools",
       "minimumSystemVersion": "12.0",
       "target": [
@@ -280,7 +280,7 @@
     },
     "dmg": {
       "sign": false,
-      "artifactName": "Multi.Agent.Teams-${version}-${arch}.${ext}"
+      "artifactName": "Hermit-${version}-${arch}.${ext}"
     },
     "win": {
       "target": [
@@ -299,13 +299,13 @@
       "category": "Development"
     },
     "appImage": {
-      "artifactName": "Multi.Agent.Teams-${version}.${ext}"
+      "artifactName": "Hermit-${version}.${ext}"
     },
     "deb": {
       "afterInstall": "resources/afterInstall.sh"
     },
     "nsis": {
-      "artifactName": "Multi.Agent.Teams.Setup.${version}.${ext}",
+      "artifactName": "Hermit.Setup.${version}.${ext}",
       "oneClick": false,
       "perMachine": false,
       "allowToChangeInstallationDirectory": true
@@ -314,7 +314,7 @@
       {
         "provider": "github",
         "owner": "lazy-agent",
-        "repo": "multi-agent-workbench",
+        "repo": "hermit",
         "releaseType": "release"
       }
     ]

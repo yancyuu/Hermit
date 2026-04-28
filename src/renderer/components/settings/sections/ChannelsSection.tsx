@@ -4,7 +4,7 @@ import { api } from '@renderer/api';
 import { Button } from '@renderer/components/ui/button';
 import { Input } from '@renderer/components/ui/input';
 import { Label } from '@renderer/components/ui/label';
-import { Plus, PlugZap, Trash2 } from 'lucide-react';
+import { PlugZap, Plus, Trash2 } from 'lucide-react';
 
 import { SettingsSectionHeader } from '../components/SettingsSectionHeader';
 
@@ -48,7 +48,7 @@ export const ChannelsSection = (): React.JSX.Element => {
           )
           .map((channel) => ({
             ...channel,
-            feishu: channel.feishu!,
+            feishu: channel.feishu,
           }));
         if (channels.length > 0) {
           setFeishuChannels(channels);

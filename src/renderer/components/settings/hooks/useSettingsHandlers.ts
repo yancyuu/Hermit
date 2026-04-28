@@ -127,7 +127,7 @@ export function useSettingsHandlers({
         setOptimisticConfig(updatedConfig);
         setStoreState({ appConfig: updatedConfig });
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to snooze notifications');
+        setError(err instanceof Error ? err.message : '暂停通知失败');
       } finally {
         setSaving(false);
       }
@@ -143,7 +143,7 @@ export function useSettingsHandlers({
       setOptimisticConfig(updatedConfig);
       setStoreState({ appConfig: updatedConfig });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to clear snooze');
+      setError(err instanceof Error ? err.message : '取消暂停通知失败');
     } finally {
       setSaving(false);
     }

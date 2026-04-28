@@ -157,7 +157,7 @@ describe('electron-builder afterPack', () => {
     tempDirs.push(tempDir);
 
     writeFile(
-      path.join(tempDir, 'Contents', 'MacOS', 'Multi Agent Teams'),
+      path.join(tempDir, 'Contents', 'MacOS', 'Hermit'),
       createMachOBuffer('arm64')
     );
     writeFile(

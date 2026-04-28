@@ -82,7 +82,7 @@ export const ThinkingTextItem = ({
           {injection.breakdown.map((item, idx) => (
             <div key={`${item.type}-${idx}`} className="flex items-center gap-2 py-0.5 text-xs">
               <span style={{ color: COLOR_TEXT_MUTED }}>
-                {item.type === 'thinking' ? 'Thinking' : 'Text'}
+                {item.type === 'thinking' ? '思考' : '文本'}
               </span>
               <span style={{ color: COLOR_TEXT_MUTED, opacity: 0.7 }}>
                 ~{formatTokens(item.tokenCount)}

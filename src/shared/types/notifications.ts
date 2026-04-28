@@ -1,5 +1,5 @@
 /**
- * Notification and configuration types for Multi Agent Teams.
+ * Notification and configuration types for Hermit.
  *
  * These types define:
  * - Detected errors from session files

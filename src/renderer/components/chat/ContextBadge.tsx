@@ -403,7 +403,7 @@ export const ContextBadge = ({
               {/* User Messages section */}
               {newUserMessageInjections.length > 0 && (
                 <PopoverSection
-                  title="User Messages"
+                  title="用户消息"
                   count={newUserMessageInjections.length}
                   tokenCount={userMessageTokens}
                 >
@@ -414,7 +414,7 @@ export const ContextBadge = ({
                           Turn {injection.turnIndex + 1}
                         </span>
                         <span style={{ color: COLOR_TEXT_MUTED }}>
-                          ~{formatTokens(injection.estimatedTokens)} tokens
+                          ~{formatTokens(injection.estimatedTokens)} token
                         </span>
                       </div>
                       {injection.textPreview && (
@@ -488,7 +488,7 @@ export const ContextBadge = ({
               {/* Tool Outputs section */}
               {newToolOutputInjections.length > 0 && (
                 <PopoverSection
-                  title="Tool Outputs"
+                  title="工具输出"
                   count={toolOutputCount}
                   tokenCount={toolOutputTokens}
                 >
@@ -500,7 +500,7 @@ export const ContextBadge = ({
                       >
                         <span style={{ color: COLOR_TEXT_SECONDARY }}>{tool.toolName}</span>
                         <span style={{ color: COLOR_TEXT_MUTED }}>
-                          ~{formatTokens(tool.tokenCount)} tokens
+                          ~{formatTokens(tool.tokenCount)} token
                         </span>
                       </div>
                     ))
@@ -511,7 +511,7 @@ export const ContextBadge = ({
               {/* Task Coordination section */}
               {newTaskCoordinationInjections.length > 0 && (
                 <PopoverSection
-                  title="Task Coordination"
+                  title="任务协作"
                   count={taskCoordinationCount}
                   tokenCount={taskCoordinationTokens}
                 >
@@ -523,7 +523,7 @@ export const ContextBadge = ({
                       >
                         <span style={{ color: COLOR_TEXT_SECONDARY }}>{item.label}</span>
                         <span style={{ color: COLOR_TEXT_MUTED }}>
-                          ~{formatTokens(item.tokenCount)} tokens
+                          ~{formatTokens(item.tokenCount)} token
                         </span>
                       </div>
                     ))
@@ -534,14 +534,14 @@ export const ContextBadge = ({
               {/* Thinking + Text section */}
               {newThinkingTextInjections.length > 0 && (
                 <PopoverSection
-                  title="Thinking + Text"
+                  title="思考 + 文本"
                   count={newThinkingTextInjections.length}
                   tokenCount={thinkingTextTokens}
                 >
                   {newThinkingTextInjections.map((injection) => (
                     <div key={injection.id} className="min-w-0">
                       <div className="text-xs" style={{ color: COLOR_TEXT_SECONDARY }}>
-                        Turn {injection.turnIndex + 1}
+                        第 {injection.turnIndex + 1} 轮
                       </div>
                       <div className="space-y-0.5 pl-2">
                         {injection.breakdown.map((item, idx) => (
@@ -550,10 +550,10 @@ export const ContextBadge = ({
                             className="flex items-center justify-between text-xs"
                           >
                             <span style={{ color: COLOR_TEXT_MUTED }}>
-                              {item.type === 'thinking' ? 'Thinking' : 'Text'}
+                              {item.type === 'thinking' ? '思考' : '文本'}
                             </span>
                             <span style={{ color: COLOR_TEXT_MUTED }}>
-                              ~{formatTokens(item.tokenCount)} tokens
+                              ~{formatTokens(item.tokenCount)} token
                             </span>
                           </div>
                         ))}

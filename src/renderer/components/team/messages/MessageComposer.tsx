@@ -19,7 +19,6 @@ import { isTeamProvisioningActive } from '@renderer/store/slices/teamSlice';
 import { serializeChipsWithText } from '@renderer/types/inlineChip';
 import { formatAgentRole } from '@renderer/utils/formatAgentRole';
 import { buildMemberColorMap } from '@renderer/utils/memberHelpers';
-import type { OpenCodeRuntimeDeliveryDebugDetails } from '@renderer/utils/openCodeRuntimeDeliveryDiagnostics';
 import { nameColorSet } from '@renderer/utils/projectColor';
 import { getSuggestedSlashCommandsForProvider } from '@renderer/utils/providerSlashCommands';
 import { buildSlashCommandSuggestions } from '@renderer/utils/skillCommandSuggestions';
@@ -39,6 +38,7 @@ import { useShallow } from 'zustand/react/shallow';
 
 import type { ActionMode } from '@renderer/components/team/messages/ActionModeSelector';
 import type { MentionSuggestion } from '@renderer/types/mention';
+import type { OpenCodeRuntimeDeliveryDebugDetails } from '@renderer/utils/openCodeRuntimeDeliveryDiagnostics';
 import type {
   AttachmentPayload,
   ResolvedTeamMember,
@@ -175,7 +175,7 @@ export const MessageComposer = ({
   const selectedTarget = sortedCrossTeamTargets.find((t) => t.teamName === selectedTeam);
   const targetDisplayName = selectedTarget?.displayName ?? selectedTeam;
   const crossTeamHintText = isCrossTeam
-    ? '提示：跨团队消息会发送到目标团队负责人。如果你希望回复发回你当前团队负责人而不是你本人，请在消息中明确说明。'
+    ? 'Tips：跨团队消息会发送到目标团队负责人。如果你希望回复发回你当前团队负责人而不是你本人，请在消息中明确说明。'
     : undefined;
 
   // Members load async with team data; keep recipient stable if valid, otherwise default to lead/first.
@@ -873,7 +873,7 @@ export const MessageComposer = ({
           onModEnter={handleSend}
           onShiftTab={handleCycleActionMode}
           dismissMentionsRef={dismissMentionsRef}
-          extraTips={['提示：你可以输入 "/" 来运行 Claude 命令。']}
+          extraTips={['Tips：你可以输入 "/" 来运行 Claude 命令。']}
           surfaceClassName="message-composer-shell message-composer-orbit-surface border border-transparent bg-[var(--color-surface-raised)] shadow-[0_8px_24px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(255,255,255,0.03)]"
           surfaceDecoration="orbit-border"
           surfaceFadeColor="var(--color-surface-raised)"

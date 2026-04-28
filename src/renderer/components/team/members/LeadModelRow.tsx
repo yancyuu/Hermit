@@ -19,6 +19,7 @@ import { resolveTeamLeadColorName } from '@shared/utils/teamMemberColors';
 import { AlertTriangle, BellRing, ChevronDown, ChevronRight, Info } from 'lucide-react';
 
 import { Button } from '../../ui/button';
+
 import { LeadChannelPanel } from './LeadChannelPanel';
 
 import type { EffortLevel, TeamProviderId } from '@shared/types';

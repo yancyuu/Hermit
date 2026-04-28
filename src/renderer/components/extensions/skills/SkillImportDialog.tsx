@@ -32,22 +32,22 @@ import type { SkillReviewPreview, SkillRootKind } from '@shared/types/extensions
 
 function getFriendlyImportError(message: string): string {
   if (message.includes('valid skill file')) {
-    return 'This folder does not look like a skill yet. It needs a SKILL.md, Skill.md, or skill.md file.';
+    return '这个文件夹还不像一个技能目录。需要包含 SKILL.md、Skill.md 或 skill.md 文件。';
   }
   if (message.includes('symbolic links')) {
     return '此文件夹包含符号链接。请导入真实文件，而不是链接。';
   }
   if (message.includes('too many files')) {
-    return 'This skill folder is too large to import at once. Remove extra files and try again.';
+    return '这个技能文件夹文件过多，无法一次导入。请移除多余文件后重试。';
   }
   if (message.includes('too large')) {
-    return 'This skill folder is too large to import safely. Trim large assets and try again.';
+    return '这个技能文件夹过大，无法安全导入。请精简大型素材后重试。';
   }
   if (message.includes('Invalid folder name')) {
-    return 'Pick a simpler destination folder name using letters, numbers, dots, dashes, or underscores.';
+    return '请选择更简单的目标文件夹名称，可使用字母、数字、点、短横线或下划线。';
   }
   if (message.includes('must be a directory')) {
-    return 'Choose a folder to import, not a single file.';
+    return '请选择要导入的文件夹，而不是单个文件。';
   }
   return message;
 }
@@ -211,18 +211,16 @@ export const SkillImportDialog = ({
             <DialogHeader className="border-b border-border px-6 py-5">
               <DialogTitle>导入技能</DialogTitle>
               <DialogDescription>
-                Pick an existing skill folder, review what will be copied, then import it into one
-                of your supported skill locations.
+                选择已有技能文件夹，检查将要复制的内容，然后导入到支持的技能位置。
               </DialogDescription>
             </DialogHeader>
 
             <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
               <div className="space-y-5">
                 <section className="space-y-1">
-                  <h3 className="text-sm font-semibold text-text">1. Choose a skill folder</h3>
+                  <h3 className="text-sm font-semibold text-text">1. 选择技能文件夹</h3>
                   <p className="text-sm text-text-muted">
-                    This should be a folder that already contains a `SKILL.md`, `Skill.md`, or
-                    `skill.md` file.
+                    请选择已包含 `SKILL.md`、`Skill.md` 或 `skill.md` 文件的文件夹。
                   </p>
                 </section>
                 <div className="space-y-2">
@@ -270,7 +268,7 @@ export const SkillImportDialog = ({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="user">用户</SelectItem>
+                        <SelectItem value="user">个人</SelectItem>
                         <SelectItem value="project" disabled={!projectPath}>
                           {projectPath ? `项目：${projectLabel ?? projectPath}` : '项目不可用'}
                         </SelectItem>
@@ -291,7 +289,7 @@ export const SkillImportDialog = ({
                         {visibleRootDefinitions.map((definition) => (
                           <SelectItem key={definition.rootKind} value={definition.rootKind}>
                             {definition.directoryName}
-                            {definition.audience === 'codex' ? ' - Codex only' : ' - Shared'}
+                            {definition.audience === 'codex' ? ' - 仅 Codex' : ' - 共享'}
                           </SelectItem>
                         ))}
                       </SelectContent>

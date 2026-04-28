@@ -131,7 +131,7 @@ export interface OpenCodeCleanupHostsCommandBody {
 export interface OpenCodeCleanupHostsCommandData {
   cleaned: number;
   remaining: number;
-  hosts: Array<{
+  hosts: {
     hostKey: string;
     projectPath: string;
     pid: number;
@@ -146,7 +146,7 @@ export interface OpenCodeCleanupHostsCommandData {
       | 'failed';
     reason: string;
     leaseCount: number;
-  }>;
+  }[];
   diagnostics: string[];
 }
 
@@ -270,7 +270,7 @@ export interface OpenCodeBackfillTaskLedgerCommandData {
   importedEvents: number;
   skippedEvents: number;
   outcome: OpenCodeBackfillTaskLedgerOutcome;
-  notices: Array<{ severity: 'warning'; message: string; code: string }>;
+  notices: { severity: 'warning'; message: string; code: string }[];
   diagnostics: string[];
 }
 

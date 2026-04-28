@@ -318,7 +318,7 @@ export const MemberLogsTab = ({
               id: `${previewLog.sessionId}:recent:${idx}`,
               timestamp: new Date(p.timestamp),
               kind: 'output' as const,
-              label: p.kind === 'thinking' ? 'Thinking' : 'Output',
+              label: p.kind === 'thinking' ? '思考' : '输出',
               content: p.text,
             }));
           }
@@ -332,7 +332,7 @@ export const MemberLogsTab = ({
           id: `${previewLog.sessionId}:lastOutput`,
           timestamp: new Date(previewLog.startTime),
           kind: 'output',
-          label: 'Output',
+          label: '输出',
           content: previewLog.lastOutputPreview,
         });
       }
@@ -341,7 +341,7 @@ export const MemberLogsTab = ({
           id: `${previewLog.sessionId}:lastThinking`,
           timestamp: new Date(previewLog.startTime),
           kind: 'output',
-          label: 'Thinking',
+          label: '思考',
           content: previewLog.lastThinkingPreview,
         });
       }
@@ -927,7 +927,7 @@ function extractSubagentPreviewMessages(chunks: EnhancedChunk[]): SubagentPrevie
             id: `${item.group.id}:output:${di.timestamp.toISOString()}:${j}`,
             timestamp: di.timestamp,
             kind: 'output',
-            label: 'Output',
+            label: '输出',
             content: di.content,
           });
         } else if (di.type === 'teammate_message') {

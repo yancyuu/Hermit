@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { api } from '@renderer/api';
 import { cn } from '@renderer/lib/utils';
-import { RefreshCw, Radio, Settings } from 'lucide-react';
+import { Radio, RefreshCw, Settings } from 'lucide-react';
 
 import { Button } from '../../ui/button';
 

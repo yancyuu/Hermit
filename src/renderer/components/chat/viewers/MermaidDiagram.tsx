@@ -97,7 +97,7 @@ export const MermaidDiagram = React.memo(function MermaidDiagram({
           border: `1px solid ${PROSE_PRE_BORDER}`,
         }}
       >
-        <div className="mb-2 text-amber-400">Mermaid syntax error</div>
+        <div className="mb-2 text-amber-400">Mermaid 语法错误</div>
         <pre className="whitespace-pre-wrap font-mono text-text-muted">{code}</pre>
       </div>
     );

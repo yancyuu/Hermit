@@ -24,7 +24,6 @@ import {
 import { ConfigManager } from '@main/services/infrastructure/ConfigManager';
 import { NotificationManager } from '@main/services/infrastructure/NotificationManager';
 import { getLeadChannelListenerService } from '@main/services/team/LeadChannelListenerService';
-import type { SshConnectionManager } from '@main/services/infrastructure/SshConnectionManager';
 import { getAppIconPath } from '@main/utils/appIcon';
 import {
   execCli,
@@ -57,6 +56,7 @@ import {
   stripAgentBlocks,
   wrapAgentBlock,
 } from '@shared/constants/agentBlocks';
+import { CLI_NOT_FOUND_MESSAGE } from '@shared/constants/cli';
 import {
   CROSS_TEAM_PREFIX_TAG,
   CROSS_TEAM_SENT_SOURCE,
@@ -64,7 +64,6 @@ import {
   parseCrossTeamPrefix,
   stripCrossTeamPrefix,
 } from '@shared/constants/crossTeam';
-import { CLI_NOT_FOUND_MESSAGE } from '@shared/constants/cli';
 import { getMemberColorByName } from '@shared/constants/memberColors';
 import { DEFAULT_TOOL_APPROVAL_SETTINGS } from '@shared/types/team';
 import { resolveLanguageName } from '@shared/utils/agentLanguage';
@@ -82,10 +81,10 @@ import {
 } from '@shared/utils/inboxNoise';
 import {
   CANONICAL_LEAD_MEMBER_NAME,
-  LEGACY_LEAD_MEMBER_NAME,
   isLeadAgentType,
   isLeadMember,
   isLeadMemberName,
+  LEGACY_LEAD_MEMBER_NAME,
 } from '@shared/utils/leadDetection';
 import { createLogger } from '@shared/utils/logger';
 import { migrateProviderBackendId } from '@shared/utils/providerBackend';
@@ -130,7 +129,6 @@ import {
 } from '../runtime/providerModelProbe';
 import { resolveTeamProviderId } from '../runtime/providerRuntimeEnv';
 
-import { createRuntimeDeliveryJournalStore } from './opencode/delivery/RuntimeDeliveryJournal';
 import {
   createOpenCodePromptDeliveryLedgerStore,
   hashOpenCodePromptDeliveryPayload,
@@ -143,14 +141,15 @@ import {
 import {
   isOpenCodePromptDeliveryObserveLaterResponseState,
   isOpenCodePromptDeliveryRetryableResponseState,
-  isOpenCodeVisibleReplySemanticallySufficient,
   isOpenCodeVisibleReplyReadCommitAllowed,
+  isOpenCodeVisibleReplySemanticallySufficient,
   OPENCODE_PROMPT_DELIVERY_OBSERVE_DELAY_MS,
   OPENCODE_PROMPT_DELIVERY_RETRY_DELAY_MS,
   OPENCODE_PROMPT_WATCHDOG_GLOBAL_CONCURRENCY,
   OPENCODE_PROMPT_WATCHDOG_PER_TEAM_CONCURRENCY,
   type OpenCodeVisibleReplyProof,
 } from './opencode/delivery/OpenCodePromptDeliveryWatchdog';
+import { createRuntimeDeliveryJournalStore } from './opencode/delivery/RuntimeDeliveryJournal';
 import {
   type RuntimeDeliveryDestinationPort,
   RuntimeDeliveryDestinationRegistry,
@@ -212,8 +211,8 @@ import {
 import { TeamLaunchStateStore } from './TeamLaunchStateStore';
 import { TeamMcpConfigBuilder } from './TeamMcpConfigBuilder';
 import { TeamMemberLogsFinder } from './TeamMemberLogsFinder';
-import { TeamMemberWorktreeManager } from './TeamMemberWorktreeManager';
 import { TeamMembersMetaStore } from './TeamMembersMetaStore';
+import { TeamMemberWorktreeManager } from './TeamMemberWorktreeManager';
 import { TeamMetaStore } from './TeamMetaStore';
 import {
   commandArgEquals,
@@ -236,6 +235,7 @@ import type {
   TeamRuntimePrepareResult,
   TeamRuntimeStopInput,
 } from './runtime';
+import type { SshConnectionManager } from '@main/services/infrastructure/SshConnectionManager';
 
 /**
  * Kill a team CLI process using SIGKILL (uncatchable).
@@ -248,6 +248,36 @@ import type {
  */
 function killTeamProcess(child: ChildProcess | null | undefined): void {
   killProcessTree(child, 'SIGKILL');
+}
+
+function buildRemoteKillProcessTreeCommand(pid: number): string {
+  const safePid = Number.isFinite(pid) && pid > 0 ? Math.trunc(pid) : 0;
+  return [
+    'sh -lc',
+    quoteShellArg(
+      [
+        `root=${safePid}`,
+        'pids="$root"',
+        'frontier="$root"',
+        'while [ -n "$frontier" ]; do',
+        '  next=""',
+        '  for parent in $frontier; do',
+        '    children=$(pgrep -P "$parent" 2>/dev/null || true)',
+        '    if [ -n "$children" ]; then',
+        '      next="$next $children"',
+        '      pids="$pids $children"',
+        '    fi',
+        '  done',
+        '  frontier="$next"',
+        'done',
+        'kill -9 $pids 2>/dev/null || true',
+      ].join('\n')
+    ),
+  ].join(' ');
+}
+
+function quoteShellArg(value: string): string {
+  return `'${value.replace(/'/g, `'\\''`)}'`;
 }
 
 function buildRelayInboxView(messages: RelayInboxMessage[]): RelayInboxMessageView[] {
@@ -2811,13 +2841,18 @@ function buildNativeCreateBootstrapPrompt(
     members: effectiveMembers,
   });
   const spawnInstructions = effectiveMembers.length
-    ? effectiveMembers
-        .map((member) => {
+    ? [
+        'Spawn teammates/employees strictly one at a time. Do not issue multiple Agent tool calls in the same assistant response.',
+        'Wait for each Agent tool result before spawning the next teammate/employee. Only after that result is returned may you start the next one.',
+        'After each successful Agent tool result, wait only 3 seconds before spawning the next teammate/employee.',
+        'If any API retry, rate-limit, or overloaded message appears, stop spawning more teammates/employees and wait for the retry/backoff to settle before continuing.',
+        'Never batch, fan out, or parallelize teammate/employee startup. This serial launch avoids request-rate bursts.',
+        ...effectiveMembers.map((member, index) => {
           const prompt = buildMemberSpawnPrompt(member, displayName, request.teamName, leadName);
           const agentArgs = buildAgentToolArgsSuffix(member);
-          return `Spawn teammate "${member.name}" with the Agent tool using team_name="${request.teamName}", name="${member.name}", subagent_type="general-purpose"${agentArgs}, and this exact prompt:\n${indentMultiline(prompt, '  ')}`;
-        })
-        .join('\n\n')
+          return `Step ${index + 1}: Spawn teammate "${member.name}" with the Agent tool using team_name="${request.teamName}", name="${member.name}", subagent_type="general-purpose"${agentArgs}, and this exact prompt:\n${indentMultiline(prompt, '  ')}`;
+        }),
+      ].join('\n\n')
     : 'No teammates are configured for this team. Do not spawn teammates.';
   const userPromptBlock = initialUserPrompt.trim()
     ? `\nInitial user request after bootstrap is stable:\n${initialUserPrompt.trim()}\n`
@@ -3189,6 +3224,25 @@ function buildDeterministicLaunchHydrationPrompt(
     isSolo,
     members,
   });
+  const spawnInstructions = members.length
+    ? [
+        'Reconnect configured teammates/employees strictly one at a time. Do not issue multiple Agent tool calls in the same assistant response.',
+        'Wait for each Agent tool result before reconnecting the next teammate/employee. Only after that result is returned may you start the next one.',
+        'After each successful Agent tool result, wait only 3 seconds before reconnecting the next teammate/employee.',
+        'If any API retry, rate-limit, or overloaded message appears, stop reconnecting more teammates/employees and wait for the retry/backoff to settle before continuing.',
+        'Never batch, fan out, or parallelize teammate/employee startup. This serial reconnect avoids request-rate bursts.',
+        ...members.map((member, index) => {
+          const prompt = buildMemberSpawnPrompt(
+            member,
+            request.teamName,
+            request.teamName,
+            leadName
+          );
+          const agentArgs = buildAgentToolArgsSuffix(member);
+          return `Step ${index + 1}: Reconnect teammate "${member.name}" with the Agent tool using team_name="${request.teamName}", name="${member.name}", subagent_type="general-purpose"${agentArgs}, and this exact prompt:\n${indentMultiline(prompt, '  ')}`;
+        }),
+      ].join('\n\n')
+    : '';
   const nextSteps = isSolo
     ? `This reconnect/bootstrap step has already been completed deterministically by the runtime.
 Do NOT call TeamCreate.
@@ -3200,11 +3254,12 @@ ${
     ? 'Do NOT create or update any new task in this turn - wait for the next normal operating turn before translating those instructions into board work.'
     : 'Do NOT create, assign, or delegate any new task in this turn. If the board is empty, stay silent and wait for a fresh user instruction.'
 }`
-    : `This reconnect/bootstrap step has already been completed deterministically by the runtime.
-Do NOT call TeamCreate.
-Do NOT use Agent to spawn or restore teammates.
-Do NOT repeat the launch summary.
-Use this turn only to refresh context and review the current board snapshot.
+    : `The desktop app has initialized the lead config, but teammates must be reconnected in this turn.
+Do NOT call TeamCreate, TeamDelete, TodoWrite, or any cleanup tool.
+Reconnect the configured teammates now:
+${spawnInstructions}
+
+After the configured teammates have been reconnected, do not repeat the launch summary. Review the current board snapshot.
 ${
   hasOriginalUserPrompt
     ? 'Do NOT create or assign any new task in this turn - wait for the next normal operating turn before translating those instructions into board work.'
@@ -3223,7 +3278,7 @@ ${nextSteps}
 ${taskBoardSnapshot}
 ${persistentContext}
 
-If there is nothing else to say after refreshing context, reply with exactly one word: "OK".`;
+${isSolo ? 'If there is nothing else to say after refreshing context, reply with exactly one word: "OK".' : 'After all Agent tool results have returned and there is nothing else to say, reply with exactly one word: "OK".'}`;
 }
 
 function buildGeminiPostLaunchHydrationPrompt(
@@ -3900,10 +3955,10 @@ export class TeamProvisioningService {
     Promise<OpenCodeMemberInboxRelayResult>
   >();
   private readonly openCodePromptDeliveryWatchdogTimers = new Map<string, NodeJS.Timeout>();
-  private readonly openCodePromptDeliveryWatchdogQueue: Array<{
+  private readonly openCodePromptDeliveryWatchdogQueue: {
     teamName: string;
     run: () => Promise<void>;
-  }> = [];
+  }[] = [];
   private openCodePromptDeliveryWatchdogInFlight = 0;
   private openCodePromptDeliveryWatchdogDisabledLogged = false;
   private readonly openCodePromptDeliveryWatchdogInFlightByTeam = new Map<string, number>();
@@ -3971,6 +4026,9 @@ export class TeamProvisioningService {
       this.membersMetaStore
     );
     this.transcriptProjectResolver = new TeamTranscriptProjectResolver(this.configReader);
+    setTimeout(() => {
+      this.killEmptyOrphanedClaudeSwarmTmuxServers('startup');
+    }, 5_000).unref?.();
   }
 
   setRuntimeAdapterRegistry(registry: TeamRuntimeAdapterRegistry | null): void {
@@ -3982,7 +4040,7 @@ export class TeamProvisioningService {
   }
 
   private isRemoteExecutionTarget(
-    target: TeamCreateRequest['executionTarget'] | TeamLaunchRequest['executionTarget']
+    target: TeamCreateRequest['executionTarget']
   ): target is { type: 'ssh'; machineId: string; cwd?: string } {
     return (
       target?.type === 'ssh' && typeof target.machineId === 'string' && target.machineId.length > 0
@@ -4417,7 +4475,7 @@ export class TeamProvisioningService {
         selectedFastMode: params.request.fastMode,
         providerFastModeDefault: getAnthropicFastModeDefault(),
       });
-      const requestedEffort = params.request.effort ?? selection.defaultEffort ?? null;
+      const requestedEffort = params.request.effort ?? null;
       const resolvedEffort =
         requestedEffort &&
         !isAnthropicOneMillionModel(selection.resolvedLaunchModel ?? resolvedLaunchModel) &&
@@ -4523,17 +4581,6 @@ export class TeamProvisioningService {
           `${params.actorLabel} resolves to Anthropic model "${resolvedLaunchModel}", but the current runtime does not list it as launchable.`
         );
       }
-      if (
-        params.effort &&
-        !isAnthropicOneMillionModel(resolvedLaunchModel) &&
-        !selection.supportedEfforts.includes(params.effort)
-      ) {
-        const modelLabel = selection.displayName ?? resolvedLaunchModel;
-        throw new Error(
-          `${params.actorLabel} 使用了 Anthropic 推理强度“${params.effort}”，但 ${modelLabel} 在当前运行时中不支持该设置。`
-        );
-      }
-
       const fastResolution = resolveAnthropicFastMode({
         selection,
         selectedFastMode: params.fastMode,
@@ -13970,7 +14017,7 @@ export class TeamProvisioningService {
         (config) => config?.members?.find((member) => isLeadMember(member))?.name?.trim() || null
       )
       .catch(() => null);
-    if (leadName && inboxName.trim().toLowerCase() === leadName.toLowerCase()) {
+    if (inboxName.trim().toLowerCase() === leadName?.toLowerCase()) {
       if (await this.isOpenCodeRuntimeRecipient(teamName, inboxName)) {
         const diagnostic =
           'opencode_lead_runtime_session_missing: OpenCode lead inbox relay is unsupported in v1; leaving inbox unread for durable retry/diagnostics.';
@@ -14853,7 +14900,7 @@ export class TeamProvisioningService {
         const externalTargets = new Map<string, NonNullable<InboxMessage['externalChannel']>>();
         for (const message of batch) {
           const channel = message.externalChannel;
-          if (!channel || channel.provider !== 'feishu') continue;
+          if (channel?.provider !== 'feishu') continue;
           externalTargets.set(`${channel.channelId}:${channel.chatId}`, channel);
         }
         for (const channel of externalTargets.values()) {
@@ -18174,7 +18221,7 @@ export class TeamProvisioningService {
       await this.ensureRemoteMachineConnected(remoteRun.machineId);
       if (this.sshConnectionManager && remoteRun.pid) {
         await this.sshConnectionManager
-          .execOnMachine(remoteRun.machineId, `kill ${remoteRun.pid}`)
+          .execOnMachine(remoteRun.machineId, buildRemoteKillProcessTreeCommand(remoteRun.pid))
           .catch(() => undefined);
       }
       await this.writeRemoteJson(
@@ -18522,6 +18569,77 @@ export class TeamProvisioningService {
     this.killOrphanedTeamAgentProcesses(teamName);
   }
 
+  private killEmptyOrphanedClaudeSwarmTmuxServers(reason: string): void {
+    if (process.platform === 'win32') {
+      return;
+    }
+
+    let output = '';
+    try {
+      output = execFileSync('ps', ['-ax', '-o', 'pid=,ppid=,command='], {
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore'],
+      });
+    } catch {
+      return;
+    }
+
+    const servers: { pid: number; socketName: string }[] = [];
+    for (const line of output.split('\n')) {
+      const match = /^\s*(\d+)\s+(\d+)\s+(.*)$/.exec(line);
+      if (!match) continue;
+      const pid = Number.parseInt(match[1] ?? '', 10);
+      const ppid = Number.parseInt(match[2] ?? '', 10);
+      const command = match[3] ?? '';
+      if (!Number.isFinite(pid) || !Number.isFinite(ppid) || ppid !== 1) {
+        continue;
+      }
+      const socketMatch = /\btmux\s+-L\s+(claude-swarm-[^\s]+)\s+new-session\b/.exec(command);
+      if (socketMatch?.[1]) {
+        servers.push({ pid, socketName: socketMatch[1] });
+      }
+    }
+
+    for (const server of servers) {
+      if (this.tmuxServerHasSessions(server.socketName)) {
+        continue;
+      }
+      try {
+        execFileSync('tmux', ['-L', server.socketName, 'kill-server'], {
+          stdio: 'ignore',
+        });
+        logger.info(
+          `Killed empty orphaned Claude swarm tmux server ${server.socketName} (${server.pid}) during ${reason}`
+        );
+      } catch {
+        try {
+          killProcessByPid(server.pid);
+          logger.info(
+            `Killed empty orphaned Claude swarm tmux process ${server.socketName} (${server.pid}) during ${reason}`
+          );
+        } catch (error) {
+          logger.debug(
+            `Failed to kill empty orphaned Claude swarm tmux server ${server.socketName} (${server.pid}): ${
+              error instanceof Error ? error.message : String(error)
+            }`
+          );
+        }
+      }
+    }
+  }
+
+  private tmuxServerHasSessions(socketName: string): boolean {
+    try {
+      const sessions = execFileSync('tmux', ['-L', socketName, 'list-sessions'], {
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore'],
+      });
+      return sessions.trim().length > 0;
+    } catch {
+      return false;
+    }
+  }
+
   private readPersistedTeamProjectPath(teamName: string): string | null {
     const configPath = path.join(getTeamsBasePath(), teamName, 'config.json');
     try {
@@ -18589,7 +18707,7 @@ export class TeamProvisioningService {
       ? this.runs.get(this.getTrackedRunId(teamName)!)?.child?.pid
       : undefined;
     const pids = new Set<number>();
-    const rows: Array<{ pid: number; command: string }> = [];
+    const rows: { pid: number; command: string }[] = [];
 
     if (process.platform === 'win32') {
       try {
@@ -18674,6 +18792,7 @@ export class TeamProvisioningService {
         this.stopPersistentTeamMembers(teamName);
       }
     }
+    this.killEmptyOrphanedClaudeSwarmTmuxServers('shutdown');
   }
 
   /**
@@ -20714,9 +20833,9 @@ export class TeamProvisioningService {
 
       if (hasSpawnFailures) {
         const failureNotice = [
-          `Системное замечание: часть команды не запустилась.`,
-          `Не стартовали тиммейты: ${failedSpawnMembers.map((member) => `@${member.name}`).join(', ')}.`,
-          `Не считай их доступными, пока их запуск не будет повторён успешно.`,
+          `系统提醒：部分团队成员未启动。`,
+          `未启动的成员：${failedSpawnMembers.map((member) => `@${member.name}`).join(', ')}。`,
+          `在这些成员被重新成功启动前，不要把他们视为可用成员。`,
         ].join(' ');
         await this.sendMessageToRun(run, failureNotice).catch((error: unknown) =>
           logger.warn(
@@ -20892,9 +21011,9 @@ export class TeamProvisioningService {
 
     if (hasSpawnFailures) {
       const failureNotice = [
-        `Системное замечание: часть команды не запустилась.`,
-        `Не стартовали тиммейты: ${failedSpawnMembers.map((member) => `@${member.name}`).join(', ')}.`,
-        `Не считай их доступными, пока их запуск не будет повторён успешно.`,
+        `系统提醒：部分团队成员未启动。`,
+        `未启动的成员：${failedSpawnMembers.map((member) => `@${member.name}`).join(', ')}。`,
+        `在这些成员被重新成功启动前，不要把他们视为可用成员。`,
       ].join(' ');
       await this.sendMessageToRun(run, failureNotice).catch((error: unknown) =>
         logger.warn(
@@ -23670,7 +23789,7 @@ export class TeamProvisioningService {
         {
           protocolVersion: '2024-11-05',
           capabilities: {},
-          clientInfo: { name: 'multi-agent-teams', version: '1.0.0' },
+          clientInfo: { name: 'hermit', version: '1.0.0' },
         },
         MCP_PREFLIGHT_INITIALIZE_TIMEOUT_MS
       );

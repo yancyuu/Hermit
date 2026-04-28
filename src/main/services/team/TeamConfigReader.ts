@@ -2,8 +2,8 @@ import { FileReadTimeoutError, readFileUtf8WithTimeout } from '@main/utils/fsRea
 import { getTeamsBasePath } from '@main/utils/pathDecoder';
 import {
   CANONICAL_LEAD_MEMBER_NAME,
-  LEGACY_LEAD_MEMBER_NAME,
   isLeadMember,
+  LEGACY_LEAD_MEMBER_NAME,
 } from '@shared/utils/leadDetection';
 import { createLogger } from '@shared/utils/logger';
 import {
@@ -13,6 +13,7 @@ import {
 import * as fs from 'fs';
 import * as path from 'path';
 
+import { atomicWriteAsync } from './atomicWrite';
 import { readBootstrapLaunchSnapshot } from './TeamBootstrapStateReader';
 import { getTeamFsWorkerClient } from './TeamFsWorkerClient';
 import { normalizePersistedLaunchSnapshot } from './TeamLaunchStateEvaluator';
@@ -25,7 +26,6 @@ import {
 } from './TeamLaunchSummaryProjection';
 import { TeamMembersMetaStore } from './TeamMembersMetaStore';
 import { TeamMetaStore } from './TeamMetaStore';
-import { atomicWriteAsync } from './atomicWrite';
 
 import type {
   TeamConfig,

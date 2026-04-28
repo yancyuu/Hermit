@@ -349,7 +349,7 @@ const SaveStatusBadge = ({
         style={{ backgroundColor: 'rgba(96, 165, 250, 0.15)', color: '#60a5fa' }}
       >
         <Loader2 className="size-3 animate-spin" />
-        Saving...
+        保存中...
       </span>
     );
   }
@@ -361,7 +361,7 @@ const SaveStatusBadge = ({
         style={{ backgroundColor: 'rgba(74, 222, 128, 0.15)', color: '#4ade80' }}
       >
         <Check className="size-3" />
-        Saved
+        已保存
       </span>
     );
   }

@@ -172,14 +172,14 @@ export const SkillEditorDialog = ({
     const nextLicense = item?.license ?? '';
     const nextCompatibility = item?.compatibility ?? '';
     const nextInvocationMode = item?.invocationMode ?? 'auto';
-    const nextWhenToUse = 'Use this skill when the task matches these conditions.';
-    const nextSteps = '1. Describe the first step.\n2. Describe the second step.';
-    const nextNotes = '- Add caveats, review rules, or references.';
+    const nextWhenToUse = '当任务符合这些条件时使用这个技能。';
+    const nextSteps = '1. 描述第一步。\n2. 描述第二步。';
+    const nextNotes = '- 添加注意事项、评审规则或参考资料。';
     const nextRawContent =
       detail?.rawContent ??
       buildSkillTemplate({
-        name: nextName || 'New Skill',
-        description: nextDescription || 'Describe what this skill helps with.',
+        name: nextName || '新技能',
+        description: nextDescription || '描述这个技能能帮助完成什么。',
         license: nextLicense,
         compatibility: nextCompatibility,
         invocationMode: nextInvocationMode,
@@ -188,17 +188,15 @@ export const SkillEditorDialog = ({
         notes: nextNotes,
       });
     const rawInput = readSkillTemplateContent(nextRawContent);
-    const suggestedFolderName = toSuggestedSkillFolderName(nextName || 'New Skill');
+    const suggestedFolderName = toSuggestedSkillFolderName(nextName || '新技能');
     const hasCustomMarkdown = mode === 'edit' && rawInput.hasUnstructuredBody;
 
     setScope(nextScope);
     setRootKind(nextRootKind);
     setFolderName(nextFolderName || suggestedFolderName || nextName || '');
     setFolderNameEdited(Boolean(item?.folderName));
-    setName(rawInput.name || nextName || 'New Skill');
-    setDescription(
-      rawInput.description || nextDescription || 'Describe what this skill helps with.'
-    );
+    setName(rawInput.name || nextName || '新技能');
+    setDescription(rawInput.description || nextDescription || '描述这个技能能帮助完成什么。');
     setLicense(rawInput.license ?? nextLicense);
     setCompatibility(rawInput.compatibility ?? nextCompatibility);
     setInvocationMode(rawInput.invocationMode ?? nextInvocationMode);
@@ -311,12 +309,12 @@ export const SkillEditorDialog = ({
   const title = mode === 'create' ? '创建技能' : '编辑技能';
   const descriptionText =
     mode === 'create'
-      ? 'Describe the workflow in plain language, review the files that will be created, then save it.'
-      : 'Update this skill, review the resulting file changes, then save it.';
+      ? '用自然语言描述工作流，检查即将创建的文件，然后保存。'
+      : '更新这个技能，检查生成的文件变更，然后保存。';
 
   function validateBeforeReview(): string | null {
     if (!name.trim()) {
-      return 'Add a skill name so people know what this workflow is for.';
+      return '请添加技能名称，方便识别这个工作流的用途。';
     }
     if (!description.trim()) {
       return '请添加简短描述，说明这个技能能帮助完成什么。';
@@ -412,16 +410,15 @@ export const SkillEditorDialog = ({
             <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
               <div className="space-y-5">
                 <section className="space-y-1">
-                  <h3 className="text-sm font-semibold text-text">1. Basics</h3>
+                  <h3 className="text-sm font-semibold text-text">1. 基础信息</h3>
                   <p className="text-sm text-text-muted">
-                    Give this skill a clear name, choose who can use it, and decide where it should
-                    live.
+                    给技能起一个清晰的名称，选择可用范围，并决定保存位置。
                   </p>
                 </section>
 
                 <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                   <div className="space-y-2">
-                    <Label htmlFor="skill-scope">Who can use it</Label>
+                    <Label htmlFor="skill-scope">谁可以使用</Label>
                     <Select
                       value={scope}
                       onValueChange={(value) => setScope(value as 'user' | 'project')}
@@ -431,11 +428,11 @@ export const SkillEditorDialog = ({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="user">User</SelectItem>
+                        <SelectItem value="user">个人</SelectItem>
                         <SelectItem value="project" disabled={!canUseProjectScope}>
                           {canUseProjectScope
-                            ? `Project: ${projectLabel ?? projectPath}`
-                            : 'Project unavailable'}
+                            ? `项目：${projectLabel ?? projectPath}`
+                            : '当前无可用项目'}
                         </SelectItem>
                       </SelectContent>
                     </Select>
@@ -455,7 +452,7 @@ export const SkillEditorDialog = ({
                         {visibleRootDefinitions.map((definition) => (
                           <SelectItem key={definition.rootKind} value={definition.rootKind}>
                             {definition.directoryName}
-                            {definition.audience === 'codex' ? ' - Codex only' : ' - Shared'}
+                            {definition.audience === 'codex' ? ' - 仅 Codex' : ' - 共享'}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -463,7 +460,7 @@ export const SkillEditorDialog = ({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="skill-folder">Folder name</Label>
+                    <Label htmlFor="skill-folder">文件夹名称</Label>
                     <Input
                       id="skill-folder"
                       value={folderName}
@@ -475,14 +472,13 @@ export const SkillEditorDialog = ({
                     />
                     {mode === 'create' && (
                       <p className="text-xs text-text-muted">
-                        We suggest this automatically from the skill name so review works right
-                        away.
+                        会根据技能名称自动建议，方便立即进入检查。
                       </p>
                     )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="skill-invocation">How it should be used</Label>
+                    <Label htmlFor="skill-invocation">使用方式</Label>
                     <Select
                       value={invocationMode}
                       onValueChange={(value) => {
@@ -495,8 +491,8 @@ export const SkillEditorDialog = ({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="auto">Can be used automatically</SelectItem>
-                        <SelectItem value="manual-only">Only when you ask for it</SelectItem>
+                        <SelectItem value="auto">可自动使用</SelectItem>
+                        <SelectItem value="manual-only">仅在你明确要求时使用</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -504,7 +500,7 @@ export const SkillEditorDialog = ({
 
                 <div className="grid gap-3 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="skill-name">Skill name</Label>
+                    <Label htmlFor="skill-name">技能名称</Label>
                     <Input
                       id="skill-name"
                       value={name}
@@ -512,15 +508,15 @@ export const SkillEditorDialog = ({
                         const nextValue = event.target.value;
                         setName(nextValue);
                         if (mode === 'create' && !folderNameEdited) {
-                          setFolderName(toSuggestedSkillFolderName(nextValue || 'New Skill'));
+                          setFolderName(toSuggestedSkillFolderName(nextValue || '新技能'));
                         }
                         applyFormToRawContent({ name: nextValue });
                       }}
-                      placeholder="Write concise skill name"
+                      placeholder="填写简洁的技能名称"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="skill-license">License</Label>
+                    <Label htmlFor="skill-license">许可证</Label>
                     <Input
                       id="skill-license"
                       value={license}
@@ -536,7 +532,7 @@ export const SkillEditorDialog = ({
 
                 <div className="grid gap-3 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="skill-description">Description</Label>
+                    <Label htmlFor="skill-description">描述</Label>
                     <Input
                       id="skill-description"
                       value={description}
@@ -545,11 +541,11 @@ export const SkillEditorDialog = ({
                         setDescription(nextValue);
                         applyFormToRawContent({ description: nextValue });
                       }}
-                      placeholder="What this skill helps with"
+                      placeholder="这个技能能帮助完成什么"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="skill-compatibility">Compatibility</Label>
+                    <Label htmlFor="skill-compatibility">兼容性</Label>
                     <Input
                       id="skill-compatibility"
                       value={compatibility}
@@ -566,16 +562,15 @@ export const SkillEditorDialog = ({
                 {!customMarkdownDetected && (
                   <>
                     <section className="space-y-1">
-                      <h3 className="text-sm font-semibold text-text">2. Instructions</h3>
+                      <h3 className="text-sm font-semibold text-text">2. 使用说明</h3>
                       <p className="text-sm text-text-muted">
-                        These sections generate the skill file for you, so you do not need to edit
-                        markdown unless you want to.
+                        这些字段会自动生成技能文件；除非需要精细控制，否则不用手动编辑 Markdown。
                       </p>
                     </section>
 
                     <div className="grid gap-3">
                       <div className="space-y-2">
-                        <Label htmlFor="skill-when-to-use">When to reach for this</Label>
+                        <Label htmlFor="skill-when-to-use">何时使用</Label>
                         <Textarea
                           id="skill-when-to-use"
                           value={whenToUse}
@@ -585,13 +580,13 @@ export const SkillEditorDialog = ({
                             setWhenToUse(nextValue);
                             applyFormToRawContent({ whenToUse: nextValue });
                           }}
-                          placeholder="Example: Use this when the task is a code review or bug triage request."
+                          placeholder="示例：当任务是代码审查或缺陷排查时使用。"
                           className="min-h-[88px]"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="skill-steps">Main steps to follow</Label>
+                        <Label htmlFor="skill-steps">主要步骤</Label>
                         <Textarea
                           id="skill-steps"
                           value={steps}
@@ -602,14 +597,14 @@ export const SkillEditorDialog = ({
                             applyFormToRawContent({ steps: nextValue });
                           }}
                           placeholder={
-                            '1. Inspect the relevant files.\n2. Explain the main risk first.\n3. Suggest the safest fix.'
+                            '1. 检查相关文件。\n2. 先说明主要风险。\n3. 建议最稳妥的修复方式。'
                           }
                           className="min-h-[120px]"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="skill-notes">Extra notes or guardrails</Label>
+                        <Label htmlFor="skill-notes">补充说明或约束</Label>
                         <Textarea
                           id="skill-notes"
                           value={notes}
@@ -619,13 +614,12 @@ export const SkillEditorDialog = ({
                             setNotes(nextValue);
                             applyFormToRawContent({ notes: nextValue });
                           }}
-                          placeholder="Example: Call out missing tests, regressions, and risky assumptions."
+                          placeholder="示例：指出缺失测试、回归风险和有风险的假设。"
                           className="min-h-[88px]"
                         />
                         {instructionsLocked && (
                           <p className="text-xs text-text-muted">
-                            Structured fields are locked because you switched to manual `SKILL.md`
-                            editing below.
+                            你已切换到下方手动编辑 `SKILL.md`，结构化字段已锁定。
                           </p>
                         )}
                       </div>
@@ -634,24 +628,23 @@ export const SkillEditorDialog = ({
                 )}
 
                 <section className="space-y-1">
-                  <h3 className="text-sm font-semibold text-text">3. Extra files</h3>
+                  <h3 className="text-sm font-semibold text-text">3. 额外文件</h3>
                   <p className="text-sm text-text-muted">
-                    Add supporting docs, scripts, or assets only if this skill really needs them.
+                    仅在技能确实需要时添加辅助文档、脚本或素材。
                   </p>
                 </section>
 
                 <div className="rounded-lg border border-border p-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="font-medium text-text">Optional files</p>
+                      <p className="font-medium text-text">可选文件</p>
                       <p className="mt-1 text-xs text-text-muted">
-                        Add starter files that will be included in the review and written together
-                        with `SKILL.md`.
+                        添加会随 `SKILL.md` 一起检查并写入的初始文件。
                       </p>
                     </div>
                     {mode === 'edit' && (
                       <Badge variant="outline" className="font-normal">
-                        Root and folder are locked for edits
+                        编辑时根目录和文件夹已锁定
                       </Badge>
                     )}
                   </div>
@@ -664,9 +657,9 @@ export const SkillEditorDialog = ({
                         className="mt-0.5"
                       />
                       <div>
-                        <p className="font-medium text-text">References</p>
+                        <p className="font-medium text-text">参考资料</p>
                         <p className="mt-1 text-xs text-text-muted">
-                          Add supporting docs, links, or examples the runtime can look at.
+                          添加运行时可以参考的文档、链接或示例。
                         </p>
                       </div>
                     </label>
@@ -678,10 +671,9 @@ export const SkillEditorDialog = ({
                         className="mt-0.5"
                       />
                       <div>
-                        <p className="font-medium text-text">Scripts</p>
+                        <p className="font-medium text-text">脚本</p>
                         <p className="mt-1 text-xs text-text-muted">
-                          Add helper commands or setup notes. Review carefully before sharing this
-                          skill.
+                          添加辅助命令或安装说明。分享前请仔细检查。
                         </p>
                       </div>
                     </label>
@@ -693,9 +685,9 @@ export const SkillEditorDialog = ({
                         className="mt-0.5"
                       />
                       <div>
-                        <p className="font-medium text-text">Assets</p>
+                        <p className="font-medium text-text">素材</p>
                         <p className="mt-1 text-xs text-text-muted">
-                          Add screenshots or bundled media only if they help explain the workflow.
+                          仅在有助于说明工作流时添加截图或媒体文件。
                         </p>
                       </div>
                     </label>
@@ -704,7 +696,7 @@ export const SkillEditorDialog = ({
                   {auxiliaryDraftFilePaths.length > 0 && (
                     <div className="mt-4">
                       <p className="text-xs font-medium uppercase tracking-wide text-text-muted">
-                        Added files:
+                        已添加文件：
                       </p>
                       <div className="mt-2 flex flex-wrap gap-2">
                         {auxiliaryDraftFilePaths.map((filePath) => (
@@ -727,14 +719,12 @@ export const SkillEditorDialog = ({
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <h3 className="text-sm font-semibold text-text">
-                        {customMarkdownDetected
-                          ? '2. SKILL.md editor'
-                          : '4. Advanced SKILL.md editor'}
+                        {customMarkdownDetected ? '2. SKILL.md 编辑器' : '4. 高级 SKILL.md 编辑器'}
                       </h3>
                       <p className="text-sm text-text-muted">
                         {customMarkdownDetected
-                          ? 'This skill uses a custom markdown format, so edit it directly here.'
-                          : 'Most people can skip this. Open it only if you want direct control over the raw markdown file.'}
+                          ? '这个技能使用自定义 Markdown 格式，请在这里直接编辑。'
+                          : '通常可以跳过这里；只有需要直接控制原始 Markdown 文件时再打开。'}
                       </p>
                     </div>
                     {!customMarkdownDetected && (
@@ -773,7 +763,7 @@ export const SkillEditorDialog = ({
                           }}
                         >
                           <RotateCcw className="mr-1.5 size-3.5" />
-                          Reset From Structured Fields
+                          从结构化字段重置
                         </Button>
                       </div>
 

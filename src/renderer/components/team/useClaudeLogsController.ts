@@ -156,12 +156,12 @@ function extractLastLogPreview(linesNewestFirst: string[]): LastLogPreview | nul
     for (let i = blocks.length - 1; i >= 0; i--) {
       const b = blocks[i];
       if (b.type === 'text' && typeof b.text === 'string' && b.text.trim()) {
-        return { type: 'output', label: 'Output', summary: b.text.trim().replace(/\n+/g, ' ') };
+        return { type: 'output', label: '输出', summary: b.text.trim().replace(/\n+/g, ' ') };
       }
       if (b.type === 'thinking' && typeof b.thinking === 'string' && b.thinking.trim()) {
         return {
           type: 'thinking',
-          label: 'Thinking',
+          label: '思考',
           summary: b.thinking.trim().replace(/\n+/g, ' '),
         };
       }

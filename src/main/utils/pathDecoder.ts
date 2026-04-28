@@ -544,8 +544,12 @@ export function getAppDataPath(): string {
 
 // ── App data root (Electron userData) ──
 
-const APP_DATA_FALLBACK_DIR_NAME = '.multi-agent-teams';
-const LEGACY_APP_DATA_FALLBACK_DIR_NAMES = ['.agent-teams-ai', '.claude-agent-teams-ui'] as const;
+const APP_DATA_FALLBACK_DIR_NAME = '.hermit';
+const LEGACY_APP_DATA_FALLBACK_DIR_NAMES = [
+  '.multi-agent-teams',
+  '.agent-teams-ai',
+  '.claude-agent-teams-ui',
+] as const;
 
 let appDataBasePathOverride: string | null = null;
 

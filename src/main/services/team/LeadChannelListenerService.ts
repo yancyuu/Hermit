@@ -1,23 +1,23 @@
-import { getAppDataPath, getTeamsBasePath } from '@main/utils/pathDecoder';
-import { createLogger } from '@shared/utils/logger';
 import * as Lark from '@larksuiteoapi/node-sdk';
+import { getAppDataPath, getTeamsBasePath } from '@main/utils/pathDecoder';
+import { CANONICAL_LEAD_MEMBER_NAME, isLeadMember } from '@shared/utils/leadDetection';
+import { createLogger } from '@shared/utils/logger';
 import * as fs from 'fs';
 import * as path from 'path';
 
 import { atomicWriteAsync } from './atomicWrite';
-import { TeamInboxWriter } from './TeamInboxWriter';
-import { TeamConfigReader } from './TeamConfigReader';
 import { withFileLock } from './fileLock';
+import { TeamConfigReader } from './TeamConfigReader';
+import { TeamInboxWriter } from './TeamInboxWriter';
 
 import type {
+  GlobalLeadChannelSnapshot,
   LeadChannelConfig,
   LeadChannelDefinition,
-  GlobalLeadChannelSnapshot,
   LeadChannelSnapshot,
   LeadChannelStatus,
   SaveLeadChannelConfigRequest,
 } from '@shared/types';
-import { CANONICAL_LEAD_MEMBER_NAME, isLeadMember } from '@shared/utils/leadDetection';
 
 const logger = createLogger('Service:LeadChannelListener');
 
@@ -248,7 +248,7 @@ export class LeadChannelListenerService {
       appSecret,
       loggerLevel: Lark.LoggerLevel.info,
       autoReconnect: true,
-      source: 'multi-agent-teams',
+      source: 'hermit',
       onReady: () => {
         this.clearConnectingHint(teamName, channel.id);
         this.patchStatus(teamName, channel.id, {

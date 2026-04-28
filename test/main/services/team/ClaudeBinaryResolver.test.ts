@@ -72,7 +72,7 @@ describe('ClaudeBinaryResolver', () => {
     });
     process.cwd = vi.fn(() => workspaceRoot);
     Object.defineProperty(process, 'resourcesPath', {
-      value: '/Applications/Multi Agent Teams.app/Contents/Resources',
+      value: '/Applications/Hermit.app/Contents/Resources',
       configurable: true,
       writable: true,
     });
@@ -200,7 +200,7 @@ describe('ClaudeBinaryResolver', () => {
 
   it('prefers the bundled runtime binary for packaged agent_teams_orchestrator builds', async () => {
     const expectedBinary = path.join(
-      '/Applications/Multi Agent Teams.app/Contents/Resources',
+      '/Applications/Hermit.app/Contents/Resources',
       'runtime',
       'claude-multimodel'
     );

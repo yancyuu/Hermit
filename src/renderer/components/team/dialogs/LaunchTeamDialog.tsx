@@ -57,6 +57,7 @@ import {
   normalizeExplicitTeamModelForUi,
 } from '@renderer/utils/teamModelAvailability';
 import { getTeamProviderLabel as getCatalogTeamProviderLabel } from '@renderer/utils/teamModelCatalog';
+import { resolveTeamEffortForLaunch } from '@renderer/utils/teamEffortOptions';
 import { isEphemeralProjectPath } from '@shared/utils/ephemeralProjectPath';
 import { CANONICAL_LEAD_MEMBER_NAME, isLeadMemberName } from '@shared/utils/leadDetection';
 import { migrateProviderBackendId } from '@shared/utils/providerBackend';
@@ -120,6 +121,11 @@ import {
   useTmuxRuntimeReadiness,
 } from './teammateRuntimeCompatibility';
 import { TeammateRuntimeCompatibilityNotice } from './TeammateRuntimeCompatibilityNotice';
+import {
+  buildLaunchExtraCliArgs,
+  buildTeammateModeCliArgs,
+  normalizeTeammateLaunchMode,
+} from './teammateLaunchMode';
 import {
   computeEffectiveTeamModel,
   formatTeamModelSummary,
@@ -378,7 +384,7 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
   );
   const [selectedEffort, setSelectedEffortRaw] = useState(() => {
     const stored = localStorage.getItem('team:lastSelectedEffort');
-    return stored === null ? 'medium' : stored;
+    return stored === null ? '' : stored;
   });
   const [selectedFastMode, setSelectedFastModeRaw] = useState<TeamFastMode>(getStoredTeamFastMode);
   const [anthropicRuntimeNotice, setAnthropicRuntimeNotice] = useState<string | null>(null);
@@ -418,6 +424,11 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
   );
   const [customArgs, setCustomArgsRaw] = useState(
     () => localStorage.getItem(`team:lastCustomArgs:${effectiveTeamName}`) ?? ''
+  );
+  const [teammateLaunchMode, setTeammateLaunchModeRaw] = useState(() =>
+    normalizeTeammateLaunchMode(
+      localStorage.getItem(`team:lastTeammateLaunchMode:${effectiveTeamName}`)
+    )
   );
 
   // ---------------------------------------------------------------------------
@@ -571,6 +582,10 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
     setCustomArgsRaw(value);
     localStorage.setItem(`team:lastCustomArgs:${effectiveTeamName}`, value);
   };
+  const setTeammateLaunchMode = (value: typeof teammateLaunchMode): void => {
+    setTeammateLaunchModeRaw(value);
+    localStorage.setItem(`team:lastTeammateLaunchMode:${effectiveTeamName}`, value);
+  };
 
   const setSelectedProviderId = (value: TeamProviderId): void => {
     const normalizedValue = normalizeLeadProviderForMode(value, multimodelEnabled);
@@ -720,7 +735,7 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
       );
       setSelectedProviderIdRaw(storedProviderId);
       setSelectedModelRaw(getStoredTeamModel(storedProviderId));
-      setSelectedEffortRaw('medium');
+      setSelectedEffortRaw('');
       setSelectedFastModeRaw(getStoredTeamFastMode());
       setSavedLaunchProviderBackendId(null);
       setScheduleHydrationKey(null);
@@ -861,7 +876,9 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
         leadProviderId: selectedProviderId,
         leadProviderBackendId: selectedProviderBackendId,
         members: isLaunchMode ? effectiveMemberDrafts : [],
-        extraCliArgs: isLaunchMode ? customArgs : undefined,
+        extraCliArgs: isLaunchMode
+          ? buildLaunchExtraCliArgs(customArgs, teammateLaunchMode)
+          : undefined,
         tmuxStatus: tmuxRuntime.status,
         tmuxStatusLoading: tmuxRuntime.loading,
         tmuxStatusError: tmuxRuntime.error,
@@ -872,6 +889,7 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
       isLaunchMode,
       selectedProviderBackendId,
       selectedProviderId,
+      teammateLaunchMode,
       tmuxRuntime.error,
       tmuxRuntime.loading,
       tmuxRuntime.status,
@@ -1559,10 +1577,11 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
       runtimeProviderStatusById.get(selectedProviderId)
     );
     if (model) args.push('--model', model);
-    const effectiveEffort =
-      selectedProviderId === 'anthropic'
-        ? selectedEffort || anthropicRuntimeSelection?.defaultEffort || ''
-        : selectedEffort;
+    const effectiveEffort = resolveTeamEffortForLaunch({
+      providerId: selectedProviderId,
+      selectedEffort,
+      anthropicSelection: anthropicRuntimeSelection,
+    });
     if (effectiveEffort) args.push('--effort', effectiveEffort);
     if (selectedProviderId === 'anthropic') {
       const fastSettings = anthropicFastModeResolution?.resolvedFastMode
@@ -1570,17 +1589,19 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
         : { fastMode: false };
       args.push('--settings', JSON.stringify(fastSettings));
     }
+    args.push(...buildTeammateModeCliArgs(teammateLaunchMode));
     if (!clearContext) args.push('--resume', '<previous>');
     return args;
   }, [
     anthropicFastModeResolution?.resolvedFastMode,
-    anthropicRuntimeSelection?.defaultEffort,
+    anthropicRuntimeSelection,
     isLaunchMode,
     skipPermissions,
     selectedModel,
     limitContext,
     selectedEffort,
     selectedProviderId,
+    teammateLaunchMode,
     clearContext,
     runtimeProviderStatusById,
   ]);
@@ -1596,9 +1617,9 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
     if (worktreeMemberCount > 0) {
       summary.push(`${worktreeMemberCount} 个成员使用独立 worktree`);
     }
-    summary.push(`提供商：${getProviderLabel(selectedProviderId)}`);
-    if (selectedModel) summary.push(`模型：${selectedModel}`);
-    if (selectedEffort) summary.push(`推理强度：${selectedEffort}`);
+    summary.push(`Provider: ${getProviderLabel(selectedProviderId)}`);
+    if (selectedModel) summary.push(`Model: ${selectedModel}`);
+    if (selectedEffort) summary.push(`Effort: ${selectedEffort}`);
     if (selectedProviderId === 'anthropic') {
       if (selectedFastMode === 'on') summary.push('快速模式');
       else if (selectedFastMode === 'off') summary.push('快速模式关闭');
@@ -1608,6 +1629,9 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
     }
     if (selectedProviderId === 'anthropic' && limitContext) summary.push('上下文限制为 200K');
     if (skipPermissions) summary.push('自动批准工具');
+    summary.push(
+      teammateLaunchMode === 'in-process' ? 'Members: Claude 子 agent' : 'Members: tmux 独立进程'
+    );
     if (clearContext) summary.push('全新会话');
     if (worktreeEnabled && worktreeName.trim()) summary.push(`Worktree：${worktreeName.trim()}`);
     if (customArgs.trim()) summary.push('自定义 CLI 参数');
@@ -1623,6 +1647,7 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
     anthropicProviderFastModeDefault,
     limitContext,
     skipPermissions,
+    teammateLaunchMode,
     clearContext,
     worktreeEnabled,
     worktreeName,
@@ -1821,6 +1846,11 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
       try {
         if (isLaunchMode) {
           const nextMembers = buildMembersFromDrafts(effectiveMemberDrafts);
+          const launchEffort = resolveTeamEffortForLaunch({
+            providerId: selectedProviderId,
+            selectedEffort,
+            anthropicSelection: anthropicRuntimeSelection,
+          });
           const launchRequest: TeamLaunchRequest = {
             teamName: effectiveTeamName,
             cwd: effectiveCwd,
@@ -1843,13 +1873,13 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
               selectedProviderId,
               runtimeProviderStatusById.get(selectedProviderId)
             ),
-            effort: (selectedEffort as EffortLevel) || undefined,
+            effort: launchEffort,
             fastMode: selectedFastMode,
             limitContext,
             clearContext: clearContext || undefined,
             skipPermissions,
             worktree: worktreeEnabled && worktreeName.trim() ? worktreeName.trim() : undefined,
-            extraCliArgs: customArgs.trim() || undefined,
+            extraCliArgs: buildLaunchExtraCliArgs(customArgs, teammateLaunchMode),
           };
           if (isRelaunch) {
             await props.onRelaunch(launchRequest, nextMembers);
@@ -1877,13 +1907,11 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
             selectedProviderId,
             runtimeProviderStatusById.get(selectedProviderId)
           );
-          const explicitScheduleEffort = selectedEffort
-            ? (selectedEffort as EffortLevel)
-            : undefined;
-          const scheduleEffort =
-            selectedProviderId === 'anthropic'
-              ? (explicitScheduleEffort ?? anthropicRuntimeSelection?.defaultEffort ?? undefined)
-              : explicitScheduleEffort;
+          const scheduleEffort = resolveTeamEffortForLaunch({
+            providerId: selectedProviderId,
+            selectedEffort,
+            anthropicSelection: anthropicRuntimeSelection,
+          });
           const launchConfig: ScheduleLaunchConfig = {
             cwd: effectiveCwd,
             prompt: promptDraft.value.trim(),
@@ -2022,7 +2050,11 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
       }}
     >
       <DialogContent
-        className={isSchedule ? 'max-h-[90vh] max-w-3xl overflow-y-auto' : 'max-w-3xl'}
+        className={
+          isSchedule
+            ? 'max-h-[90vh] w-[calc(100vw-2rem)] max-w-3xl overflow-y-auto sm:w-[48rem]'
+            : 'w-[calc(100vw-2rem)] max-w-3xl sm:w-[48rem]'
+        }
       >
         <DialogHeader>
           <DialogTitle className="text-sm">{dialogTitle}</DialogTitle>
@@ -2424,6 +2456,8 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
                   onWorktreeNameChange={setWorktreeName}
                   customArgs={customArgs}
                   onCustomArgsChange={setCustomArgs}
+                  teammateLaunchMode={teammateLaunchMode}
+                  onTeammateLaunchModeChange={setTeammateLaunchMode}
                 />
               </div>
             </OptionalSettingsSection>

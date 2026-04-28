@@ -69,10 +69,11 @@ describe('electron userData migration', () => {
   }
 
   it('derives legacy candidates beside the current Electron userData directory', () => {
-    const currentPath = path.join('/Users/me/Library/Application Support', 'Multi Agent Teams');
+    const currentPath = path.join('/Users/me/Library/Application Support', 'Hermit');
     const parentPath = path.dirname(currentPath);
 
     expect(getLegacyElectronUserDataCandidates(currentPath)).toEqual([
+      path.join(parentPath, 'Multi Agent Teams'),
       path.join(parentPath, 'Agent Teams UI'),
       path.join(parentPath, 'Claude Agent Teams UI'),
       path.join(parentPath, 'claude-agent-teams-ui'),
@@ -84,7 +85,7 @@ describe('electron userData migration', () => {
   it('copies the complete legacy userData tree, including all current app-owned stores', async () => {
     const root = createTempRoot();
     const legacyPath = path.join(root, 'Claude Agent Teams UI');
-    const currentPath = path.join(root, 'Multi Agent Teams');
+    const currentPath = path.join(root, 'Hermit');
     fs.mkdirSync(currentPath, { recursive: true });
 
     const knownFiles = [
@@ -147,7 +148,7 @@ describe('electron userData migration', () => {
   it('does not merge legacy data into an already populated new userData directory', () => {
     const root = createTempRoot();
     const legacyPath = path.join(root, 'Claude Agent Teams UI');
-    const currentPath = path.join(root, 'Multi Agent Teams');
+    const currentPath = path.join(root, 'Hermit');
 
     writeFile(legacyPath, 'data/attachments/team-a/legacy.txt', 'legacy');
     writeFile(currentPath, 'data/attachments/team-a/current.txt', 'current');
@@ -168,7 +169,7 @@ describe('electron userData migration', () => {
   it('falls back to the legacy userData path for this run when copying fails', () => {
     const root = createTempRoot();
     const legacyPath = path.join(root, 'Claude Agent Teams UI');
-    const currentPath = path.join(root, 'Multi Agent Teams');
+    const currentPath = path.join(root, 'Hermit');
     const app = new FakeElectronApp(currentPath);
 
     writeFile(legacyPath, 'data/attachments/team-a/legacy.txt', 'legacy');
@@ -194,7 +195,7 @@ describe('electron userData migration', () => {
   it('uses the new populated userData path if another startup finishes migration first', () => {
     const root = createTempRoot();
     const legacyPath = path.join(root, 'Claude Agent Teams UI');
-    const currentPath = path.join(root, 'Multi Agent Teams');
+    const currentPath = path.join(root, 'Hermit');
     const app = new FakeElectronApp(currentPath);
 
     writeFile(legacyPath, 'data/attachments/team-a/legacy.txt', 'legacy');
@@ -220,7 +221,7 @@ describe('electron userData migration', () => {
   it('falls back to the legacy userData path when copying fails and new userData is still empty', () => {
     const root = createTempRoot();
     const legacyPath = path.join(root, 'Claude Agent Teams UI');
-    const currentPath = path.join(root, 'Multi Agent Teams');
+    const currentPath = path.join(root, 'Hermit');
     const app = new FakeElectronApp(currentPath);
 
     fs.mkdirSync(currentPath, { recursive: true });
@@ -248,7 +249,7 @@ describe('electron userData migration', () => {
   it('does not fallback when the new userData path is a file', () => {
     const root = createTempRoot();
     const legacyPath = path.join(root, 'Claude Agent Teams UI');
-    const currentPath = path.join(root, 'Multi Agent Teams');
+    const currentPath = path.join(root, 'Hermit');
 
     writeFile(legacyPath, 'data/attachments/team-a/legacy.txt', 'legacy');
     fs.writeFileSync(currentPath, 'not a directory', 'utf8');
@@ -267,7 +268,7 @@ describe('electron userData migration', () => {
   it('uses the lowercase package-name legacy directory when product-name legacy data is absent', () => {
     const root = createTempRoot();
     const legacyPath = path.join(root, 'claude-agent-teams-ui');
-    const currentPath = path.join(root, 'Multi Agent Teams');
+    const currentPath = path.join(root, 'Hermit');
 
     writeFile(legacyPath, 'mcp-configs/legacy.json', '{}');
 
@@ -287,7 +288,7 @@ describe('electron userData migration', () => {
     const root = createTempRoot();
     const emptyNewerLegacyPath = path.join(root, 'Claude Agent Teams UI');
     const populatedOlderLegacyPath = path.join(root, 'claude-devtools');
-    const currentPath = path.join(root, 'Multi Agent Teams');
+    const currentPath = path.join(root, 'Hermit');
 
     fs.mkdirSync(emptyNewerLegacyPath, { recursive: true });
     writeFile(populatedOlderLegacyPath, 'data/attachments/team-a/pre-release.txt', 'pre-release');
@@ -307,7 +308,7 @@ describe('electron userData migration', () => {
   it('uses the pre-1.0 claude-devtools legacy directory when newer legacy data is absent', () => {
     const root = createTempRoot();
     const legacyPath = path.join(root, 'claude-devtools');
-    const currentPath = path.join(root, 'Multi Agent Teams');
+    const currentPath = path.join(root, 'Hermit');
 
     writeFile(legacyPath, 'data/attachments/team-a/pre-release.txt', 'pre-release');
 

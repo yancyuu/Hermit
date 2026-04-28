@@ -19,7 +19,7 @@ export const ContextSwitchOverlay: React.FC = () => {
 
   // Format context label for display
   const contextLabel =
-    targetContextId === 'local' ? 'Local' : (targetContextId?.replace(/^ssh-/, '') ?? 'Unknown');
+    targetContextId === 'local' ? '本地' : (targetContextId?.replace(/^ssh-/, '') ?? '未知');
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-surface">
@@ -29,8 +29,8 @@ export const ContextSwitchOverlay: React.FC = () => {
 
         {/* Text */}
         <div className="flex flex-col items-center gap-1">
-          <p className="text-text">Switching to {contextLabel}...</p>
-          <p className="text-sm text-text-secondary">Loading workspace</p>
+          <p className="text-text">正在切换到 {contextLabel}...</p>
+          <p className="text-sm text-text-secondary">正在加载工作区</p>
         </div>
       </div>
     </div>

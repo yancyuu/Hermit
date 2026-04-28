@@ -1,5 +1,5 @@
 /**
- * Domain/business entity types for Multi Agent Teams.
+ * Domain/business entity types for Hermit.
  *
  * These types represent the application's domain model:
  * - Projects and sessions

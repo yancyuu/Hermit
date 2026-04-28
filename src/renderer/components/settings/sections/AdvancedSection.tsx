@@ -172,7 +172,7 @@ export const AdvancedSection = ({
         <div>
           <div className="flex items-center gap-3">
             <p className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
-              Multi Agent Teams
+              Hermit
             </p>
             {isElectron && (
               <button

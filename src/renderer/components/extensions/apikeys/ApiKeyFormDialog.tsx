@@ -40,8 +40,8 @@ interface ApiKeyFormDialogProps {
 type Scope = 'user' | 'project';
 
 const SCOPE_OPTIONS: { value: Scope; label: string }[] = [
-  { value: 'user', label: 'User (global)' },
-  { value: 'project', label: 'Project' },
+  { value: 'user', label: '个人（全局）' },
+  { value: 'project', label: '项目' },
 ];
 
 export const ApiKeyFormDialog = ({
@@ -165,11 +165,11 @@ export const ApiKeyFormDialog = ({
               <Key className="size-4 text-text-muted" />
             </div>
             <div>
-              <DialogTitle>{isEdit ? 'Edit API Key' : 'Add API Key'}</DialogTitle>
+              <DialogTitle>{isEdit ? '编辑 API Key' : '添加 API Key'}</DialogTitle>
               <DialogDescription>
                 {isEdit
-                  ? 'Update the key details. You must re-enter the value.'
-                  : 'Store an API key for auto-filling in MCP server installations.'}
+                  ? '更新 Key 信息。你需要重新输入 Key 值。'
+                  : '保存 API Key，用于安装 MCP 服务器时自动填充。'}
               </DialogDescription>
             </div>
           </div>
@@ -178,8 +178,7 @@ export const ApiKeyFormDialog = ({
         {storageStatus && storageStatus.encryptionMethod !== 'os-keychain' && (
           <div className="flex items-center gap-2 rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-amber-400">
             <AlertTriangle className="size-3.5 shrink-0" />
-            OS keychain unavailable — keys encrypted with AES-256 locally. Install gnome-keyring for
-            OS-level protection.
+            系统钥匙串不可用，Key 会用 AES-256 在本地加密。安装 gnome-keyring 可获得系统级保护。
           </div>
         )}
 
@@ -187,7 +186,7 @@ export const ApiKeyFormDialog = ({
           {/* Name */}
           <div className="space-y-1.5">
             <Label htmlFor="apikey-name" className="text-xs">
-              Name
+              名称
             </Label>
             <Input
               id="apikey-name"
@@ -202,7 +201,7 @@ export const ApiKeyFormDialog = ({
           {/* Env var name */}
           <div className="space-y-1.5">
             <Label htmlFor="apikey-envvar" className="text-xs">
-              Environment Variable Name
+              环境变量名
             </Label>
             <Input
               id="apikey-envvar"
@@ -220,21 +219,21 @@ export const ApiKeyFormDialog = ({
           {/* Value */}
           <div className="space-y-1.5">
             <Label htmlFor="apikey-value" className="text-xs">
-              Value
+              值
             </Label>
             <Input
               id="apikey-value"
               type="password"
               value={value}
               onChange={(e) => setValue(e.target.value)}
-              placeholder={isEdit ? 'Re-enter key value' : 'sk-...'}
+              placeholder={isEdit ? '重新输入 Key 值' : 'sk-...'}
               className="h-8 text-sm"
             />
           </div>
 
           {/* Scope */}
           <div className="space-y-1.5">
-            <Label className="text-xs">Scope</Label>
+            <Label className="text-xs">作用域</Label>
             <Select value={scope} onValueChange={(v) => setScope(v as Scope)}>
               <SelectTrigger className="h-8 text-sm">
                 <SelectValue />
@@ -248,15 +247,15 @@ export const ApiKeyFormDialog = ({
                   >
                     {opt.value === 'project'
                       ? effectiveProjectPath
-                        ? `Project: ${effectiveProjectLabel}`
-                        : 'Project unavailable'
+                        ? `项目：${effectiveProjectLabel}`
+                        : '当前无可用项目'
                       : opt.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             {scope === 'project' && effectiveProjectPath && (
-              <p className="text-xs text-text-muted">Bound to {effectiveProjectPath}</p>
+              <p className="text-xs text-text-muted">绑定到 {effectiveProjectPath}</p>
             )}
           </div>
 
@@ -270,10 +269,10 @@ export const ApiKeyFormDialog = ({
           {/* Actions */}
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="ghost" size="sm" onClick={onClose}>
-              Cancel
+              取消
             </Button>
             <Button type="submit" size="sm" disabled={!canSubmit}>
-              {apiKeySaving ? 'Saving...' : isEdit ? 'Update' : 'Save'}
+              {apiKeySaving ? '保存中...' : isEdit ? '更新' : '保存'}
             </Button>
           </div>
         </form>

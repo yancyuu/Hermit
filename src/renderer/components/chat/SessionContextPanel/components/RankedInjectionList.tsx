@@ -23,11 +23,11 @@ import type { ContextInjection, ToolOutputInjection } from '@renderer/types/cont
 
 const CATEGORY_COLORS: Record<string, { bg: string; text: string; label: string }> = {
   'claude-md': { bg: 'rgba(99, 102, 241, 0.15)', text: '#818cf8', label: 'CLAUDE.md' },
-  'mentioned-file': { bg: 'rgba(52, 211, 153, 0.15)', text: '#34d399', label: 'File' },
-  'tool-output': { bg: 'rgba(251, 191, 36, 0.15)', text: '#fbbf24', label: 'Tool' },
-  'thinking-text': { bg: 'rgba(167, 139, 250, 0.15)', text: '#a78bfa', label: 'Thinking' },
-  'task-coordination': { bg: 'rgba(251, 146, 60, 0.15)', text: '#fb923c', label: 'Team' },
-  'user-message': { bg: 'rgba(249, 115, 22, 0.15)', text: '#fb923c', label: 'User' },
+  'mentioned-file': { bg: 'rgba(52, 211, 153, 0.15)', text: '#34d399', label: '文件' },
+  'tool-output': { bg: 'rgba(251, 191, 36, 0.15)', text: '#fbbf24', label: '工具' },
+  'thinking-text': { bg: 'rgba(167, 139, 250, 0.15)', text: '#a78bfa', label: '思考' },
+  'task-coordination': { bg: 'rgba(251, 146, 60, 0.15)', text: '#fb923c', label: '团队' },
+  'user-message': { bg: 'rgba(249, 115, 22, 0.15)', text: '#fb923c', label: '用户' },
 };
 
 // =============================================================================
@@ -52,11 +52,11 @@ function getInjectionDescription(injection: ContextInjection): string {
     case 'mentioned-file':
       return injection.displayName;
     case 'tool-output':
-      return `${injection.toolCount} tool${injection.toolCount !== 1 ? 's' : ''} in Turn ${injection.turnIndex + 1}`;
+      return `第 ${injection.turnIndex + 1} 轮的 ${injection.toolCount} 个工具`;
     case 'thinking-text':
-      return `Turn ${injection.turnIndex + 1} thinking/text`;
+      return `第 ${injection.turnIndex + 1} 轮思考/文本`;
     case 'task-coordination':
-      return `Turn ${injection.turnIndex + 1} coordination`;
+      return `第 ${injection.turnIndex + 1} 轮协作`;
     case 'user-message':
       return injection.textPreview;
   }

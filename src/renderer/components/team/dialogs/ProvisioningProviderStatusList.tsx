@@ -473,7 +473,7 @@ function formatProvisioningDetail(detail: string): string {
   const trimmed = detail.trim();
   const lower = trimmed.toLowerCase();
 
-  const unavailableMatch = trimmed.match(/^(.+?)\s+-\s+unavailable\s+-\s+(.+)$/i);
+  const unavailableMatch = /^(.+?)\s+-\s+unavailable\s+-\s+(.+)$/i.exec(trimmed);
   if (unavailableMatch) {
     return `${unavailableMatch[1]} - 不可用 - ${formatProvisioningDetail(unavailableMatch[2])}`;
   }

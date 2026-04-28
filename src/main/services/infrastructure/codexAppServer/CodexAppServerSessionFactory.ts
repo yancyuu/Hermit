@@ -113,8 +113,8 @@ export class CodexAppServerSessionFactory {
       'initialize',
       {
         clientInfo: {
-          name: 'multi-agent-teams',
-          title: 'Multi Agent Teams',
+          name: 'hermit',
+          title: 'Hermit',
           version: '0.1.0',
         },
         capabilities: {

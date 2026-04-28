@@ -16,6 +16,8 @@ import {
   XCircle,
 } from 'lucide-react';
 
+import type { TeammateLaunchMode } from './teammateLaunchMode';
+
 interface AdvancedCliSectionProps {
   teamName: string;
   /** All CLI args from parent (model, effort, permissions, resume, etc.) */
@@ -26,6 +28,8 @@ interface AdvancedCliSectionProps {
   onWorktreeNameChange: (name: string) => void;
   customArgs: string;
   onCustomArgsChange: (args: string) => void;
+  teammateLaunchMode: TeammateLaunchMode;
+  onTeammateLaunchModeChange: (mode: TeammateLaunchMode) => void;
 }
 
 /** Infrastructure flags that are dimmed in command preview. */
@@ -78,6 +82,8 @@ export const AdvancedCliSection: React.FC<AdvancedCliSectionProps> = ({
   onWorktreeNameChange,
   customArgs,
   onCustomArgsChange,
+  teammateLaunchMode,
+  onTeammateLaunchModeChange,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [validationState, setValidationState] = useState<ValidationState>('idle');
@@ -202,6 +208,25 @@ export const AdvancedCliSection: React.FC<AdvancedCliSectionProps> = ({
 
       {isOpen && (
         <div className="mt-2 space-y-3 pl-5">
+          {/* Teammate launch mode */}
+          <div className="space-y-1.5">
+            <Label className="text-xs text-text-secondary">成员启动方式</Label>
+            <select
+              value={teammateLaunchMode}
+              onChange={(event) =>
+                onTeammateLaunchModeChange(event.target.value as TeammateLaunchMode)
+              }
+              className="h-8 w-full rounded border border-border bg-surface px-2 text-xs text-text outline-none focus:border-blue-500"
+            >
+              <option value="in-process">Claude 子 agent（更省请求，降低限流）</option>
+              <option value="tmux">tmux 独立进程（更隔离，可单独查看/重启）</option>
+            </select>
+            <p className="text-[11px] leading-relaxed text-text-muted">
+              子 agent 在 lead 会话内启动；tmux 会为成员启动独立 Claude
+              进程。无论选择哪种方式，成员都会按顺序逐个启动。
+            </p>
+          </div>
+
           {/* Worktree */}
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">

@@ -941,18 +941,14 @@ export const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
             className="flex items-center justify-between px-3 py-2 text-xs"
             style={{ color: COLOR_TEXT_MUTED }}
           >
-            <span>Raw preview</span>
+            <span>原始预览</span>
             <button
               type="button"
               className="underline"
               style={{ color: PROSE_LINK }}
               onClick={() => setShowRaw(false)}
               disabled={isTooLarge}
-              title={
-                isTooLarge
-                  ? 'Large content is shown as raw to prevent UI freeze'
-                  : 'Render markdown'
-              }
+              title={isTooLarge ? '内容较大，已使用原始预览以避免界面卡顿' : '渲染 Markdown'}
             >
               Render markdown
             </button>

@@ -1,6 +1,5 @@
-import type { EnhancedChunk } from '@main/types';
-
 import type { ExecutionTarget } from './api';
+import type { EnhancedChunk } from '@main/types';
 
 export interface TeamMember {
   name: string;

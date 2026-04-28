@@ -100,7 +100,7 @@ export const UpdateDialog = (): React.JSX.Element | null => {
     : releaseNotes;
 
   const releaseUrl = availableVersion
-    ? `https://github.com/lazy-agent/multi-agent-workbench/releases/tag/v${availableVersion}`
+    ? `https://github.com/lazy-agent/hermit/releases/tag/v${availableVersion}`
     : null;
 
   const openReleaseOnGitHub = (): void => {

@@ -29,7 +29,7 @@ export const TaskCoordinationSection = ({
 
   return (
     <CollapsibleSection
-      title="Task Coordination"
+      title="任务协作"
       count={injections.length}
       tokenCount={tokenCount}
       isExpanded={isExpanded}

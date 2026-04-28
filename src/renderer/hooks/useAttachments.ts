@@ -208,7 +208,7 @@ export function useAttachments(options?: UseAttachmentsOptions): UseAttachmentsR
           const payload = await fileToAttachmentPayload(file);
           newPayloads.push(payload);
         } catch {
-          setError(`Failed to read file: ${file.name}`);
+          setError(`读取文件失败：${file.name}`);
           valid = false;
           break;
         }
@@ -217,12 +217,12 @@ export function useAttachments(options?: UseAttachmentsOptions): UseAttachmentsR
 
       setAttachments((prev) => {
         if (prev.length + newPayloads.length > MAX_FILES) {
-          setError(`Maximum ${MAX_FILES} attachments allowed`);
+          setError(`最多允许添加 ${MAX_FILES} 个附件`);
           return prev;
         }
         const currentTotal = prev.reduce((sum, a) => sum + a.size, 0);
         if (currentTotal + batchSize > MAX_TOTAL_SIZE) {
-          setError('Total attachment size exceeds 20MB limit');
+          setError('附件总大小超过 20MB 限制');
           return prev;
         }
         const next = [...prev, ...newPayloads];

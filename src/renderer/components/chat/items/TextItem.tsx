@@ -58,7 +58,7 @@ export const TextItem: React.FC<TextItemProps> = ({
   return (
     <BaseItem
       icon={<MessageSquare className="size-4" />}
-      label="Output"
+      label="输出"
       summary={summary}
       tokenCount={tokenCount}
       timestamp={timestamp}

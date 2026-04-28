@@ -70,7 +70,7 @@ export const TriggerConfiguration = ({
     <>
       {/* Section 1: General Info */}
       <div className="space-y-3">
-        <SectionHeader title="General Info" />
+        <SectionHeader title="基本信息" />
 
         {/* Scope/Tool Name */}
         {(trigger.contentType === 'tool_use' || trigger.contentType === 'tool_result') && (
@@ -79,7 +79,7 @@ export const TriggerConfiguration = ({
               htmlFor={`trigger-${trigger.id}-tool-name`}
               className="text-sm text-text-secondary"
             >
-              Scope / Tool Name
+              范围 / 工具名
             </label>
             <select
               id={`trigger-${trigger.id}-tool-name`}
@@ -100,19 +100,19 @@ export const TriggerConfiguration = ({
 
       {/* Dot Color */}
       <div className="space-y-3">
-        <SectionHeader title="Dot Color" />
+        <SectionHeader title="圆点颜色" />
         <ColorPaletteSelector value={trigger.color} onChange={onColorChange} disabled={saving} />
       </div>
 
       {/* Section 2: Trigger Condition (Mode Selector) */}
       <div className="space-y-3">
-        <SectionHeader title="Trigger Condition" />
+        <SectionHeader title="触发条件" />
         <ModeSelector value={localMode} onChange={onModeChange} disabled={saving} />
       </div>
 
       {/* Section 3: Dynamic Configuration */}
       <div className="space-y-3">
-        <SectionHeader title="Configuration" />
+        <SectionHeader title="配置" />
 
         {/* Error Status Mode */}
         {localMode === 'error_status' && (
@@ -304,22 +304,22 @@ const TokenThresholdConfig = ({
           className={`${SELECT_INPUT_BASE} ${getCursorClass(saving)}`}
         >
           <option value="total" className={SELECT_OPTION_BG}>
-            Total Tokens
+            总 Token
           </option>
           <option value="input" className={SELECT_OPTION_BG}>
-            Input Tokens
+            输入 Token
           </option>
           <option value="output" className={SELECT_OPTION_BG}>
-            Output Tokens
+            输出 Token
           </option>
         </select>
       </div>
       <div className="flex items-center justify-between border-b border-border-subtle py-2">
         <label htmlFor={`trigger-${triggerId}-threshold`} className="text-sm text-text-secondary">
-          Threshold
+          阈值
         </label>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-text-muted">Alert if &gt;</span>
+          <span className="text-xs text-text-muted">超过时提醒 &gt;</span>
           <input
             id={`trigger-${triggerId}-threshold`}
             type="text"

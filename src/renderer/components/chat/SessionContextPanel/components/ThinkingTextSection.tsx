@@ -29,7 +29,7 @@ export const ThinkingTextSection = ({
 
   return (
     <CollapsibleSection
-      title="Thinking + Text"
+      title="思考 + 文本"
       count={injections.length}
       tokenCount={tokenCount}
       isExpanded={isExpanded}

@@ -424,16 +424,16 @@ export function computeTakeaways(report: TakeawayReport): Takeaway[] {
   if (costSev === 'danger') {
     items.push({
       severity: 'danger',
-      title: 'High cost per commit',
-      detail: `$${report.costAnalysis.totalSessionCostUsd.toFixed(2)} total \u2014 consider smaller, focused sessions`,
-      sectionTitle: 'Cost Analysis',
+      title: '单次提交成本过高',
+      detail: `总计 $${report.costAnalysis.totalSessionCostUsd.toFixed(2)}，建议拆成更小、更聚焦的会话`,
+      sectionTitle: '成本分析',
     });
   } else if (costSev === 'warning') {
     items.push({
       severity: 'warning',
-      title: 'Elevated cost per commit',
-      detail: 'Cost per commit is above typical range',
-      sectionTitle: 'Cost Analysis',
+      title: '单次提交成本偏高',
+      detail: '单次提交成本高于常见范围',
+      sectionTitle: '成本分析',
     });
   }
 
@@ -441,9 +441,9 @@ export function computeTakeaways(report: TakeawayReport): Takeaway[] {
   if (report.cacheEconomics.cacheEfficiencyAssessment === 'concerning') {
     items.push({
       severity: 'warning',
-      title: 'Low cache efficiency',
-      detail: `${report.cacheEconomics.cacheEfficiencyPct}% cache hit rate \u2014 prompt structure may reduce caching`,
-      sectionTitle: 'Token Usage',
+      title: '缓存效率偏低',
+      detail: `缓存命中率 ${report.cacheEconomics.cacheEfficiencyPct}%，提示词结构可能影响缓存`,
+      sectionTitle: 'Token 用量',
     });
   }
 
@@ -452,16 +452,16 @@ export function computeTakeaways(report: TakeawayReport): Takeaway[] {
   if (toolSev === 'danger') {
     items.push({
       severity: 'danger',
-      title: 'Tool reliability issues',
-      detail: 'Multiple tool calls are failing \u2014 check error section for details',
-      sectionTitle: 'Tool Usage',
+      title: '工具可靠性异常',
+      detail: '多个工具调用失败，请查看错误区详情',
+      sectionTitle: '工具用量',
     });
   } else if (toolSev === 'warning') {
     items.push({
       severity: 'warning',
-      title: 'Degraded tool health',
-      detail: 'Some tools have elevated failure rates',
-      sectionTitle: 'Tool Usage',
+      title: '工具健康度下降',
+      detail: '部分工具失败率偏高',
+      sectionTitle: '工具用量',
     });
   }
 
@@ -469,16 +469,16 @@ export function computeTakeaways(report: TakeawayReport): Takeaway[] {
   if (report.thrashingSignals.thrashingAssessment === 'severe') {
     items.push({
       severity: 'danger',
-      title: 'Significant thrashing detected',
-      detail: 'Repeated commands and file rework suggest unclear direction',
-      sectionTitle: 'Friction Signals',
+      title: '检测到明显反复操作',
+      detail: '重复命令和文件返工表明方向可能不够清晰',
+      sectionTitle: '阻力信号',
     });
   } else if (report.thrashingSignals.thrashingAssessment === 'mild') {
     items.push({
       severity: 'warning',
-      title: 'Mild thrashing detected',
-      detail: 'Some repeated commands or file rework occurred',
-      sectionTitle: 'Friction Signals',
+      title: '检测到轻微反复操作',
+      detail: '出现了一些重复命令或文件返工',
+      sectionTitle: '阻力信号',
     });
   }
 
@@ -486,9 +486,9 @@ export function computeTakeaways(report: TakeawayReport): Takeaway[] {
   if (report.idleAnalysis.idleAssessment === 'high_idle') {
     items.push({
       severity: 'warning',
-      title: 'High idle time',
-      detail: `${report.idleAnalysis.idlePct}% of wall-clock time was idle`,
-      sectionTitle: 'Timeline & Activity',
+      title: '空闲时间偏高',
+      detail: `实际耗时中有 ${report.idleAnalysis.idlePct}% 处于空闲`,
+      sectionTitle: '时间线与活动',
     });
   }
 
@@ -497,9 +497,9 @@ export function computeTakeaways(report: TakeawayReport): Takeaway[] {
   if (promptSev === 'danger') {
     items.push({
       severity: 'danger',
-      title: 'Prompt quality issues',
-      detail: `${(report.promptQuality.frictionRate * 100).toFixed(0)}% friction rate \u2014 try more detailed initial prompts`,
-      sectionTitle: 'Quality Signals',
+      title: '提示词质量问题',
+      detail: `阻力率 ${(report.promptQuality.frictionRate * 100).toFixed(0)}%，建议初始提示更具体`,
+      sectionTitle: '质量信号',
     });
   }
 
@@ -510,9 +510,9 @@ export function computeTakeaways(report: TakeawayReport): Takeaway[] {
   ) {
     items.push({
       severity: report.overview.contextAssessment === 'critical' ? 'danger' : 'warning',
-      title: 'Context window pressure',
-      detail: `${report.overview.compactionCount} compaction${report.overview.compactionCount !== 1 ? 's' : ''} occurred \u2014 session may lose early context`,
-      sectionTitle: 'Overview',
+      title: '上下文窗口压力较高',
+      detail: `发生 ${report.overview.compactionCount} 次压缩，会话可能丢失早期上下文`,
+      sectionTitle: '概览',
     });
   }
 
@@ -520,9 +520,9 @@ export function computeTakeaways(report: TakeawayReport): Takeaway[] {
   if (report.fileReadRedundancy.redundancyAssessment === 'wasteful') {
     items.push({
       severity: 'warning',
-      title: 'Redundant file reads',
-      detail: `${report.fileReadRedundancy.readsPerUniqueFile}x reads per unique file`,
-      sectionTitle: 'Quality Signals',
+      title: '文件读取重复',
+      detail: `每个唯一文件平均读取 ${report.fileReadRedundancy.readsPerUniqueFile} 次`,
+      sectionTitle: '质量信号',
     });
   }
 
@@ -530,9 +530,9 @@ export function computeTakeaways(report: TakeawayReport): Takeaway[] {
   if (report.testProgression.trajectory === 'regressing') {
     items.push({
       severity: 'danger',
-      title: 'Tests regressing',
-      detail: 'Test failures increased over the session',
-      sectionTitle: 'Quality Signals',
+      title: '测试出现回退',
+      detail: '会话过程中测试失败数量增加',
+      sectionTitle: '质量信号',
     });
   }
 
@@ -544,9 +544,9 @@ export function computeTakeaways(report: TakeawayReport): Takeaway[] {
     return [
       {
         severity: 'good',
-        title: 'Session looks healthy',
-        detail: 'No significant issues detected across all metrics',
-        sectionTitle: 'Overview',
+        title: '会话状态健康',
+        detail: '各项指标未检测到明显问题',
+        sectionTitle: '概览',
       },
     ];
   }

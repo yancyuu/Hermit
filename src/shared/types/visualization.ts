@@ -1,5 +1,5 @@
 /**
- * Visualization-specific types for Multi Agent Teams.
+ * Visualization-specific types for Hermit.
  *
  * These types are used for waterfall chart visualization
  * and are shared between main and renderer processes.

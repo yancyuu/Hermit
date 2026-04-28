@@ -77,7 +77,7 @@ interface ProviderRowProps {
   readonly actions: RuntimeProviderManagementActions;
 }
 
-const DIRECTORY_FILTERS: Array<{ id: RuntimeProviderDirectoryFilterDto; label: string }> = [
+const DIRECTORY_FILTERS: { id: RuntimeProviderDirectoryFilterDto; label: string }[] = [
   { id: 'all', label: '全部' },
   { id: 'connectable', label: '可连接' },
   { id: 'connected', label: '已连接' },

@@ -136,7 +136,7 @@ export const TaskCommentInput = ({
         const id = crypto.randomUUID();
         setPendingAttachments((prev) => {
           if (prev.length >= MAX_ATTACHMENTS) {
-            setAttachError(`Maximum ${MAX_ATTACHMENTS} attachments per comment`);
+            setAttachError(`每条评论最多允许添加 ${MAX_ATTACHMENTS} 个附件`);
             return prev;
           }
           return [

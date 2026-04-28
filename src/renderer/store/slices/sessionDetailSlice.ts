@@ -485,7 +485,7 @@ export const createSessionDetailSlice: StateCreator<AppState, [], [], SessionDet
       if (!isCurrentTabGeneration(requestGeneration, tabId)) {
         return;
       }
-      const errorMsg = error instanceof Error ? error.message : 'Failed to fetch session detail';
+      const errorMsg = error instanceof Error ? error.message : '获取会话详情失败';
       if (!options?.silent) {
         set({
           sessionDetailError: errorMsg,

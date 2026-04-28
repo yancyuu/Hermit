@@ -20,11 +20,11 @@ import type { ContextInjection } from '@renderer/types/contextInjection';
 
 const CATEGORY_COLORS: Record<string, { bg: string; text: string; label: string }> = {
   'claude-md': { bg: 'rgba(99, 102, 241, 0.15)', text: '#818cf8', label: 'CLAUDE.md' },
-  'mentioned-file': { bg: 'rgba(52, 211, 153, 0.15)', text: '#34d399', label: 'File' },
-  'tool-output': { bg: 'rgba(251, 191, 36, 0.15)', text: '#fbbf24', label: 'Tool' },
-  'thinking-text': { bg: 'rgba(167, 139, 250, 0.15)', text: '#a78bfa', label: 'Thinking' },
-  'task-coordination': { bg: 'rgba(251, 146, 60, 0.15)', text: '#fb923c', label: 'Team' },
-  'user-message': { bg: 'rgba(249, 115, 22, 0.15)', text: '#fb923c', label: 'User' },
+  'mentioned-file': { bg: 'rgba(52, 211, 153, 0.15)', text: '#34d399', label: '文件' },
+  'tool-output': { bg: 'rgba(251, 191, 36, 0.15)', text: '#fbbf24', label: '工具' },
+  'thinking-text': { bg: 'rgba(167, 139, 250, 0.15)', text: '#a78bfa', label: '思考' },
+  'task-coordination': { bg: 'rgba(251, 146, 60, 0.15)', text: '#fb923c', label: '团队' },
+  'user-message': { bg: 'rgba(249, 115, 22, 0.15)', text: '#fb923c', label: '用户' },
 };
 
 // =============================================================================
@@ -67,7 +67,7 @@ function flattenInjections(injections: ContextInjection[]): FlatRow[] {
               key: `${inj.id}-${tool.toolName}-${tool.toolUseId ?? rows.length}`,
               category: 'tool-output',
               label: tool.toolName,
-              description: `Turn ${inj.turnIndex + 1}`,
+              description: `第 ${inj.turnIndex + 1} 轮`,
               tokens: tool.tokenCount,
               turnIndex: inj.turnIndex,
               toolUseId: tool.toolUseId,
@@ -79,8 +79,8 @@ function flattenInjections(injections: ContextInjection[]): FlatRow[] {
           rows.push({
             key: inj.id,
             category: 'tool-output',
-            label: `${inj.toolCount} tool${inj.toolCount !== 1 ? 's' : ''}`,
-            description: `Turn ${inj.turnIndex + 1}`,
+            label: `${inj.toolCount} 个工具`,
+            description: `第 ${inj.turnIndex + 1} 轮`,
             tokens: inj.estimatedTokens,
             turnIndex: inj.turnIndex,
             navigationType: 'turn',
@@ -93,8 +93,8 @@ function flattenInjections(injections: ContextInjection[]): FlatRow[] {
           rows.push({
             key: `${inj.id}-${item.type}`,
             category: 'thinking-text',
-            label: item.type === 'thinking' ? 'Thinking' : 'Text',
-            description: `Turn ${inj.turnIndex + 1}`,
+            label: item.type === 'thinking' ? '思考' : '文本',
+            description: `第 ${inj.turnIndex + 1} 轮`,
             tokens: item.tokenCount,
             turnIndex: inj.turnIndex,
             navigationType: 'turn',

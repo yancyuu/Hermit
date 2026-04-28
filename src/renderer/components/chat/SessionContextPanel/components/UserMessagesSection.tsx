@@ -29,7 +29,7 @@ export const UserMessagesSection = ({
 
   return (
     <CollapsibleSection
-      title="User Messages"
+      title="用户消息"
       count={injections.length}
       tokenCount={tokenCount}
       isExpanded={isExpanded}

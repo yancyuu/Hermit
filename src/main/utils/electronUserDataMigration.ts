@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 const LEGACY_USER_DATA_DIR_NAMES = [
+  'Multi Agent Teams',
   'Agent Teams UI',
   'Claude Agent Teams UI',
   'claude-agent-teams-ui',

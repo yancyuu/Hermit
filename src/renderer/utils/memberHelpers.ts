@@ -1,8 +1,8 @@
 import {
   CANONICAL_LEAD_MEMBER_NAME,
-  LEAD_DISPLAY_NAME,
   isLeadMember,
   isLeadMemberName,
+  LEAD_DISPLAY_NAME,
 } from '@shared/utils/leadDetection';
 import { buildTeamMemberColorMap } from '@shared/utils/teamMemberColors';
 

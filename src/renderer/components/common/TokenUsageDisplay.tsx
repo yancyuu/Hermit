@@ -182,7 +182,7 @@ const SessionContextSection = ({
           {tokensByCategory.toolOutputs > 0 && (
             <div className="flex items-center justify-between text-[10px]">
               <span style={{ color: COLOR_TEXT_MUTED }}>
-                Tool Outputs <span className="opacity-60">×{toolOutputsCount}</span>
+                工具输出 <span className="opacity-60">×{toolOutputsCount}</span>
               </span>
               <span className="tabular-nums" style={{ color: COLOR_TEXT_SECONDARY }}>
                 {formatTokens(tokensByCategory.toolOutputs)}{' '}
@@ -195,7 +195,7 @@ const SessionContextSection = ({
           {tokensByCategory.taskCoordination > 0 && (
             <div className="flex items-center justify-between text-[10px]">
               <span style={{ color: COLOR_TEXT_MUTED }}>
-                Task Coordination <span className="opacity-60">×{taskCoordinationCount}</span>
+                任务协作 <span className="opacity-60">×{taskCoordinationCount}</span>
               </span>
               <span className="tabular-nums" style={{ color: COLOR_TEXT_SECONDARY }}>
                 {formatTokens(tokensByCategory.taskCoordination)}{' '}
@@ -208,7 +208,7 @@ const SessionContextSection = ({
           {tokensByCategory.userMessages > 0 && (
             <div className="flex items-center justify-between text-[10px]">
               <span style={{ color: COLOR_TEXT_MUTED }}>
-                User Messages <span className="opacity-60">×{userMessagesCount}</span>
+                用户消息 <span className="opacity-60">×{userMessagesCount}</span>
               </span>
               <span className="tabular-nums" style={{ color: COLOR_TEXT_SECONDARY }}>
                 {formatTokens(tokensByCategory.userMessages)}{' '}
@@ -220,7 +220,7 @@ const SessionContextSection = ({
           {/* Thinking + Text */}
           {tokensByCategory.thinkingText > 0 && (
             <div className="flex items-center justify-between text-[10px]">
-              <span style={{ color: COLOR_TEXT_MUTED }}>Thinking + Text</span>
+              <span style={{ color: COLOR_TEXT_MUTED }}>思考 + 文本</span>
               <span className="tabular-nums" style={{ color: COLOR_TEXT_SECONDARY }}>
                 {formatTokens(tokensByCategory.thinkingText)}{' '}
                 <span className="opacity-60">({thinkingTextPercent}%)</span>
@@ -233,7 +233,7 @@ const SessionContextSection = ({
             className="pt-0.5 text-[9px] italic"
             style={{ color: COLOR_TEXT_MUTED, opacity: 0.7 }}
           >
-            Accumulated across entire session without duplication
+            按整个会话累计，已去重
           </div>
         </div>
       )}
@@ -486,7 +486,7 @@ export const TokenUsageDisplay = ({
 
                 {/* Output Tokens */}
                 <div className="flex items-center justify-between">
-                  <span style={{ color: COLOR_TEXT_MUTED }}>Output Tokens</span>
+                  <span style={{ color: COLOR_TEXT_MUTED }}>输出 Token</span>
                   <span
                     className="font-medium tabular-nums"
                     style={{ color: COLOR_TEXT_SECONDARY }}

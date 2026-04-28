@@ -1,5 +1,5 @@
 const REPO_OWNER = 'lazy-agent';
-const REPO_NAME = 'multi-agent-workbench';
+const REPO_NAME = 'hermit';
 
 export function buildReleaseAssetBase(version: string, repoName = REPO_NAME): string {
   return `https://github.com/${REPO_OWNER}/${repoName}/releases/download/v${version}`;
@@ -19,12 +19,12 @@ export function getExpectedReleaseAssetUrl(
   switch (platform) {
     case 'darwin':
       return arch === 'arm64'
-        ? `${base}/Multi.Agent.Teams-${version}-arm64.dmg`
-        : `${base}/Multi.Agent.Teams-${version}-x64.dmg`;
+        ? `${base}/Hermit-${version}-arm64.dmg`
+        : `${base}/Hermit-${version}-x64.dmg`;
     case 'win32':
-      return `${base}/Multi.Agent.Teams.Setup.${version}.exe`;
+      return `${base}/Hermit.Setup.${version}.exe`;
     case 'linux':
-      return `${base}/Multi.Agent.Teams-${version}.AppImage`;
+      return `${base}/Hermit-${version}.AppImage`;
     default:
       return null;
   }
@@ -57,8 +57,8 @@ export function getExpectedLatestMacArtifacts(
   arch: Extract<NodeJS.Architecture, 'arm64' | 'x64'>
 ): readonly string[] {
   return arch === 'arm64'
-    ? [`Multi.Agent.Teams-${version}-arm64-mac.zip`, `Multi.Agent.Teams-${version}-arm64.dmg`]
-    : [`Multi.Agent.Teams-${version}-x64-mac.zip`, `Multi.Agent.Teams-${version}-x64.dmg`];
+    ? [`Hermit-${version}-arm64-mac.zip`, `Hermit-${version}-arm64.dmg`]
+    : [`Hermit-${version}-x64-mac.zip`, `Hermit-${version}-x64.dmg`];
 }
 
 function stripYamlScalar(rawValue: string): string {
