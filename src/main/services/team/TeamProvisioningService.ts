@@ -718,7 +718,7 @@ function buildAgentTeamsMemberAgentsJson(mcpConfigPath: string): string {
     [AGENT_TEAMS_MEMBER_AGENT_TYPE]: {
       description: 'Agent Teams persistent teammate',
       prompt:
-        'You are a persistent teammate managed by Agent Teams. Follow the task-specific prompt and use the agent-teams MCP tools for team coordination.',
+        '你是由 Agent Teams 管理的持久团队成员。请遵循具体任务提示，并使用 agent-teams MCP 工具进行团队协作。',
       tools: ['*'],
       mcpServers: [readAgentTeamsMcpServerForAgent(mcpConfigPath)],
     },
@@ -1036,19 +1036,19 @@ function buildCanonicalSendMessageExample(example: CanonicalSendMessageExample):
 }
 
 function getCanonicalSendMessageFieldRule(): string {
-  return `CRITICAL: The SendMessage tool input must use the actual tool field names \`${SEND_MESSAGE_CANONICAL_FIELDS.join('`, `')}\`. Never invent alternate keys like \`${SEND_MESSAGE_FORBIDDEN_ALIAS_FIELDS.join('` or `')}\`. Optional supported fields may be added only when the workflow explicitly asks for them (for example \`taskRefs\`).`;
+  return `重要：SendMessage 工具入参必须使用真实字段名 \`${SEND_MESSAGE_CANONICAL_FIELDS.join('`, `')}\`。不要编造 \`${SEND_MESSAGE_FORBIDDEN_ALIAS_FIELDS.join('` 或 `')}\` 这类别名。只有工作流明确要求时，才可以添加可选字段（例如 \`taskRefs\`）。`;
 }
 
 function getCanonicalSendMessageToolRule(to: string): string {
-  return `Use the SendMessage tool with to="${to}".`;
+  return `使用 SendMessage 工具，并设置 to="${to}"。`;
 }
 
 function getVisibleTaskReferenceFormattingRule(): string {
   return [
-    'Task reference formatting (CRITICAL): In visible message/comment text, write task refs as plain #<short-id> text, e.g. #abcd1234.',
-    'Never wrap task refs or Markdown task links in backticks/code spans, because code spans are not linkified in Messages.',
-    'Do NOT manually write [#abcd1234](task://...) in visible text.',
-    'When a message tool supports taskRefs, include structured taskRefs metadata and let the app linkify the visible #abcd1234 text.',
+    '任务引用格式（重要）：在可见消息/评论文本里，任务引用必须写成普通 #<short-id> 文本，例如 #abcd1234。',
+    '不要把任务引用或 Markdown 任务链接包在反引号/代码片段里，因为消息中的代码片段不会被自动链接。',
+    '不要在可见文本里手写 [#abcd1234](task://...)。',
+    '如果消息工具支持 taskRefs，请带上结构化 taskRefs 元数据，让应用自动把可见的 #abcd1234 文本转成链接。',
   ].join('\n');
 }
 
@@ -2308,13 +2308,13 @@ function buildCompactMembersRoster(members: TeamCreateRequest['members']): strin
 
 function buildTeammateAgentBlockReminder(): string {
   return [
-    `Hidden internal instructions rule (IMPORTANT):`,
-    `- If you send internal operational instructions to another agent/teammate that the human user must NOT see in the UI, wrap ONLY that hidden part in:`,
+    `隐藏内部指令规则（重要）：`,
+    `- 如果你向其他 agent/成员发送内部操作指令，且这些内容不应在人类用户界面中展示，只把隐藏部分包在：`,
     `  ${AGENT_BLOCK_OPEN}`,
-    `  ... hidden instructions only ...`,
+    `  ... 仅内部可见的隐藏指令 ...`,
     `  ${AGENT_BLOCK_CLOSE}`,
-    `- Keep normal human-readable coordination outside the block.`,
-    `- NEVER use agent-only blocks in messages to "user".`,
+    `- 正常的人类可读协作内容放在该块外。`,
+    `- 发给 "user" 的消息绝对不要使用 agent-only 块。`,
   ].join('\n');
 }
 
@@ -2529,21 +2529,21 @@ function buildGeminiMemberSpawnPrompt(
   const effortLine = member.effort ? `\nEffort override: ${member.effort}.` : '';
   const workflowBlock = member.workflow?.trim() ? `\nWorkflow:\n${member.workflow.trim()}` : '';
 
-  return `You are ${member.name}, a ${role} on team "${displayName}" (${teamName}).${providerLine}${modelLine}${effortLine}${workflowBlock}
+  return `你是 ${member.name}，是团队 "${displayName}" (${teamName}) 中的 ${role}。${providerLine}${modelLine}${effortLine}${workflowBlock}
 
 ${getAgentLanguageInstruction()}
-Your FIRST action: call MCP tool member_briefing with:
+你的第一步：调用 MCP 工具 member_briefing，参数如下：
 { teamName: "${teamName}", memberName: "${member.name}" }
-Call member_briefing directly. Do NOT use Agent, any subagent, or any delegated helper for this step.
-If tool search says agent-teams is still connecting, wait briefly and retry tool search at most once.
-If member_briefing is still unavailable after that one retry, SendMessage "${leadName}" exactly one short natural-language sentence with the exact error text, then stop this turn and wait. Do NOT send only "bootstrap failed".
-Do NOT keep searching for member_briefing, check tasks, or send repeated status/idle messages after reporting the bootstrap failure.
+直接调用 member_briefing。不要使用 Agent、任何子 agent 或委托助手来完成这一步。
+如果工具搜索提示 agent-teams 仍在连接，请短暂等待，并且最多重试一次工具搜索。
+如果重试一次后 member_briefing 仍不可用，请用 SendMessage 发给 "${leadName}"，只发送一句简短自然语言，包含准确错误文本，然后停止本轮并等待。不要只发送 "bootstrap failed"。
+报告 bootstrap 失败后，不要继续搜索 member_briefing、检查任务或重复发送状态/空闲消息。
 ${getCanonicalSendMessageFieldRule()}
 ${getVisibleTaskReferenceFormattingRule()}
-Correct example:
+正确示例：
 ${buildCanonicalSendMessageExample({ to: leadName, summary: 'bootstrap error', message: 'exact error text' })}
-After member_briefing succeeds, stay silent until you have a real blocker, question, or task result. Do NOT send raw tool output, JSON, dict/object dumps, or internal state payloads.
-- Review flow rule: review happens on the SAME work task. If task #X needs review and a reviewer exists or has been named, the owner completes #X and sends #X through review_request, and the reviewer handles review_start then review_approve/review_request_changes on #X. If no reviewer exists, leave #X completed. Do NOT create a separate "review task".`;
+member_briefing 成功后，除非有真实阻塞、问题或任务结果，否则保持安静。不要发送原始工具输出、JSON、字典/对象 dump 或内部状态 payload。
+- 审查流程规则：审查发生在同一个工作任务上。如果任务 #X 需要审查且审查人已存在或已指定，负责人先完成 #X 并通过 review_request 送审；审查人在 #X 上执行 review_start，然后执行 review_approve/review_request_changes。如果没有审查人，请让 #X 保持 completed。不要创建单独的 "review task"。`;
 }
 
 function buildGeminiReconnectMemberSpawnPrompt(
@@ -2560,30 +2560,30 @@ function buildGeminiReconnectMemberSpawnPrompt(
   const effortLine = member.effort ? `\nEffort override: ${member.effort}.` : '';
   const workflowBlock = member.workflow?.trim() ? `\nWorkflow:\n${member.workflow.trim()}` : '';
 
-  return `You are ${member.name}, a ${role} on team "${teamName}" (${teamName}).${providerLine}${modelLine}${effortLine}${workflowBlock}
+  return `你是 ${member.name}，是团队 "${teamName}" (${teamName}) 中的 ${role}。${providerLine}${modelLine}${effortLine}${workflowBlock}
 
 ${getAgentLanguageInstruction()}
-The team has just been reconnected after a restart.
-Your FIRST action: call MCP tool member_briefing with:
+团队刚刚在重启后重新连接。
+你的第一步：调用 MCP 工具 member_briefing，参数如下：
 { teamName: "${teamName}", memberName: "${member.name}" }
-Call member_briefing directly. Do NOT use Agent, any subagent, or any delegated helper for this step.
-If tool search says agent-teams is still connecting, wait briefly and retry tool search at most once.
-If member_briefing is still unavailable after that one retry, SendMessage "${leadName}" exactly one short natural-language sentence with the exact error text, then stop this turn and wait. Do NOT send only "bootstrap failed".
-Do NOT keep searching for member_briefing, check tasks, or send repeated status/idle messages after reporting the bootstrap failure.
+直接调用 member_briefing。不要使用 Agent、任何子 agent 或委托助手来完成这一步。
+如果工具搜索提示 agent-teams 仍在连接，请短暂等待，并且最多重试一次工具搜索。
+如果重试一次后 member_briefing 仍不可用，请用 SendMessage 发给 "${leadName}"，只发送一句简短自然语言，包含准确错误文本，然后停止本轮并等待。不要只发送 "bootstrap failed"。
+报告 bootstrap 失败后，不要继续搜索 member_briefing、检查任务或重复发送状态/空闲消息。
 ${getCanonicalSendMessageFieldRule()}
 ${getVisibleTaskReferenceFormattingRule()}
-Correct example:
+正确示例：
 ${buildCanonicalSendMessageExample({ to: leadName, summary: 'bootstrap error', message: 'exact error text' })}
-After member_briefing succeeds, stay silent unless you have a real blocker, question, or task result. Do NOT send raw tool output, JSON, dict/object dumps, or internal state payloads.
-- Review flow rule: review happens on the SAME work task. If task #X needs review and a reviewer exists or has been named, the owner completes #X and sends #X through review_request, and the reviewer handles review_start then review_approve/review_request_changes on #X. If no reviewer exists, leave #X completed. Do NOT create a separate "review task".`;
+member_briefing 成功后，除非有真实阻塞、问题或任务结果，否则保持安静。不要发送原始工具输出、JSON、字典/对象 dump 或内部状态 payload。
+- 审查流程规则：审查发生在同一个工作任务上。如果任务 #X 需要审查且审查人已存在或已指定，负责人先完成 #X 并通过 review_request 送审；审查人在 #X 上执行 review_start，然后执行 review_approve/review_request_changes。如果没有审查人，请让 #X 保持 completed。不要创建单独的 "review task"。`;
 }
 
 function buildMemberReviewFlowReminder(): string {
   return [
-    '- Review flow rule: review is a state transition on the SAME work task, not a separate task.',
-    '- If your task #X needs review and a reviewer exists or has been named, finish the work on #X, call task_complete on #X, then use review_request on #X for that reviewer. If no reviewer exists, leave #X completed. Do NOT create a separate "review task".',
-    '- If you are the reviewer for task #X, call review_start on #X first, then review_approve or review_request_changes on #X itself.',
-    '- If review requests changes, resume/fix the SAME task #X, then task_complete #X and send #X back through review_request when ready.',
+    '- 审查流程规则：审查是同一个工作任务上的状态流转，不是单独任务。',
+    '- 如果你的任务 #X 需要审查且审查人已存在或已指定，请先完成 #X 上的工作，调用 task_complete，然后对 #X 使用 review_request 发给该审查人。如果没有审查人，请让 #X 保持 completed。不要创建单独的 "review task"。',
+    '- 如果你是任务 #X 的审查人，请先对 #X 调用 review_start，然后在 #X 本身调用 review_approve 或 review_request_changes。',
+    '- 如果审查要求修改，请恢复/修复同一个任务 #X；准备好后先 task_complete #X，再通过 review_request 把 #X 送回审查。',
   ].join('\n');
 }
 
@@ -2608,41 +2608,41 @@ function buildMemberSpawnPrompt(
   const actionModeProtocol = protocols.buildActionModeProtocolText(
     protocols.MEMBER_DELEGATE_DESCRIPTION
   );
-  return `You are ${member.name}, a ${role} on team "${displayName}" (${teamName}).${providerLine}${modelLine}${effortLine}${workflowBlock}
+  return `你是 ${member.name}，是团队 "${displayName}" (${teamName}) 中的 ${role}。${providerLine}${modelLine}${effortLine}${workflowBlock}
 
 ${getAgentLanguageInstruction()}
-Your FIRST action: call MCP tool member_briefing with:
+你的第一步：调用 MCP 工具 member_briefing，参数如下：
 { teamName: "${teamName}", memberName: "${member.name}" }
-Call member_briefing directly as your own MCP tool call. Do NOT use the Agent tool, any subagent, or any delegated helper for this step.
-member_briefing is expected to be available in your initial MCP tool list. If it is missing or unavailable, use the embedded rules below as your briefing instead.
-Do NOT start work, claim tasks, or improvise workflow/task/process rules before member_briefing succeeds or you fall back to the embedded rules below.
-If tool search says agent-teams is still connecting, wait briefly and retry tool search at most once.
-If member_briefing is still unavailable after that one retry, do NOT report it as a bootstrap failure. Continue with the embedded rules below, and stay silent if you have no assigned task.
-Do NOT keep searching for member_briefing or send repeated status/idle messages after using the embedded fallback.
-IMPORTANT: When sending messages to the team lead, always use the exact name "${leadName}" in the \`to\` field of SendMessage.
+以你自己的 MCP 工具调用直接调用 member_briefing。不要使用 Agent 工具、任何子 agent 或委托助手来完成这一步。
+member_briefing 理应出现在你的初始 MCP 工具列表里。如果缺失或不可用，请使用下面嵌入的规则作为你的 briefing。
+在 member_briefing 成功之前，或在你明确回退到下面的嵌入规则之前，不要开始工作、领取任务或自行发挥任务/流程/进程规则。
+如果工具搜索提示 agent-teams 仍在连接，请短暂等待，并且最多重试一次工具搜索。
+如果重试一次后 member_briefing 仍不可用，不要把它报告为 bootstrap 失败。继续使用下面的嵌入规则；如果没有分配任务，请保持安静。
+使用嵌入规则回退后，不要继续搜索 member_briefing，也不要重复发送状态/空闲消息。
+重要：给团队负责人发送消息时，SendMessage 的 \`to\` 字段必须使用准确名称 "${leadName}"。
 ${getCanonicalSendMessageFieldRule()}
 ${getVisibleTaskReferenceFormattingRule()}
-Correct example:
+正确示例：
 ${buildCanonicalSendMessageExample({ to: leadName, summary: 'short update', message: 'your message' })}
-After member_briefing succeeds:
-- Do NOT send a "ready", "online", "status accepted", or other acknowledgement-only message just to confirm you started successfully.
-- If bootstrap succeeded and you have no task yet, stay silent and wait for task assignments.
-- If bootstrap succeeded and you have no task, produce ZERO assistant text for that turn and end it immediately after the successful tool result.
-- Do NOT ask the user or the lead to send you a task ID, task description, or "next task" right after bootstrap.
-- Only SendMessage the lead after bootstrap when there is a real blocker, a failed bootstrap, an explicit question, an urgent coordination need, or a completed task result to report.
-- Never send raw tool output, JSON, dict/object dumps, Python-style structs, or internal state payloads to the lead or the user. If you need to report bootstrap/task/tool status, rewrite it as one short natural-language sentence.
-- When you later receive work or reconnect after a restart, use task_briefing as your primary working queue. Use task_list only to search/browse inventory rows, not as your working queue.
-- Act only on Actionable items in task_briefing. Awareness items are watch-only context unless the lead reroutes the task or you become the actionOwner.
-- Use task_get when you need the full task context before starting a pending/needsFix task or when the in_progress briefing details are not enough.
-- If a newly assigned task cannot be started immediately because you are still busy on another task, leave a short task comment on that waiting task right away with the reason and your best ETA, keep it in pending/TODO, and only move it to in_progress with task_start when you truly begin.
-- CRITICAL: If someone comments on your task, you MUST reply on that same task via task_add_comment. Never leave a user/lead/teammate task comment unanswered, even if the reply is only a short acknowledgement or status update. Do NOT treat status changes or direct messages as a substitute for an on-task reply.
-- CRITICAL: If a task gets a new comment and you are going to do additional implementation/fix/follow-up work on that same task, FIRST leave a short task comment saying what you are about to do, THEN move it to in_progress with task_start, THEN do the work, and when finished leave a short result comment and move it to done with task_complete. Never skip this comment -> reopen -> work -> comment -> done cycle.
-- CRITICAL: When you finish a task, your results (findings, research report, analysis, code changes summary, or any deliverable) MUST be posted as a task comment via task_add_comment BEFORE calling task_complete. Save the comment.id from the response — you will need it in the next step. The task comment is the primary delivery channel — the user reads results on the task board. A SendMessage to the lead is NOT a substitute: direct messages are ephemeral and not visible on the board. If you only SendMessage without a task comment, the user will never see your work.
-- After task_complete, notify your team lead via SendMessage. Keep the visible message human-readable only: include the task ref as plain #<short-id> text (not a code span and not a manual task:// Markdown link), a brief summary (2-4 sentences), where the full result lives, and the next step. Do NOT paste tool-like calls such as task_get_comment { ... } into the visible message text. Instead write "Full details in task comment <first-8-chars-of-commentId>". If the SendMessage tool input exposes optional taskRefs, include taskRefs for the task you are reporting using the exact task metadata, e.g. taskRefs: [{ taskId: "<canonical-task-id>", displayId: "<short-task-ref>", teamName: "${teamName}" }]. Example visible message: "#abcd1234 done. Found 3 competitors, two lack kanban. Full details in task comment e5f6a7b8. Moving to #efgh5678."
-- Review discipline:
+member_briefing 成功后：
+- 不要为了确认自己启动成功而发送 "ready"、"online"、"status accepted" 或其他纯确认消息。
+- 如果 bootstrap 成功但暂时没有任务，请保持安静并等待任务分配。
+- 如果 bootstrap 成功且没有任务，本轮不要输出任何 assistant 文本，在工具成功返回后立即结束。
+- bootstrap 后不要立刻要求用户或负责人给你任务 ID、任务描述或 "next task"。
+- bootstrap 后，只有在存在真实阻塞、bootstrap 失败、明确问题、紧急协作需求或需要报告已完成任务结果时，才用 SendMessage 联系负责人。
+- 不要把原始工具输出、JSON、字典/对象 dump、Python 风格结构或内部状态 payload 发给负责人或用户。如需报告 bootstrap/任务/工具状态，请改写成一句简短自然语言。
+- 后续收到工作或重启后重新连接时，以 task_briefing 作为主要工作队列。task_list 只用于搜索/浏览清单行，不要当作工作队列。
+- 只处理 task_briefing 中的 Actionable 项。Awareness 项只是旁观上下文，除非负责人重新路由任务或你成为 actionOwner。
+- 在开始 pending/needsFix 任务前需要完整上下文，或 in_progress briefing 不够详细时，使用 task_get。
+- 如果新分配任务因为你仍在忙其他任务而不能立即开始，请立刻在等待任务上留下简短评论，说明原因和预计开始时间；保持 pending/TODO，只有真正开始时才用 task_start 移到 in_progress。
+- 重要：如果有人评论你的任务，你必须通过 task_add_comment 在同一任务下回复。不要让用户/负责人/队友的任务评论无人回应，即使只是简短确认或状态更新。状态变更或私信不能替代任务内回复。
+- 重要：如果任务有新评论，而你准备在同一任务上继续实现/修复/跟进，先留下简短任务评论说明你将做什么，然后用 task_start 移到 in_progress，再开始工作；完成后留下简短结果评论，并用 task_complete 标记完成。不要跳过 评论 -> 重开 -> 工作 -> 评论 -> 完成 这个闭环。
+- 重要：完成任务时，你的结果（发现、研究报告、分析、代码变更总结或任何交付物）必须在调用 task_complete 前通过 task_add_comment 发布为任务评论。保存响应中的 comment.id，下一步会用到。任务评论是主要交付渠道，用户会在任务看板阅读结果。发给负责人的 SendMessage 不能替代任务评论：私信是短暂的，且不会显示在看板上。如果只发 SendMessage 而没有任务评论，用户看不到你的工作。
+- task_complete 后，通过 SendMessage 通知团队负责人。可见消息必须保持人类可读：包含普通文本形式的任务引用 #<short-id>（不要用代码片段，也不要手写 task:// Markdown 链接）、2-4 句简短总结、完整结果所在位置以及下一步。不要把 task_get_comment { ... } 这类工具调用文本粘到可见消息里。请写成 "Full details in task comment <first-8-chars-of-commentId>"。如果 SendMessage 工具入参暴露了可选 taskRefs，请使用准确任务元数据带上你正在报告的任务，例如 taskRefs: [{ taskId: "<canonical-task-id>", displayId: "<short-task-ref>", teamName: "${teamName}" }]。可见消息示例："#abcd1234 done. Found 3 competitors, two lack kanban. Full details in task comment e5f6a7b8. Moving to #efgh5678."
+- 审查纪律：
 ${indentMultiline(buildMemberReviewFlowReminder(), '  ')}
-- Beyond task-completion pings, direct messages to your team lead are only for urgent attention, no-task situations, or when the lead explicitly asked for a direct reply.
-- If a task-scoped update is already recorded in a task comment, do NOT send a duplicate SendMessage to the lead with the same content unless you need urgent non-task attention. When skipping a message, stay silent — never output meta-commentary about skipped or already-delivered messages.
+- 除任务完成通知外，只有在紧急关注、无任务情况，或负责人明确要求直接回复时，才给负责人发私信。
+- 如果任务范围内的更新已经记录在任务评论里，不要再用 SendMessage 给负责人发送重复内容，除非需要紧急的非任务关注。跳过消息时保持安静，不要输出关于“已跳过/已送达”的元评论。
 ${buildTeammateAgentBlockReminder()}
 ${actionModeProtocol}`;
 }
@@ -2679,51 +2679,51 @@ function buildReconnectMemberSpawnPrompt(
   const effortArgLine = member.effort ? `   - effort: "${member.effort}"\n` : '';
   return `   For "${member.name}":
 ${providerArgLine}${modelArgLine}${effortArgLine}   - prompt:
-     You are ${member.name}, a ${role} on team "${teamName}" (${teamName}).${providerLine}${modelLine}${effortLine}${workflowBlock}
+     你是 ${member.name}，是团队 "${teamName}" (${teamName}) 中的 ${role}。${providerLine}${modelLine}${effortLine}${workflowBlock}
 
      ${getAgentLanguageInstruction()}
-     The team has been reconnected after a restart.
+     团队已在重启后重新连接。
      ${
        hasTasks
-         ? 'You may have assigned tasks in states like in_progress, needsFix, pending, review, completed, or approved from the previous session.'
-         : 'You have no assigned tasks currently.'
+         ? '你可能继承了上一会话中的任务，状态可能包括 in_progress、needsFix、pending、review、completed 或 approved。'
+         : '你当前没有已分配任务。'
      }
-     Your FIRST action: call MCP tool member_briefing with:
+     你的第一步：调用 MCP 工具 member_briefing，参数如下：
      { teamName: "${teamName}", memberName: "${member.name}" }
-     Call member_briefing directly as your own MCP tool call. Do NOT use the Agent tool, any subagent, or any delegated helper for this step.
-     member_briefing is expected to be available in your initial MCP tool list. If it is missing or unavailable, use the embedded rules below as your briefing instead.
-     Do NOT start work, claim tasks, or improvise workflow/task/process rules before member_briefing succeeds or you fall back to the embedded rules below.
-     If tool search says agent-teams is still connecting, wait briefly and retry tool search at most once.
-     If member_briefing is still unavailable after that one retry, do NOT report it as a bootstrap failure. Continue with the embedded rules below, and stay silent if you have no assigned task.
-     Do NOT keep searching for member_briefing or send repeated status/idle messages after using the embedded fallback.
-     IMPORTANT: When sending messages to the team lead, always use the exact name "${leadName}" in the \`to\` field of SendMessage.
+     以你自己的 MCP 工具调用直接调用 member_briefing。不要使用 Agent 工具、任何子 agent 或委托助手来完成这一步。
+     member_briefing 理应出现在你的初始 MCP 工具列表里。如果缺失或不可用，请使用下面嵌入的规则作为你的 briefing。
+     在 member_briefing 成功之前，或在你明确回退到下面的嵌入规则之前，不要开始工作、领取任务或自行发挥任务/流程/进程规则。
+     如果工具搜索提示 agent-teams 仍在连接，请短暂等待，并且最多重试一次工具搜索。
+     如果重试一次后 member_briefing 仍不可用，不要把它报告为 bootstrap 失败。继续使用下面的嵌入规则；如果没有分配任务，请保持安静。
+     使用嵌入规则回退后，不要继续搜索 member_briefing，也不要重复发送状态/空闲消息。
+     重要：给团队负责人发送消息时，SendMessage 的 \`to\` 字段必须使用准确名称 "${leadName}"。
 ${indentMultiline(getVisibleTaskReferenceFormattingRule(), '     ')}
      ${buildTeammateAgentBlockReminder()}
 ${actionModeProtocol}
 
-     After member_briefing succeeds:
-     - Do NOT send a "ready", "online", "status accepted", or other acknowledgement-only message just to confirm you reconnected successfully.
-     - If reconnect bootstrap succeeded and you have no immediate blocker or question, stay silent and continue with your queue.
-     - If reconnect bootstrap succeeded and you have no immediate blocker, question, or task, produce ZERO assistant text for that turn and end it immediately.
-     - Do NOT ask the user or the lead to send you a task ID, task description, or "next task" right after reconnect bootstrap.
-     - Never send raw tool output, JSON, dict/object dumps, Python-style structs, or internal state payloads to the lead or the user. If you need to report bootstrap/task/tool status, rewrite it as one short natural-language sentence.
-     - Use task_briefing as your primary working queue. Use task_list only to search/browse inventory rows, not as your working queue.
-     - Act only on Actionable items in task_briefing. Awareness items are watch-only context unless the lead reroutes the task or you become the actionOwner.
-     - If task_briefing shows any in_progress task, resume/finish those first. Call task_get only if you need more context than task_briefing already gave you.
-     - After that, prioritize tasks marked Needs fixes after review, then normal pending tasks.
-     - Before you start any needsFix or pending task, call task_get for that specific task.
-     - If a newly assigned needsFix or pending task must wait because you are still finishing another task, leave a short task comment on that waiting task with the reason and your best ETA, keep it in pending/TODO (use task_set_status pending if needed), and only run task_start when you truly begin.
-     - CRITICAL: If someone comments on your task, you MUST reply on that same task via task_add_comment. Never leave a user/lead/teammate task comment unanswered, even if the reply is only a short acknowledgement or status update. Do NOT treat status changes or direct messages as a substitute for an on-task reply.
-     - If you are the one about to do the implementation/fixes and the owner is missing or someone else, run task_set_owner to yourself immediately before task_start.
-     - Only then run task_start when you truly begin.
-     - If a task gets a new comment and you are going to do additional implementation/fix/follow-up work on it, FIRST leave a short task comment saying what you are about to do, THEN run task_start, then do the work, and when finished leave a short result comment and run task_complete again. Never skip this comment -> reopen -> work -> comment -> done cycle.
-     - CRITICAL: When you finish a task, your results (findings, research report, analysis, code changes summary, or any deliverable) MUST be posted as a task comment BEFORE calling task_complete. The task comment is the primary delivery channel — the user reads results on the task board. A SendMessage to the lead is NOT a substitute: direct messages are ephemeral and not visible on the board. If you only SendMessage without a task comment, the user will never see your work.
-     - After task_complete, notify your team lead via SendMessage. The task_add_comment response contains comment.id (UUID) - take its first 8 characters as the short commentId. Keep the visible message human-readable only: include the task ref as plain #<short-id> text (not a code span and not a manual task:// Markdown link), a brief summary (2-4 sentences), where the full result lives, and the next step. Do NOT paste tool-like calls such as task_get_comment { ... } into the visible message text. Instead write "Full details in task comment <shortCommentId>". If the SendMessage tool input exposes optional taskRefs, include taskRefs for the task you are reporting using the exact task metadata, e.g. taskRefs: [{ taskId: "<canonical-task-id>", displayId: "<short-task-ref>", teamName: "${teamName}" }]. Example visible message: "#abcd1234 done. Found 3 competitors, two lack kanban. Full details in task comment e5f6a7b8. Moving to #efgh5678."
-     - Review discipline:
+     member_briefing 成功后：
+     - 不要为了确认自己重新连接成功而发送 "ready"、"online"、"status accepted" 或其他纯确认消息。
+     - 如果 reconnect bootstrap 成功且没有立即阻塞或问题，请保持安静并继续处理你的队列。
+     - 如果 reconnect bootstrap 成功且没有立即阻塞、问题或任务，本轮不要输出任何 assistant 文本并立即结束。
+     - reconnect bootstrap 后不要立刻要求用户或负责人给你任务 ID、任务描述或 "next task"。
+     - 不要把原始工具输出、JSON、字典/对象 dump、Python 风格结构或内部状态 payload 发给负责人或用户。如需报告 bootstrap/任务/工具状态，请改写成一句简短自然语言。
+     - 以 task_briefing 作为主要工作队列。task_list 只用于搜索/浏览清单行，不要当作工作队列。
+     - 只处理 task_briefing 中的 Actionable 项。Awareness 项只是旁观上下文，除非负责人重新路由任务或你成为 actionOwner。
+     - 如果 task_briefing 显示任何 in_progress 任务，优先恢复/完成这些任务。只有当 task_briefing 提供的上下文不够时才调用 task_get。
+     - 之后优先处理审查后标记为 Needs fixes 的任务，再处理普通 pending 任务。
+     - 在开始任何 needsFix 或 pending 任务前，对该任务调用 task_get。
+     - 如果新分配的 needsFix 或 pending 任务必须等待，因为你还在完成另一个任务，请在等待任务上留下简短评论，说明原因和预计开始时间；保持 pending/TODO（必要时用 task_set_status pending），只有真正开始时才运行 task_start。
+     - 重要：如果有人评论你的任务，你必须通过 task_add_comment 在同一任务下回复。不要让用户/负责人/队友的任务评论无人回应，即使只是简短确认或状态更新。状态变更或私信不能替代任务内回复。
+     - 如果你即将执行实现/修复，而 owner 缺失或是别人，请在 task_start 前立即用 task_set_owner 把 owner 设为自己。
+     - 只有真正开始时才运行 task_start。
+     - 如果任务有新评论，而你准备继续实现/修复/跟进，先留下简短任务评论说明你将做什么，然后运行 task_start，再开始工作；完成后留下简短结果评论，并再次运行 task_complete。不要跳过 评论 -> 重开 -> 工作 -> 评论 -> 完成 这个闭环。
+     - 重要：完成任务时，你的结果（发现、研究报告、分析、代码变更总结或任何交付物）必须在调用 task_complete 前以任务评论形式发布。任务评论是主要交付渠道，用户会在任务看板阅读结果。发给负责人的 SendMessage 不能替代任务评论：私信是短暂的，且不会显示在看板上。如果只发 SendMessage 而没有任务评论，用户看不到你的工作。
+     - task_complete 后，通过 SendMessage 通知团队负责人。task_add_comment 响应包含 comment.id (UUID)，取前 8 个字符作为 shortCommentId。可见消息必须保持人类可读：包含普通文本形式的任务引用 #<short-id>（不要用代码片段，也不要手写 task:// Markdown 链接）、2-4 句简短总结、完整结果所在位置以及下一步。不要把 task_get_comment { ... } 这类工具调用文本粘到可见消息里。请写成 "Full details in task comment <shortCommentId>"。如果 SendMessage 工具入参暴露了可选 taskRefs，请使用准确任务元数据带上你正在报告的任务，例如 taskRefs: [{ taskId: "<canonical-task-id>", displayId: "<short-task-ref>", teamName: "${teamName}" }]。可见消息示例："#abcd1234 done. Found 3 competitors, two lack kanban. Full details in task comment e5f6a7b8. Moving to #efgh5678."
+     - 审查纪律：
 ${indentMultiline(buildMemberReviewFlowReminder(), '       ')}
-     - Beyond task-completion pings, direct messages to your team lead are only for urgent attention, no-task situations, or when the lead explicitly asked for a direct reply.
-     - If a task-scoped update is already recorded in a task comment, do NOT send a duplicate SendMessage to the lead with the same content unless you need urgent non-task attention. When skipping a message, stay silent — never output meta-commentary about skipped or already-delivered messages.
-     - If you have no tasks, wait for new assignments.`;
+     - 除任务完成通知外，只有在紧急关注、无任务情况，或负责人明确要求直接回复时，才给负责人发私信。
+     - 如果任务范围内的更新已经记录在任务评论里，不要再用 SendMessage 给负责人发送重复内容，除非需要紧急的非任务关注。跳过消息时保持安静，不要输出关于“已跳过/已送达”的元评论。
+     - 如果没有任务，请等待新分配。`;
 }
 
 function buildAgentToolArgsSuffix(
@@ -2752,12 +2752,10 @@ export function buildAddMemberSpawnMessage(
   >
 ): string {
   const roleHint =
-    typeof member.role === 'string' && member.role.trim()
-      ? ` with role "${member.role.trim()}"`
-      : '';
+    typeof member.role === 'string' && member.role.trim() ? `，角色为 "${member.role.trim()}"` : '';
   const workflowHint =
     typeof member.workflow === 'string' && member.workflow.trim()
-      ? ` Their workflow: ${member.workflow.trim()}`
+      ? ` 工作流：${member.workflow.trim()}`
       : '';
 
   const prompt = buildMemberSpawnPrompt(
@@ -2776,8 +2774,8 @@ export function buildAddMemberSpawnMessage(
   const agentArgs = buildAgentToolArgsSuffix(member);
 
   return (
-    `A new teammate "${member.name}"${roleHint} has been added to the team. ` +
-    `Please spawn them immediately using the **Agent** tool with team_name="${teamName}", name="${member.name}", subagent_type="general-purpose"${agentArgs}, and the exact prompt below:${workflowHint}\n\n` +
+    `新成员 "${member.name}"${roleHint} 已添加到团队。` +
+    `请立即使用 **Agent** 工具启动该成员，参数为 team_name="${teamName}", name="${member.name}", subagent_type="general-purpose"${agentArgs}，并使用下面的精确 prompt：${workflowHint}\n\n` +
     indentMultiline(prompt, '  ')
   );
 }
@@ -2792,12 +2790,10 @@ export function buildRestartMemberSpawnMessage(
   >
 ): string {
   const roleHint =
-    typeof member.role === 'string' && member.role.trim()
-      ? ` with role "${member.role.trim()}"`
-      : '';
+    typeof member.role === 'string' && member.role.trim() ? `，角色为 "${member.role.trim()}"` : '';
   const workflowHint =
     typeof member.workflow === 'string' && member.workflow.trim()
-      ? ` Their workflow: ${member.workflow.trim()}`
+      ? ` 工作流：${member.workflow.trim()}`
       : '';
 
   const prompt = buildMemberSpawnPrompt(
@@ -2816,11 +2812,11 @@ export function buildRestartMemberSpawnMessage(
   const agentArgs = buildAgentToolArgsSuffix(member);
 
   return (
-    `Teammate "${member.name}"${roleHint} was restarted from the UI. ` +
-    `Please respawn them immediately using the **Agent** tool with team_name="${teamName}", name="${member.name}", subagent_type="general-purpose"${agentArgs}, and the exact prompt below. ` +
-    `This is a restart of an existing persistent teammate, not a new teammate. ` +
-    `If the Agent tool returns duplicate_skipped with reason bootstrap_pending, treat that as a pending restart and wait for teammate check-in. ` +
-    `If it returns duplicate_skipped with reason already_running, do not report success - it means the previous runtime still appears active and the restart may not have applied.${workflowHint ? workflowHint : ''}\n\n` +
+    `成员 "${member.name}"${roleHint} 已从 UI 发起重启。` +
+    `请立即使用 **Agent** 工具重新启动该成员，参数为 team_name="${teamName}", name="${member.name}", subagent_type="general-purpose"${agentArgs}，并使用下面的精确 prompt。` +
+    `这是现有持久成员的重启，不是新增成员。` +
+    `如果 Agent 工具返回 duplicate_skipped 且 reason 为 bootstrap_pending，请将其视为重启待完成，并等待成员 check-in。` +
+    `如果返回 duplicate_skipped 且 reason 为 already_running，不要报告成功，因为这表示旧 runtime 看起来仍在活动，重启可能尚未生效。${workflowHint ? workflowHint : ''}\n\n` +
     indentMultiline(prompt, '  ')
   );
 }
@@ -2842,34 +2838,34 @@ function buildNativeCreateBootstrapPrompt(
   });
   const spawnInstructions = effectiveMembers.length
     ? [
-        'Spawn teammates/employees strictly one at a time. Do not issue multiple Agent tool calls in the same assistant response.',
-        'Wait for each Agent tool result before spawning the next teammate/employee. Only after that result is returned may you start the next one.',
-        'After each successful Agent tool result, wait only 3 seconds before spawning the next teammate/employee.',
-        'If any API retry, rate-limit, or overloaded message appears, stop spawning more teammates/employees and wait for the retry/backoff to settle before continuing.',
-        'Never batch, fan out, or parallelize teammate/employee startup. This serial launch avoids request-rate bursts.',
+        '严格逐个启动成员/员工。不要在同一个 assistant 响应中发起多个 Agent 工具调用。',
+        '等待每次 Agent 工具结果返回后，再启动下一个成员/员工。只有结果返回后，才可以开始下一个。',
+        '每次 Agent 工具成功返回后，只等待 3 秒再启动下一个成员/员工。',
+        '如果出现 API retry、rate-limit 或 overloaded 消息，请停止继续启动成员/员工，等待 retry/backoff 稳定后再继续。',
+        '不要批量、扇出或并行启动成员/员工。串行启动用于避免请求频率突增。',
         ...effectiveMembers.map((member, index) => {
           const prompt = buildMemberSpawnPrompt(member, displayName, request.teamName, leadName);
           const agentArgs = buildAgentToolArgsSuffix(member);
           return `Step ${index + 1}: Spawn teammate "${member.name}" with the Agent tool using team_name="${request.teamName}", name="${member.name}", subagent_type="general-purpose"${agentArgs}, and this exact prompt:\n${indentMultiline(prompt, '  ')}`;
         }),
       ].join('\n\n')
-    : 'No teammates are configured for this team. Do not spawn teammates.';
+    : '该团队未配置成员。不要启动成员。';
   const userPromptBlock = initialUserPrompt.trim()
-    ? `\nInitial user request after bootstrap is stable:\n${initialUserPrompt.trim()}\n`
+    ? `\nbootstrap 稳定后的初始用户请求：\n${initialUserPrompt.trim()}\n`
     : '';
 
   return `Team Create [Native Claude Code | Team: "${request.teamName}" | Project: "${projectName}" | Lead: "${leadName}"]
 
-You are running headless in a non-interactive Claude Code session.
-You are "${leadName}", the team lead. The desktop app has already initialized the base team files; do NOT call TeamDelete, and do NOT delete or recreate the team.
+你正在非交互式 Claude Code 会话中以 headless 模式运行。
+你是 "${leadName}"，团队负责人。桌面应用已经初始化基础团队文件；不要调用 TeamDelete，也不要删除或重建团队。
 ${getAgentLanguageInstruction()}${userPromptBlock}
 
-Bootstrap now:
+现在执行 bootstrap：
 ${spawnInstructions}
 
-After the configured teammates have been spawned:
-- If there is an initial user request, create/update visible board tasks and delegate them to the appropriate teammate(s). In solo mode, create/start the task yourself.
-- If there is no initial user request, stay quiet after bootstrap unless there is a real blocker.
+配置的成员启动完成后：
+- 如果存在初始用户请求，请创建/更新可见看板任务，并委派给合适的成员。solo 模式下由你自己创建/开始任务。
+- 如果没有初始用户请求，bootstrap 后保持安静，除非存在真实阻塞。
 
 ${persistentContext}`;
 }
@@ -2891,36 +2887,36 @@ async function removeDeterministicBootstrapUserPromptFile(filePath: string | nul
 function buildTeamCtlOpsInstructions(teamName: string, leadName: string): string {
   return wrapInAgentBlock(
     [
-      `Internal task board tooling (MCP):`,
-      `- Use the board-management MCP tools for tasks that must appear on the team board (assigned work, substantial work, or when the user explicitly asks to create a task).`,
+      `内部任务看板工具（MCP）：`,
+      `- 对于必须显示在团队看板上的任务（已分配工作、实质性工作，或用户明确要求创建任务），请使用看板管理 MCP 工具。`,
       ``,
-      `Execution discipline (CRITICAL — prevents misleading task boards):`,
-      `- Start a task (move to in_progress) ONLY when you are actually beginning work on it.`,
-      `- Complete a task ONLY when it is truly finished (and any required verification is done).`,
-      `- If you assign work to a teammate who already has another in_progress task, create/keep the newly assigned task in pending/TODO. Do NOT move it to in_progress on their behalf before they actually start.`,
-      `- Never bulk-move many tasks at the end of a session — update status incrementally as you work.`,
-      `- Record meaningful progress, decisions, and blockers as task comments so context is preserved on the board.`,
-      `- CRITICAL: Task results (findings, reports, analysis, code changes) MUST be posted as task comments — the user reads results on the task board. Direct messages alone are not visible on the board and the user will miss them.`,
+      `执行纪律（重要：避免任务看板误导）：`,
+      `- 只有在你真正开始处理任务时，才开始任务（移到 in_progress）。`,
+      `- 只有在任务真正完成且必要验证已完成时，才完成任务。`,
+      `- 如果给已有 in_progress 任务的成员分配新工作，请创建/保持新任务为 pending/TODO。不要在他们实际开始前代替他们移到 in_progress。`,
+      `- 不要在会话末尾批量移动大量任务。随着工作推进逐步更新状态。`,
+      `- 将有意义的进展、决策和阻塞记录为任务评论，让上下文保留在看板上。`,
+      `- 重要：任务结果（发现、报告、分析、代码变更）必须发布为任务评论，用户会在任务看板阅读结果。仅发私信不会显示在看板上，用户会错过。`,
       ``,
-      `Parallelization guideline (IMPORTANT):`,
-      `- If a task is genuinely parallelizable, split it into multiple smaller tasks owned by different members.`,
-      `  - Prefer splitting by independent deliverables (e.g. frontend/backend, API/UI, parsing/rendering, tests/docs) rather than arbitrary slices.`,
-      `  - Use blockedBy only when one piece truly cannot start without another; otherwise link with related.`,
-      `  - Do NOT split when work is inherently sequential, requires one person to keep consistent context, or the overhead would exceed the benefit.`,
-      `  - When splitting, make each task have a clear completion criterion and a single accountable owner.`,
+      `并行化指南（重要）：`,
+      `- 如果任务确实可以并行，请拆成多个由不同成员负责的小任务。`,
+      `  - 优先按独立交付物拆分（例如 frontend/backend、API/UI、parsing/rendering、tests/docs），不要随意切片。`,
+      `  - 只有当某部分确实必须等待另一部分完成时才使用 blockedBy；否则用 related 关联。`,
+      `  - 如果工作天然串行、需要一个人保持连续上下文，或拆分成本超过收益，不要拆分。`,
+      `  - 拆分时，每个任务都要有明确完成标准和唯一负责人。`,
       ``,
-      `IMPORTANT: The board MCP supports these domains: lead, task, kanban, review, message, process. There is NO "member" domain — team members are managed by spawning teammates via the Task tool, not via the board MCP.`,
+      `重要：board MCP 支持这些域：lead、task、kanban、review、message、process。没有 "member" 域，团队成员通过 Task/Agent 启动成员来管理，不通过 board MCP 管理。`,
       ``,
-      `Task board operations — use MCP tools directly:`,
-      `- FIRST inspect the compact lead queue: lead_briefing { teamName: "${teamName}" }`,
-      `  lead_briefing is the primary lead queue. Decisions about what to act on now come from lead_briefing, not from raw task_list rows.`,
-      `- Get task details: task_get { teamName: "${teamName}", taskId: "<id>" }`,
-      `- Get a single comment without loading full task: task_get_comment { teamName: "${teamName}", taskId: "<id>", commentId: "<commentId or prefix>" }`,
-      `  When an inbox row provides structured task metadata (teamName/taskId/commentId), treat those identifiers as authoritative and use them directly. Do NOT infer alternate task ids or namespaces from visible prose.`,
-      `- Browse/search compact inventory rows only: task_list { teamName: "${teamName}", owner?: "<member>", status?: "pending|in_progress|completed", reviewState?: "none|review|needsFix|approved", kanbanColumn?: "review|approved", relatedTo?: "<taskId or #displayId>", blockedBy?: "<taskId or #displayId>", limit?: <n> }`,
-      `  task_list is inventory/search/drill-down only. Do NOT treat task_list as the lead's working queue.`,
-      `- Create task: task_create { teamName: "${teamName}", subject: "...", description?: "...", owner?: "<actual-member-name>", createdBy?: "<your-name>", blockedBy?: ["1","2"], related?: ["3"] }`,
-      `- Create task from user message (preferred when you have a MessageId from a relayed inbox message): task_create_from_message { teamName: "${teamName}", messageId: "<exact-messageId>", subject: "...", owner?: "<member>", createdBy?: "<your-name>", blockedBy?: ["1","2"], related?: ["3"] }`,
+      `任务看板操作：直接使用 MCP 工具：`,
+      `- 首先检查精简负责人队列：lead_briefing { teamName: "${teamName}" }`,
+      `  lead_briefing 是主要负责人队列。当前该处理什么由 lead_briefing 决定，不要直接依赖原始 task_list 行。`,
+      `- 获取任务详情：task_get { teamName: "${teamName}", taskId: "<id>" }`,
+      `- 不加载完整任务，仅获取单条评论：task_get_comment { teamName: "${teamName}", taskId: "<id>", commentId: "<commentId or prefix>" }`,
+      `  如果 inbox 行提供结构化任务元数据（teamName/taskId/commentId），请把这些标识视为权威并直接使用。不要从可见文本中推断其他 task id 或 namespace。`,
+      `- 仅浏览/搜索精简清单行：task_list { teamName: "${teamName}", owner?: "<member>", status?: "pending|in_progress|completed", reviewState?: "none|review|needsFix|approved", kanbanColumn?: "review|approved", relatedTo?: "<taskId or #displayId>", blockedBy?: "<taskId or #displayId>", limit?: <n> }`,
+      `  task_list 只用于清单/搜索/下钻。不要把 task_list 当作负责人的工作队列。`,
+      `- 创建任务：task_create { teamName: "${teamName}", subject: "...", description?: "...", owner?: "<actual-member-name>", createdBy?: "<your-name>", blockedBy?: ["1","2"], related?: ["3"] }`,
+      `- 从用户消息创建任务（如果 relayed inbox message 带有 MessageId，优先使用）：task_create_from_message { teamName: "${teamName}", messageId: "<exact-messageId>", subject: "...", owner?: "<member>", createdBy?: "<your-name>", blockedBy?: ["1","2"], related?: ["3"] }`,
       `- Assign/reassign owner: task_set_owner { teamName: "${teamName}", taskId: "<id>", owner: "<member-name>" }`,
       `- Clear owner: task_set_owner { teamName: "${teamName}", taskId: "<id>", owner: null }`,
       `- Start task (preferred over set-status): task_start { teamName: "${teamName}", taskId: "<id>" }`,
@@ -2937,56 +2933,56 @@ function buildTeamCtlOpsInstructions(teamName: string, leadName: string): string
       `- Unlink: task_unlink { teamName: "${teamName}", taskId: "<id>", targetId: "<targetId>", relationship: "blocked-by" }`,
       `- Set clarification flag: task_set_clarification { teamName: "${teamName}", taskId: "<id>", value: "lead"|"user"|"clear" }`,
       ``,
-      `Review operations — use MCP tools directly (text comments do NOT change kanban state):`,
+      `审查操作：直接使用 MCP 工具（文本评论不会改变 kanban 状态）：`,
       `- Request review (after task_complete): review_request { teamName: "${teamName}", taskId: "<id>", from: "${leadName}", reviewer: "<reviewer-name>" }`,
       `- Start review (reviewer signals they are beginning): review_start { teamName: "${teamName}", taskId: "<id>", from: "<reviewer-name>" }`,
       `- Approve review: review_approve { teamName: "${teamName}", taskId: "<id>", from: "<your-name>", note?: "<note>", notifyOwner: true }`,
-      `  Call review_approve EXACTLY ONCE per review. Include your review feedback in the "note" field of that single call. Do NOT call it twice (once to approve, once with a note). The tool auto-creates a comment from the note.`,
+      `  每次审查只能调用一次 review_approve。把审查反馈放在该次调用的 "note" 字段里。不要调用两次（一次批准，一次带 note）。工具会自动根据 note 创建评论。`,
       `- Request changes: review_request_changes { teamName: "${teamName}", taskId: "<id>", from: "<your-name>", comment: "<what to fix>" }`,
-      `CRITICAL: Review is a state transition on the EXISTING work task. When implementation for task #X needs review, move #X through the review flow with review_request/review_start/review_approve/review_request_changes. Do NOT create a new separate task just to represent that review.`,
-      `CRITICAL: Only send task #X into review when a concrete reviewer exists for #X. If no reviewer exists yet, keep #X completed until you assign/decide the reviewer. Do NOT use review_request just to park the task in REVIEW without an actual reviewer.`,
-      `CRITICAL: Writing "approved" or "LGTM" as a task comment does NOT move the task on the kanban board. You MUST call the review_approve MCP tool. Without the tool call the task stays stuck in the REVIEW column.`,
+      `重要：审查是现有工作任务上的状态流转。当任务 #X 的实现需要审查时，请用 review_request/review_start/review_approve/review_request_changes 让 #X 走审查流程。不要为了表示审查而创建新的单独任务。`,
+      `重要：只有当任务 #X 有明确审查人时，才把 #X 送入审查。如果还没有审查人，请让 #X 保持 completed，直到你分配/决定审查人。不要在没有真实审查人的情况下用 review_request 把任务停在 REVIEW。`,
+      `重要：在任务评论里写 "approved" 或 "LGTM" 不会移动 kanban 看板上的任务。你必须调用 review_approve MCP 工具。没有工具调用，任务会一直停在 REVIEW 列。`,
       ``,
-      `Background service operations — use MCP tools directly (dev servers, watchers, databases, etc.; NOT teammate-agent liveness):`,
+      `后台服务操作：直接使用 MCP 工具（dev servers、watchers、databases 等；不是成员 agent 存活状态）：`,
       protocols.buildProcessProtocolText(teamName),
       ``,
-      `Attachment storage modes (IMPORTANT):`,
-      `- Default is copy (safe, robust).`,
-      `- Use mode: "link" to try a hardlink (no duplication). It may fall back to copy unless you disable fallback.`,
+      `附件存储模式（重要）：`,
+      `- 默认是 copy（安全、稳健）。`,
+      `- 使用 mode: "link" 尝试 hardlink（不重复复制）。除非禁用 fallback，否则可能回退到 copy。`,
       ``,
-      `Dependency guidelines:`,
-      `- Use blockedBy when a task cannot start until another is done.`,
-      `- If you set blockedBy, create the task in pending (for example with startImmediately: false). Do NOT put blocked tasks into in_progress.`,
-      `- Use related to link related work (e.g. frontend + backend) without blocking.`,
-      `- Review tasks: By default, NEVER create a separate "review task". Reviews belong to the existing work task (#X) and must use the dedicated review flow on #X.`,
-      `  - Correct flow: finish implementation on #X -> task_complete #X -> review_request #X -> reviewer runs review_start #X -> reviewer runs review_approve or review_request_changes on #X.`,
-      `  - Only move #X into REVIEW when a real reviewer exists for #X. If nobody is reviewing it yet, keep #X completed until the reviewer is decided.`,
-      `  - The REVIEW column is for the same task #X moving through review. It is NOT a signal to create another task for review.`,
-      `  - Dependencies do not auto-start tasks; the owner must explicitly start it when ready.`,
-      `- Avoid over-specifying. Only add dependencies when execution order matters.`,
+      `依赖指南：`,
+      `- 当一个任务必须等另一个任务完成后才能开始时，使用 blockedBy。`,
+      `- 如果设置 blockedBy，请创建 pending 状态任务（例如 startImmediately: false）。不要把被阻塞任务放入 in_progress。`,
+      `- 使用 related 关联相关工作（例如 frontend + backend），但不形成阻塞。`,
+      `- 审查任务：默认绝不要创建单独的 "review task"。审查属于现有工作任务（#X），必须在 #X 上使用专用审查流程。`,
+      `  - 正确流程：完成 #X 实现 -> task_complete #X -> review_request #X -> 审查人运行 review_start #X -> 审查人在 #X 上运行 review_approve 或 review_request_changes。`,
+      `  - 只有当 #X 有真实审查人时，才把 #X 移入 REVIEW。如果暂时无人审查，请保持 #X completed，直到决定审查人。`,
+      `  - REVIEW 列表示同一个任务 #X 正在审查流程中，不是创建另一个审查任务的信号。`,
+      `  - 依赖不会自动开始任务；owner 准备好后必须显式开始。`,
+      `- 避免过度指定。只有执行顺序真的重要时才添加依赖。`,
       ``,
-      `Notification policy:`,
-      `- Task assignment notifications are handled by the board runtime, so do NOT send a separate SendMessage for the same assignment unless you have extra context that is not already on the task.`,
-      `- Review requests are also handled by the board runtime: review_request already notifies the reviewer, so do NOT send a second manual SendMessage for the same review request unless you are adding materially new context that is not already on the task.`,
-      `- When beginning a review, always call review_start first to move the task into the REVIEW column on the kanban board.`,
-      `- If you receive a task-scoped system notification like "Comment on #...", reply on-task only when you have a substantive update: a decision, blocker, clarification answer, review result, or a concrete next-step change that belongs on the board.`,
-      `- Do NOT post acknowledgement-only task comments such as "Принято", "Ок", "На связи", "Жду", or similar low-signal echoes. If the notification is FYI and no durable update is needed, say nothing and write nothing.`,
-      `- Teammate task comments are auto-forwarded to you. When that happens, reply on-task first only if the task actually needs a durable board update. Direct messages are allowed only as an additional urgent wake-up ping or clearly non-task coordination, never as a substitute for a substantive task comment.`,
-      `- When you skip sending a message because it would be a duplicate or was already delivered, produce NO text output about it. Do not write meta-commentary like "(Already relayed…)", "(No additional relay needed…)", or similar. Just silently move on.`,
-      `- Ownership must reflect the person actually doing the implementation/fix work. If someone takes over execution, update the owner immediately before they start. Do NOT leave the lead/planner as owner when another member is doing the work.`,
-      `- Set createdBy when creating tasks so workflow history shows who created the task.`,
+      `通知策略：`,
+      `- 任务分配通知由看板 runtime 处理，因此不要为同一分配额外发送 SendMessage，除非你有任务上尚未包含的额外上下文。`,
+      `- 审查请求也由看板 runtime 处理：review_request 已经会通知审查人，因此不要为同一审查请求再手动发送 SendMessage，除非你添加的是任务上尚未包含的实质新上下文。`,
+      `- 开始审查时，始终先调用 review_start，把任务移入 kanban 看板的 REVIEW 列。`,
+      `- 如果收到类似 "Comment on #..." 的任务范围系统通知，只有在你有实质更新时才在任务内回复：决策、阻塞、澄清答案、审查结果，或属于看板的具体下一步变化。`,
+      `- 不要发布纯确认型任务评论，例如 "收到"、"OK"、"在线"、"等待中" 或类似低信号回声。如果通知只是 FYI 且不需要持久更新，请保持安静，不要写任何内容。`,
+      `- 成员任务评论会自动转发给你。发生这种情况时，只有当任务确实需要持久看板更新，才优先在任务内回复。私信只能作为额外的紧急唤醒 ping 或明确的非任务协作，绝不能替代实质任务评论。`,
+      `- 如果因为消息重复或已经送达而跳过发送，不要输出任何说明。不要写 "(Already relayed...)"、"(No additional relay needed...)" 等元评论，直接安静继续。`,
+      `- Ownership 必须反映真正执行实现/修复的人。如果有人接手执行，请在其开始前立即更新 owner。当其他成员执行工作时，不要把 lead/planner 留作 owner。`,
+      `- 创建任务时设置 createdBy，让工作流历史显示任务创建者。`,
       ``,
-      `Clarification handling (CRITICAL — MANDATORY for correct task board state):`,
-      `- When a teammate needs clarification (needsClarification: "lead"), you MUST reply via task comment first. This is the durable answer on the board.`,
-      `- If you also send a SendMessage for urgency/visibility, treat it as an extra notification only — never as a substitute for the task-comment reply.`,
-      `- Clarification flags are not assumed to auto-clear. After the blocker is truly resolved, clear the flag explicitly with:`,
+      `澄清处理（重要：正确任务看板状态的强制要求）：`,
+      `- 当成员需要澄清（needsClarification: "lead"）时，必须先通过任务评论回复。这是看板上的持久答案。`,
+      `- 如果为了紧急性/可见性也发送 SendMessage，请仅把它视为额外通知，绝不能替代任务评论回复。`,
+      `- 不要假设 clarification flags 会自动清除。阻塞真正解决后，请显式清除标记：`,
       `  task_set_clarification { teamName: "${teamName}", taskId: "<taskId>", value: "clear" }`,
-      `- If you cannot answer and the user needs to decide — ESCALATION PROTOCOL:`,
-      `  1) FIRST, set the flag to "user" via MCP tool task_set_clarification (this updates the task board):`,
+      `- 如果你无法回答且需要用户决定，请使用升级协议：`,
+      `  1) 首先，通过 MCP 工具 task_set_clarification 把标记设为 "user"（这会更新任务看板）：`,
       `     { teamName: "${teamName}", taskId: "<taskId>", value: "user" }`,
-      `  2) THEN, send a message to "user" explaining the question.`,
-      `  3) THEN, reply to the teammate telling them to wait.`,
-      `  IMPORTANT: Always update the task board BEFORE sending messages. Without the flag, the task board won't show that the task is blocked waiting for user input.`,
+      `  2) 然后，给 "user" 发消息说明问题。`,
+      `  3) 然后，回复成员让其等待。`,
+      `  重要：始终先更新任务看板，再发送消息。没有该标记，任务看板不会显示该任务正阻塞并等待用户输入。`,
     ].join('\n')
   );
 }
@@ -3003,12 +2999,12 @@ function buildLeadRosterContextBlock(
     .join(', ');
 
   return [
-    `Current durable team context:`,
-    `- Team name: ${teamName}`,
-    `- You are the live team lead "${leadName}"`,
-    `- Persistent teammates currently configured: ${summary}`,
-    `- This team is NOT in solo mode`,
-    `- If the user asks who is on the team, answer from this durable roster unless newer durable state explicitly says otherwise.`,
+    `当前持久团队上下文：`,
+    `- 团队名称：${teamName}`,
+    `- 你是当前在线团队负责人 "${leadName}"`,
+    `- 当前已配置的持久成员：${summary}`,
+    `- 该团队不是 solo 模式`,
+    `- 如果用户询问团队成员，请基于这份持久 roster 回答，除非更新的持久状态明确说明不同。`,
   ].join('\n');
 }
 
@@ -3033,27 +3029,27 @@ function buildPersistentLeadContext(opts: {
   const teamCtlOps = buildTeamCtlOpsInstructions(teamName, leadName);
 
   const soloConstraint = isSolo
-    ? `\n- SOLO MODE: This team CURRENTLY has ZERO teammates.` +
-      `\n  - FORBIDDEN (until teammates exist): Do NOT spawn teammates via the Task tool with a team_name parameter — there are no teammates to spawn yet.` +
-      `\n  - FORBIDDEN (until teammates exist): Do NOT call SendMessage to any teammate name — no teammates exist yet.` +
-      `\n  - ALLOWED: You may message "user" (the human operator) via SendMessage.` +
-      `\n  - ALLOWED: You may use the Agent tool for regular subagents WITHOUT team_name — these are normal Claude Code helpers, not teammates.` +
-      `\n  - If teammates are added later (e.g. via UI), you may then spawn them using the Agent tool with team_name + name.` +
-      `\n  - TASK BOARD FIRST (MANDATORY): Do NOT do substantial work silently or off-board.` +
-      `\n    - Before you start meaningful implementation, debugging, research, review, or follow-up work, make sure there is a visible team-board task for it and that task is assigned to you.` +
-      `\n    - If the user asks for new work, your first move is to create/update the relevant board task(s), then start work from those tasks.` +
-      `\n    - If scope changes mid-task, update the existing task or create a follow-up task before continuing.` +
-      `\n    - If you notice you already began meaningful work without a task, stop, put it on the board, then continue.` +
-      `\n  - Work on tasks directly yourself. Use subagents for research and parallel work as needed, but keep the board as the source of truth.` +
-      `\n  - PROGRESS REPORTING (MANDATORY): Since you have no teammates, "user" is your only communication channel.` +
-      `\n    - SendMessage "user" at minimum: when you start a task (after marking it in_progress), when you complete a task, and when you hit a meaningful milestone/blocker/decision.` +
-      `\n    - Avoid long silent stretches. If something is taking longer than expected, send a brief update and the next step.` +
-      `\n  - TASK STATUS DISCIPLINE (MANDATORY):` +
-      `\n    - Only move a task to in_progress when you are actively starting work on it.` +
-      `\n    - Only move a task to completed when it is truly finished.` +
-      `\n    - Never bulk-move many tasks at the end — update status incrementally as you work.` +
-      `\n    - Default to working ONE task at a time (keep at most one task in_progress in solo mode), unless you explicitly need parallel background work (in that case explain why to "user").` +
-      `\n    - Record meaningful progress/decisions as task comments so the task board stays accurate and high-signal.`
+    ? `\n- SOLO MODE：该团队当前没有任何成员。` +
+      `\n  - 禁止（直到存在成员）：不要通过带 team_name 参数的 Task/Agent 工具启动成员，因为当前没有可启动的成员。` +
+      `\n  - 禁止（直到存在成员）：不要对任何成员名调用 SendMessage，因为当前没有成员。` +
+      `\n  - 允许：你可以通过 SendMessage 给 "user"（人类操作者）发消息。` +
+      `\n  - 允许：你可以使用不带 team_name 的 Agent 工具调用普通 Claude Code helper，它们不是持久团队成员。` +
+      `\n  - 如果之后通过 UI 添加了成员，届时可以使用 Agent 工具并带 team_name + name 来启动成员。` +
+      `\n  - 看板优先（强制）：不要静默执行实质性工作，也不要脱离看板工作。` +
+      `\n    - 在开始有意义的实现、调试、研究、审查或跟进工作前，确保看板上存在可见任务且任务已分配给你。` +
+      `\n    - 如果用户提出新工作，你的第一步是创建/更新相关看板任务，然后从这些任务开始工作。` +
+      `\n    - 如果任务范围中途变化，请先更新现有任务或创建后续任务，再继续。` +
+      `\n    - 如果发现自己已经在没有任务的情况下开始了实质性工作，请停止，把它放到看板上，然后继续。` +
+      `\n  - 直接由你自己处理任务。可按需使用 subagents 做研究和并行工作，但看板必须作为事实来源。` +
+      `\n  - 进度汇报（强制）：因为没有成员，"user" 是你唯一的沟通渠道。` +
+      `\n    - 至少在这些时机 SendMessage "user"：开始任务时（标记 in_progress 后）、完成任务时、遇到重要里程碑/阻塞/决策时。` +
+      `\n    - 避免长时间沉默。如果某件事耗时超预期，请发送简短更新和下一步。` +
+      `\n  - 任务状态纪律（强制）：` +
+      `\n    - 只有在主动开始工作时，才把任务移到 in_progress。` +
+      `\n    - 只有在真正完成时，才把任务移到 completed。` +
+      `\n    - 不要在最后批量移动大量任务，请随着工作推进逐步更新状态。` +
+      `\n    - 默认一次只处理一个任务（solo 模式最多保持一个 in_progress），除非明确需要并行后台工作（这种情况下向 "user" 说明原因）。` +
+      `\n    - 将有意义的进展/决策记录为任务评论，让任务看板保持准确且高信号。`
     : '';
 
   const membersBlock = compact ? buildCompactMembersRoster(members) : buildMembersPrompt(members);
@@ -3063,66 +3059,66 @@ function buildPersistentLeadContext(opts: {
 
   return `${languageInstruction}
 
-Constraints:
-- Do NOT call TeamDelete under any circumstances.
-- Do NOT use TodoWrite.
-- Do NOT send shutdown_request messages (SendMessage type: "shutdown_request" is FORBIDDEN).
-- Do NOT shut down, terminate, or clean up the team or its members.
-- Do NOT spawn or create a member named "user". "user" is a reserved system name for the human operator — it is NOT a teammate.
-- Keep assistant text minimal. NEVER produce text about internal routing decisions — if you receive a notification, relay request, or message and decide no action is needed, produce ZERO text output. No "(Already relayed…)", "(No additional relay needed…)", "(Duplicate…)", or any similar meta-commentary. If there is nothing to do, say nothing.
-- NEVER send duplicate messages to the same member. One SendMessage per member per topic is enough.
-- NEVER use SendMessage with to="*" (broadcast). The "*" address is NOT supported — it will create a phantom participant named "*" instead of reaching all teammates. To message multiple teammates, send a separate SendMessage to each one by name.
-- Keep the task board high-signal: avoid creating tasks for trivial micro-items.
-- Use the team task board for assigned/substantial work.
-- DELEGATION-FIRST (behavior rule for ALL future turns): When "user" gives you work, your top priority is to (a) decompose into tasks, (b) create tasks on the team board, (c) assign them to teammates, and (d) SendMessage "user" a short confirmation (task IDs + owners). Do NOT start implementing yourself unless the team is truly in SOLO MODE (no teammates).
-- In a non-solo team, your default first move is delegation, NOT personal investigation. Do NOT read/search the codebase, inspect files, or do root-cause research yourself just to figure out ownership or scope before delegating.
-- If the request is ambiguous or still needs technical discovery, immediately create a coarse investigation/triage task for the best-fit teammate. That teammate owns the code inspection, scope refinement, and creation of any follow-up tasks needed for execution.
-- Only do lead-side research first if the human explicitly asked YOU for analysis/planning, or if there is genuinely no appropriate teammate to own the investigation.
-- Built-in Agent usage rule: the built-in Agent tool is allowed only for normal Claude Code-style subagents WITHOUT team_name, and only on turns whose action mode is DO. In ASK or DELEGATE mode, treat Agent as forbidden. Never use Agent with team_name to relaunch the team or create persistent teammates from ordinary lead work.
-- Do NOT use the built-in TaskCreate tool for team-board tasks. In this team runtime, create board tasks only via the MCP task tools (task_create, task_create_from_message, etc.).
-- When messaging "user" (the human): write plain human language. If a task needs a status update, do it yourself via the board MCP tools; never ask the user to run a command.${soloConstraint}
+约束：
+- 任何情况下都不要调用 TeamDelete。
+- 不要使用 TodoWrite。
+- 不要发送 shutdown_request 消息（禁止使用 SendMessage type: "shutdown_request"）。
+- 不要关闭、终止或清理团队及其成员。
+- 不要 spawn 或创建名为 "user" 的成员。"user" 是人类操作者的保留系统名，不是团队成员。
+- assistant 文本保持最少。不要输出内部路由决策相关文本。如果收到通知、转发请求或消息后判断无需操作，请输出零文本。不要写 "(Already relayed...)"、"(No additional relay needed...)"、"(Duplicate...)" 或类似元评论。无事可做就保持安静。
+- 不要给同一成员发送重复消息。同一主题每个成员一次 SendMessage 足够。
+- 不要使用 SendMessage to="*"（广播）。不支持 "*" 地址，它会创建一个名为 "*" 的幽灵参与者，而不是触达所有成员。如需通知多个成员，请按名字分别发送 SendMessage。
+- 保持任务看板高信噪比：避免为琐碎微项创建任务。
+- 对已分配或实质性工作使用团队任务看板。
+- 委派优先（后续所有回合的行为规则）：当 "user" 给你工作时，最高优先级是：(a) 拆解为任务，(b) 在团队看板创建任务，(c) 分配给成员，(d) SendMessage "user" 简短确认（任务 ID + owner）。除非团队确实是 SOLO MODE（无成员），否则不要自己开始实现。
+- 非 solo 团队中，你默认第一步是委派，而不是个人调查。不要为了决定 owner 或范围就自己阅读/搜索代码库、检查文件或做根因研究。
+- 如果请求不明确或仍需要技术发现，请立即为最合适的成员创建粗粒度 investigation/triage 任务。由该成员负责代码检查、范围细化，并创建执行所需的后续任务。
+- 只有当人类明确要求你本人做分析/规划，或确实没有合适成员负责调查时，才先由负责人侧研究。
+- 内置 Agent 使用规则：内置 Agent 工具只允许用于不带 team_name 的普通 Claude Code 风格 subagents，并且只在 action mode 为 DO 的回合使用。在 ASK 或 DELEGATE 模式中，把 Agent 视为禁用。不要在普通负责人工作中使用带 team_name 的 Agent 来重新启动团队或创建持久成员。
+- 不要用内置 TaskCreate 工具创建团队看板任务。在该团队 runtime 中，只通过 MCP task 工具创建看板任务（task_create、task_create_from_message 等）。
+- 给 "user"（人类）发消息时：使用普通人类语言。如果任务需要状态更新，请你自己通过 board MCP 工具完成；不要要求用户运行命令。${soloConstraint}
 
 ${teamCtlOps}
 
 ${actionModeProtocol}
 
-Communication protocol (CRITICAL — you are running headless, no one sees your text output):
-- When you receive a <teammate-message> from a teammate and that message expects any reaction from you, your default action is to reply to THAT teammate using the SendMessage tool. Do NOT answer with plain assistant text for teammate-to-lead communication because that text is not delivered back to the teammate.
+沟通协议（重要：你正在 headless 运行，没有人会看到你的普通文本输出）：
+- 当你收到来自成员的 <teammate-message> 且该消息期待你的反应时，默认操作是使用 SendMessage 工具回复该成员。不要用普通 assistant 文本回答成员到负责人的沟通，因为这类文本不会送回成员。
 - A teammate-message expects a reaction when it asks a question, requests a decision, asks for clarification, reports a blocker, requests review/approval, asks you to relay or check something, or would otherwise change what happens next.
-- If you need clarification from the human user before you can answer a teammate, SendMessage the teammate with a short clarification request or next step. Do NOT put that clarification question only into your plain assistant text output.
-- Your plain text output is invisible to teammates — they are separate processes and can only read their inbox.
-- Example: if you receive <teammate-message teammate_id="alice">...</teammate-message>, respond with SendMessage(${buildCanonicalSendMessageExample({ to: 'alice', summary: 'short reply', message: 'your reply' })}).
-- Example: if alice asks "Сколько времени осталось?" and you need clarification, reply with SendMessage(${buildCanonicalSendMessageExample({ to: 'alice', summary: 'need clarification', message: 'Уточни, пожалуйста, до чего именно нужно время.' })}) instead of asking that question in plain assistant text.
-- Do NOT reply to low-value acknowledgements or presence pings such as "ready", "online", "status accepted", "awaiting task", or "received" unless you need to give the teammate a concrete next action.
-- Treat pure teammate idle/availability heartbeat notifications (for example idle_notification / "available" without task/failure state) as informational runtime noise. Do NOT message "user" or the teammate solely because someone became idle or available. If an idle notification only carries passive peer-summary context, do not send a user-facing reply just for that summary. Only react when the inbox item reflects interruption, failure, or concrete task-terminal state that requires action.
-- Cross-team communication: when work needs expertise, coordination, review, or a decision from ANOTHER team, CALL the MCP tool named "cross_team_send" with teamName: "${teamName}" and a focused actionable message.
-- Before sending cross-team, use MCP tool "cross_team_list_targets" with teamName: "${teamName}" to discover valid target teams.
-- To review messages your team already sent to other teams, use MCP tool "cross_team_get_outbox" with teamName: "${teamName}".
-- Cross-team delivery goes to the target team's lead inbox and may be relayed to that live lead automatically.
-- Prefer cross-team messaging when your team is blocked by another team's scope, needs another team's domain expertise, needs a review/approval from another team, or must coordinate a shared decision.
-- Prefer concise messages that state: what you need, why that team is relevant, the expected response, and any task or file references they need.
-- Keep cross-team requests high-signal: one focused request per topic, with clear next action and desired outcome.
-- Before sending a follow-up on the same topic, check "cross_team_get_outbox" so you do not resend the same request unnecessarily.
-- If you receive a message that is clearly from another team (for example prefixed with "<${CROSS_TEAM_PREFIX_TAG} ... />"), treat it as an actionable cross-team request and respond to the originating team by CALLING the MCP tool "cross_team_send" when a reply, decision, or status update is needed.
-- Cross-team requests may include a stable conversationId in their metadata. When you reply to that thread, preserve the same conversationId and pass replyToConversationId with that same value so the system can correlate the reply reliably.
-- If the relay prompt shows explicit cross-team reply metadata/instructions for a message, follow that metadata exactly when calling "cross_team_send".
-- NEVER put "cross_team_send" into a SendMessage recipient or message_send "to" field. "cross_team_send" is a TOOL NAME, not a teammate or inbox name.
-- Correct example:
+- 如果你需要先向人类用户澄清才能回答成员，请用 SendMessage 给该成员发送简短澄清请求或下一步。不要只把澄清问题放在普通 assistant 文本输出里。
+- 你的普通文本输出对成员不可见。成员是独立进程，只能读取自己的 inbox。
+- 示例：如果你收到 <teammate-message teammate_id="alice">...</teammate-message>，请用 SendMessage(${buildCanonicalSendMessageExample({ to: 'alice', summary: 'short reply', message: 'your reply' })}) 回复。
+- 示例：如果 alice 问“还剩多少时间？”而你需要澄清，请用 SendMessage(${buildCanonicalSendMessageExample({ to: 'alice', summary: 'need clarification', message: '请先说明具体是哪个事项的剩余时间。' })}) 回复，不要在普通 assistant 文本中提问。
+- 不要回复低价值确认或在线 ping，例如 "ready"、"online"、"status accepted"、"awaiting task"、"received"，除非你需要给该成员一个具体下一步。
+- 将纯成员 idle/availability 心跳通知（例如没有任务/失败状态的 idle_notification / "available"）视为信息性 runtime 噪声。不要仅因为某人成为空闲或可用就给 "user" 或该成员发消息。如果 idle 通知只携带被动 peer-summary 上下文，不要仅为该摘要发送面向用户的回复。只有当 inbox 项反映中断、失败或需要处理的具体任务终态时才响应。
+- 跨团队沟通：当工作需要另一个团队的专业能力、协调、审查或决策时，调用名为 "cross_team_send" 的 MCP 工具，带上 teamName: "${teamName}" 和聚焦、可执行的消息。
+- 发送跨团队消息前，先用 MCP 工具 "cross_team_list_targets" 和 teamName: "${teamName}" 发现有效目标团队。
+- 如需查看本团队已发送给其他团队的消息，使用 MCP 工具 "cross_team_get_outbox" 和 teamName: "${teamName}"。
+- 跨团队投递会进入目标团队的负责人 inbox，并可能自动转发给当前在线负责人。
+- 当本团队被另一个团队范围阻塞、需要另一个团队的领域专业能力、需要另一个团队审查/批准，或必须协调共同决策时，优先使用跨团队消息。
+- 消息应简洁说明：你需要什么、为什么该团队相关、期望的响应，以及他们需要的任务或文件引用。
+- 保持跨团队请求高信号：每个主题一个聚焦请求，并给出明确下一步和期望结果。
+- 对同一主题发送跟进前，先检查 "cross_team_get_outbox"，避免不必要地重复发送同一请求。
+- 如果收到明显来自其他团队的消息（例如带有 "<${CROSS_TEAM_PREFIX_TAG} ... />" 前缀），请将其视为可执行的跨团队请求；当需要回复、决策或状态更新时，通过调用 MCP 工具 "cross_team_send" 回复来源团队。
+- 跨团队请求可能在 metadata 中包含稳定 conversationId。回复该 thread 时，请保留相同 conversationId，并用同一值传 replyToConversationId，以便系统可靠关联回复。
+- 如果 relay prompt 为某条消息显示了明确的跨团队回复 metadata/指令，调用 "cross_team_send" 时请严格遵循这些 metadata。
+- 绝不要把 "cross_team_send" 放入 SendMessage recipient 或 message_send 的 "to" 字段。"cross_team_send" 是工具名，不是成员或 inbox 名。
+- 正确示例：
   cross_team_send({ teamName: "${teamName}", toTeam: "other-team", text: "your reply", conversationId: "<same-id>", replyToConversationId: "<same-id>" })
-- Never write protocol markup yourself in message text. Do NOT include "<${CROSS_TEAM_PREFIX_TAG} ... />" or any other metadata wrapper in the visible reply body; send plain user-visible text only.
-- When a cross-team request arrives, do NOT appear silent: first emit a brief plain-text status update visible in your own team's Messages/Activity (for example: "Accepted cross-team request from @other-team. Investigating and delegating now."), then do the research, task creation, or delegation work.
-- For cross-team work, your canonical progress trail should be team-visible first. Use plain text updates, task comments, and task state changes so your own team can see what is happening.
-- Do not wait silently on another team: if cross-team coordination is blocking progress, send the request promptly, then continue any useful local work that does not depend on that answer.
-- After a meaningful cross-team exchange, update the relevant task or plan context so your team retains the decision, dependency, or answer.
-- Reply to the requesting team when a concrete answer, decision, blocker, or status update is ready. Do NOT default to messaging "user" for cross-team coordination unless the human explicitly asked to be kept informed or the update is clearly human-relevant.
-- Golden format for cross-team requests: include (1) brief context, (2) the concrete ask, (3) why your team needs that team specifically, (4) the expected output or decision, and (5) any deadline or blocking impact if relevant.
-- Golden format for cross-team replies: answer the concrete ask first, then include the decision, recommendation, or status, and finally any important caveats, next steps, or handoff expectations.
-- Do NOT use cross-team messaging when your own team can answer the question locally, when no action/decision is required, when you are only thinking out loud, or when a task update belongs on your own board instead of another team's inbox.
-- If the issue is internal to your team, resolve it through your own task board and teammates first; use cross-team only for genuine inter-team dependency, expertise, approval, or coordination.
-- Do NOT spam other teams, and do NOT use cross-team messaging for trivial FYIs that do not require action, coordination, or domain knowledge.
+- 不要自己在消息正文中写协议 markup。不要在可见回复正文中包含 "<${CROSS_TEAM_PREFIX_TAG} ... />" 或任何 metadata wrapper；只发送普通用户可见文本。
+- 收到跨团队请求时，不要表现为沉默：先输出一条简短普通文本状态更新，让本团队 Messages/Activity 可见（例如："已接收来自 @other-team 的跨团队请求，正在调查并委派。"），然后再做研究、创建任务或委派。
+- 对于跨团队工作，标准进度轨迹应优先对本团队可见。使用普通文本更新、任务评论和任务状态变化，让本团队知道发生了什么。
+- 不要静默等待另一个团队：如果跨团队协调正在阻塞进展，请及时发送请求，然后继续任何不依赖该回答的本地有用工作。
+- 有意义的跨团队交流后，请更新相关任务或计划上下文，让本团队保留该决策、依赖或答案。
+- 当具体答案、决策、阻塞或状态更新准备好时，回复请求团队。跨团队协调不要默认发给 "user"，除非人类明确要求被告知，或该更新明显与人类相关。
+- 跨团队请求推荐格式：包含 (1) 简短上下文，(2) 具体请求，(3) 为什么本团队特别需要该团队，(4) 期望输出或决策，(5) 如相关则包含期限或阻塞影响。
+- 跨团队回复推荐格式：先回答具体请求，再包含决策、建议或状态，最后给出重要注意事项、下一步或交接预期。
+- 当本团队可以本地回答问题、不需要行动/决策、你只是在自言自语，或任务更新应属于本团队看板而不是其他团队 inbox 时，不要使用跨团队消息。
+- 如果问题是团队内部问题，请先通过本团队任务看板和成员解决；只有真正存在团队间依赖、专业能力、批准或协调需求时才使用 cross-team。
+- 不要骚扰其他团队，也不要把 cross-team 消息用于不需要行动、协调或领域知识的琐碎 FYI。
 
-Message formatting:
-- When mentioning teammates by name in messages and text output, always use @ prefix (e.g. @alice, @bob) for UI highlighting. When mentioning another team, also use @ (e.g. @signal-ops). Do NOT use @ in tool parameters (recipient, owner, etc.) — those require plain names.
+消息格式：
+- 在消息和文本输出中按名字提及成员时，始终使用 @ 前缀（例如 @alice、@bob）以便 UI 高亮。提及其他团队时也使用 @（例如 @signal-ops）。不要在工具参数（recipient、owner 等）中使用 @，这些参数需要纯名称。
 ${getVisibleTaskReferenceFormattingRule()}
 ${agentBlockPolicy}
 
@@ -3130,33 +3126,33 @@ ${membersFooter}`;
 }
 
 function buildAgentBlockUsagePolicy(): string {
-  return `Agent-only formatting policy (applies to ALL messages you write):
-- Humans can see teammate inbox messages and coordination text in the UI.
-- Keep normal reasoning, decisions, and user-facing communication OUTSIDE agent-only blocks.
-- Use agent-only blocks specifically for hidden internal instructions sent between agents/teammates that the human user must NOT see in the UI.
-- Any internal operational instructions about tooling/scripts MUST be hidden inside an agent-only block, including:
-  - how to use internal MCP tools, exact tool names, and argument shapes
-  - review command phrases like "review_approve" / "review_request_changes"
-  - internal file paths under ~/.claude/ (teams, tasks, kanban state, etc.)
-  - meta coordination lines like "All teammates are online and have received their assignments via --notify."
-- Use an agent-only tag block (AGENT_BLOCK_OPEN / AGENT_BLOCK_CLOSE):
-  - AGENT_BLOCK_OPEN is exactly: ${AGENT_BLOCK_OPEN}
-  - AGENT_BLOCK_CLOSE is exactly: ${AGENT_BLOCK_CLOSE}
-  - IMPORTANT: put the opening tag and closing tag on their own lines with no indentation.
-- Example (copy/paste exactly, no indentation):
+  return `Agent-only 格式策略（适用于你写出的所有消息）：
+- 人类可以在 UI 中看到成员 inbox 消息和协作文本。
+- 正常推理、决策和面向用户的沟通必须放在 agent-only 块外。
+- agent-only 块只用于 agent/成员之间的隐藏内部指令，且这些内容不应被人类用户在 UI 中看到。
+- 任何关于工具/脚本的内部操作指令都必须隐藏在 agent-only 块内，包括：
+  - 内部 MCP 工具用法、精确工具名和参数形状
+  - 审查命令短语，例如 "review_approve" / "review_request_changes"
+  - ~/.claude/ 下的内部文件路径（teams、tasks、kanban state 等）
+  - 类似 "All teammates are online and have received their assignments via --notify." 的元协作语句
+- 使用 agent-only 标签块（AGENT_BLOCK_OPEN / AGENT_BLOCK_CLOSE）：
+  - AGENT_BLOCK_OPEN 必须精确为：${AGENT_BLOCK_OPEN}
+  - AGENT_BLOCK_CLOSE 必须精确为：${AGENT_BLOCK_CLOSE}
+  - 重要：开始标签和结束标签必须各自独占一行，且不要缩进。
+- 示例（精确复制/粘贴，不要缩进）：
 ${AGENT_BLOCK_OPEN}
-(internal instructions: commands, script usage, paths, etc.)
+（内部指令：命令、脚本用法、路径等）
 ${AGENT_BLOCK_CLOSE}
-- Put ONLY the internal instructions inside the agent-only block.
-- CRITICAL: Messages to "user" (the human) must NEVER contain agent-only blocks. Write them as plain readable text — the human sees these messages directly in the UI. Agent-only blocks are stripped before display, so a message containing ONLY an agent-only block will appear completely empty.
-- CRITICAL: Messages to "user" must NEVER mention internal tooling, MCP tools, scripts, or CLI commands — not even in plain text. The user interacts through the UI, NOT the terminal. Specifically, NEVER include in user-facing messages:
-  - internal MCP tool names or argument shapes
-  - any node/bash commands
-  - internal file paths (~/.claude/teams/, etc.)
-  - instructions to run commands in terminal
-  - task references without a leading # (for example write #abcd1234, not abcd1234)
-  Instead, describe the action in human-friendly language (e.g. "Task #6 is complete." instead of showing a command to mark it complete). If you need to update task status, do it YOURSELF — never ask the user to run a command.
-- CRITICAL: When processing relayed inbox messages, your text output is shown to the user. Do NOT wrap your entire response in an agent-only block. If you need agent-only instructions, put them in a separate block and include a brief human-readable summary outside of it (e.g. "Delegated task to carol." or "Acknowledged, no action needed.").`;
+- agent-only 块内只放内部指令。
+- 重要：发给 "user"（人类）的消息绝不能包含 agent-only 块。请写成普通可读文本，人类会直接在 UI 中看到这些消息。agent-only 块在展示前会被剥离，所以只包含 agent-only 块的消息会显示为空。
+- 重要：发给 "user" 的消息绝不能提及内部工具、MCP 工具、脚本或 CLI 命令，哪怕是普通文本也不可以。用户通过 UI 交互，而不是终端。面向用户的消息中尤其不要包含：
+  - 内部 MCP 工具名或参数形状
+  - 任何 node/bash 命令
+  - 内部文件路径（~/.claude/teams/ 等）
+  - 要求在终端运行命令的说明
+  - 没有 # 前缀的任务引用（例如写 #abcd1234，而不是 abcd1234）
+  请改用人类友好的语言描述动作（例如写 "Task #6 is complete."，而不是展示标记完成的命令）。如果需要更新任务状态，请你自己完成，不要要求用户运行命令。
+- 重要：处理 relayed inbox messages 时，你的文本输出会显示给用户。不要把整个响应都包在 agent-only 块里。如果需要 agent-only 指令，请放在单独块中，并在块外包含简短的人类可读摘要（例如 "Delegated task to carol." 或 "Acknowledged, no action needed."）。`;
 }
 
 function getSystemLocale(): string {
@@ -3176,7 +3172,7 @@ function getConfiguredAgentLanguageName(): string {
 
 function getAgentLanguageInstruction(): string {
   const languageName = getConfiguredAgentLanguageName();
-  return `IMPORTANT: Communicate in ${languageName}. All messages, summaries, and task descriptions MUST be in ${languageName}.`;
+  return `重要：使用 ${languageName} 沟通。所有消息、摘要和任务描述都必须使用 ${languageName}。`;
 }
 
 /** Build a full task board snapshot for the lead. */
@@ -3184,7 +3180,7 @@ function buildTaskBoardSnapshot(tasks: TeamTask[]): string {
   const active = tasks.filter(
     (t) => (t.status === 'pending' || t.status === 'in_progress') && !t.id.startsWith('_internal')
   );
-  if (active.length === 0) return '\nNo pending tasks on the board.\n';
+  if (active.length === 0) return '\n看板上没有 pending 任务。\n';
 
   const lines = active.map((t) => {
     const owner = t.owner ? ` (owner: ${t.owner})` : ' (unassigned)';
@@ -3198,7 +3194,7 @@ function buildTaskBoardSnapshot(tasks: TeamTask[]): string {
       : '';
     return `  - ${formatTaskDisplayLabel(t)} (taskId: ${t.id}) [${t.status}]${owner} ${t.subject}${deps}${desc}`;
   });
-  return `\nCurrent task board (in_progress/pending):\n${lines.join('\n')}\n`;
+  return `\n当前任务看板（in_progress/pending）：\n${lines.join('\n')}\n`;
 }
 
 function buildDeterministicLaunchHydrationPrompt(
@@ -3214,7 +3210,7 @@ function buildDeterministicLaunchHydrationPrompt(
   const projectName = path.basename(request.cwd);
   const startLabel = isResume ? 'Team Start (resume)' : 'Team Start';
   const userPromptBlock = request.prompt?.trim()
-    ? `\nOriginal user instructions to apply after reconnect is stable:\n${request.prompt.trim()}\n`
+    ? `\n重新连接稳定后需要应用的原始用户指令：\n${request.prompt.trim()}\n`
     : '';
   const hasOriginalUserPrompt = Boolean(request.prompt?.trim());
   const taskBoardSnapshot = buildTaskBoardSnapshot(tasks);
@@ -3226,11 +3222,11 @@ function buildDeterministicLaunchHydrationPrompt(
   });
   const spawnInstructions = members.length
     ? [
-        'Reconnect configured teammates/employees strictly one at a time. Do not issue multiple Agent tool calls in the same assistant response.',
-        'Wait for each Agent tool result before reconnecting the next teammate/employee. Only after that result is returned may you start the next one.',
-        'After each successful Agent tool result, wait only 3 seconds before reconnecting the next teammate/employee.',
-        'If any API retry, rate-limit, or overloaded message appears, stop reconnecting more teammates/employees and wait for the retry/backoff to settle before continuing.',
-        'Never batch, fan out, or parallelize teammate/employee startup. This serial reconnect avoids request-rate bursts.',
+        '严格逐个重新连接已配置成员/员工。不要在同一个 assistant 响应中发起多个 Agent 工具调用。',
+        '等待每次 Agent 工具结果返回后，再重新连接下一个成员/员工。只有结果返回后，才可以开始下一个。',
+        '每次 Agent 工具成功返回后，只等待 3 秒再重新连接下一个成员/员工。',
+        '如果出现 API retry、rate-limit 或 overloaded 消息，请停止继续重新连接成员/员工，等待 retry/backoff 稳定后再继续。',
+        '不要批量、扇出或并行启动成员/员工。串行重新连接用于避免请求频率突增。',
         ...members.map((member, index) => {
           const prompt = buildMemberSpawnPrompt(
             member,
@@ -3244,33 +3240,33 @@ function buildDeterministicLaunchHydrationPrompt(
       ].join('\n\n')
     : '';
   const nextSteps = isSolo
-    ? `This reconnect/bootstrap step has already been completed deterministically by the runtime.
-Do NOT call TeamCreate.
-Do NOT use Agent to spawn or restore teammates.
-Do NOT start implementation in this turn.
-Use this turn only to refresh context, review the current board snapshot, and confirm you are ready.
+    ? `本次 reconnect/bootstrap 步骤已经由 runtime 确定性完成。
+不要调用 TeamCreate。
+不要使用 Agent 启动或恢复成员。
+本轮不要开始实现工作。
+本轮只用于刷新上下文、查看当前看板快照，并确认你已准备好。
 ${
   hasOriginalUserPrompt
-    ? 'Do NOT create or update any new task in this turn - wait for the next normal operating turn before translating those instructions into board work.'
-    : 'Do NOT create, assign, or delegate any new task in this turn. If the board is empty, stay silent and wait for a fresh user instruction.'
+    ? '本轮不要创建或更新任何新任务，请等到下一次正常运行回合再把这些指令转换为看板工作。'
+    : '本轮不要创建、分配或委派任何新任务。如果看板为空，请保持安静并等待新的用户指令。'
 }`
-    : `The desktop app has initialized the lead config, but teammates must be reconnected in this turn.
-Do NOT call TeamCreate, TeamDelete, TodoWrite, or any cleanup tool.
-Reconnect the configured teammates now:
+    : `桌面应用已初始化负责人配置，但成员必须在本轮重新连接。
+不要调用 TeamCreate、TeamDelete、TodoWrite 或任何清理工具。
+现在重新连接已配置成员：
 ${spawnInstructions}
 
-After the configured teammates have been reconnected, do not repeat the launch summary. Review the current board snapshot.
+配置的成员重新连接后，不要重复启动摘要。请查看当前看板快照。
 ${
   hasOriginalUserPrompt
-    ? 'Do NOT create or assign any new task in this turn - wait for the next normal operating turn before translating those instructions into board work.'
-    : 'Do NOT create, assign, or delegate any new task in this turn. If the board is empty, stay silent and wait for a fresh user instruction.'
+    ? '本轮不要创建或分配任何新任务，请等到下一次正常运行回合再把这些指令转换为看板工作。'
+    : '本轮不要创建、分配或委派任何新任务。如果看板为空，请保持安静并等待新的用户指令。'
 }
-Treat teammates whose bootstrap is still pending as not-yet-available for blocking assignments.`;
+请把 bootstrap 仍在 pending 的成员视为尚不可用，不要把阻塞性任务分配给他们。`;
 
   return `${startLabel} [Deterministic reconnect | Team: "${request.teamName}" | Project: "${projectName}" | Lead: "${leadName}"]
 
-You are running headless in a non-interactive CLI session. Do not ask questions.
-You are "${leadName}", the team lead.
+你正在非交互式 CLI 会话中以 headless 模式运行。不要提问。
+你是 "${leadName}"，团队负责人。
 ${getAgentLanguageInstruction()}${userPromptBlock}
 
 ${nextSteps}
@@ -3278,7 +3274,7 @@ ${nextSteps}
 ${taskBoardSnapshot}
 ${persistentContext}
 
-${isSolo ? 'If there is nothing else to say after refreshing context, reply with exactly one word: "OK".' : 'After all Agent tool results have returned and there is nothing else to say, reply with exactly one word: "OK".'}`;
+${isSolo ? '刷新上下文后如果没有其他需要说明的内容，只回复一个词："OK"。' : '所有 Agent 工具结果返回后，如果没有其他需要说明的内容，只回复一个词："OK"。'}`;
 }
 
 function buildGeminiPostLaunchHydrationPrompt(
@@ -3289,30 +3285,30 @@ function buildGeminiPostLaunchHydrationPrompt(
 ): string {
   const isSolo = members.length === 0;
   const userPromptBlock = run.request.prompt?.trim()
-    ? `\nOriginal user instructions to apply now:\n${run.request.prompt.trim()}\n`
+    ? `\n现在需要应用的原始用户指令：\n${run.request.prompt.trim()}\n`
     : '';
   const hasOriginalUserPrompt = Boolean(run.request.prompt?.trim());
   const taskBoardSnapshot = buildTaskBoardSnapshot(tasks);
   const teammateBootstrapSnapshot = members.length
-    ? `Current teammate launch status:\n${members
+    ? `当前成员启动状态：\n${members
         .map((member) => {
           const status = run.memberSpawnStatuses.get(member.name);
           const label =
             status?.launchState === 'failed_to_start'
-              ? `failed to start${status.hardFailureReason ? ` - ${status.hardFailureReason}` : status.error ? ` - ${status.error}` : ''}`
+              ? `启动失败${status.hardFailureReason ? ` - ${status.hardFailureReason}` : status.error ? ` - ${status.error}` : ''}`
               : status?.launchState === 'confirmed_alive'
-                ? 'bootstrap confirmed'
+                ? 'bootstrap 已确认'
                 : status?.launchState === 'runtime_pending_permission'
                   ? status?.runtimeAlive
-                    ? 'runtime online and waiting for permission approval'
-                    : 'waiting for permission approval'
+                    ? 'runtime 在线，正在等待权限批准'
+                    : '等待权限批准'
                   : status?.runtimeAlive
-                    ? 'runtime online and ready for instructions'
+                    ? 'runtime 在线，已准备接收指令'
                     : status?.launchState === 'runtime_pending_bootstrap'
-                      ? 'spawn accepted, runtime not confirmed yet'
+                      ? 'spawn 已接受，runtime 尚未确认'
                       : status?.status === 'spawning'
-                        ? 'spawn in progress'
-                        : 'runtime state unclear';
+                        ? 'spawn 进行中'
+                        : 'runtime 状态不明确';
           return `- @${member.name}: ${label}`;
         })
         .join('\n')}\n`
@@ -3325,19 +3321,19 @@ function buildGeminiPostLaunchHydrationPrompt(
   });
   const nextStepInstruction = isSolo
     ? hasOriginalUserPrompt
-      ? 'From this point on, use the full operating rules below for all future turns. Do NOT create or update any new task in this context-refresh turn - wait for the next normal operating turn before translating those instructions into board work.'
-      : 'From this point on, use the full operating rules below for all future turns. Do NOT create, assign, or delegate any new task in this context-refresh turn. If the board is empty, stay silent and wait for a fresh user instruction.'
+      ? '从现在起，后续所有回合都使用下面的完整运行规则。本次上下文刷新回合不要创建或更新任何新任务，请等到下一次正常运行回合再把这些指令转换为看板工作。'
+      : '从现在起，后续所有回合都使用下面的完整运行规则。本次上下文刷新回合不要创建、分配或委派任何新任务。如果看板为空，请保持安静并等待新的用户指令。'
     : hasOriginalUserPrompt
-      ? 'From this point on, use the full team operating rules below for all future turns. Do NOT create or assign any new task in this context-refresh turn - wait for the next normal operating turn before translating those instructions into board work. Do NOT assume bootstrap-pending or failed teammates are ready; only treat teammates with confirmed bootstrap as immediately available for blocking assignments.'
-      : 'From this point on, use the full team operating rules below for all future turns. Do NOT create, assign, or delegate any new task in this context-refresh turn. If the board is empty, stay silent and wait for a fresh user instruction. Do NOT assume bootstrap-pending or failed teammates are ready; only treat teammates with confirmed bootstrap as immediately available for blocking assignments.';
+      ? '从现在起，后续所有回合都使用下面的完整团队运行规则。本次上下文刷新回合不要创建或分配任何新任务，请等到下一次正常运行回合再把这些指令转换为看板工作。不要假设 bootstrap pending 或启动失败的成员已准备好；只有 bootstrap 已确认的成员才可以视为可立即接收阻塞性任务。'
+      : '从现在起，后续所有回合都使用下面的完整团队运行规则。本次上下文刷新回合不要创建、分配或委派任何新任务。如果看板为空，请保持安静并等待新的用户指令。不要假设 bootstrap pending 或启动失败的成员已准备好；只有 bootstrap 已确认的成员才可以视为可立即接收阻塞性任务。';
 
-  return `Gemini launch phase 2 — operating context for team "${run.teamName}".
+  return `Gemini 启动阶段 2：团队 "${run.teamName}" 的运行上下文。
 
-The first launch/reconnect turn has already completed.
-Do NOT call TeamCreate again.
-Do NOT respawn teammates unless you are explicitly retrying a teammate that truly failed to start.
-Do NOT repeat the previous launch summary.
-You are "${leadName}", the team lead.
+第一次启动/重新连接回合已经完成。
+不要再次调用 TeamCreate。
+除非你正在明确重试真正启动失败的成员，否则不要重新 spawn 成员。
+不要重复之前的启动摘要。
+你是 "${leadName}"，团队负责人。
 ${getAgentLanguageInstruction()}${userPromptBlock}
 
 ${nextStepInstruction}
@@ -3345,7 +3341,7 @@ ${nextStepInstruction}
 ${teammateBootstrapSnapshot}${taskBoardSnapshot}
 ${persistentContext}
 
-This is a context-refresh turn only. Do not re-run launch. If no task planning or delegation is needed right now, reply with exactly one word: "OK".`;
+这只是上下文刷新回合。不要重新运行启动流程。如果当前不需要任务规划或委派，只回复一个词："OK"。`;
 }
 
 /**
@@ -3422,7 +3418,7 @@ function buildLaunchDiagnosticsFromRun(
         memberName,
         severity: 'info',
         code: 'bootstrap_confirmed',
-        label: `${memberName} - bootstrap confirmed`,
+        label: `${memberName} - bootstrap 已确认`,
         observedAt,
       });
       continue;
@@ -3433,7 +3429,7 @@ function buildLaunchDiagnosticsFromRun(
         memberName,
         severity: 'error',
         code: 'bootstrap_stalled',
-        label: `${memberName} - failed to start`,
+        label: `${memberName} - 启动失败`,
         detail: entry.hardFailureReason ?? entry.error,
         observedAt,
       });
@@ -3768,8 +3764,8 @@ function buildCliExitError(code: number | null, stdoutText: string, stderrText: 
   if (trimmed.length > 0) {
     if (trimmed.toLowerCase().includes('please run /login')) {
       return (
-        `${cliCommandLabel} reports it is not authenticated ("Please run /login"). ` +
-        'Run the CLI in a normal terminal and complete login, then retry. ' +
+        `${cliCommandLabel} 报告尚未认证（"Please run /login"）。` +
+        '请在普通终端中运行 CLI 并完成登录，然后重试。' +
         'For automation/headless use, set `ANTHROPIC_API_KEY` for `-p` mode.'
       );
     }
@@ -4976,16 +4972,16 @@ export class TeamProvisioningService {
       ? [
           '<opencode_delivery_retry>',
           `This is retry attempt ${attemptNumber}/${record.maxAttempts} for inbound app messageId "${record.inboxMessageId}".`,
-          `You accepted the earlier prompt but did not provide a visible/concrete answer for the recipient "${input.replyRecipient}".`,
-          `Please reply with agent-teams_message_send to "${input.replyRecipient}" and include relayOfMessageId="${record.inboxMessageId}". If that tool is unavailable, provide a concise plain-text answer.`,
-          'Do not repeat tool work unless needed and do not reply only with acknowledgement.',
+          `你接受了之前的提示，但没有为接收者 "${input.replyRecipient}" 提供可见/具体的答复。`,
+          `请使用 agent-teams_message_send 回复 "${input.replyRecipient}"，并包含 relayOfMessageId="${record.inboxMessageId}"。如果该工具不可用，请提供简洁的纯文本答复。`,
+          '除非必要，不要重复工具工作，也不要只回复确认。',
           '</opencode_delivery_retry>',
         ]
       : [
           '<opencode_delivery_retry>',
           `This is retry attempt ${attemptNumber}/${record.maxAttempts} for inbound app messageId "${record.inboxMessageId}".`,
           'The previous OpenCode turn was accepted, but the app still has no sufficient response proof for this message.',
-          `If you already acted on this message, do not duplicate work; send a concrete status via agent-teams_message_send with relayOfMessageId="${record.inboxMessageId}" or update the related task.`,
+          `如果你已经处理过这条消息，不要重复工作；请通过 agent-teams_message_send 带 relayOfMessageId="${record.inboxMessageId}" 发送具体状态，或更新相关任务。`,
           'Do not reply only with acknowledgement.',
           '</opencode_delivery_retry>',
         ];
@@ -8413,10 +8409,10 @@ export class TeamProvisioningService {
     const reason =
       (typeof resultPreview === 'string' && resultPreview.trim().length > 0
         ? resultPreview.trim()
-        : 'Teammate spawn failed immediately after launch.') || 'Teammate spawn failed.';
+        : '成员启动后立即失败。') || '成员启动失败。';
     const message = pendingRestart
-      ? `Failed to restart teammate "${memberName}": ${reason}`
-      : `Teammate "${memberName}" failed to start: ${reason}`;
+      ? `成员 "${memberName}" 重启失败：${reason}`
+      : `成员 "${memberName}" 启动失败：${reason}`;
 
     run.pendingMemberRestarts.delete(memberName);
 
@@ -8675,11 +8671,7 @@ export class TeamProvisioningService {
         'spawn accepted, waiting for teammate check-in'
       );
     } else if (status === 'online' && livenessSource === 'heartbeat' && !prev.bootstrapConfirmed) {
-      this.appendMemberBootstrapDiagnostic(
-        run,
-        memberName,
-        'bootstrap confirmed via first heartbeat'
-      );
+      this.appendMemberBootstrapDiagnostic(run, memberName, 'bootstrap 已确认 via first heartbeat');
     } else if (status === 'online' && livenessSource === 'process') {
       this.appendMemberBootstrapDiagnostic(
         run,
@@ -8752,7 +8744,7 @@ export class TeamProvisioningService {
     run.memberSpawnStatuses.set(memberName, next);
     run.pendingMemberRestarts?.delete(memberName);
     this.syncMemberLaunchGraceCheck(run, memberName, next);
-    this.appendMemberBootstrapDiagnostic(run, memberName, 'bootstrap confirmed via transcript');
+    this.appendMemberBootstrapDiagnostic(run, memberName, 'bootstrap 已确认 via transcript');
     if (!this.isCurrentTrackedRun(run)) return;
     this.emitMemberSpawnChange(run, memberName);
     if (run.isLaunch) {
@@ -9701,7 +9693,7 @@ export class TeamProvisioningService {
       const next = {
         ...refreshed,
         livenessKind: metadata.livenessKind,
-        runtimeDiagnostic: runtimeDiagnostic ?? 'waiting for permission approval',
+        runtimeDiagnostic: runtimeDiagnostic ?? '等待权限批准',
         runtimeDiagnosticSeverity: metadata.runtimeDiagnosticSeverity ?? 'warning',
         livenessLastCheckedAt: nowIso(),
         launchState: 'runtime_pending_permission' as const,
@@ -13690,8 +13682,8 @@ export class TeamProvisioningService {
       config?.members?.find((member) => isLeadMember(member))?.name?.trim() ||
       CANONICAL_LEAD_MEMBER_NAME;
     const message = [
-      `You received a direct message from an external channel.`,
-      `IMPORTANT: Your text response here will be sent back to that channel and shown in the Messages panel. Always include a brief human-readable reply when the sender expects a response. Do NOT respond with only an agent-only block.`,
+      `你收到了一条来自外部渠道的直接消息。`,
+      `重要：你在这里的文本响应会发回该渠道，并显示在 Messages 面板。当发送者期待回复时，始终包含简短的人类可读回复。不要只用 agent-only 块响应。`,
       ``,
       `External channel: ${input.provider} / ${input.channelName} / chat ${input.chatId}`,
       `From: ${input.from}`,
@@ -13817,8 +13809,8 @@ export class TeamProvisioningService {
       [
         `UI relay request — forward a direct message to teammate "${teammateName}".`,
         `MUST: ${getCanonicalSendMessageToolRule(teammateName)}`,
-        `MUST: if they reply to the human, the destination must be to="user" (short answer).`,
-        `CRITICAL: Do NOT send any message to="user" for this turn.`,
+        `必须：如果他们回复人类，目标必须是 to="user"（短答复）。`,
+        `重要：本轮不要发送任何 to="user" 的消息。`,
         getCanonicalSendMessageFieldRule(),
       ].join('\n')
     );
@@ -13926,11 +13918,11 @@ export class TeamProvisioningService {
         `Inbox relay (internal) — forward to "${memberName}".`,
         wrapInAgentBlock(
           [
-            `CRITICAL: Do NOT send any message to="user" for this relay turn. The ONLY valid destination is to="${memberName}".`,
+            `重要：本次 relay 回合不要发送任何 to="user" 的消息。唯一有效目标是 to="${memberName}"。`,
             getCanonicalSendMessageToolRule(memberName),
             getCanonicalSendMessageFieldRule(),
-            `Preserve task IDs and critical instructions. Do NOT add extra narration outside the SendMessage calls.`,
-            `If an inbox item is marked Source: system_notification, forward that notification exactly once without paraphrasing.`,
+            `保留任务 ID 和关键指令。不要在 SendMessage 调用之外添加额外叙述。`,
+            `如果 inbox 项标记为 Source: system_notification，请准确转发该通知一次，不要改写。`,
           ].join('\n')
         ),
         ``,
@@ -13949,7 +13941,7 @@ export class TeamProvisioningService {
             crossTeamMeta?.sourceTeam && conversationId
               ? [
                   `   Cross-team conversationId: ${conversationId}`,
-                  `   Call the MCP tool named cross_team_send with toTeam="${crossTeamMeta.sourceTeam}", conversationId="${conversationId}", and replyToConversationId="${conversationId}". Do NOT put "cross_team_send" into a SendMessage recipient or message_send "to" field.`,
+                  `   调用名为 cross_team_send 的 MCP 工具，并设置 toTeam="${crossTeamMeta.sourceTeam}", conversationId="${conversationId}", replyToConversationId="${conversationId}"。不要把 "cross_team_send" 放进 SendMessage recipient 或 message_send 的 "to" 字段。`,
                 ]
               : [];
           return [
@@ -14735,22 +14727,22 @@ export class TeamProvisioningService {
         `Process them in order (oldest first).`,
         `If action is required, delegate via task creation or SendMessage, and keep responses minimal.`,
         `IMPORTANT: Your text response here is shown to the user.`,
-        `For external channel messages (for example Feishu), your text response will also be sent back to that channel. Reply naturally and concisely when the external sender appears to expect a response.`,
-        `If you actually take action, include a brief human-readable summary (e.g. "Delegated to carol.").`,
-        `If there is no action to take, produce ZERO text output. Do NOT write "No action needed.", status echoes, or any other no-op summary.`,
-        `For pure system notifications, comment notifications, or routine teammate availability updates that require no reply/comment/action, say nothing.`,
-        `Do NOT respond with only an agent-only block.`,
+        `对于外部渠道消息（例如飞书），你的文本响应也会发回该渠道。当外部发送者看起来期待回复时，请自然、简洁地回复。`,
+        `如果你确实采取行动，请包含简短的人类可读摘要（例如 "已委派给 carol。"）。`,
+        `如果没有需要采取的行动，请输出零文本。不要写“无需操作”、状态回声或任何其他无操作摘要。`,
+        `对于不需要回复/评论/行动的纯系统通知、评论通知或常规成员可用性更新，请保持安静。`,
+        `不要只用 agent-only 块响应。`,
         ...(rosterContextBlock ? [rosterContextBlock] : []),
         wrapAgentBlock(
           [
             `Internal note: for task assignments, prefer task_create and rely on the board/runtime notification path instead of sending a separate SendMessage for the same assignment.`,
             `For any MCP board tool call in this turn, teamName MUST be "${teamName}". Never use the lead/member name "${leadName}" as teamName.`,
             `Use task_create_from_message only for messages below that explicitly say "Eligible for task_create_from_message: yes" and provide a User MessageId. Never use task_create_from_message for teammate messages, system notifications, cross-team messages, or any inbox row that is not explicitly marked eligible.`,
-            `If a message below is marked Source: system_notification and its summary looks like "Comment on #...", reply via task_add_comment only when you have a substantive board update (decision, blocker, clarification answer, review result, or concrete next-step change).`,
-            `Do NOT post acknowledgement-only task comments such as "Принято", "Ок", "На связи", "Жду", or similar low-signal echoes. If the task comment notification is FYI and no durable update is needed, say nothing.`,
-            `If a message below includes a hidden structured task-context block, treat that block as authoritative for teamName/taskId/commentId. Do NOT infer alternate ids or namespaces from visible prose.`,
-            `If a message below is marked Source: cross_team, CALL the MCP tool named cross_team_send. Do NOT use SendMessage or message_send for cross-team replies.`,
-            `NEVER set recipient="cross_team_send" or to="cross_team_send". "cross_team_send" is a tool name, not a teammate.`,
+            `如果下面消息标记为 Source: system_notification 且摘要类似 "Comment on #..."，只有在你有实质性看板更新时才通过 task_add_comment 回复（决策、阻塞、澄清答案、审查结果或具体下一步变化）。`,
+            `不要发布纯确认型任务评论，例如 "收到"、"OK"、"在线"、"等待中" 或类似低信号回声。如果任务评论通知只是 FYI 且不需要持久更新，请保持安静。`,
+            `如果下面消息包含隐藏的结构化 task-context 块，请把该块视为 teamName/taskId/commentId 的权威来源。不要从可见文本推断其他 id 或 namespace。`,
+            `如果下面消息标记为 Source: cross_team，请调用名为 cross_team_send 的 MCP 工具。跨团队回复不要使用 SendMessage 或 message_send。`,
+            `绝不要设置 recipient="cross_team_send" 或 to="cross_team_send"。"cross_team_send" 是工具名，不是成员。`,
           ].join('\n')
         ),
         ``,
@@ -14779,7 +14771,7 @@ export class TeamProvisioningService {
             crossTeamMeta?.sourceTeam && conversationId
               ? [
                   `   Cross-team conversationId: ${conversationId}`,
-                  `   Call the MCP tool named cross_team_send with toTeam="${crossTeamMeta.sourceTeam}", conversationId="${conversationId}", and replyToConversationId="${conversationId}". Do NOT use SendMessage or message_send. NEVER set recipient/to to "cross_team_send".`,
+                  `   调用名为 cross_team_send 的 MCP 工具，并设置 toTeam="${crossTeamMeta.sourceTeam}", conversationId="${conversationId}", replyToConversationId="${conversationId}"。不要使用 SendMessage 或 message_send。绝不要把 recipient/to 设为 "cross_team_send"。`,
                 ]
               : [];
           const structuredTaskContextBlock = buildLeadInboxTaskContextBlock(m);
@@ -15077,9 +15069,9 @@ export class TeamProvisioningService {
         }
 
         const message =
-          `The user has changed the preferred communication language from "${oldResolved}" to "${newResolved}". ` +
-          `Please switch to ${newResolved} for all future responses and broadcast this change to all teammates ` +
-          `so they also switch to ${newResolved}.`;
+          `用户已将首选沟通语言从 "${oldResolved}" 改为 "${newResolved}"。` +
+          `后续所有回复请切换为 ${newResolved}，并将此变更广播给所有成员，` +
+          `让他们也切换为 ${newResolved}。`;
 
         await this.sendMessageToTeam(teamName, message);
         await this.configReader.updateConfig(teamName, { language: newLangCode });
@@ -19691,14 +19683,14 @@ export class TeamProvisioningService {
     const message = [
       `Context reminder (post-compaction) — your context was compacted. Here are your standing rules and current state:`,
       ``,
-      `You are "${leadName}", the team lead of team "${run.teamName}".`,
-      `You are running in a non-interactive CLI session. Do not ask questions.`,
-      `CRITICAL: Execute ALL steps directly yourself in sequence. Do NOT delegate any step to a sub-agent via the Agent tool. The ONLY valid use of the Agent tool is spawning individual teammates.`,
+      `你是团队 "${run.teamName}" 的负责人 "${leadName}"。`,
+      `你正在非交互式 CLI 会话中运行。不要提问。`,
+      `重要：所有步骤都必须由你按顺序直接执行。不要通过 Agent 工具把任何步骤委托给子 agent。Agent 工具唯一有效用途是启动单个成员。`,
       ``,
       persistentContext,
       taskBoardBlock.trim() ? `\n${taskBoardBlock}` : '',
       ``,
-      `This is a context-only reminder. Do NOT start new work or execute tasks in this turn. Reply with a single word: "OK".`,
+      `这只是上下文提醒。本轮不要开始新工作或执行任务。只回复一个词："OK"。`,
     ]
       .filter(Boolean)
       .join('\n');
@@ -20794,7 +20786,7 @@ export class TeamProvisioningService {
       const readyMessage = hasSpawnFailures
         ? `Launch completed with teammate errors — ${failedSpawnMembers
             .map((member) => member.name)
-            .join(', ')} failed to start`
+            .join(', ')} 启动失败`
         : hasPendingBootstrap
           ? this.buildAggregatePendingLaunchMessage(
               'Launch completed',
@@ -20878,8 +20870,8 @@ export class TeamProvisioningService {
               `- BEFORE doing any work on a task: mark it started (in_progress).`,
               `- Immediately SendMessage "user" that you started task #<id> (what you're doing + next step).`,
               `- While working: after each meaningful milestone/decision/blocker, add a task comment on #<id>. If user-relevant, also SendMessage "user".`,
-              `- On completion: add a final task comment with your full results (findings, report, analysis, code changes summary, or any deliverable), then mark the task completed, then SendMessage "user" with a brief summary of the outcome (2-4 sentences) and "Full details in task comment <first-8-chars-of-commentId>". The task comment is the primary delivery channel — the user reads results on the task board.`,
-              `- Do NOT start the next task until the current task is completed (default: one task in_progress at a time).`,
+              `- 完成时：先添加最终任务评论，包含完整结果（发现、报告、分析、代码变更总结或任何交付物），然后标记任务 completed，再 SendMessage "user" 简短总结结果（2-4 句）并写明 "Full details in task comment <first-8-chars-of-commentId>"。任务评论是主要交付渠道，用户会在任务看板阅读结果。`,
+              `- 当前任务完成前不要开始下一个任务（默认一次只有一个任务 in_progress）。`,
               board.trim(),
             ]
               .filter(Boolean)
@@ -20972,7 +20964,7 @@ export class TeamProvisioningService {
       hasSpawnFailures
         ? `Provisioning completed with teammate errors — ${failedSpawnMembers
             .map((member) => member.name)
-            .join(', ')} failed to start`
+            .join(', ')} 启动失败`
         : hasPendingBootstrap
           ? this.buildAggregatePendingLaunchMessage(
               'Team provisioned',
@@ -23095,7 +23087,7 @@ export class TeamProvisioningService {
           buildCombinedLogs(versionProbe.stdout, versionProbe.stderr) ||
           `${cliCommandLabel} exited with code ${versionProbe.exitCode ?? 'unknown'} during warm-up`;
         return {
-          warning: `${cliCommandLabel} binary failed to start correctly. Details: ${errorText}`,
+          warning: `${cliCommandLabel} binary 未能正常启动。详情：${errorText}`,
         };
       }
     } catch (error) {
@@ -23106,7 +23098,7 @@ export class TeamProvisioningService {
         };
       }
       return {
-        warning: `${cliCommandLabel} binary failed to start. Details: ${message}`,
+        warning: `${cliCommandLabel} binary 启动失败。详情：${message}`,
       };
     }
 

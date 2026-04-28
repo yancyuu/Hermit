@@ -1,7 +1,7 @@
 <p align="center">
   <a href="docs/screenshots/1.jpg"><img src="docs/screenshots/1.jpg" width="75" alt="看板" /></a>&nbsp;
-  <a href="docs/screenshots/7.png"><img src="docs/screenshots/7.png" width="75" alt="代码审查" /></a>&nbsp;
-  <a href="docs/screenshots/2.jpg"><img src="docs/screenshots/2.jpg" width="75" alt="团队视图" /></a>&nbsp;
+  <a href="docs/screenshots/2.png"><img src="docs/screenshots/7.png" width="75" alt="代码审查" /></a>&nbsp;
+  <a href="docs/screenshots/4.jpg"><img src="docs/screenshots/2.jpg" width="75" alt="团队视图" /></a>&nbsp;
   <a href="docs/screenshots/8.png"><img src="docs/screenshots/8.png" width="75" alt="任务详情" /></a>&nbsp;
   <img src="resources/icons/png/1024x1024.png" alt="Hermit" width="80" />&nbsp;
   <a href="docs/screenshots/9.png"><img src="docs/screenshots/9.png" width="75" alt="执行日志" /></a>&nbsp;
@@ -13,7 +13,7 @@
 <h1 align="center"><a href="https://github.com/yancyuu/Hermit">Hermit</a></h1>
 
 <p align="center">
-  <strong><code>拥有编程能力 + 编程环境 = 拥有一切。</code></strong>
+  <strong><code>拥有编程能力 + 拥有编程环境 = 拥有一切。</code></strong>
 </p>
 
 <p align="center">
