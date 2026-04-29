@@ -19,11 +19,12 @@ import { getRuntimeDisplayName } from '@renderer/utils/runtimeDisplayName';
 import { CLI_NOT_FOUND_MARKER } from '@shared/constants/cli';
 import {
   getMcpDiagnosticKey,
+  getMcpOperationKey,
   getMcpProjectStateKey,
   getPreferredMcpInstallationEntry,
   sanitizeMcpServerName,
 } from '@shared/utils/extensionNormalizers';
-import { AlertTriangle, RefreshCw, Search, Server } from 'lucide-react';
+import { AlertTriangle, RefreshCw, Search, Server, Trash2 } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 
 import { SearchInput } from '../common/SearchInput';
@@ -33,6 +34,7 @@ import { McpServerDetailDialog } from './McpServerDetailDialog';
 
 import type { CliInstallationStatus } from '@shared/types';
 import type {
+  InstallScope,
   InstalledMcpEntry,
   McpCatalogItem,
   McpServerDiagnostic,
@@ -114,6 +116,8 @@ export const McpServersPanel = ({
     mcpDiagnosticsLastCheckedAtByProjectPath,
     mcpDiagnosticsLastCheckedAtFallback,
     runMcpDiagnostics,
+    uninstallMcpServer,
+    mcpInstallProgress,
   } = useStore(
     useShallow((s) => ({
       browseCatalog: s.mcpBrowseCatalog,
@@ -133,6 +137,8 @@ export const McpServersPanel = ({
       mcpDiagnosticsLastCheckedAtByProjectPath: s.mcpDiagnosticsLastCheckedAtByProjectPath,
       mcpDiagnosticsLastCheckedAtFallback: s.mcpDiagnosticsLastCheckedAt,
       runMcpDiagnostics: s.runMcpDiagnostics,
+      uninstallMcpServer: s.uninstallMcpServer,
+      mcpInstallProgress: s.mcpInstallProgress,
     }))
   );
   const storedCliStatus = useStore((s) => s.cliStatus);
@@ -307,32 +313,62 @@ export const McpServersPanel = ({
             </div>
             {allDiagnostics.length > 0 ? (
               <div className="mcp-diagnostics-list max-h-[18.5rem] space-y-2 overflow-y-auto pr-1">
-                {allDiagnostics.map((diagnostic) => (
-                  <div
-                    key={getMcpDiagnosticKey(diagnostic.name, diagnostic.scope)}
-                    className="flex items-start justify-between gap-3 rounded-md border border-black/10 px-3 py-2 dark:border-white/10"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm text-text">{diagnostic.name}</p>
-                        {diagnostic.scope && (
-                          <span className="rounded-full border border-border bg-surface-raised px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-text-muted">
-                            {diagnostic.scope}
-                          </span>
-                        )}
+                {allDiagnostics.map((diagnostic) => {
+                  const opKey = getMcpOperationKey(
+                    diagnostic.name,
+                    (diagnostic.scope as InstallScope) || 'user',
+                    projectPath
+                  );
+                  const uninstalling = mcpInstallProgress[opKey] === 'pending';
+                  return (
+                    <div
+                      key={getMcpDiagnosticKey(diagnostic.name, diagnostic.scope)}
+                      className="flex items-start justify-between gap-3 rounded-md border border-black/10 px-3 py-2 dark:border-white/10"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm text-text">{diagnostic.name}</p>
+                          {diagnostic.scope && (
+                            <span className="rounded-full border border-border bg-surface-raised px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-text-muted">
+                              {diagnostic.scope}
+                            </span>
+                          )}
+                        </div>
+                        <p
+                          className="truncate font-mono text-[11px] text-text-muted"
+                          title={diagnostic.target}
+                        >
+                          {diagnostic.target}
+                        </p>
                       </div>
-                      <p
-                        className="truncate font-mono text-[11px] text-text-muted"
-                        title={diagnostic.target}
-                      >
-                        {diagnostic.target}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          className={getDiagnosticBadgeClass(diagnostic.status)}
+                          variant="outline"
+                        >
+                          {diagnostic.statusLabel}
+                        </Badge>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 text-red-300 hover:text-red-200"
+                          disabled={uninstalling}
+                          onClick={() => {
+                            void uninstallMcpServer(
+                              diagnostic.name,
+                              diagnostic.name,
+                              diagnostic.scope || undefined,
+                              projectPath ?? undefined
+                            );
+                          }}
+                          title={`卸载 ${diagnostic.name}`}
+                        >
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      </div>
                     </div>
-                    <Badge className={getDiagnosticBadgeClass(diagnostic.status)} variant="outline">
-                      {diagnostic.statusLabel}
-                    </Badge>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <p className="text-xs text-text-muted">正在等待诊断结果...</p>

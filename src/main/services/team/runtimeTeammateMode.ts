@@ -75,12 +75,12 @@ export async function resolveDesktopTeammateModeDecision(
   if (!(await isTmuxAvailable())) {
     return {
       injectedTeammateMode: null,
-      forceProcessTeammates: true,
+      forceProcessTeammates: false,
     };
   }
 
   return {
     injectedTeammateMode: 'tmux',
-    forceProcessTeammates: true,
+    forceProcessTeammates: false,
   };
 }

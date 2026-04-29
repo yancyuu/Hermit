@@ -111,9 +111,12 @@ export const ChannelsSection = (): React.JSX.Element => {
         channels,
         feishu: firstFeishu,
       });
+      // Update local state with saved data
+      setFeishuChannels(channels);
       setMessage('飞书渠道实例已保存。');
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '保存渠道配置失败');
+      throw error;
     } finally {
       setSaving(false);
     }
@@ -123,10 +126,14 @@ export const ChannelsSection = (): React.JSX.Element => {
     setBusyChannelId(channelId);
     setMessage(null);
     try {
+      // Auto-save before starting so the config is always in sync
+      await save();
       await api.teams.startFeishuLeadChannel(channelId);
-      setMessage(`飞书实例 "${channelId}" 已启动监听。`);
+      setMessage(`飞书实例已启动监听。`);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : '启动监听失败');
+      if (error instanceof Error && !error.message.includes('保存渠道配置失败')) {
+        setMessage(error instanceof Error ? error.message : '启动监听失败');
+      }
     } finally {
       setBusyChannelId(null);
     }
@@ -137,7 +144,7 @@ export const ChannelsSection = (): React.JSX.Element => {
     setMessage(null);
     try {
       await api.teams.stopFeishuLeadChannel(channelId);
-      setMessage(`飞书实例 "${channelId}" 已停止监听。`);
+      setMessage(`飞书实例已停止监听。`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '停止监听失败');
     } finally {
@@ -293,7 +300,7 @@ export const ChannelsSection = (): React.JSX.Element => {
               </div>
             </div>
           ))}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               type="button"
               variant="outline"
@@ -303,9 +310,12 @@ export const ChannelsSection = (): React.JSX.Element => {
               <Plus className="mr-1 size-3.5" />
               新增飞书实例
             </Button>
-            <Button type="button" onClick={() => void save()} disabled={saving}>
-              {saving ? '保存中...' : '保存渠道实例'}
+            <Button type="button" variant="outline" onClick={() => void save()} disabled={saving}>
+              {saving ? '保存中...' : '保存配置'}
             </Button>
+            <span className="text-[11px] text-[var(--color-text-muted)]">
+              点击"启动监听"也会自动保存
+            </span>
           </div>
           {message ? <p className="text-xs text-[var(--color-text-muted)]">{message}</p> : null}
         </div>

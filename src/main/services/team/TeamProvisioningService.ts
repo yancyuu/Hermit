@@ -2840,25 +2840,17 @@ function buildNativeCreateBootstrapPrompt(
     members: effectiveMembers,
     feishuChannels,
   });
-  const batchSize = 3;
+  const batchSize = 1;
   const needsBatches = effectiveMembers.length > batchSize;
   const spawnInstructions = effectiveMembers.length
     ? [
         needsBatches
-          ? '分批并行启动成员/员工。每批最多 3 个成员，在同一个 assistant 响应中为该批成员各发起一个 Agent 工具调用。'
-          : '并行启动所有成员/员工。你可以在同一个 assistant 响应中为每个成员各发起一个 Agent 工具调用。',
-        needsBatches
-          ? '等待该批所有 Agent 工具结果返回后，再启动下一批。不要逐个串行启动，也不要一次性扇出所有成员。'
-          : '不要等待前一个成员返回后再启动下一个。',
-        '如果某个 Agent 调用遇到 API retry、rate-limit 或 overloaded，Claude CLI 会自动处理重试；你不需要为此暂停其他成员的启动。',
-        ...effectiveMembers.flatMap((member, index) => {
+          ? '重要：必须严格按顺序逐个启动成员/员工。先启动第一个，等 Agent 工具完全返回后再启动下一个。绝对不要并行启动多个成员，否则会导致 API 频率限制。'
+          : '启动成员/员工。为该成员发起一个 Agent 工具调用。',
+        ...effectiveMembers.map((member) => {
           const prompt = buildMemberSpawnPrompt(member, displayName, request.teamName, leadName);
           const agentArgs = buildAgentToolArgsSuffix(member);
-          const memberLine = `Spawn teammate "${member.name}" with the Agent tool using team_name="${request.teamName}", name="${member.name}", subagent_type="general-purpose"${agentArgs}, and this exact prompt:\n${indentMultiline(prompt, '  ')}`;
-          if (!needsBatches) return [memberLine];
-          const isFirstInBatch = index % batchSize === 0;
-          const batchNum = Math.floor(index / batchSize) + 1;
-          return isFirstInBatch ? [`Batch ${batchNum}:`, memberLine] : [memberLine];
+          return `Spawn teammate "${member.name}" with the Agent tool using team_name="${request.teamName}", name="${member.name}", subagent_type="general-purpose"${agentArgs}, and this exact prompt:\n${indentMultiline(prompt, '  ')}`;
         }),
       ].join('\n\n')
     : '该团队未配置成员。不要启动成员。';
@@ -3284,18 +3276,14 @@ function buildDeterministicLaunchHydrationPrompt(
     members,
     feishuChannels,
   });
-  const batchSize = 3;
+  const batchSize = 1;
   const needsBatches = members.length > batchSize;
   const spawnInstructions = members.length
     ? [
         needsBatches
-          ? '分批并行重新连接已配置成员/员工。每批最多 3 个成员，在同一个 assistant 响应中为该批成员各发起一个 Agent 工具调用。'
-          : '并行重新连接所有已配置成员/员工。你可以在同一个 assistant 响应中为每个成员各发起一个 Agent 工具调用。',
-        needsBatches
-          ? '等待该批所有 Agent 工具结果返回后，再重新连接下一批。不要逐个串行重新连接，也不要一次性扇出所有成员。'
-          : '不要等待前一个成员返回后再重新连接下一个。',
-        '如果某个 Agent 调用遇到 API retry、rate-limit 或 overloaded，Claude CLI 会自动处理重试；你不需要为此暂停其他成员的重新连接。',
-        ...members.flatMap((member, index) => {
+          ? '重要：必须严格按顺序逐个重新连接成员/员工。先重新连接第一个，等 Agent 工具完全返回后再重新连接下一个。绝对不要并行重新连接多个成员，否则会导致 API 频率限制。'
+          : '重新连接成员/员工。为该成员发起一个 Agent 工具调用。',
+        ...members.map((member) => {
           const prompt = buildMemberSpawnPrompt(
             member,
             request.teamName,
@@ -3303,11 +3291,7 @@ function buildDeterministicLaunchHydrationPrompt(
             leadName
           );
           const agentArgs = buildAgentToolArgsSuffix(member);
-          const memberLine = `Reconnect teammate "${member.name}" with the Agent tool using team_name="${request.teamName}", name="${member.name}", subagent_type="general-purpose"${agentArgs}, and this exact prompt:\n${indentMultiline(prompt, '  ')}`;
-          if (!needsBatches) return [memberLine];
-          const isFirstInBatch = index % batchSize === 0;
-          const batchNum = Math.floor(index / batchSize) + 1;
-          return isFirstInBatch ? [`Batch ${batchNum}:`, memberLine] : [memberLine];
+          return `Reconnect teammate "${member.name}" with the Agent tool using team_name="${request.teamName}", name="${member.name}", subagent_type="general-purpose"${agentArgs}, and this exact prompt:\n${indentMultiline(prompt, '  ')}`;
         }),
       ].join('\n\n')
     : '';
@@ -11979,6 +11963,12 @@ export class TeamProvisioningService {
     request: TeamCreateRequest,
     onProgress: (progress: TeamProvisioningProgress) => void
   ): Promise<TeamCreateResponse> {
+    const _t0 = Date.now();
+    const _t = (label: string): void => {
+      const ms = Date.now() - _t0;
+      logger.info(`[${request.teamName}] create-timing: ${ms}ms — ${label}`);
+    };
+
     const existingProvisioningRunId = this.getProvisioningRunId(request.teamName);
     if (existingProvisioningRunId) {
       return { runId: existingProvisioningRunId };
@@ -12016,6 +12006,7 @@ export class TeamProvisioningService {
         request.providerId,
         request.providerBackendId
       );
+      _t('create:buildProvisioningEnv');
       const {
         env: shellEnv,
         geminiRuntimeAuth,
@@ -12056,6 +12047,7 @@ export class TeamProvisioningService {
         request,
         effectiveMembers: effectiveMemberSpecs,
       });
+      _t('create:validateLaunchIdentity');
       const runId = randomUUID();
       const startedAt = nowIso();
       const run: ProvisioningRun = {
@@ -12163,6 +12155,7 @@ export class TeamProvisioningService {
         this.mcpConfigBuilder.writeConfigFile(request.cwd),
         resolveDesktopTeammateModeDecision(request.extraCliArgs),
       ]);
+      _t('create:parallelPreSpawn');
       const nativeBootstrapPrompt = buildNativeCreateBootstrapPrompt(
         request,
         effectiveMemberSpecs,
@@ -12171,10 +12164,9 @@ export class TeamProvisioningService {
       );
       const promptSize = getPromptSizeSummary(nativeBootstrapPrompt);
       let child: ReturnType<typeof spawn>;
-      shellEnv.CLAUDE_ENABLE_DETERMINISTIC_TEAM_BOOTSTRAP = '1';
-      if (teammateModeDecision.forceProcessTeammates) {
-        shellEnv.CLAUDE_TEAM_FORCE_PROCESS_TEAMMATES = '1';
-      }
+      // Force members to run as independent processes (not in-process sub-agents).
+      // Combined with strong sequential prompt instructions, this prevents API rate limiting.
+      shellEnv.CLAUDE_TEAM_FORCE_PROCESS_TEAMMATES = '1';
       let mcpConfigPath: string;
       mcpConfigPath = mcpConfigPathResult;
       run.mcpConfigPath = mcpConfigPath;
@@ -12230,6 +12222,29 @@ export class TeamProvisioningService {
         ...parseCliArgs(request.extraCliArgs),
         ...providerArgs,
       ];
+
+      // Create deterministic bootstrap spec file for CLI-level sequential member spawning
+      const specDir = path.join(getTeamsBasePath(), request.teamName, '.bootstrap');
+      const specPath = path.join(specDir, 'spec.json');
+      await fs.promises.mkdir(specDir, { recursive: true });
+      const bootstrapSpec = {
+        mode: 'create' as const,
+        team: { name: request.teamName, cwd: request.cwd },
+        members: effectiveMemberSpecs.map((member) => ({
+          name: member.name,
+          provider: member.providerId || undefined,
+          model: member.model || undefined,
+          effort: member.effort || undefined,
+          role: member.role || undefined,
+        })),
+      };
+      await fs.promises.writeFile(specPath, JSON.stringify(bootstrapSpec, null, 2));
+      run.bootstrapSpecPath = specPath;
+      spawnArgs.push('--team-bootstrap-spec', specPath);
+
+      // Enable deterministic bootstrap for CLI-controlled sequential member spawning
+      shellEnv.CLAUDE_ENABLE_DETERMINISTIC_TEAM_BOOTSTRAP = '1';
+      shellEnv.CLAUDE_TEAM_FORCE_PROCESS_TEAMMATES = '1';
       const runtimeWarning = buildRuntimeLaunchWarning(request, shellEnv, {
         geminiRuntimeAuth,
         promptSize,
@@ -12248,30 +12263,36 @@ export class TeamProvisioningService {
         const tasksDir = path.join(getTasksBasePath(), request.teamName);
         await fs.promises.mkdir(teamDir, { recursive: true });
         await fs.promises.mkdir(tasksDir, { recursive: true });
-        await this.writeNativeClaudeLeadConfig(request);
-        await this.teamMetaStore.writeMeta(request.teamName, {
-          displayName: request.displayName,
-          description: request.description,
-          color: request.color,
-          cwd: request.cwd,
-          executionTarget: request.executionTarget,
-          prompt: request.prompt,
-          providerId: request.providerId,
-          providerBackendId: request.providerBackendId,
-          model: request.model,
-          effort: request.effort,
-          fastMode: request.fastMode,
-          skipPermissions: request.skipPermissions,
-          worktree: request.worktree,
-          extraCliArgs: request.extraCliArgs,
-          limitContext: request.limitContext,
-          launchIdentity,
-          createdAt: Date.now(),
-        });
         const membersToWrite = this.buildMembersMetaWritePayload(allEffectiveMemberSpecs);
-        await this.membersMetaStore.writeMembers(request.teamName, membersToWrite, {
-          providerBackendId: request.providerBackendId,
-        });
+        await Promise.all([
+          this.writeNativeClaudeLeadConfig(request),
+          this.teamMetaStore.writeMeta(request.teamName, {
+            displayName: request.displayName,
+            description: request.description,
+            color: request.color,
+            cwd: request.cwd,
+            executionTarget: request.executionTarget,
+            prompt: request.prompt,
+            providerId: request.providerId,
+            providerBackendId: request.providerBackendId,
+            model: request.model,
+            effort: request.effort,
+            fastMode: request.fastMode,
+            skipPermissions: request.skipPermissions,
+            worktree: request.worktree,
+            extraCliArgs: request.extraCliArgs,
+            limitContext: request.limitContext,
+            launchIdentity,
+            createdAt: Date.now(),
+          }),
+          this.membersMetaStore.writeMembers(request.teamName, membersToWrite, {
+            providerBackendId: request.providerBackendId,
+          }),
+          ...(request.skipPermissions === false
+            ? [this.seedLeadBootstrapPermissionRules(request.teamName, request.cwd)]
+            : []),
+        ]);
+        _t('create:metaWritten');
         if (
           run.cancelRequested ||
           run.processKilled ||
@@ -12279,15 +12300,13 @@ export class TeamProvisioningService {
         ) {
           throw new Error('Team launch cancelled by app shutdown');
         }
-        if (request.skipPermissions === false) {
-          await this.seedLeadBootstrapPermissionRules(request.teamName, request.cwd);
-        }
 
         child = spawnCli(claudePath, spawnArgs, {
           cwd: request.cwd,
           env: { ...shellEnv },
           stdio: ['pipe', 'pipe', 'pipe'],
         });
+        _t('create:cliSpawned');
       } catch (error) {
         // Clean up pre-saved meta files if spawn failed (instant failure, not transient)
         await this.teamMetaStore.deleteMeta(request.teamName).catch(() => {});
@@ -12348,6 +12367,7 @@ export class TeamProvisioningService {
       // Await the MCP validation that was started concurrently before spawn.
       // If validation fails, kill the CLI process and clean up.
       const mcpValidationResult = await mcpValidationPromise;
+      _t('mcpValidationDone');
       if (mcpValidationResult instanceof Error) {
         killTeamProcess(child);
         this.runs.delete(runId);
@@ -12864,15 +12884,31 @@ export class TeamProvisioningService {
         logger.info(`[${request.teamName}] launch-timing: ${ms}ms — ${label}`);
       };
 
-      // Verify config.json exists — team must already be provisioned
+      // Phase 1: Read config and resolve members in parallel with binary + env resolution
       const configPath = path.join(getTeamsBasePath(), request.teamName, 'config.json');
-      const configRaw = await tryReadRegularFileUtf8(configPath, {
-        timeoutMs: TEAM_JSON_READ_TIMEOUT_MS,
-        maxBytes: TEAM_CONFIG_MAX_BYTES,
-      });
+      const [configRawResult, binaryResult, envResult] = await Promise.all([
+        tryReadRegularFileUtf8(configPath, {
+          timeoutMs: TEAM_JSON_READ_TIMEOUT_MS,
+          maxBytes: TEAM_CONFIG_MAX_BYTES,
+        }),
+        ClaudeBinaryResolver.resolve().then((p) => {
+          _t('binaryResolved');
+          return p;
+        }),
+        this.buildProvisioningEnv(request.providerId, request.providerBackendId).then((e) => {
+          _t('buildProvisioningEnv');
+          return e;
+        }),
+      ]);
+      const configRaw = configRawResult;
       if (!configRaw) {
         throw new Error(`Team "${request.teamName}" not found — config.json does not exist`);
       }
+      const claudePath = binaryResult;
+      if (!claudePath) {
+        throw new Error(CLI_NOT_FOUND_MESSAGE);
+      }
+      const provisioningEnv = envResult;
       let configProjectPath: string | null = null;
       try {
         const parsedConfig = JSON.parse(configRaw) as { projectPath?: unknown };
@@ -12909,12 +12945,14 @@ export class TeamProvisioningService {
         }
       }
 
-      const {
-        members: expectedMemberSpecs,
-        source,
-        warning,
-      } = await this.resolveLaunchExpectedMembers(request.teamName, configRaw, request.providerId);
-      _t('resolveLaunchExpectedMembers');
+      const [membersResult, persistedLaunchState] = await Promise.all([
+        this.resolveLaunchExpectedMembers(request.teamName, configRaw, request.providerId),
+        request.clearContext
+          ? Promise.resolve(null)
+          : this.launchStateStore.read(request.teamName).catch(() => null),
+      ]);
+      const { members: expectedMemberSpecs, source, warning } = membersResult;
+      _t('resolveLaunchExpectedMembers+launchState');
       assertOpenCodeNotLaunchedThroughLegacyProvisioning({
         providerId: request.providerId,
         members: expectedMemberSpecs,
@@ -12935,7 +12973,6 @@ export class TeamProvisioningService {
         // ever spawned (all in 'starting' state), resuming would reconnect the lead but
         // the CLI's deterministic bootstrap won't re-spawn dead teammates in reconnect
         // mode. Skip resume so the CLI creates a fresh session that fully bootstraps.
-        const persistedLaunchState = await this.launchStateStore.read(request.teamName);
         if (persistedLaunchState) {
           const {
             expectedMembers: prevExpected,
@@ -13054,30 +13091,12 @@ export class TeamProvisioningService {
         throw error;
       }
 
-      let claudePath: string | null;
-      try {
-        await ensureCwdExists(request.cwd);
-
-        claudePath = await ClaudeBinaryResolver.resolve();
-        _t('binaryResolved');
-        if (!claudePath) {
-          throw new Error(CLI_NOT_FOUND_MESSAGE);
-        }
-      } catch (error) {
-        // Restore pre-launch backup so config.json is not left in normalized (lead-only) state
-        await this.restorePrelaunchConfig(request.teamName);
-        throw error;
-      }
+      await ensureCwdExists(request.cwd);
 
       const teamsBasePathsToProbe = getTeamsBasePathsToProbe();
       const runId = randomUUID();
       const startedAt = nowIso();
 
-      const provisioningEnv = await this.buildProvisioningEnv(
-        request.providerId,
-        request.providerBackendId
-      );
-      _t('buildProvisioningEnv');
       const {
         env: shellEnv,
         geminiRuntimeAuth,
@@ -13292,10 +13311,8 @@ export class TeamProvisioningService {
       );
       const promptSize = getPromptSizeSummary(prompt);
       let child: ReturnType<typeof spawn>;
-      shellEnv.CLAUDE_ENABLE_DETERMINISTIC_TEAM_BOOTSTRAP = '1';
-      if (teammateModeDecision.forceProcessTeammates) {
-        shellEnv.CLAUDE_TEAM_FORCE_PROCESS_TEAMMATES = '1';
-      }
+      // Force members to run as independent processes (not in-process sub-agents).
+      shellEnv.CLAUDE_TEAM_FORCE_PROCESS_TEAMMATES = '1';
       let mcpConfigPath: string;
       mcpConfigPath = mcpConfigPathResult;
       run.mcpConfigPath = mcpConfigPath;
@@ -13375,32 +13392,38 @@ export class TeamProvisioningService {
       });
       // --resume is added above when a valid previous session JSONL exists.
       // Without it, CLI creates a fresh session ID automatically.
-      await this.teamMetaStore.writeMeta(request.teamName, {
-        displayName: syntheticRequest.displayName,
-        description: syntheticRequest.description,
-        color: syntheticRequest.color,
-        cwd: request.cwd,
-        executionTarget: request.executionTarget,
-        prompt: request.prompt,
-        providerId: request.providerId,
-        providerBackendId: request.providerBackendId,
-        model: request.model,
-        effort: request.effort,
-        fastMode: request.fastMode,
-        skipPermissions: request.skipPermissions,
-        worktree: request.worktree,
-        extraCliArgs: request.extraCliArgs,
-        limitContext: request.limitContext,
-        launchIdentity,
-        createdAt: Date.now(),
-      });
-      await this.membersMetaStore.writeMembers(
-        request.teamName,
-        this.buildMembersMetaWritePayload(allEffectiveMemberSpecs),
-        {
+      await Promise.all([
+        this.teamMetaStore.writeMeta(request.teamName, {
+          displayName: syntheticRequest.displayName,
+          description: syntheticRequest.description,
+          color: syntheticRequest.color,
+          cwd: request.cwd,
+          executionTarget: request.executionTarget,
+          prompt: request.prompt,
+          providerId: request.providerId,
           providerBackendId: request.providerBackendId,
-        }
-      );
+          model: request.model,
+          effort: syntheticRequest.effort,
+          fastMode: syntheticRequest.fastMode,
+          skipPermissions: syntheticRequest.skipPermissions,
+          worktree: syntheticRequest.worktree,
+          extraCliArgs: syntheticRequest.extraCliArgs,
+          limitContext: syntheticRequest.limitContext,
+          launchIdentity,
+          createdAt: Date.now(),
+        }),
+        this.membersMetaStore.writeMembers(
+          request.teamName,
+          this.buildMembersMetaWritePayload(allEffectiveMemberSpecs),
+          {
+            providerBackendId: request.providerBackendId,
+          }
+        ),
+        ...(request.skipPermissions === false
+          ? [this.seedLeadBootstrapPermissionRules(request.teamName, request.cwd)]
+          : []),
+      ]);
+      _t('metaWritten');
 
       try {
         if (
@@ -13410,14 +13433,12 @@ export class TeamProvisioningService {
         ) {
           throw new Error('Team launch cancelled by app shutdown');
         }
-        if (request.skipPermissions === false) {
-          await this.seedLeadBootstrapPermissionRules(request.teamName, request.cwd);
-        }
         child = spawnCli(claudePath, launchArgs, {
           cwd: request.cwd,
           env: { ...shellEnv },
           stdio: ['pipe', 'pipe', 'pipe'],
         });
+        _t('cliSpawned');
       } catch (error) {
         if (run.mcpConfigPath) {
           await this.mcpConfigBuilder.removeConfigFile(run.mcpConfigPath).catch(() => {});
@@ -13471,6 +13492,7 @@ export class TeamProvisioningService {
       // Await the MCP validation that was started concurrently before spawn.
       // If validation fails, kill the CLI process and clean up.
       const mcpValidationResult = await mcpValidationPromise;
+      _t('mcpValidationDone');
       if (mcpValidationResult instanceof Error) {
         killTeamProcess(child);
         this.runs.delete(runId);

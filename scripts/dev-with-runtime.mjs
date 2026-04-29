@@ -537,9 +537,9 @@ async function main() {
 
   const uiEnv = {
     ...process.env,
-    CLAUDE_AGENT_TEAMS_ORCHESTRATOR_CLI_PATH: resolvedRuntime.binaryPath,
+    CLAUDE_CLI_PATH: 'claude',
   };
-  delete uiEnv.CLAUDE_CLI_PATH;
+  delete uiEnv.CLAUDE_AGENT_TEAMS_ORCHESTRATOR_CLI_PATH;
   const uiPackageManager = readPackageManagerCommand(uiRepoRoot);
 
   runOrExit(uiPackageManager, ['exec', 'electron-vite', 'dev'], {

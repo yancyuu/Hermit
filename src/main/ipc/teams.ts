@@ -1944,11 +1944,11 @@ async function handleLaunchTeam(
   if (!launchProviderBackendValidation.valid) {
     return { success: false, error: launchProviderBackendValidation.error };
   }
-  const rawLaunchEffort =
-    payload.effort ??
-    persistedMeta?.effort ??
-    persistedMeta?.launchIdentity?.selectedEffort ??
-    undefined;
+  const rawLaunchEffort = Object.hasOwn(payload, 'effort')
+    ? typeof payload.effort === 'string' && payload.effort.length > 0
+      ? payload.effort
+      : undefined
+    : (persistedMeta?.effort ?? persistedMeta?.launchIdentity?.selectedEffort ?? undefined);
   const effortValidation = parseOptionalTeamEffort(rawLaunchEffort, launchProviderId);
   if (!effortValidation.valid) {
     return { success: false, error: effortValidation.error };
