@@ -52,12 +52,12 @@ import { normalizePath } from '@renderer/utils/pathNormalize';
 import { nameColorSet } from '@renderer/utils/projectColor';
 import { resolveUiOwnedProviderBackendId } from '@renderer/utils/providerBackendIdentity';
 import { refreshCliStatusForCurrentMode } from '@renderer/utils/refreshCliStatus';
+import { resolveTeamEffortForLaunch } from '@renderer/utils/teamEffortOptions';
 import {
   getTeamModelSelectionError,
   normalizeExplicitTeamModelForUi,
 } from '@renderer/utils/teamModelAvailability';
 import { getTeamProviderLabel as getCatalogTeamProviderLabel } from '@renderer/utils/teamModelCatalog';
-import { resolveTeamEffortForLaunch } from '@renderer/utils/teamEffortOptions';
 import { isEphemeralProjectPath } from '@shared/utils/ephemeralProjectPath';
 import { CANONICAL_LEAD_MEMBER_NAME, isLeadMemberName } from '@shared/utils/leadDetection';
 import { migrateProviderBackendId } from '@shared/utils/providerBackend';
@@ -117,15 +117,15 @@ import {
   updateProviderCheck,
 } from './ProvisioningProviderStatusList';
 import {
-  analyzeTeammateRuntimeCompatibility,
-  useTmuxRuntimeReadiness,
-} from './teammateRuntimeCompatibility';
-import { TeammateRuntimeCompatibilityNotice } from './TeammateRuntimeCompatibilityNotice';
-import {
   buildLaunchExtraCliArgs,
   buildTeammateModeCliArgs,
   normalizeTeammateLaunchMode,
 } from './teammateLaunchMode';
+import {
+  analyzeTeammateRuntimeCompatibility,
+  useTmuxRuntimeReadiness,
+} from './teammateRuntimeCompatibility';
+import { TeammateRuntimeCompatibilityNotice } from './TeammateRuntimeCompatibilityNotice';
 import {
   computeEffectiveTeamModel,
   formatTeamModelSummary,

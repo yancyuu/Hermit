@@ -12167,8 +12167,7 @@ export class TeamProvisioningService {
       // Force members to run as independent processes (not in-process sub-agents).
       // Combined with strong sequential prompt instructions, this prevents API rate limiting.
       shellEnv.CLAUDE_TEAM_FORCE_PROCESS_TEAMMATES = '1';
-      let mcpConfigPath: string;
-      mcpConfigPath = mcpConfigPathResult;
+      const mcpConfigPath = mcpConfigPathResult;
       run.mcpConfigPath = mcpConfigPath;
       // Start MCP validation concurrently — we'll await it after spawning the CLI
       // so the CLI can initialize while the MCP server is being validated.
@@ -13313,8 +13312,7 @@ export class TeamProvisioningService {
       let child: ReturnType<typeof spawn>;
       // Force members to run as independent processes (not in-process sub-agents).
       shellEnv.CLAUDE_TEAM_FORCE_PROCESS_TEAMMATES = '1';
-      let mcpConfigPath: string;
-      mcpConfigPath = mcpConfigPathResult;
+      const mcpConfigPath = mcpConfigPathResult;
       run.mcpConfigPath = mcpConfigPath;
       // Start MCP validation concurrently — we'll await it after spawning the CLI
       const mcpValidationPromise = this.validateAgentTeamsMcpRuntime(

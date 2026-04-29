@@ -1611,7 +1611,7 @@ async function validateProvisioningRequest(
   }
 
   if (typeof payload.cwd !== 'string' || payload.cwd.trim().length === 0) {
-    return { valid: false, error: 'cwd is required' };
+    return { valid: false, error: '请填写项目路径' };
   }
   const cwd = payload.cwd.trim();
   const executionTarget =
@@ -1627,7 +1627,7 @@ async function validateProvisioningRequest(
       : { type: 'local' as const, cwd };
   const isRemoteTarget = executionTarget.type === 'ssh';
   if (!path.isAbsolute(cwd)) {
-    return { valid: false, error: 'cwd must be an absolute path' };
+    return { valid: false, error: '项目路径必须是绝对路径' };
   }
 
   if (payload.prompt !== undefined && typeof payload.prompt !== 'string') {
@@ -1653,17 +1653,17 @@ async function validateProvisioningRequest(
     try {
       await fs.promises.mkdir(cwd, { recursive: true });
     } catch {
-      return { valid: false, error: 'failed to create cwd directory' };
+      return { valid: false, error: `项目路径不存在且无法创建：${cwd}` };
     }
 
     let stat: fs.Stats;
     try {
       stat = await fs.promises.stat(cwd);
     } catch {
-      return { valid: false, error: 'cwd does not exist' };
+      return { valid: false, error: `项目路径不存在：${cwd}` };
     }
     if (!stat.isDirectory()) {
-      return { valid: false, error: 'cwd must be a directory' };
+      return { valid: false, error: `项目路径不是目录：${cwd}` };
     }
   }
 
@@ -1791,7 +1791,7 @@ async function handleLaunchTeam(
   }
 
   if (typeof payload.cwd !== 'string' || payload.cwd.trim().length === 0) {
-    return { success: false, error: 'cwd is required' };
+    return { success: false, error: '请填写项目路径' };
   }
   const cwd = payload.cwd.trim();
   const executionTarget =
@@ -1807,17 +1807,17 @@ async function handleLaunchTeam(
       : { type: 'local' as const, cwd };
   const isRemoteTarget = executionTarget.type === 'ssh';
   if (!path.isAbsolute(cwd)) {
-    return { success: false, error: 'cwd must be an absolute path' };
+    return { success: false, error: '项目路径必须是绝对路径' };
   }
 
   if (!isRemoteTarget) {
     try {
       const stat = await fs.promises.stat(cwd);
       if (!stat.isDirectory()) {
-        return { success: false, error: 'cwd must be a directory' };
+        return { success: false, error: `项目路径不是目录：${cwd}` };
       }
     } catch {
-      return { success: false, error: 'cwd does not exist' };
+      return { success: false, error: `项目路径不存在：${cwd}` };
     }
   }
 
@@ -2048,11 +2048,11 @@ async function handlePrepareProvisioning(
   let validatedModelVerificationMode: TeamProvisioningModelVerificationMode | undefined;
   if (cwd !== undefined) {
     if (typeof cwd !== 'string' || cwd.trim().length === 0) {
-      return { success: false, error: 'cwd must be a non-empty string' };
+      return { success: false, error: '请填写项目路径' };
     }
     validatedCwd = cwd.trim();
     if (!path.isAbsolute(validatedCwd)) {
-      return { success: false, error: 'cwd must be an absolute path' };
+      return { success: false, error: '项目路径必须是绝对路径' };
     }
   }
   if (providerId !== undefined) {
@@ -3168,7 +3168,7 @@ async function handleCreateConfig(
       return { success: false, error: 'cwd must be a non-empty string if provided' };
     }
     if (!path.isAbsolute(payload.cwd.trim())) {
-      return { success: false, error: 'cwd must be an absolute path' };
+      return { success: false, error: '项目路径必须是绝对路径' };
     }
   }
   const configCwd = typeof payload.cwd === 'string' ? payload.cwd.trim() : undefined;

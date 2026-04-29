@@ -314,7 +314,7 @@ export const ChannelsSection = (): React.JSX.Element => {
               {saving ? '保存中...' : '保存配置'}
             </Button>
             <span className="text-[11px] text-[var(--color-text-muted)]">
-              点击"启动监听"也会自动保存
+              点击&ldquo;启动监听&rdquo;也会自动保存
             </span>
           </div>
           {message ? <p className="text-xs text-[var(--color-text-muted)]">{message}</p> : null}

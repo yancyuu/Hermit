@@ -34,8 +34,8 @@ import { McpServerDetailDialog } from './McpServerDetailDialog';
 
 import type { CliInstallationStatus } from '@shared/types';
 import type {
-  InstallScope,
   InstalledMcpEntry,
+  InstallScope,
   McpCatalogItem,
   McpServerDiagnostic,
 } from '@shared/types/extensions';
@@ -351,7 +351,7 @@ export const McpServersPanel = ({
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-6 w-6 p-0 text-red-300 hover:text-red-200"
+                          className="size-6 p-0 text-red-300 hover:text-red-200"
                           disabled={uninstalling}
                           onClick={() => {
                             void uninstallMcpServer(

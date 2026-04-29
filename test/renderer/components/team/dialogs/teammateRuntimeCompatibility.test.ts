@@ -65,8 +65,8 @@ describe('analyzeTeammateRuntimeCompatibility', () => {
     });
 
     expect(result.blocksSubmission).toBe(true);
-    expect(result.details.join('\n')).toContain('Mixed providers');
-    expect(result.memberWarningById.bob).toContain('same provider as the Anthropic lead');
+    expect(result.details.join('\n')).toContain('混合提供商');
+    expect(result.memberWarningById.bob).toContain('必须与 Anthropic 负责人使用相同提供商');
   });
 
   it('allows OpenCode secondary-lane teammates without tmux under a non-OpenCode lead', () => {
@@ -93,9 +93,9 @@ describe('analyzeTeammateRuntimeCompatibility', () => {
     });
 
     expect(result.blocksSubmission).toBe(true);
-    expect(result.title).toBe('OpenCode cannot lead mixed-provider teams');
-    expect(result.message).toContain('OpenCode-led mixed teams are not supported');
-    expect(result.memberWarningById.bob).toContain('OpenCode cannot be the team lead');
+    expect(result.title).toBe('OpenCode 不能负责混合提供商团队');
+    expect(result.message).toContain('当前阶段不支持 OpenCode 负责混合团队');
+    expect(result.memberWarningById.bob).toContain('OpenCode 不能作为团队负责人');
   });
 
   it('blocks same-provider Codex native teammates when tmux is unavailable', () => {
@@ -109,10 +109,10 @@ describe('analyzeTeammateRuntimeCompatibility', () => {
     });
 
     expect(result.blocksSubmission).toBe(true);
-    expect(result.title).toBe('Codex teammates need tmux before they can run');
-    expect(result.message).toContain('The Codex lead can run without tmux');
-    expect(result.details.join('\n')).toContain('Codex native teammates');
-    expect(result.memberWarningById.jack).toContain('Codex native teammates require');
+    expect(result.title).toBe('Codex 成员运行前需要 tmux');
+    expect(result.message).toContain('Codex 负责人可以不依赖 tmux 运行');
+    expect(result.details.join('\n')).toContain('Codex 原生成员');
+    expect(result.memberWarningById.jack).toContain('Codex 原生成员需要独立进程');
   });
 
   it('allows separate-process teammate requirements when tmux is ready', () => {
@@ -154,6 +154,6 @@ describe('analyzeTeammateRuntimeCompatibility', () => {
     });
 
     expect(result.blocksSubmission).toBe(true);
-    expect(result.details).toContain('Custom CLI args force --teammate-mode tmux.');
+    expect(result.details).toContain('自定义 CLI 参数强制使用 --teammate-mode tmux。');
   });
 });

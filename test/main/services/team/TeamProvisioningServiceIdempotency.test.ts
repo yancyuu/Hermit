@@ -25,6 +25,19 @@ vi.mock('@main/utils/pathDecoder', async (importOriginal) => {
   };
 });
 
+vi.mock('@main/services/team/ClaudeBinaryResolver', () => ({
+  ClaudeBinaryResolver: {
+    resolve: vi.fn().mockResolvedValue('/usr/local/bin/claude'),
+  },
+}));
+
+vi.mock('@main/utils/shellEnv', () => ({
+  resolveInteractiveShellEnv: vi.fn().mockResolvedValue({ PATH: '/usr/bin' }),
+  clearShellEnvCache: vi.fn(),
+  getCachedShellEnv: vi.fn().mockReturnValue({ PATH: '/usr/bin' }),
+  getShellPreferredHome: vi.fn().mockReturnValue('/home/test'),
+}));
+
 import { TeamProvisioningService } from '@main/services/team/TeamProvisioningService';
 
 describe('TeamProvisioningService idempotent launch guards', () => {

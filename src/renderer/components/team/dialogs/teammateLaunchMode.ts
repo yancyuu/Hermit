@@ -14,10 +14,14 @@ export function buildTeammateModeCliArgs(mode: TeammateLaunchMode): string[] {
 
 function stripTeammateModeArgs(tokens: string[]): string[] {
   const result: string[] = [];
-  for (let index = 0; index < tokens.length; index += 1) {
-    const token = tokens[index];
+  let skip = false;
+  for (const token of tokens) {
+    if (skip) {
+      skip = false;
+      continue;
+    }
     if (token === '--teammate-mode') {
-      index += 1;
+      skip = true;
       continue;
     }
     if (token.startsWith('--teammate-mode=')) {
