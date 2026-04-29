@@ -114,6 +114,10 @@ function normalizeConfig(input: unknown): LeadChannelConfig {
             name,
             provider,
             enabled: row.enabled !== false,
+            boundTeam:
+              typeof row.boundTeam === 'string' && row.boundTeam.trim()
+                ? row.boundTeam.trim()
+                : undefined,
             feishu: row.feishu ? normalizeConfig({ feishu: row.feishu }).feishu : undefined,
           };
         })
@@ -154,8 +158,9 @@ function extractFeishuText(event: unknown): string {
 export class LeadChannelListenerService {
   private readonly inboxWriter = new TeamInboxWriter();
   private readonly configReader = new TeamConfigReader();
-  private readonly wsClientByTeamChannel = new Map<string, InstanceType<typeof Lark.WSClient>>();
-  private readonly apiClientByTeamChannel = new Map<string, InstanceType<typeof Lark.Client>>();
+  private readonly wsClientByChannel = new Map<string, InstanceType<typeof Lark.WSClient>>();
+  private readonly apiClientByChannel = new Map<string, InstanceType<typeof Lark.Client>>();
+  private readonly channelBindings = new Map<string, Set<string>>();
   private readonly statusByTeamChannel = new Map<string, Map<string, LeadChannelStatus>>();
   private readonly connectingHintTimerByTeamChannel = new Map<string, NodeJS.Timeout>();
   private inboundMessageHandler:
@@ -203,36 +208,32 @@ export class LeadChannelListenerService {
     return this.getSnapshot(teamName);
   }
 
-  async startFeishu(teamName: string, channelId?: string): Promise<LeadChannelSnapshot> {
-    const teamConfig = await this.readConfig(teamName);
+  async startFeishu(channelId: string): Promise<LeadChannelSnapshot | null> {
     const globalConfig = await this.readGlobalConfig();
-    const config =
-      teamConfig.feishu.appId.trim() || teamConfig.feishu.appSecret.trim()
-        ? teamConfig
-        : globalConfig;
-    const feishuChannels = config.channels.filter(
-      (channel) => channel.provider === 'feishu' && channel.enabled !== false
+    const channel = globalConfig.channels.find(
+      (c) => c.id === channelId && c.provider === 'feishu'
     );
-    const feishuChannel = channelId
-      ? (feishuChannels.find((channel) => channel.id === channelId) ?? null)
-      : (feishuChannels[0] ?? null);
-    const feishuConfig = feishuChannel?.feishu ?? config.feishu;
+    if (!channel) {
+      throw new Error(`未找到飞书渠道实例 "${channelId}"。`);
+    }
+    const boundTeam = channel.boundTeam;
+    if (!boundTeam) {
+      throw new Error(`飞书渠道实例 "${channelId}" 未绑定团队。请在设置 → 渠道中先绑定团队。`);
+    }
+    const feishuConfig = channel.feishu ?? globalConfig.feishu;
     const appId = feishuConfig.appId.trim();
     const appSecret = feishuConfig.appSecret.trim();
     if (!appId || !appSecret) {
-      throw new Error('请先填写飞书 App ID 和 App Secret。');
+      throw new Error(`飞书渠道实例 "${channelId}" 缺少 App ID 或 App Secret。`);
     }
-    const channel: LeadChannelDefinition = feishuChannel ?? {
-      id: channelId?.trim() || 'feishu-default',
-      name: '飞书长连接',
-      provider: 'feishu',
-      enabled: true,
-      feishu: feishuConfig,
-    };
 
-    await this.stopFeishu(teamName, channel.id);
-    this.clearConnectingHint(teamName, channel.id);
-    this.setStatus(teamName, channel.id, {
+    const key = this.getChannelKey(channelId);
+    if (this.wsClientByChannel.has(key)) {
+      return this.getSnapshot(boundTeam);
+    }
+
+    this.clearConnectingHint(boundTeam, channel.id);
+    this.setStatus(boundTeam, channel.id, {
       running: true,
       state: 'connecting',
       message: `正在连接 ${channel.name}...`,
@@ -241,7 +242,7 @@ export class LeadChannelListenerService {
       channelId: channel.id,
       channelName: channel.name,
     });
-    this.scheduleConnectingHint(teamName, channel);
+    this.scheduleConnectingHint(boundTeam, channel);
 
     const wsClient = new Lark.WSClient({
       appId,
@@ -250,36 +251,36 @@ export class LeadChannelListenerService {
       autoReconnect: true,
       source: 'hermit',
       onReady: () => {
-        this.clearConnectingHint(teamName, channel.id);
-        this.patchStatus(teamName, channel.id, {
+        this.clearConnectingHint(boundTeam, channel.id);
+        this.patchStatus(boundTeam, channel.id, {
           running: true,
           state: 'connected',
           message: `${channel.name} 已连接。`,
         });
       },
       onReconnecting: () => {
-        this.patchStatus(teamName, channel.id, {
+        this.patchStatus(boundTeam, channel.id, {
           running: true,
           state: 'reconnecting',
           message: `${channel.name} 重连中...`,
         });
       },
       onReconnected: () => {
-        this.clearConnectingHint(teamName, channel.id);
-        this.patchStatus(teamName, channel.id, {
+        this.clearConnectingHint(boundTeam, channel.id);
+        this.patchStatus(boundTeam, channel.id, {
           running: true,
           state: 'connected',
           message: `${channel.name} 已重新连接。`,
         });
       },
       onError: (error) => {
-        this.clearConnectingHint(teamName, channel.id);
-        this.patchStatus(teamName, channel.id, {
+        this.clearConnectingHint(boundTeam, channel.id);
+        this.patchStatus(boundTeam, channel.id, {
           running: false,
           state: 'error',
           message: error.message,
         });
-        logger.error(`[${teamName}/${channel.id}] Feishu WS error:`, error);
+        logger.error(`[${boundTeam}/${channel.id}] Feishu WS error:`, error);
       },
     });
     const apiClient = new Lark.Client({ appId, appSecret });
@@ -306,9 +307,9 @@ export class LeadChannelListenerService {
           text,
           from: `${channel.name}:${senderId}`,
         };
-        const eventClaim = await this.claimInboundEvent(teamName, channel.id, inboundMessage);
+        const eventClaim = await this.claimInboundEvent(boundTeam, channel.id, inboundMessage);
         if (!eventClaim.shouldProcess) {
-          this.patchStatus(teamName, channel.id, {
+          this.patchStatus(boundTeam, channel.id, {
             running: true,
             state: 'connected',
             message: `${channel.name} 已忽略飞书重复消息。`,
@@ -317,17 +318,17 @@ export class LeadChannelListenerService {
           return;
         }
         const deliveredDirect =
-          (await Promise.resolve(this.inboundMessageHandler?.(teamName, inboundMessage)).catch(
+          (await Promise.resolve(this.inboundMessageHandler?.(boundTeam, inboundMessage)).catch(
             (error: unknown) => {
               logger.warn(
-                `[${teamName}/${channel.id}] Direct channel delivery failed: ${String(error)}`
+                `[${boundTeam}/${channel.id}] Direct channel delivery failed: ${String(error)}`
               );
               return false;
             }
           )) === true;
-        const leadName = await this.resolveLeadName(teamName);
+        const leadName = await this.resolveLeadName(boundTeam);
         if (!deliveredDirect) {
-          await this.inboxWriter.sendMessage(teamName, {
+          await this.inboxWriter.sendMessage(boundTeam, {
             member: leadName,
             to: leadName,
             from: inboundMessage.from,
@@ -345,9 +346,9 @@ export class LeadChannelListenerService {
           });
         }
         if (eventClaim.eventKey) {
-          await this.markInboundEventHandled(teamName, eventClaim.eventKey);
+          await this.markInboundEventHandled(boundTeam, eventClaim.eventKey);
         }
-        this.patchStatus(teamName, channel.id, {
+        this.patchStatus(boundTeam, channel.id, {
           running: true,
           state: 'connected',
           message: deliveredDirect
@@ -358,19 +359,17 @@ export class LeadChannelListenerService {
       },
     });
 
-    this.wsClientByTeamChannel.set(this.getTeamChannelKey(teamName, channel.id), wsClient);
-    this.apiClientByTeamChannel.set(this.getTeamChannelKey(teamName, channel.id), apiClient);
+    this.wsClientByChannel.set(key, wsClient);
+    this.apiClientByChannel.set(key, apiClient);
     await wsClient.start({ eventDispatcher });
-    return this.getSnapshot(teamName);
+    return this.getSnapshot(boundTeam);
   }
 
-  async sendFeishuReply(
-    teamName: string,
-    channelId: string,
-    chatId: string,
-    text: string
-  ): Promise<void> {
-    const client = await this.getFeishuApiClient(teamName, channelId);
+  async sendFeishuReply(channelId: string, chatId: string, text: string): Promise<void> {
+    const client = await this.getFeishuApiClient(channelId);
+    const globalConfig = await this.readGlobalConfig();
+    const channel = globalConfig.channels.find((c) => c.id === channelId);
+    const boundTeam = channel?.boundTeam;
     await client.im.message.create({
       params: {
         receive_id_type: 'chat_id',
@@ -381,43 +380,56 @@ export class LeadChannelListenerService {
         msg_type: 'text',
       },
     });
-    this.patchStatus(teamName, channelId, {
-      running: true,
-      state: 'connected',
-      message: '负责人回复已发送到飞书。',
-      lastEventAt: new Date().toISOString(),
-    });
+    if (boundTeam) {
+      this.patchStatus(boundTeam, channelId, {
+        running: true,
+        state: 'connected',
+        message: '负责人回复已发送到飞书。',
+        lastEventAt: new Date().toISOString(),
+      });
+    }
   }
 
-  async stopFeishu(teamName: string, channelId?: string): Promise<LeadChannelSnapshot> {
+  async stopFeishu(channelId?: string): Promise<LeadChannelSnapshot | null> {
+    const globalConfig = await this.readGlobalConfig();
     if (!channelId) {
-      const prefix = `${teamName}:`;
-      for (const [key, wsClient] of this.wsClientByTeamChannel.entries()) {
-        if (!key.startsWith(prefix)) continue;
+      for (const [key, wsClient] of this.wsClientByChannel.entries()) {
         wsClient.close({ force: true });
-        this.wsClientByTeamChannel.delete(key);
-        this.apiClientByTeamChannel.delete(key);
-        const id = key.slice(prefix.length);
-        this.clearConnectingHint(teamName, id);
-        this.setStatus(teamName, id, createStoppedStatus('飞书长连接已停止。', { id, name: id }));
+        this.wsClientByChannel.delete(key);
+        this.apiClientByChannel.delete(key);
+        const id = key;
+        const channel = globalConfig.channels.find((c) => c.id === id);
+        if (channel?.boundTeam) {
+          this.clearConnectingHint(channel.boundTeam, id);
+          this.setStatus(
+            channel.boundTeam,
+            id,
+            createStoppedStatus('飞书长连接已停止。', { id, name: id })
+          );
+        }
       }
-      return this.getSnapshot(teamName);
+      return null;
     }
 
-    const key = this.getTeamChannelKey(teamName, channelId);
-    const wsClient = this.wsClientByTeamChannel.get(key);
+    const key = this.getChannelKey(channelId);
+    const wsClient = this.wsClientByChannel.get(key);
     if (wsClient) {
       wsClient.close({ force: true });
-      this.wsClientByTeamChannel.delete(key);
+      this.wsClientByChannel.delete(key);
     }
-    this.apiClientByTeamChannel.delete(key);
-    this.clearConnectingHint(teamName, channelId);
-    this.setStatus(
-      teamName,
-      channelId,
-      createStoppedStatus('飞书长连接已停止。', { id: channelId, name: channelId })
-    );
-    return this.getSnapshot(teamName);
+    this.apiClientByChannel.delete(key);
+    const channel = globalConfig.channels.find((c) => c.id === channelId);
+    const boundTeam = channel?.boundTeam;
+    if (boundTeam) {
+      this.clearConnectingHint(boundTeam, channelId);
+      this.setStatus(
+        boundTeam,
+        channelId,
+        createStoppedStatus('飞书长连接已停止。', { id: channelId, name: channelId })
+      );
+      return this.getSnapshot(boundTeam);
+    }
+    return null;
   }
 
   private async readConfig(teamName: string): Promise<LeadChannelConfig> {
@@ -474,8 +486,8 @@ export class LeadChannelListenerService {
     this.setStatus(teamName, channelId, { ...current, ...patch });
   }
 
-  private getTeamChannelKey(teamName: string, channelId: string): string {
-    return `${teamName}:${channelId}`;
+  private getChannelKey(channelId: string): string {
+    return channelId;
   }
 
   private async resolveLeadName(teamName: string): Promise<string> {
@@ -486,31 +498,23 @@ export class LeadChannelListenerService {
     );
   }
 
-  private async getFeishuApiClient(
-    teamName: string,
-    channelId: string
-  ): Promise<InstanceType<typeof Lark.Client>> {
-    const key = this.getTeamChannelKey(teamName, channelId);
-    const existing = this.apiClientByTeamChannel.get(key);
+  private async getFeishuApiClient(channelId: string): Promise<InstanceType<typeof Lark.Client>> {
+    const key = this.getChannelKey(channelId);
+    const existing = this.apiClientByChannel.get(key);
     if (existing) return existing;
 
     const globalConfig = await this.readGlobalConfig();
-    const teamConfig = await this.readConfig(teamName);
-    const config =
-      teamConfig.feishu.appId.trim() || teamConfig.feishu.appSecret.trim()
-        ? teamConfig
-        : globalConfig;
-    const channel = config.channels.find(
+    const channel = globalConfig.channels.find(
       (item) => item.id === channelId && item.provider === 'feishu'
     );
-    const feishuConfig = channel?.feishu ?? config.feishu;
+    const feishuConfig = channel?.feishu ?? globalConfig.feishu;
     const appId = feishuConfig.appId.trim();
     const appSecret = feishuConfig.appSecret.trim();
     if (!appId || !appSecret) {
       throw new Error('无法发送飞书回复：渠道配置缺少 App ID 或 App Secret。');
     }
     const client = new Lark.Client({ appId, appSecret });
-    this.apiClientByTeamChannel.set(key, client);
+    this.apiClientByChannel.set(key, client);
     return client;
   }
 
@@ -620,7 +624,7 @@ export class LeadChannelListenerService {
     teamName: string,
     channel: Pick<LeadChannelDefinition, 'id' | 'name'>
   ): void {
-    const key = this.getTeamChannelKey(teamName, channel.id);
+    const key = this.getChannelKey(channel.id);
     const timer = setTimeout(() => {
       const status = this.statusByTeamChannel.get(teamName)?.get(channel.id);
       if (!status || (status.state !== 'connecting' && status.state !== 'reconnecting')) return;
@@ -632,7 +636,7 @@ export class LeadChannelListenerService {
   }
 
   private clearConnectingHint(teamName: string, channelId: string): void {
-    const key = this.getTeamChannelKey(teamName, channelId);
+    const key = this.getChannelKey(channelId);
     const timer = this.connectingHintTimerByTeamChannel.get(key);
     if (timer) {
       clearTimeout(timer);

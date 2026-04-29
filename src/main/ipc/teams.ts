@@ -579,12 +579,7 @@ export function initializeTeamHandlers(
     if (!reply) {
       return false;
     }
-    await getLeadChannelListenerService().sendFeishuReply(
-      teamName,
-      message.channelId,
-      message.chatId,
-      reply
-    );
+    await getLeadChannelListenerService().sendFeishuReply(message.channelId, message.chatId, reply);
     return true;
   });
   teamMemberLogsFinder = logsFinder ?? null;
@@ -3622,35 +3617,25 @@ async function handleLeadChannelSave(
 
 async function handleLeadChannelFeishuStart(
   _event: IpcMainInvokeEvent,
-  teamName: unknown,
   channelId?: unknown
-): Promise<IpcResult<LeadChannelSnapshot>> {
-  const validated = validateTeamName(teamName);
-  if (!validated.valid) {
-    return { success: false, error: validated.error ?? 'Invalid teamName' };
-  }
+): Promise<IpcResult<LeadChannelSnapshot | null>> {
   if (channelId !== undefined && typeof channelId !== 'string') {
     return { success: false, error: 'channelId must be a string' };
   }
   return wrapTeamHandler('leadChannelFeishuStart', async () =>
-    getLeadChannelListenerService().startFeishu(validated.value!, channelId?.trim() || undefined)
+    getLeadChannelListenerService().startFeishu(channelId?.trim() || 'feishu-default')
   );
 }
 
 async function handleLeadChannelFeishuStop(
   _event: IpcMainInvokeEvent,
-  teamName: unknown,
   channelId?: unknown
-): Promise<IpcResult<LeadChannelSnapshot>> {
-  const validated = validateTeamName(teamName);
-  if (!validated.valid) {
-    return { success: false, error: validated.error ?? 'Invalid teamName' };
-  }
+): Promise<IpcResult<LeadChannelSnapshot | null>> {
   if (channelId !== undefined && typeof channelId !== 'string') {
     return { success: false, error: 'channelId must be a string' };
   }
   return wrapTeamHandler('leadChannelFeishuStop', async () =>
-    getLeadChannelListenerService().stopFeishu(validated.value!, channelId?.trim() || undefined)
+    getLeadChannelListenerService().stopFeishu(channelId?.trim() || undefined)
   );
 }
 
@@ -4157,11 +4142,15 @@ async function handleRemoveMember(
   const vTeam = validateTeamName(teamName);
   if (!vTeam.valid) return { success: false, error: vTeam.error ?? 'Invalid teamName' };
   const vMember = validateMemberName(memberName);
-  if (!vMember.valid) return { success: false, error: vMember.error ?? 'Invalid memberName' };
+  // Allow removing members that already exist in the team even if their names contain invalid characters
+  const rawName = typeof memberName === 'string' ? memberName.trim() : '';
+  const name = vMember.valid ? vMember.value! : rawName;
+  if (!name) {
+    return { success: false, error: vMember.error ?? 'Invalid memberName' };
+  }
 
   return wrapTeamHandler('removeMember', async () => {
     const tn = vTeam.value!;
-    const name = vMember.value!;
     const teamDataService = getTeamDataService();
     const previousMembersMeta = await new TeamMembersMetaStore().getMeta(tn).catch(() => null);
     const previousMembers = (await teamDataService.getTeamData(tn))

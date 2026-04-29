@@ -1580,7 +1580,6 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
     const effectiveEffort = resolveTeamEffortForLaunch({
       providerId: selectedProviderId,
       selectedEffort,
-      anthropicSelection: anthropicRuntimeSelection,
     });
     if (effectiveEffort) args.push('--effort', effectiveEffort);
     if (selectedProviderId === 'anthropic') {
@@ -1849,7 +1848,6 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
           const launchEffort = resolveTeamEffortForLaunch({
             providerId: selectedProviderId,
             selectedEffort,
-            anthropicSelection: anthropicRuntimeSelection,
           });
           const launchRequest: TeamLaunchRequest = {
             teamName: effectiveTeamName,
@@ -1910,7 +1908,6 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
           const scheduleEffort = resolveTeamEffortForLaunch({
             providerId: selectedProviderId,
             selectedEffort,
-            anthropicSelection: anthropicRuntimeSelection,
           });
           const launchConfig: ScheduleLaunchConfig = {
             cwd: effectiveCwd,

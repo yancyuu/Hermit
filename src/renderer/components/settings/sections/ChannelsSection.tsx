@@ -4,11 +4,18 @@ import { api } from '@renderer/api';
 import { Button } from '@renderer/components/ui/button';
 import { Input } from '@renderer/components/ui/input';
 import { Label } from '@renderer/components/ui/label';
-import { PlugZap, Plus, Trash2 } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@renderer/components/ui/select';
+import { Play, PlugZap, Plus, Square, Trash2 } from 'lucide-react';
 
 import { SettingsSectionHeader } from '../components/SettingsSectionHeader';
 
-import type { LeadChannelDefinition } from '@shared/types';
+import type { LeadChannelDefinition, TeamSummary } from '@shared/types';
 
 type FeishuChannelDraft = LeadChannelDefinition & {
   provider: 'feishu';
@@ -32,11 +39,22 @@ function createFeishuDraft(): FeishuChannelDraft {
 
 export const ChannelsSection = (): React.JSX.Element => {
   const [feishuChannels, setFeishuChannels] = useState<FeishuChannelDraft[]>([]);
+  const [teams, setTeams] = useState<TeamSummary[]>([]);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [busyChannelId, setBusyChannelId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+    void api.teams
+      .list()
+      .then((list) => {
+        if (cancelled) return;
+        setTeams(list);
+      })
+      .catch(() => {
+        /* ignore */
+      });
     void api.teams
       .getGlobalLeadChannel()
       .then((snapshot) => {
@@ -93,11 +111,37 @@ export const ChannelsSection = (): React.JSX.Element => {
         channels,
         feishu: firstFeishu,
       });
-      setMessage('飞书渠道实例已保存。团队负责人可在“渠道”里分别启动监听。');
+      setMessage('飞书渠道实例已保存。');
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '保存渠道配置失败');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const startChannel = async (channelId: string): Promise<void> => {
+    setBusyChannelId(channelId);
+    setMessage(null);
+    try {
+      await api.teams.startFeishuLeadChannel(channelId);
+      setMessage(`飞书实例 "${channelId}" 已启动监听。`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : '启动监听失败');
+    } finally {
+      setBusyChannelId(null);
+    }
+  };
+
+  const stopChannel = async (channelId: string): Promise<void> => {
+    setBusyChannelId(channelId);
+    setMessage(null);
+    try {
+      await api.teams.stopFeishuLeadChannel(channelId);
+      setMessage(`飞书实例 "${channelId}" 已停止监听。`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : '停止监听失败');
+    } finally {
+      setBusyChannelId(null);
     }
   };
 
@@ -114,7 +158,7 @@ export const ChannelsSection = (): React.JSX.Element => {
     <div className="space-y-6">
       <SettingsSectionHeader icon={<PlugZap className="size-3.5" />} title="渠道集成" />
       <p className="-mt-4 text-xs text-[var(--color-text-muted)]">
-        统一配置外部渠道密钥；团队负责人只选择要监听的渠道。
+        统一配置外部渠道密钥并为每个实例绑定一个团队。
       </p>
 
       <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-4">
@@ -197,6 +241,55 @@ export const ChannelsSection = (): React.JSX.Element => {
                     disabled={saving}
                   />
                 </div>
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label>绑定团队</Label>
+                  <Select
+                    value={channel.boundTeam ?? '__none__'}
+                    onValueChange={(value) =>
+                      updateFeishuChannel(channel.id, (item) => ({
+                        ...item,
+                        boundTeam: value === '__none__' ? undefined : value,
+                      }))
+                    }
+                    disabled={saving}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="选择要绑定的团队" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">不绑定</SelectItem>
+                      {teams.map((team) => (
+                        <SelectItem key={team.teamName} value={team.teamName}>
+                          {team.displayName || team.teamName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className="h-7 gap-1 text-xs"
+                  disabled={!channel.boundTeam || busyChannelId === channel.id}
+                  onClick={() => void startChannel(channel.id)}
+                >
+                  <Play className="size-3" />
+                  {busyChannelId === channel.id ? '处理中...' : '启动监听'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1 text-xs"
+                  disabled={busyChannelId === channel.id}
+                  onClick={() => void stopChannel(channel.id)}
+                >
+                  <Square className="size-3" />
+                  停止监听
+                </Button>
               </div>
             </div>
           ))}
@@ -222,7 +315,7 @@ export const ChannelsSection = (): React.JSX.Element => {
         <h3 className="text-sm font-medium text-[var(--color-text)]">后续多渠道</h3>
         <p className="mt-1 text-xs leading-relaxed text-[var(--color-text-muted)]">
           底层已按渠道实例列表保存，后续可继续添加企业微信、钉钉、Slack、Telegram 和多个命名
-          Webhook。团队负责人只绑定需要监听的渠道实例。
+          Webhook。每个渠道实例只能绑定一个团队。
         </p>
       </div>
     </div>

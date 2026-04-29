@@ -1700,9 +1700,15 @@ export class TeamDataService {
       request.members.map((member) => {
         const name = member.name.trim();
         if (!name) throw new Error('Member name cannot be empty');
-        const formatError = validateTeamMemberNameFormat(name);
-        if (formatError) {
-          throw new Error(`Member name "${name}" is invalid: ${formatError}`);
+        const prev = existingByName.get(name.toLowerCase());
+        const isSameActiveMember = Boolean(prev && prev.removedAt == null);
+        // Allow existing members to keep names that don't pass stricter format validation,
+        // so teams with legacy/CLI-created members can still be edited.
+        if (!isSameActiveMember) {
+          const formatError = validateTeamMemberNameFormat(name);
+          if (formatError) {
+            throw new Error(`Member name "${name}" is invalid: ${formatError}`);
+          }
         }
         if (name.toLowerCase() === 'user') {
           throw new Error('Member name "user" is reserved');
@@ -1720,8 +1726,6 @@ export class TeamDataService {
           );
         }
         nextByName.add(name.toLowerCase());
-        const prev = existingByName.get(name.toLowerCase());
-        const isSameActiveMember = Boolean(prev && prev.removedAt == null);
         return {
           name,
           role: member.role?.trim() || undefined,

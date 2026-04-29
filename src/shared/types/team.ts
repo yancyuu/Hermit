@@ -1454,6 +1454,8 @@ export interface LeadChannelDefinition {
   provider: LeadChannelProvider;
   enabled: boolean;
   feishu?: LeadChannelFeishuConfig;
+  /** If set, inbound messages from this channel are routed to the specified team. */
+  boundTeam?: string;
 }
 
 export interface LeadChannelConfig {

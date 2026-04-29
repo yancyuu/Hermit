@@ -1332,7 +1332,6 @@ export const CreateTeamDialog = ({
     const launchEffort = resolveTeamEffortForLaunch({
       providerId: selectedProviderId,
       selectedEffort,
-      anthropicSelection: anthropicRuntimeSelection,
     });
 
     return {
@@ -1465,7 +1464,6 @@ export const CreateTeamDialog = ({
     const effectiveEffort = resolveTeamEffortForLaunch({
       providerId: selectedProviderId,
       selectedEffort,
-      anthropicSelection: anthropicRuntimeSelection,
     });
     if (effectiveEffort) args.push('--effort', effectiveEffort);
     if (selectedProviderId === 'anthropic') {

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { api } from '@renderer/api';
 import { cn } from '@renderer/lib/utils';
-import { Radio, RefreshCw, Settings } from 'lucide-react';
+import { Radio, RefreshCw } from 'lucide-react';
 
 import { Button } from '../../ui/button';
 
@@ -81,7 +81,6 @@ export const LeadChannelPanel = ({
   const [channels, setChannels] = useState<LeadChannelDefinition[]>([]);
   const [statusesById, setStatusesById] = useState<Record<string, LeadChannelStatus>>({});
   const [panelError, setPanelError] = useState<string | null>(null);
-  const [busyChannelId, setBusyChannelId] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(null);
 
@@ -104,7 +103,8 @@ export const LeadChannelPanel = ({
       setPanelError(null);
       try {
         const globalSnapshot = await api.teams.getGlobalLeadChannel();
-        setChannels(resolveFeishuChannels(globalSnapshot));
+        const allChannels = resolveFeishuChannels(globalSnapshot);
+        setChannels(allChannels);
         if (teamName) {
           applySnapshot(await api.teams.getLeadChannel(teamName));
         } else {
@@ -132,33 +132,10 @@ export const LeadChannelPanel = ({
     return () => window.clearInterval(timer);
   }, [hasPendingConnection, refresh, teamName]);
 
-  const startChannel = async (channelId: string): Promise<void> => {
-    if (!teamName) return;
-    setBusyChannelId(channelId);
-    setPanelError(null);
-    try {
-      applySnapshot(await api.teams.startFeishuLeadChannel(teamName, channelId));
-      window.setTimeout(() => void refresh(true), 1200);
-      window.setTimeout(() => void refresh(true), 3500);
-    } catch (error) {
-      setPanelError(error instanceof Error ? error.message : '启动飞书长连接失败');
-    } finally {
-      setBusyChannelId(null);
-    }
-  };
-
-  const stopChannel = async (channelId: string): Promise<void> => {
-    if (!teamName) return;
-    setBusyChannelId(channelId);
-    setPanelError(null);
-    try {
-      applySnapshot(await api.teams.stopFeishuLeadChannel(teamName, channelId));
-    } catch (error) {
-      setPanelError(error instanceof Error ? error.message : '停止飞书长连接失败');
-    } finally {
-      setBusyChannelId(null);
-    }
-  };
+  const boundChannels = useMemo(
+    () => channels.filter((channel) => channel.boundTeam === teamName),
+    [channels, teamName]
+  );
 
   return (
     <div className={cn('space-y-3', className)}>
@@ -194,19 +171,15 @@ export const LeadChannelPanel = ({
           </p>
         </div>
 
-        {channels.length === 0 ? (
+        {boundChannels.length === 0 ? (
           <div className="mt-3 rounded-md border border-dashed border-[var(--color-border)] bg-[var(--color-surface-raised)] p-3">
-            <div className="flex items-start gap-2">
-              <Settings className="mt-0.5 size-3.5 shrink-0 text-[var(--color-text-muted)]" />
-              <p className="text-[11px] leading-relaxed text-[var(--color-text-muted)]">
-                还没有可用的飞书实例。请先到“设置 →
-                渠道”新增飞书长连接实例，再回到这里给负责人启动监听。
-              </p>
-            </div>
+            <p className="text-[11px] leading-relaxed text-[var(--color-text-muted)]">
+              当前团队未绑定任何飞书实例。请先到“设置 → 渠道”新增飞书长连接实例并绑定本团队。
+            </p>
           </div>
         ) : (
           <div className="mt-3 space-y-2">
-            {channels.map((channel) => {
+            {boundChannels.map((channel) => {
               const status = statusesById[channel.id];
               const pendingTooLong = isLongConnecting(status);
               return (
@@ -252,28 +225,6 @@ export const LeadChannelPanel = ({
                         </p>
                       ) : null}
                     </div>
-                    <div className="flex shrink-0 gap-1">
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        className="h-7 text-xs"
-                        disabled={!teamName || busyChannelId === channel.id}
-                        onClick={() => void startChannel(channel.id)}
-                      >
-                        {busyChannelId === channel.id ? '处理中...' : '启动'}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-7 text-xs"
-                        disabled={!teamName || busyChannelId === channel.id}
-                        onClick={() => void stopChannel(channel.id)}
-                      >
-                        停止
-                      </Button>
-                    </div>
                   </div>
                 </div>
               );
@@ -284,7 +235,7 @@ export const LeadChannelPanel = ({
         {panelError ? <p className="mt-3 text-[11px] text-red-300">{panelError}</p> : null}
         {!teamName ? (
           <p className="mt-1 text-[11px] text-amber-300">
-            创建团队前无法启动长连接；创建完成后可在团队详情里绑定渠道。
+            创建团队前无法显示渠道绑定；创建完成后可在团队详情里查看。
           </p>
         ) : null}
       </div>

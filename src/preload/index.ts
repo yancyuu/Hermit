@@ -1134,17 +1134,15 @@ const electronAPI: ElectronAPI = {
     saveLeadChannel: async (teamName: string, request: SaveLeadChannelConfigRequest) => {
       return invokeIpcWithResult<LeadChannelSnapshot>(TEAM_LEAD_CHANNEL_SAVE, teamName, request);
     },
-    startFeishuLeadChannel: async (teamName: string, channelId?: string) => {
-      return invokeIpcWithResult<LeadChannelSnapshot>(
+    startFeishuLeadChannel: async (channelId?: string) => {
+      return invokeIpcWithResult<LeadChannelSnapshot | null>(
         TEAM_LEAD_CHANNEL_FEISHU_START,
-        teamName,
         channelId
       );
     },
-    stopFeishuLeadChannel: async (teamName: string, channelId?: string) => {
-      return invokeIpcWithResult<LeadChannelSnapshot>(
+    stopFeishuLeadChannel: async (channelId?: string) => {
+      return invokeIpcWithResult<LeadChannelSnapshot | null>(
         TEAM_LEAD_CHANNEL_FEISHU_STOP,
-        teamName,
         channelId
       );
     },

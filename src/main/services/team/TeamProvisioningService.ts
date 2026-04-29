@@ -2826,7 +2826,8 @@ export function buildRestartMemberSpawnMessage(
 function buildNativeCreateBootstrapPrompt(
   request: TeamCreateRequest,
   effectiveMembers: TeamCreateRequest['members'],
-  initialUserPrompt: string
+  initialUserPrompt: string,
+  feishuChannels: readonly BoundFeishuChannel[] = []
 ): string {
   const leadName = CANONICAL_LEAD_MEMBER_NAME;
   const displayName = request.displayName?.trim() || request.teamName;
@@ -2837,18 +2838,27 @@ function buildNativeCreateBootstrapPrompt(
     leadName,
     isSolo,
     members: effectiveMembers,
+    feishuChannels,
   });
+  const batchSize = 3;
+  const needsBatches = effectiveMembers.length > batchSize;
   const spawnInstructions = effectiveMembers.length
     ? [
-        '严格逐个启动成员/员工。不要在同一个 assistant 响应中发起多个 Agent 工具调用。',
-        '等待每次 Agent 工具结果返回后，再启动下一个成员/员工。只有结果返回后，才可以开始下一个。',
-        '每次 Agent 工具成功返回后，只等待 3 秒再启动下一个成员/员工。',
-        '如果出现 API retry、rate-limit 或 overloaded 消息，请停止继续启动成员/员工，等待 retry/backoff 稳定后再继续。',
-        '不要批量、扇出或并行启动成员/员工。串行启动用于避免请求频率突增。',
-        ...effectiveMembers.map((member, index) => {
+        needsBatches
+          ? '分批并行启动成员/员工。每批最多 3 个成员，在同一个 assistant 响应中为该批成员各发起一个 Agent 工具调用。'
+          : '并行启动所有成员/员工。你可以在同一个 assistant 响应中为每个成员各发起一个 Agent 工具调用。',
+        needsBatches
+          ? '等待该批所有 Agent 工具结果返回后，再启动下一批。不要逐个串行启动，也不要一次性扇出所有成员。'
+          : '不要等待前一个成员返回后再启动下一个。',
+        '如果某个 Agent 调用遇到 API retry、rate-limit 或 overloaded，Claude CLI 会自动处理重试；你不需要为此暂停其他成员的启动。',
+        ...effectiveMembers.flatMap((member, index) => {
           const prompt = buildMemberSpawnPrompt(member, displayName, request.teamName, leadName);
           const agentArgs = buildAgentToolArgsSuffix(member);
-          return `Step ${index + 1}: Spawn teammate "${member.name}" with the Agent tool using team_name="${request.teamName}", name="${member.name}", subagent_type="general-purpose"${agentArgs}, and this exact prompt:\n${indentMultiline(prompt, '  ')}`;
+          const memberLine = `Spawn teammate "${member.name}" with the Agent tool using team_name="${request.teamName}", name="${member.name}", subagent_type="general-purpose"${agentArgs}, and this exact prompt:\n${indentMultiline(prompt, '  ')}`;
+          if (!needsBatches) return [memberLine];
+          const isFirstInBatch = index % batchSize === 0;
+          const batchNum = Math.floor(index / batchSize) + 1;
+          return isFirstInBatch ? [`Batch ${batchNum}:`, memberLine] : [memberLine];
         }),
       ].join('\n\n')
     : '该团队未配置成员。不要启动成员。';
@@ -2886,7 +2896,16 @@ async function removeDeterministicBootstrapUserPromptFile(filePath: string | nul
   await removeDeterministicBootstrapTempFile(filePath);
 }
 
-function buildTeamCtlOpsInstructions(teamName: string, leadName: string): string {
+function buildTeamCtlOpsInstructions(
+  teamName: string,
+  leadName: string,
+  members: readonly { name: string; role?: string }[]
+): string {
+  const memberNames = members.map((m) => m.name).join('、');
+  const membersConstraint =
+    members.length > 0
+      ? `- 可用成员名单（任务 owner、reviewer、消息 recipient 必须从这个列表中选择，严禁使用名单外的名字）：${memberNames}`
+      : '';
   return wrapInAgentBlock(
     [
       `内部任务看板工具（MCP）：`,
@@ -2910,6 +2929,7 @@ function buildTeamCtlOpsInstructions(teamName: string, leadName: string): string
       `重要：board MCP 支持这些域：lead、task、kanban、review、message、process。没有 "member" 域，团队成员通过 Task/Agent 启动成员来管理，不通过 board MCP 管理。`,
       ``,
       `任务看板操作：直接使用 MCP 工具：`,
+      membersConstraint,
       `- 首先检查精简负责人队列：lead_briefing { teamName: "${teamName}" }`,
       `  lead_briefing 是主要负责人队列。当前该处理什么由 lead_briefing 决定，不要直接依赖原始 task_list 行。`,
       `- 获取任务详情：task_get { teamName: "${teamName}", taskId: "<id>" }`,
@@ -3016,6 +3036,44 @@ function buildLeadRosterContextBlock(
  *
  * Used by: deterministic launch hydration and post-compact reinjection.
  */
+interface BoundFeishuChannel {
+  channelId: string;
+  channelName: string;
+  appId: string;
+  appSecret: string;
+}
+
+function buildFeishuCredentialsBlock(channels: readonly BoundFeishuChannel[]): string {
+  if (channels.length === 0) return '';
+  const lines = channels.map(
+    (ch) =>
+      `- 渠道: ${ch.channelName} (id: ${ch.channelId})\n  App ID: ${ch.appId}\n  App Secret: ${ch.appSecret}`
+  );
+  return `飞书应用凭据（用于 Feishu CLI / Lark SDK 认证）：\n${lines.join('\n')}`;
+}
+
+async function readBoundFeishuChannels(teamName: string): Promise<BoundFeishuChannel[]> {
+  try {
+    const snapshot = await getLeadChannelListenerService().getGlobalSnapshot();
+    return snapshot.config.channels
+      .filter(
+        (ch): ch is typeof ch & { provider: 'feishu'; feishu: NonNullable<typeof ch.feishu> } =>
+          ch.provider === 'feishu' &&
+          Boolean(ch.feishu) &&
+          ch.boundTeam?.toLowerCase() === teamName.toLowerCase()
+      )
+      .map((ch) => ({
+        channelId: ch.id,
+        channelName: ch.name,
+        appId: ch.feishu.appId.trim(),
+        appSecret: ch.feishu.appSecret.trim(),
+      }))
+      .filter((ch) => ch.appId && ch.appSecret);
+  } catch {
+    return [];
+  }
+}
+
 function buildPersistentLeadContext(opts: {
   teamName: string;
   leadName: string;
@@ -3023,12 +3081,14 @@ function buildPersistentLeadContext(opts: {
   members: TeamCreateRequest['members'];
   /** When true, emit a compact roster (name + role only, no workflows). Used for post-compact reminders. */
   compact?: boolean;
+  /** Feishu channels bound to this team, used to inject CLI credentials. */
+  feishuChannels?: readonly BoundFeishuChannel[];
 }): string {
-  const { teamName, leadName, isSolo, members, compact } = opts;
+  const { teamName, leadName, isSolo, members, compact, feishuChannels } = opts;
   const languageInstruction = getAgentLanguageInstruction();
   const agentBlockPolicy = buildAgentBlockUsagePolicy();
   const actionModeProtocol = buildActionModeProtocol();
-  const teamCtlOps = buildTeamCtlOpsInstructions(teamName, leadName);
+  const teamCtlOps = buildTeamCtlOpsInstructions(teamName, leadName, members);
 
   const soloConstraint = isSolo
     ? `\n- SOLO MODE：该团队当前没有任何成员。` +
@@ -3124,7 +3184,7 @@ ${actionModeProtocol}
 ${getVisibleTaskReferenceFormattingRule()}
 ${agentBlockPolicy}
 
-${membersFooter}`;
+${feishuChannels?.length ? buildFeishuCredentialsBlock(feishuChannels) + '\n\n' : ''}${membersFooter}`;
 }
 
 function buildAgentBlockUsagePolicy(): string {
@@ -3203,7 +3263,8 @@ function buildDeterministicLaunchHydrationPrompt(
   request: TeamLaunchRequest,
   members: TeamCreateRequest['members'],
   tasks: TeamTask[],
-  isResume: boolean
+  isResume: boolean,
+  feishuChannels: readonly BoundFeishuChannel[] = []
 ): string {
   const leadName =
     members.find((member) => member.role?.toLowerCase().includes('lead'))?.name ||
@@ -3221,15 +3282,20 @@ function buildDeterministicLaunchHydrationPrompt(
     leadName,
     isSolo,
     members,
+    feishuChannels,
   });
+  const batchSize = 3;
+  const needsBatches = members.length > batchSize;
   const spawnInstructions = members.length
     ? [
-        '严格逐个重新连接已配置成员/员工。不要在同一个 assistant 响应中发起多个 Agent 工具调用。',
-        '等待每次 Agent 工具结果返回后，再重新连接下一个成员/员工。只有结果返回后，才可以开始下一个。',
-        '每次 Agent 工具成功返回后，只等待 3 秒再重新连接下一个成员/员工。',
-        '如果出现 API retry、rate-limit 或 overloaded 消息，请停止继续重新连接成员/员工，等待 retry/backoff 稳定后再继续。',
-        '不要批量、扇出或并行启动成员/员工。串行重新连接用于避免请求频率突增。',
-        ...members.map((member, index) => {
+        needsBatches
+          ? '分批并行重新连接已配置成员/员工。每批最多 3 个成员，在同一个 assistant 响应中为该批成员各发起一个 Agent 工具调用。'
+          : '并行重新连接所有已配置成员/员工。你可以在同一个 assistant 响应中为每个成员各发起一个 Agent 工具调用。',
+        needsBatches
+          ? '等待该批所有 Agent 工具结果返回后，再重新连接下一批。不要逐个串行重新连接，也不要一次性扇出所有成员。'
+          : '不要等待前一个成员返回后再重新连接下一个。',
+        '如果某个 Agent 调用遇到 API retry、rate-limit 或 overloaded，Claude CLI 会自动处理重试；你不需要为此暂停其他成员的重新连接。',
+        ...members.flatMap((member, index) => {
           const prompt = buildMemberSpawnPrompt(
             member,
             request.teamName,
@@ -3237,7 +3303,11 @@ function buildDeterministicLaunchHydrationPrompt(
             leadName
           );
           const agentArgs = buildAgentToolArgsSuffix(member);
-          return `Step ${index + 1}: Reconnect teammate "${member.name}" with the Agent tool using team_name="${request.teamName}", name="${member.name}", subagent_type="general-purpose"${agentArgs}, and this exact prompt:\n${indentMultiline(prompt, '  ')}`;
+          const memberLine = `Reconnect teammate "${member.name}" with the Agent tool using team_name="${request.teamName}", name="${member.name}", subagent_type="general-purpose"${agentArgs}, and this exact prompt:\n${indentMultiline(prompt, '  ')}`;
+          if (!needsBatches) return [memberLine];
+          const isFirstInBatch = index % batchSize === 0;
+          const batchNum = Math.floor(index / batchSize) + 1;
+          return isFirstInBatch ? [`Batch ${batchNum}:`, memberLine] : [memberLine];
         }),
       ].join('\n\n')
     : '';
@@ -3283,7 +3353,8 @@ function buildGeminiPostLaunchHydrationPrompt(
   run: ProvisioningRun,
   leadName: string,
   members: TeamCreateRequest['members'],
-  tasks: TeamTask[]
+  tasks: TeamTask[],
+  feishuChannels: readonly BoundFeishuChannel[] = []
 ): string {
   const isSolo = members.length === 0;
   const userPromptBlock = run.request.prompt?.trim()
@@ -3320,6 +3391,7 @@ function buildGeminiPostLaunchHydrationPrompt(
     leadName,
     isSolo,
     members,
+    feishuChannels,
   });
   const nextStepInstruction = isSolo
     ? hasOriginalUserPrompt
@@ -4590,6 +4662,18 @@ export class TeamProvisioningService {
             fastResolution.disabledReason ?? '所选运行时或模型不可用。'
           }`
         );
+      }
+      if (params.effort) {
+        if (isAnthropicOneMillionModel(resolvedLaunchModel)) {
+          throw new Error(
+            `${params.actorLabel} 使用了 effort "${params.effort}"，但 1M token 模型不支持 effort 参数。`
+          );
+        }
+        if (!selection.supportedEfforts.includes(params.effort)) {
+          throw new Error(
+            `${params.actorLabel} 使用了 effort "${params.effort}"，但当前 Anthropic 运行时/模型不支持此 effort。支持的值：${selection.supportedEfforts.join(', ') || '（无）'}`
+          );
+        }
       }
       return;
     }
@@ -12074,39 +12158,40 @@ export class TeamProvisioningService {
       await this.clearPersistedLaunchState(request.teamName);
 
       const initialUserPrompt = request.prompt?.trim() ?? '';
+      const [feishuChannels, mcpConfigPathResult, teammateModeDecision] = await Promise.all([
+        readBoundFeishuChannels(request.teamName),
+        this.mcpConfigBuilder.writeConfigFile(request.cwd),
+        resolveDesktopTeammateModeDecision(request.extraCliArgs),
+      ]);
       const nativeBootstrapPrompt = buildNativeCreateBootstrapPrompt(
         request,
         effectiveMemberSpecs,
-        initialUserPrompt
+        initialUserPrompt,
+        feishuChannels
       );
       const promptSize = getPromptSizeSummary(nativeBootstrapPrompt);
       let child: ReturnType<typeof spawn>;
       shellEnv.CLAUDE_ENABLE_DETERMINISTIC_TEAM_BOOTSTRAP = '1';
-      const teammateModeDecision = await resolveDesktopTeammateModeDecision(request.extraCliArgs);
       if (teammateModeDecision.forceProcessTeammates) {
         shellEnv.CLAUDE_TEAM_FORCE_PROCESS_TEAMMATES = '1';
       }
       let mcpConfigPath: string;
-      try {
-        mcpConfigPath = await this.mcpConfigBuilder.writeConfigFile(request.cwd);
-        run.mcpConfigPath = mcpConfigPath;
-        await this.validateAgentTeamsMcpRuntime(claudePath, request.cwd, shellEnv, mcpConfigPath, {
+      mcpConfigPath = mcpConfigPathResult;
+      run.mcpConfigPath = mcpConfigPath;
+      // Start MCP validation concurrently — we'll await it after spawning the CLI
+      // so the CLI can initialize while the MCP server is being validated.
+      const mcpValidationPromise = this.validateAgentTeamsMcpRuntime(
+        claudePath,
+        request.cwd,
+        shellEnv,
+        mcpConfigPath,
+        {
           isCancelled: () =>
             run.cancelRequested ||
             run.processKilled ||
             this.stopAllTeamsGeneration !== stopAllGenerationAtStart,
-        });
-      } catch (error) {
-        this.runs.delete(runId);
-        this.provisioningRunByTeam.delete(request.teamName);
-        await removeDeterministicBootstrapSpecFile(run.bootstrapSpecPath).catch(() => {});
-        run.bootstrapSpecPath = null;
-        await removeDeterministicBootstrapUserPromptFile(run.bootstrapUserPromptPath).catch(
-          () => {}
-        );
-        run.bootstrapUserPromptPath = null;
-        throw error;
-      }
+        }
+      ).catch((error: unknown) => (error instanceof Error ? error : new Error(String(error))));
       const launchModelArg = getLaunchModelArg(
         resolveTeamProviderId(request.providerId),
         request.model,
@@ -12260,6 +12345,22 @@ export class TeamProvisioningService {
       run.lastStdoutReceivedAt = Date.now();
       this.startStallWatchdog(run);
 
+      // Await the MCP validation that was started concurrently before spawn.
+      // If validation fails, kill the CLI process and clean up.
+      const mcpValidationResult = await mcpValidationPromise;
+      if (mcpValidationResult instanceof Error) {
+        killTeamProcess(child);
+        this.runs.delete(runId);
+        this.provisioningRunByTeam.delete(request.teamName);
+        await removeDeterministicBootstrapSpecFile(run.bootstrapSpecPath).catch(() => {});
+        run.bootstrapSpecPath = null;
+        await removeDeterministicBootstrapUserPromptFile(run.bootstrapUserPromptPath).catch(
+          () => {}
+        );
+        run.bootstrapUserPromptPath = null;
+        throw mcpValidationResult;
+      }
+
       // Filesystem-based progress monitor: actively polls team files instead
       // of relying on stdout (which only arrives at the end in text mode).
       // When config + members + tasks are all present, kill the process early
@@ -12410,11 +12511,13 @@ export class TeamProvisioningService {
         `[${request.teamName}] Failed to read tasks for OpenCode launch prompt: ${String(error)}`
       );
     }
+    const feishuChannels1 = await readBoundFeishuChannels(request.teamName);
     const prompt = buildDeterministicLaunchHydrationPrompt(
       request,
       effectiveMembers,
       existingTasks,
-      false
+      false,
+      feishuChannels1
     );
 
     return this.runOpenCodeTeamRuntimeAdapterLaunch({
@@ -12755,6 +12858,12 @@ export class TeamProvisioningService {
     this.provisioningRunByTeam.set(request.teamName, pendingKey);
 
     try {
+      const _t0 = Date.now();
+      const _t = (label: string): void => {
+        const ms = Date.now() - _t0;
+        logger.info(`[${request.teamName}] launch-timing: ${ms}ms — ${label}`);
+      };
+
       // Verify config.json exists — team must already be provisioned
       const configPath = path.join(getTeamsBasePath(), request.teamName, 'config.json');
       const configRaw = await tryReadRegularFileUtf8(configPath, {
@@ -12805,6 +12914,7 @@ export class TeamProvisioningService {
         source,
         warning,
       } = await this.resolveLaunchExpectedMembers(request.teamName, configRaw, request.providerId);
+      _t('resolveLaunchExpectedMembers');
       assertOpenCodeNotLaunchedThroughLegacyProvisioning({
         providerId: request.providerId,
         members: expectedMemberSpecs,
@@ -12937,6 +13047,7 @@ export class TeamProvisioningService {
         // even if provisioning is interrupted or the user stops the team early.
         // If launch fails, restorePrelaunchConfig() will revert to the backup (old projectPath).
         await this.updateConfigProjectPath(request.teamName, request.cwd);
+        _t('configNormalized');
       } catch (error) {
         // Restore pre-launch backup so config.json is not left in normalized (lead-only) state.
         await this.restorePrelaunchConfig(request.teamName);
@@ -12948,6 +13059,7 @@ export class TeamProvisioningService {
         await ensureCwdExists(request.cwd);
 
         claudePath = await ClaudeBinaryResolver.resolve();
+        _t('binaryResolved');
         if (!claudePath) {
           throw new Error(CLI_NOT_FOUND_MESSAGE);
         }
@@ -12965,6 +13077,7 @@ export class TeamProvisioningService {
         request.providerId,
         request.providerBackendId
       );
+      _t('buildProvisioningEnv');
       const {
         env: shellEnv,
         geminiRuntimeAuth,
@@ -12988,6 +13101,7 @@ export class TeamProvisioningService {
         primaryEnv: provisioningEnv,
         limitContext: request.limitContext,
       });
+      _t('materializeMembers');
       const allEffectiveMemberSpecs = await this.resolveOpenCodeMemberWorkspacesForRuntime({
         teamName: request.teamName,
         baseCwd: request.cwd,
@@ -13007,6 +13121,7 @@ export class TeamProvisioningService {
         request,
         effectiveMembers: effectiveMemberSpecs,
       });
+      _t('validateLaunchIdentity');
 
       // Build a synthetic TeamCreateRequest for reuse by shared infrastructure
       const syntheticRequest: TeamCreateRequest = {
@@ -13143,52 +13258,60 @@ export class TeamProvisioningService {
         await this.publishMixedSecondaryLaneStatusChange(run, lane);
       }
 
-      // Read existing tasks to include in teammate prompts for work resumption
-      const taskReader = new TeamTaskReader();
-      let existingTasks: TeamTask[] = [];
-      try {
-        existingTasks = await taskReader.getTasks(request.teamName);
-      } catch (error) {
-        logger.warn(
-          `[${request.teamName}] Failed to read tasks for launch prompt: ${String(error)}`
-        );
-      }
-
+      // Parallelize independent pre-spawn operations to reduce launch latency
+      const [existingTasksResult, feishuChannels2, mcpConfigPathResult, teammateModeDecision] =
+        await Promise.all([
+          // Read existing tasks for teammate work resumption prompts
+          new Promise<TeamTask[]>((resolve) => {
+            const taskReader = new TeamTaskReader();
+            taskReader
+              .getTasks(request.teamName)
+              .then(resolve)
+              .catch((error: unknown) => {
+                logger.warn(
+                  `[${request.teamName}] Failed to read tasks for launch prompt: ${String(error)}`
+                );
+                resolve([]);
+              });
+          }),
+          // Read bound Feishu channel credentials
+          readBoundFeishuChannels(request.teamName),
+          // Write MCP config file
+          this.mcpConfigBuilder.writeConfigFile(request.cwd),
+          // Resolve teammate mode (tmux check)
+          resolveDesktopTeammateModeDecision(request.extraCliArgs),
+        ]);
+      _t('parallelPreSpawn (tasks+feishu+mcp+tmux)');
+      const existingTasks = existingTasksResult;
       const prompt = buildDeterministicLaunchHydrationPrompt(
         request,
         effectiveMemberSpecs,
         existingTasks,
-        Boolean(previousSessionId)
+        Boolean(previousSessionId),
+        feishuChannels2
       );
       const promptSize = getPromptSizeSummary(prompt);
       let child: ReturnType<typeof spawn>;
       shellEnv.CLAUDE_ENABLE_DETERMINISTIC_TEAM_BOOTSTRAP = '1';
-      const teammateModeDecision = await resolveDesktopTeammateModeDecision(request.extraCliArgs);
       if (teammateModeDecision.forceProcessTeammates) {
         shellEnv.CLAUDE_TEAM_FORCE_PROCESS_TEAMMATES = '1';
       }
       let mcpConfigPath: string;
-      try {
-        mcpConfigPath = await this.mcpConfigBuilder.writeConfigFile(request.cwd);
-        run.mcpConfigPath = mcpConfigPath;
-        await this.validateAgentTeamsMcpRuntime(claudePath, request.cwd, shellEnv, mcpConfigPath, {
+      mcpConfigPath = mcpConfigPathResult;
+      run.mcpConfigPath = mcpConfigPath;
+      // Start MCP validation concurrently — we'll await it after spawning the CLI
+      const mcpValidationPromise = this.validateAgentTeamsMcpRuntime(
+        claudePath,
+        request.cwd,
+        shellEnv,
+        mcpConfigPath,
+        {
           isCancelled: () =>
             run.cancelRequested ||
             run.processKilled ||
             this.stopAllTeamsGeneration !== stopAllGenerationAtStart,
-        });
-      } catch (error) {
-        this.runs.delete(runId);
-        this.provisioningRunByTeam.delete(request.teamName);
-        await removeDeterministicBootstrapSpecFile(run.bootstrapSpecPath).catch(() => {});
-        run.bootstrapSpecPath = null;
-        await removeDeterministicBootstrapUserPromptFile(run.bootstrapUserPromptPath).catch(
-          () => {}
-        );
-        run.bootstrapUserPromptPath = null;
-        await this.restorePrelaunchConfig(request.teamName);
-        throw error;
-      }
+        }
+      ).catch((error: unknown) => (error instanceof Error ? error : new Error(String(error))));
       const launchArgs = [
         '--print',
         '--input-format',
@@ -13344,6 +13467,23 @@ export class TeamProvisioningService {
       run.lastDataReceivedAt = Date.now();
       run.lastStdoutReceivedAt = Date.now();
       this.startStallWatchdog(run);
+
+      // Await the MCP validation that was started concurrently before spawn.
+      // If validation fails, kill the CLI process and clean up.
+      const mcpValidationResult = await mcpValidationPromise;
+      if (mcpValidationResult instanceof Error) {
+        killTeamProcess(child);
+        this.runs.delete(runId);
+        this.provisioningRunByTeam.delete(request.teamName);
+        await removeDeterministicBootstrapSpecFile(run.bootstrapSpecPath).catch(() => {});
+        run.bootstrapSpecPath = null;
+        await removeDeterministicBootstrapUserPromptFile(run.bootstrapUserPromptPath).catch(
+          () => {}
+        );
+        run.bootstrapUserPromptPath = null;
+        await this.restorePrelaunchConfig(request.teamName);
+        throw mcpValidationResult;
+      }
 
       // For launch, skip the filesystem monitor — files (config, inboxes, tasks)
       // already exist from the previous run and would trigger immediate false
@@ -14950,7 +15090,7 @@ export class TeamProvisioningService {
         }
         for (const channel of externalTargets.values()) {
           void getLeadChannelListenerService()
-            .sendFeishuReply(teamName, channel.channelId, channel.chatId, cleanReply)
+            .sendFeishuReply(channel.channelId, channel.chatId, cleanReply)
             .catch((error: unknown) =>
               logger.warn(
                 `[${teamName}] Failed to send lead reply to Feishu channel ${channel.channelId}: ${String(error)}`
@@ -15237,7 +15377,20 @@ export class TeamProvisioningService {
       }
       // Only track spawns for this team
       if (teamName !== run.teamName) continue;
-      const existing = run.memberSpawnStatuses.get(memberName);
+
+      // Lead can only spawn pre-configured members, not create new ones
+      const resolvedName = this.resolveExpectedLaunchMemberName(run.expectedMembers, memberName);
+      if (!resolvedName) {
+        this.setMemberSpawnStatus(
+          run,
+          memberName,
+          'error',
+          `Member "${memberName}" is not in the configured roster — lead cannot create new teammates, only assign existing ones`
+        );
+        continue;
+      }
+
+      const existing = run.memberSpawnStatuses.get(resolvedName);
       if (
         existing &&
         !existing.hardFailure &&
@@ -15245,15 +15398,15 @@ export class TeamProvisioningService {
       ) {
         this.appendMemberBootstrapDiagnostic(
           run,
-          memberName,
+          resolvedName,
           'respawn blocked as duplicate - teammate already online'
         );
         continue;
       }
-      this.setMemberSpawnStatus(run, memberName, 'spawning');
+      this.setMemberSpawnStatus(run, resolvedName, 'spawning');
       const toolUseId = typeof part.id === 'string' ? part.id.trim() : '';
       if (toolUseId) {
-        run.memberSpawnToolUseIds.set(toolUseId, memberName);
+        run.memberSpawnToolUseIds.set(toolUseId, resolvedName);
       }
 
       // Advance stepper to "Members joining" when first member spawn is detected
@@ -15261,7 +15414,7 @@ export class TeamProvisioningService {
         !run.provisioningComplete &&
         (run.progress.state === 'configuring' || run.progress.state === 'spawning')
       ) {
-        const progress = updateProgress(run, 'assembling', `Spawning member ${memberName}...`);
+        const progress = updateProgress(run, 'assembling', `Spawning member ${resolvedName}...`);
         run.onProgress(progress);
       }
     }
@@ -19698,12 +19851,14 @@ export class TeamProvisioningService {
     const isSolo = currentMembers.length === 0;
 
     // Build persistent lead context.
+    const feishuChannels4 = await readBoundFeishuChannels(run.teamName);
     const persistentContext = buildPersistentLeadContext({
       teamName: run.teamName,
       leadName,
       isSolo,
       members: currentMembers,
       compact: true,
+      feishuChannels: feishuChannels4,
     });
 
     // Best-effort: fetch fresh task board snapshot.
@@ -19880,7 +20035,14 @@ export class TeamProvisioningService {
       return;
     }
 
-    const message = buildGeminiPostLaunchHydrationPrompt(run, leadName, currentMembers, tasks);
+    const feishuChannels3 = await readBoundFeishuChannels(run.teamName);
+    const message = buildGeminiPostLaunchHydrationPrompt(
+      run,
+      leadName,
+      currentMembers,
+      tasks,
+      feishuChannels3
+    );
     const promptSize = getPromptSizeSummary(message);
     logger.info(
       `[${run.teamName}] Gemini post-launch hydration prepared (${promptSize.chars} chars / ${promptSize.lines} lines)`

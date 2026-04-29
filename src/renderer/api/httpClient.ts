@@ -1009,10 +1009,10 @@ export class HttpAPIClient implements ElectronAPI {
     saveLeadChannel: async () => {
       throw new Error('负责人渠道监听仅在 Electron 模式可用');
     },
-    startFeishuLeadChannel: async () => {
+    startFeishuLeadChannel: async (_channelId?: string) => {
       throw new Error('飞书长连接仅在 Electron 模式可用');
     },
-    stopFeishuLeadChannel: async () => {
+    stopFeishuLeadChannel: async (_channelId?: string) => {
       throw new Error('飞书长连接仅在 Electron 模式可用');
     },
     getMemberSpawnStatuses: async () => {

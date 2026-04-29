@@ -599,8 +599,8 @@ export interface TeamsAPI {
     teamName: string,
     request: SaveLeadChannelConfigRequest
   ) => Promise<LeadChannelSnapshot>;
-  startFeishuLeadChannel: (teamName: string, channelId?: string) => Promise<LeadChannelSnapshot>;
-  stopFeishuLeadChannel: (teamName: string, channelId?: string) => Promise<LeadChannelSnapshot>;
+  startFeishuLeadChannel: (channelId?: string) => Promise<LeadChannelSnapshot | null>;
+  stopFeishuLeadChannel: (channelId?: string) => Promise<LeadChannelSnapshot | null>;
   getMemberSpawnStatuses: (teamName: string) => Promise<MemberSpawnStatusesSnapshot>;
   getTeamAgentRuntime: (teamName: string) => Promise<TeamAgentRuntimeSnapshot>;
   restartMember: (teamName: string, memberName: string) => Promise<void>;

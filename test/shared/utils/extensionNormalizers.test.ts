@@ -189,16 +189,16 @@ describe('getInstallationSummaryLabel', () => {
   });
 
   it('describes a single global installation', () => {
-    expect(getInstallationSummaryLabel([{ scope: 'user' }])).toBe('Installed globally');
+    expect(getInstallationSummaryLabel([{ scope: 'user' }])).toBe('已全局安装');
   });
 
   it('describes a single project installation', () => {
-    expect(getInstallationSummaryLabel([{ scope: 'project' }])).toBe('Installed in project');
+    expect(getInstallationSummaryLabel([{ scope: 'project' }])).toBe('已安装到项目');
   });
 
   it('summarizes multiple scopes without pretending they are global', () => {
     expect(getInstallationSummaryLabel([{ scope: 'project' }, { scope: 'user' }])).toBe(
-      'Installed in 2 scopes'
+      '已安装到 2 个范围'
     );
   });
 });
@@ -228,16 +228,16 @@ describe('getMcpInstallationSummaryLabel', () => {
   });
 
   it('describes a single local MCP installation', () => {
-    expect(getMcpInstallationSummaryLabel([{ scope: 'local' }])).toBe('Installed locally');
+    expect(getMcpInstallationSummaryLabel([{ scope: 'local' }])).toBe('已安装到本地');
   });
 
   it('describes a single global MCP installation', () => {
-    expect(getMcpInstallationSummaryLabel([{ scope: 'global' }])).toBe('Installed globally');
+    expect(getMcpInstallationSummaryLabel([{ scope: 'global' }])).toBe('已全局安装');
   });
 
   it('summarizes multiple MCP scopes', () => {
     expect(getMcpInstallationSummaryLabel([{ scope: 'user' }, { scope: 'project' }])).toBe(
-      'Installed in 2 scopes'
+      '已安装到 2 个范围'
     );
   });
 });
@@ -267,7 +267,7 @@ describe('getExtensionActionDisableReason', () => {
         cliStatus: createDirectCliStatus({ authLoggedIn: false }),
         cliStatusLoading: false,
       })
-    ).toContain('not signed in');
+    ).toContain('已安装但尚未登录');
   });
 
   it('allows uninstall when CLI is present but auth is missing', () => {
@@ -287,7 +287,7 @@ describe('getExtensionActionDisableReason', () => {
         cliStatus: createDirectCliStatus({ installed: false, authLoggedIn: false }),
         cliStatusLoading: false,
       })
-    ).toContain('configured runtime');
+    ).toContain('需要配置的运行时');
   });
 
   it('does not block extension actions during a background refresh when runtime status is already known', () => {
@@ -314,7 +314,7 @@ describe('getExtensionActionDisableReason', () => {
         },
         cliStatusLoading: false,
       })
-    ).toContain('failed to start');
+    ).toContain('已找到配置的运行时，但启动失败');
   });
 
   it('disables multimodel plugin installs when the runtime declares plugins unsupported', () => {
@@ -414,7 +414,7 @@ describe('getExtensionActionDisableReason', () => {
         },
         cliStatusLoading: false,
       })
-    ).toContain('not supported by the current runtime');
+    ).toContain('当前运行时不支持');
 
     expect(
       getExtensionActionDisableReason({
@@ -430,7 +430,7 @@ describe('getExtensionActionDisableReason', () => {
         },
         cliStatusLoading: false,
       })
-    ).toContain('not supported by the current runtime');
+    ).toContain('当前运行时不支持');
   });
 });
 
