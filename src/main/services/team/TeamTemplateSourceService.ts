@@ -222,9 +222,11 @@ export class TeamTemplateSourceService {
     if (!Array.isArray(rawSources)) {
       throw new Error('sources must be an array');
     }
+    const previousSources = await this.readSources();
     const sources = dedupeSources(rawSources.map(normalizeSource).filter(isTemplateSource));
     await fs.promises.mkdir(getTemplateDataRoot(), { recursive: true });
     await atomicWriteAsync(getSourcesConfigPath(), `${JSON.stringify({ sources }, null, 2)}\n`);
+    await this.cleanupRemovedSourceCheckouts(previousSources, sources);
     return this.getSnapshot();
   }
 
@@ -275,6 +277,20 @@ export class TeamTemplateSourceService {
     await atomicWriteAsync(
       getSourcesConfigPath(),
       `${JSON.stringify({ sources: dedupeSources(sources) }, null, 2)}\n`
+    );
+  }
+
+  private async cleanupRemovedSourceCheckouts(
+    previousSources: readonly TeamTemplateSource[],
+    nextSources: readonly TeamTemplateSource[]
+  ): Promise<void> {
+    const nextIds = new Set(nextSources.map((source) => source.id));
+    await Promise.all(
+      previousSources
+        .filter((source) => !source.isDefault && !nextIds.has(source.id))
+        .map((source) =>
+          fs.promises.rm(sourceCheckoutPath(source.id), { recursive: true, force: true })
+        )
     );
   }
 

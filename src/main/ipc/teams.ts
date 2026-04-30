@@ -142,9 +142,9 @@ import { mergeLiveLeadProcessMessages } from '../services/team/mergeLiveLeadProc
 import { TeamAttachmentStore } from '../services/team/TeamAttachmentStore';
 import { TeamMembersMetaStore } from '../services/team/TeamMembersMetaStore';
 import { TeamMetaStore } from '../services/team/TeamMetaStore';
-import { getTeamTemplateSourceService } from '../services/team/TeamTemplateSourceService';
 import { buildAddMemberSpawnMessage } from '../services/team/TeamProvisioningService';
 import { TeamTaskAttachmentStore } from '../services/team/TeamTaskAttachmentStore';
+import { getTeamTemplateSourceService } from '../services/team/TeamTemplateSourceService';
 
 import {
   validateFromField,
@@ -220,9 +220,9 @@ import type {
   TeamProvisioningPrepareResult,
   TeamProvisioningProgress,
   TeamSummary,
-  TeamTemplateSourcesSnapshot,
   TeamTask,
   TeamTaskStatus,
+  TeamTemplateSourcesSnapshot,
   TeamUpdateConfigRequest,
   TeamViewSnapshot,
   ToolApprovalFileContent,
@@ -2323,8 +2323,9 @@ function buildMessageDeliveryText(
         'ROUTING MODE: AUTO',
         '- The user did not choose Ask/Delegate/Do. Do not ask the user to choose a mode.',
         '- Infer the next step from the message content, current team rules, task board state, member roles, and available runtime.',
-        '- If this is a question or discussion, answer directly when you can.',
-        '- If this is actionable work for a non-solo team, create/update focused board tasks, assign the right teammate, and send the user a concise visible acknowledgement.',
+        '- This is a real user message. You MUST produce one brief visible response addressed to the user in this turn. Prefer SendMessage with to="user"; do not leave the user-facing reply empty.',
+        '- If this is a question or discussion, answer the user directly when you can.',
+        '- If this is actionable work for a non-solo team, create/update focused board tasks and assign the right teammate, but still SendMessage to="user" with a concise acknowledgement/status.',
         '- If the request is ambiguous, ask a concise clarification or create a triage task for the most relevant teammate, depending on what is more useful.',
         '- Keep routing decisions internal; do not expose labels like ask/delegate/do to the user.',
         AGENT_BLOCK_CLOSE,

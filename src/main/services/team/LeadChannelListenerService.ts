@@ -625,8 +625,8 @@ export class LeadChannelListenerService {
   private async resolveMentionedTeamName(text: string): Promise<string | null> {
     const trimmed = text.trim();
     if (!trimmed) return null;
-    const explicitTeam = trimmed.match(/^\/team\s+([^\s]+)\s*/i)?.[1]?.trim();
-    const atMention = trimmed.match(/@([\p{L}\p{N}._-]+)/u)?.[1]?.trim();
+    const explicitTeam = /^\/team\s+([^\s]+)\s*/i.exec(trimmed)?.[1]?.trim();
+    const atMention = /@([\p{L}\p{N}._-]+)/u.exec(trimmed)?.[1]?.trim();
     const requested = explicitTeam || atMention;
     if (!requested) return null;
 

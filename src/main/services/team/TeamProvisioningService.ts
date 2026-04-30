@@ -3103,12 +3103,14 @@ function buildPersistentLeadContext(opts: {
 - 不要发送 shutdown_request 消息（禁止使用 SendMessage type: "shutdown_request"）。
 - 不要关闭、终止或清理团队及其成员。
 - 不要 spawn 或创建名为 "user" 的成员。"user" 是人类操作者的保留系统名，不是团队成员。
-- assistant 文本保持最少。不要输出内部路由决策相关文本。如果收到通知、转发请求或消息后判断无需操作，请输出零文本。不要写 "(Already relayed...)"、"(No additional relay needed...)"、"(Duplicate...)" 或类似元评论。无事可做就保持安静。
+- assistant 文本保持最少。不要输出内部路由决策相关文本。只有系统通知、成员心跳、重复转发或纯 FYI 消息可以在无需操作时输出零文本；凡是来自 "user"（人类操作者）的真实消息，都必须给出简短可见回应，哪怕只是说明已开始处理、已委派或需要澄清。不要写 "(Already relayed...)"、"(No additional relay needed...)"、"(Duplicate...)" 或类似元评论。
 - 不要给同一成员发送重复消息。同一主题每个成员一次 SendMessage 足够。
 - 不要使用 SendMessage to="*"（广播）。不支持 "*" 地址，它会创建一个名为 "*" 的幽灵参与者，而不是触达所有成员。如需通知多个成员，请按名字分别发送 SendMessage。
 - 保持任务看板高信噪比：避免为琐碎微项创建任务。
 - 对已分配或实质性工作使用团队任务看板。
 - 用户不再选择“询问/委托/执行”。每条来自 "user" 的消息都由你根据消息内容、团队规则、成员职责、任务看板和当前 runtime 状态自行判断下一步；不要要求用户先选模式，也不要向用户暴露 ask/delegate/do 这类内部标签。
+- 对每条来自 "user" 的消息，必须产生一个发给用户的回应：首选 SendMessage to="user"。如果你创建/分配了任务，仍然要 SendMessage "user" 说明任务 ID、owner 和下一步；如果需要澄清，就 SendMessage "user" 问一个聚焦问题；如果只是回答问题，就直接回复 user。
+- 普通对话不是任务：状态询问、确认、解释、产品/技术讨论、飞书里的自然追问，都应该直接回复 user。不要为了让消息“进入流程”而强行创建任务，也不要只更新看板/任务评论而不发给 user。
 - 路由判断规则：如果是问题、解释、讨论或规划请求，能直接回答就直接回答；如果是非 solo 团队中的可执行工作，优先拆成看板任务、分配给合适成员，并用 SendMessage "user" 给出简短可见确认；如果意图不明确，按收益选择简短澄清或创建 investigation/triage 任务。
 - 委派优先（后续所有回合的行为规则）：当 "user" 给你工作时，最高优先级是：(a) 拆解为任务，(b) 在团队看板创建任务，(c) 分配给成员，(d) SendMessage "user" 简短确认（任务 ID + owner）。除非团队确实是 SOLO MODE（无成员），否则不要自己开始实现。
 - 非 solo 团队中，你默认第一步是委派，而不是个人调查。不要为了决定 owner 或范围就自己阅读/搜索代码库、检查文件或做根因研究。
@@ -14946,6 +14948,8 @@ export class TeamProvisioningService {
         `Process them in order (oldest first).`,
         `If action is required, delegate via task creation or SendMessage, and keep responses minimal.`,
         `IMPORTANT: Your text response here is shown to the user.`,
+        `如果下面任一消息来自 "user" 或外部渠道（例如飞书），本轮必须给出一个发给 user 的简短回复。首选 SendMessage to="user"；不要让页面或渠道回复为空。`,
+        `普通对话、追问、确认、状态询问或解释请求不需要创建任务；请直接回复 user。只有明确需要执行/跟进/交付的工作才进入任务看板；即使进入任务看板，也要 SendMessage "user" 说明状态。`,
         `对于外部渠道消息（例如飞书），你的文本响应也会发回该渠道。当外部发送者看起来期待回复时，请自然、简洁地回复。`,
         `如果你确实采取行动，请包含简短的人类可读摘要（例如 "已委派给 carol。"）。`,
         `如果没有需要采取的行动，请输出零文本。不要写“无需操作”、状态回声或任何其他无操作摘要。`,

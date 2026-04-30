@@ -9,7 +9,7 @@ function createStoredModelGetter(models: Partial<Record<TeamProviderId, string>>
 }
 
 describe('resolveLaunchDialogPrefill', () => {
-  it('prefills from the current lead runtime before localStorage defaults', () => {
+  it('falls back current lead runtime to the launch UI provider before localStorage defaults', () => {
     const members = [
       {
         name: 'lead',
@@ -47,8 +47,8 @@ describe('resolveLaunchDialogPrefill', () => {
     });
 
     expect(result).toEqual({
-      providerId: 'codex',
-      providerBackendId: 'codex-native',
+      providerId: 'anthropic',
+      providerBackendId: undefined,
       model: 'gpt-5.4',
       effort: 'medium',
       fastMode: 'inherit',
@@ -56,7 +56,7 @@ describe('resolveLaunchDialogPrefill', () => {
     });
   });
 
-  it('prefers the current lead runtime over a stale saved request', () => {
+  it('prefers current lead model over a stale saved request while using launch UI provider', () => {
     const members = [
       {
         name: 'lead',
@@ -92,8 +92,8 @@ describe('resolveLaunchDialogPrefill', () => {
     });
 
     expect(result).toEqual({
-      providerId: 'codex',
-      providerBackendId: 'codex-native',
+      providerId: 'anthropic',
+      providerBackendId: undefined,
       model: 'gpt-5.4',
       effort: 'medium',
       fastMode: 'inherit',
@@ -123,7 +123,7 @@ describe('resolveLaunchDialogPrefill', () => {
     });
 
     expect(result).toEqual({
-      providerId: 'codex',
+      providerId: 'anthropic',
       providerBackendId: 'codex-native',
       model: 'gpt-5.3-codex',
       effort: 'high',
@@ -132,7 +132,7 @@ describe('resolveLaunchDialogPrefill', () => {
     });
   });
 
-  it('falls back to a saved request backend lane when no previous launch params exist', () => {
+  it('keeps saved request backend lane metadata when provider falls back to launch UI default', () => {
     const result = resolveLaunchDialogPrefill({
       members: [],
       savedRequest: {
@@ -157,7 +157,7 @@ describe('resolveLaunchDialogPrefill', () => {
     });
 
     expect(result).toEqual({
-      providerId: 'codex',
+      providerId: 'anthropic',
       providerBackendId: 'codex-native',
       model: 'gpt-5.4',
       effort: 'medium',
@@ -166,7 +166,7 @@ describe('resolveLaunchDialogPrefill', () => {
     });
   });
 
-  it('defaults new Codex launch flows to codex-native when no backend was persisted', () => {
+  it('falls back new Codex launch flows to the launch UI provider', () => {
     const result = resolveLaunchDialogPrefill({
       members: [
         {
@@ -190,8 +190,8 @@ describe('resolveLaunchDialogPrefill', () => {
     });
 
     expect(result).toEqual({
-      providerId: 'codex',
-      providerBackendId: 'codex-native',
+      providerId: 'anthropic',
+      providerBackendId: undefined,
       model: 'gpt-5.4',
       effort: 'medium',
       fastMode: 'inherit',
@@ -235,7 +235,7 @@ describe('resolveLaunchDialogPrefill', () => {
     });
   });
 
-  it('preserves OpenCode relaunch runtime instead of collapsing it to Anthropic', () => {
+  it('falls back previous OpenCode relaunch runtime to the launch UI provider', () => {
     const result = resolveLaunchDialogPrefill({
       members: [],
       savedRequest: null,
@@ -256,7 +256,7 @@ describe('resolveLaunchDialogPrefill', () => {
     });
 
     expect(result).toEqual({
-      providerId: 'opencode',
+      providerId: 'anthropic',
       providerBackendId: undefined,
       model: 'openrouter/moonshotai/kimi-k2',
       effort: 'medium',
@@ -295,7 +295,7 @@ describe('resolveLaunchDialogPrefill', () => {
     });
   });
 
-  it('preserves literal [1m] suffixes for non-anthropic providers', () => {
+  it('falls back to anthropic when previous provider is not available in launch UI', () => {
     const result = resolveLaunchDialogPrefill({
       members: [],
       savedRequest: null,
@@ -316,16 +316,16 @@ describe('resolveLaunchDialogPrefill', () => {
     });
 
     expect(result).toEqual({
-      providerId: 'codex',
-      providerBackendId: 'codex-native',
-      model: 'custom-model[1m]',
+      providerId: 'anthropic',
+      providerBackendId: undefined,
+      model: 'custom-model',
       effort: 'medium',
       fastMode: 'inherit',
       limitContext: false,
     });
   });
 
-  it('preserves literal [1m] suffixes for non-anthropic providers', () => {
+  it('uses anthropic base model when a scoped non-anthropic previous model is unavailable', () => {
     const result = resolveLaunchDialogPrefill({
       members: [],
       savedRequest: null,
@@ -346,9 +346,9 @@ describe('resolveLaunchDialogPrefill', () => {
     });
 
     expect(result).toEqual({
-      providerId: 'codex',
-      providerBackendId: 'codex-native',
-      model: 'custom-model[1m]',
+      providerId: 'anthropic',
+      providerBackendId: undefined,
+      model: 'custom-model',
       effort: 'medium',
       fastMode: 'inherit',
       limitContext: false,

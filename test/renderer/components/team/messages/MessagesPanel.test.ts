@@ -498,7 +498,7 @@ describe('MessagesPanel idle summary invariants', () => {
       await Promise.resolve();
     });
 
-    expect(host.querySelector('input[placeholder=\"Search...\"]')).not.toBeNull();
+    expect(host.querySelector('input[placeholder="搜索..."]')).not.toBeNull();
 
     await act(async () => {
       root.unmount();
@@ -545,7 +545,7 @@ describe('MessagesPanel idle summary invariants', () => {
       await Promise.resolve();
     });
 
-    expect(host.querySelector('input[placeholder=\"Search...\"]')).not.toBeNull();
+    expect(host.querySelector('input[placeholder="搜索..."]')).not.toBeNull();
     expect(host.textContent).toContain('filter-popover');
 
     await act(async () => {

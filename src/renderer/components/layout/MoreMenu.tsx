@@ -13,10 +13,10 @@ import { triggerDownload } from '@renderer/utils/sessionExporter';
 import { formatShortcut } from '@renderer/utils/stringUtils';
 import {
   Activity,
+  Bell,
   Braces,
   Calendar,
   FileText,
-  Bell,
   MoreHorizontal,
   Search,
   Settings,

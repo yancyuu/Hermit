@@ -175,7 +175,7 @@ describe('MemberDraftRow', () => {
     });
 
     expect(host.textContent).toBeTruthy();
-    expect(host.textContent!.length).toBeGreaterThan(0);
+    expect(host.textContent?.length).toBeGreaterThan(0);
 
     act(() => {
       root.unmount();

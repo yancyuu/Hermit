@@ -33,6 +33,9 @@ function normalizeMemberKey(value: unknown): string {
 function resolveCrossTeamFromMember(config: TeamConfig, rawFromMember: string): string {
   const members = Array.isArray(config.members) ? config.members : [];
   const rawKey = normalizeMemberKey(rawFromMember);
+  if (rawKey === 'user') {
+    return 'user';
+  }
   const direct = members.find((member) => normalizeMemberKey(member.name) === rawKey);
   if (direct?.name?.trim()) {
     return direct.name.trim();

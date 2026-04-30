@@ -802,15 +802,6 @@ export const TeamListView = (): React.JSX.Element => {
   const handleRemoveTemplateSource = useCallback(
     async (source: TeamTemplateSource): Promise<void> => {
       if (source.isDefault) return;
-      const confirmed = await confirm({
-        title: '删除模板源',
-        message: `确定删除模板源“${source.name}”吗？已扫描出的模板也会从列表中移除。`,
-        confirmLabel: '删除',
-        cancelLabel: '取消',
-        variant: 'danger',
-      });
-      if (!confirmed) return;
-
       setTemplateLoading(true);
       setTemplateError(null);
       try {
@@ -937,42 +928,33 @@ export const TeamListView = (): React.JSX.Element => {
             </Button>
           </div>
           {templateSources.length > 0 ? (
-            <div className="mt-3 space-y-1.5">
+            <div className="mt-2 flex flex-wrap gap-1.5">
               {templateSources.map((source) => (
-                <div
+                <span
                   key={source.id}
-                  className="flex min-w-0 items-center gap-2 rounded bg-[var(--color-surface-raised)] px-2 py-1"
+                  className="inline-flex max-w-full items-center gap-1 rounded bg-[var(--color-surface-raised)] px-1.5 py-0.5 text-[10px] text-[var(--color-text-muted)]"
                   title={source.url}
                 >
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-[11px] text-[var(--color-text-secondary)]">
-                      {source.name}
-                      {source.isDefault ? ' · 默认' : ''}
-                      {source.lastError ? ' · 同步失败' : ''}
-                    </div>
-                    <div className="truncate text-[10px] text-[var(--color-text-muted)]">
-                      {source.url}
-                    </div>
-                  </div>
+                  <span className="max-w-44 truncate">
+                    {source.name}
+                    {source.isDefault ? ' · 默认' : ''}
+                    {source.lastError ? ' · 同步失败' : ''}
+                  </span>
                   {!source.isDefault ? (
-                    <Button
+                    <button
                       type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 shrink-0 gap-1 px-2 text-[11px] text-red-300 hover:bg-red-500/10 hover:text-red-200"
+                      className="-mr-0.5 inline-flex size-4 shrink-0 items-center justify-center rounded text-[var(--color-text-muted)] transition-colors hover:bg-red-500/10 hover:text-red-300"
                       aria-label={`删除模板源 ${source.name}`}
-                      disabled={templateLoading}
                       onClick={(event) => {
                         event.preventDefault();
                         event.stopPropagation();
                         void handleRemoveTemplateSource(source);
                       }}
                     >
-                      <Trash2 size={12} />
-                      删除
-                    </Button>
+                      <Trash2 size={10} />
+                    </button>
                   ) : null}
-                </div>
+                </span>
               ))}
             </div>
           ) : null}
