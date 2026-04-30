@@ -13,6 +13,7 @@
 - [Iteration 07 - Task Logs + Explicit Board Task Links](./iteration-07-task-logs-explicit-board-task-links.md)
 - [Iteration 08 - Exact Task Logs Reusing Existing Execution Renderer](./iteration-08-exact-task-logs-reuse-existing-renderer.md)
 - [Iteration 09 - Cursor SDK Runtime Adapter](./iteration-09-cursor-sdk-runtime-adapter.md)
+- [Iteration 10 - Skills And Team Version Management](./iteration-10-skills-and-team-version-management.md)
 
 ## Принципы
 

@@ -10,7 +10,8 @@
 当前产品重点：
 - UI 默认面向中文用户，新增可见文案应优先使用简体中文。
 - 默认本地运行时是普通 Claude CLI/Claude Code，不要假设必须存在 `claude-multimodel`。
-- 多机分布式 MVP 采用团队级调度：本地 UI 通过 SSH/SFTP 操作远程项目目录和 `.claude/teams` 文件，不做成员级调度、技能同步、卷挂载或复杂远程进程编排。
+- 多机协同方向改为仓库同步：每台机器安装 Hermit，团队模板和 Skills 通过 GitHub/企业 Git 仓库源同步；不要再把 SSH/SFTP 分布式调度作为新功能默认方向。
+- Skills 支持配置多个 GitHub/企业 Git 源；团队模板也支持多个 GitHub/企业 Git 源。
 - 团队名、成员名、角色等用户输入必须支持中文；内部目录/标识需要单独做安全 slug。
 
 新功能默认位置：
