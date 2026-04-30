@@ -27,7 +27,7 @@
 
 > Hermit 基于 `claude_agent_teams_ui` 二次开发，保留其本地优先的 Claude Code 团队协作能力，并在此基础上强化中文体验、团队看板、成员运行时、外部渠道、版本化 Skills / 团队模板，以及面向多运行时的长期架构。
 
-<img width="1304" height="820" alt="界面预览" src="https://github.com/user-attachments/assets/dea53a01-68b3-4c36-bcf6-e4d1ad4cdb31" />
+<img width="1304" height="820" alt="界面预览" src="docs/screenshots/hero.png" />
 
 ## 为什么需要 Hermit
 
