@@ -4010,6 +4010,7 @@ export class TeamProvisioningService {
   private readonly teamOpLocks = new Map<string, Promise<void>>();
   private readonly leadInboxRelayInFlight = new Map<string, Promise<number>>();
   private readonly relayedLeadInboxMessageIds = new Map<string, Set<string>>();
+  private readonly inFlightLeadInboxMessageIds = new Map<string, Set<string>>();
   private readonly memberInboxRelayInFlight = new Map<string, Promise<number>>();
   private readonly openCodeMemberInboxRelayInFlight = new Map<
     string,
@@ -6705,6 +6706,7 @@ export class TeamProvisioningService {
     this.persistedTranscriptClaudeLogsCache.delete(teamName);
     this.leadInboxRelayInFlight.delete(teamName);
     this.relayedLeadInboxMessageIds.delete(teamName);
+    this.inFlightLeadInboxMessageIds.delete(teamName);
     this.pendingCrossTeamFirstReplies.delete(teamName);
     this.recentCrossTeamLeadDeliveryMessageIds.delete(teamName);
     this.recentSameTeamNativeFingerprints.delete(teamName);
@@ -13881,9 +13883,11 @@ export class TeamProvisioningService {
     input: {
       channelName: string;
       provider: 'feishu';
+      channelId: string;
       text: string;
       from: string;
       chatId: string;
+      senderId?: string;
       messageId?: string;
     }
   ): Promise<string | null> {
@@ -13902,6 +13906,16 @@ export class TeamProvisioningService {
     const leadName =
       config?.members?.find((member) => isLeadMember(member))?.name?.trim() ||
       CANONICAL_LEAD_MEMBER_NAME;
+    this.persistExternalChannelUserMessage(teamName, {
+      leadName,
+      provider: input.provider,
+      channelId: input.channelId,
+      channelName: input.channelName,
+      chatId: input.chatId,
+      senderId: input.senderId,
+      text: input.text,
+      messageId: input.messageId,
+    });
     const message = [
       `你收到了一条来自外部渠道的直接消息。`,
       `重要：你在这里的文本响应会发回该渠道，并显示在 Messages 面板。当发送者期待回复时，始终包含简短的人类可读回复。不要只用 agent-only 块响应。`,
@@ -14719,6 +14733,7 @@ export class TeamProvisioningService {
       if (!run.provisioningComplete) return 0;
 
       const relayedIds = this.relayedLeadInboxMessageIds.get(teamName) ?? new Set<string>();
+      const inFlightIds = this.inFlightLeadInboxMessageIds.get(teamName) ?? new Set<string>();
 
       // Re-read config if needed (already fetched above but guard provisioningComplete path)
       if (!config) {
@@ -14749,7 +14764,7 @@ export class TeamProvisioningService {
           if (m.read) return false;
           if (typeof m.text !== 'string' || m.text.trim().length === 0) return false;
           if (!this.hasStableMessageId(m)) return false;
-          return !relayedIds.has(m.messageId);
+          return !relayedIds.has(m.messageId) && !inFlightIds.has(m.messageId);
         })
         .sort((a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp));
 
@@ -14925,6 +14940,14 @@ export class TeamProvisioningService {
 
       const MAX_RELAY = 10;
       const batch = actionableUnread.slice(0, MAX_RELAY);
+      const batchIds = batch.map((message) => message.messageId);
+      if (batchIds.length > 0) {
+        const nextInFlightIds = this.inFlightLeadInboxMessageIds.get(teamName) ?? new Set<string>();
+        for (const messageId of batchIds) {
+          nextInFlightIds.add(messageId);
+        }
+        this.inFlightLeadInboxMessageIds.set(teamName, nextInFlightIds);
+      }
       const teammateRoster = (config.members ?? [])
         .filter((member) => {
           const name = member.name?.trim();
@@ -15085,6 +15108,15 @@ export class TeamProvisioningService {
       }
 
       if (!relayTurnCompleted) {
+        const currentInFlightIds = this.inFlightLeadInboxMessageIds.get(teamName);
+        if (currentInFlightIds) {
+          for (const messageId of batchIds) {
+            currentInFlightIds.delete(messageId);
+          }
+          if (currentInFlightIds.size === 0) {
+            this.inFlightLeadInboxMessageIds.delete(teamName);
+          }
+        }
         logger.warn(
           `[${teamName}] lead inbox relay did not complete; leaving ${batch.length} message(s) unread for retry`
         );
@@ -15095,6 +15127,15 @@ export class TeamProvisioningService {
         relayedIds.add(m.messageId);
       }
       this.relayedLeadInboxMessageIds.set(teamName, this.trimRelayedSet(relayedIds));
+      const currentInFlightIds = this.inFlightLeadInboxMessageIds.get(teamName);
+      if (currentInFlightIds) {
+        for (const messageId of batchIds) {
+          currentInFlightIds.delete(messageId);
+        }
+        if (currentInFlightIds.size === 0) {
+          this.inFlightLeadInboxMessageIds.delete(teamName);
+        }
+      }
       this.rememberRecentCrossTeamLeadDeliveryMessageIds(
         teamName,
         batch
@@ -15143,6 +15184,9 @@ export class TeamProvisioningService {
           source: 'lead_process',
         };
         this.pushLiveLeadProcessMessage(teamName, relayMsg);
+        if (externalTargets.size === 0) {
+          this.pushLeadUserMessageToRecentFeishu(teamName, cleanReply);
+        }
         // Persist to disk so relayed replies survive app restart and trigger FileWatcher
         this.persistSentMessage(teamName, relayMsg);
         this.teamChangeEmitter?.({
@@ -18266,13 +18310,7 @@ export class TeamProvisioningService {
           run.leadRelayCapture.textParts.push(strippedCrossTeamContent);
           run.leadRelayCapture.resolveOnce(strippedCrossTeamContent);
         } else {
-          void getLeadChannelListenerService()
-            .sendToRecentFeishuTarget(run.teamName, strippedCrossTeamContent)
-            .catch((error: unknown) => {
-              logger.warn(
-                `[${run.teamName}] Failed to push proactive lead message to Feishu: ${String(error)}`
-              );
-            });
+          this.pushLeadUserMessageToRecentFeishu(run.teamName, strippedCrossTeamContent);
         }
         this.teamChangeEmitter?.({
           type: 'inbox',
@@ -18323,6 +18361,61 @@ export class TeamProvisioningService {
       list.splice(0, list.length - MAX);
     }
     this.liveLeadProcessMessages.set(teamName, list);
+  }
+
+  private pushLeadUserMessageToRecentFeishu(teamName: string, text: string): void {
+    const cleanText = stripAgentBlocks(text).trim();
+    if (!cleanText) {
+      return;
+    }
+    void getLeadChannelListenerService()
+      .sendToRecentFeishuTarget(teamName, cleanText)
+      .catch((error: unknown) => {
+        logger.warn(`[${teamName}] Failed to push lead user message to Feishu: ${String(error)}`);
+      });
+  }
+
+  private persistExternalChannelUserMessage(
+    teamName: string,
+    input: {
+      leadName: string;
+      provider: 'feishu';
+      channelId: string;
+      channelName: string;
+      chatId: string;
+      senderId?: string;
+      text: string;
+      messageId?: string;
+    }
+  ): void {
+    const text = input.text.trim();
+    if (!text) {
+      return;
+    }
+    const message: InboxMessage = {
+      from: 'user',
+      to: input.leadName,
+      text,
+      timestamp: nowIso(),
+      read: true,
+      summary: text.length > 60 ? text.slice(0, 57) + '...' : text,
+      messageId: input.messageId?.trim() || `external-user-${input.channelId}-${Date.now()}`,
+      source: 'user_sent',
+      externalChannel: {
+        provider: input.provider,
+        channelId: input.channelId,
+        channelName: input.channelName,
+        chatId: input.chatId,
+        senderId: input.senderId,
+      },
+    };
+    this.persistSentMessage(teamName, message);
+    this.pushLiveLeadProcessMessage(teamName, message);
+    this.teamChangeEmitter?.({
+      type: 'inbox',
+      teamName,
+      detail: 'external-channel-user-message',
+    });
   }
 
   resolveCrossTeamReplyMetadata(
@@ -18426,6 +18519,7 @@ export class TeamProvisioningService {
     run.pendingToolCalls = [];
     const leadMsg: InboxMessage = {
       from: leadName,
+      to: 'user',
       text: cleanText,
       timestamp,
       read: true,
@@ -18436,6 +18530,7 @@ export class TeamProvisioningService {
       toolCalls,
     };
     this.pushLiveLeadProcessMessage(run.teamName, leadMsg);
+    this.pushLeadUserMessageToRecentFeishu(run.teamName, cleanText);
 
     // Coalesced refresh: at most one event per LEAD_TEXT_EMIT_THROTTLE_MS per team.
     const now = Date.now();
@@ -21633,6 +21728,7 @@ export class TeamProvisioningService {
       this.liveTeamAgentRuntimeMetadataCache.delete(run.teamName);
       this.leadInboxRelayInFlight.delete(run.teamName);
       this.relayedLeadInboxMessageIds.delete(run.teamName);
+      this.inFlightLeadInboxMessageIds.delete(run.teamName);
       this.pendingCrossTeamFirstReplies.delete(run.teamName);
       this.recentCrossTeamLeadDeliveryMessageIds.delete(run.teamName);
       this.recentSameTeamNativeFingerprints.delete(run.teamName);

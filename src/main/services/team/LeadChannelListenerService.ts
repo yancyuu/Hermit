@@ -435,7 +435,7 @@ export class LeadChannelListenerService {
           await this.inboxWriter.sendMessage(targetTeam, {
             member: leadName,
             to: leadName,
-            from: inboundMessage.from,
+            from: 'user',
             text: `[${channel.name}]\n聊天：${chatId}\n\n${text}`,
             messageId: inboundMessage.messageId,
             source: 'inbox',

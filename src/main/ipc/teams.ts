@@ -576,9 +576,11 @@ export function initializeTeamHandlers(
     const reply = await provisioningService.deliverExternalChannelMessageToLead(teamName, {
       channelName: message.channelName,
       provider: message.provider,
+      channelId: message.channelId,
       text: message.text,
       from: message.from,
       chatId: message.chatId,
+      senderId: message.senderId,
       messageId: message.messageId,
     });
     if (!reply) {
