@@ -104,7 +104,16 @@ function dedupeSources(sources: TeamTemplateSource[]): TeamTemplateSource[] {
   for (const source of sources) {
     byId.set(source.id, source);
   }
-  if (!byId.has(DEFAULT_SOURCE.id)) {
+  const existingDefault = byId.get(DEFAULT_SOURCE.id);
+  if (existingDefault) {
+    byId.set(DEFAULT_SOURCE.id, {
+      ...existingDefault,
+      name: DEFAULT_SOURCE.name,
+      url: DEFAULT_SOURCE.url,
+      branch: existingDefault.branch ?? DEFAULT_SOURCE.branch,
+      isDefault: true,
+    });
+  } else {
     byId.set(DEFAULT_SOURCE.id, DEFAULT_SOURCE);
   }
   return Array.from(byId.values());

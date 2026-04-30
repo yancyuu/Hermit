@@ -929,7 +929,7 @@ export const MentionableTextarea = React.forwardRef<HTMLTextAreaElement, Mention
           });
           if (e.defaultPrevented) return;
         }
-        // Shift+Tab → cycle action mode
+        // Shift+Tab can be wired by callers for an optional composer shortcut.
         if (e.key === 'Tab' && e.shiftKey && onShiftTab) {
           e.preventDefault();
           onShiftTab();

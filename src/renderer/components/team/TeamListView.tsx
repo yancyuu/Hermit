@@ -799,6 +799,35 @@ export const TeamListView = (): React.JSX.Element => {
     }
   }, [newTemplateSourceUrl, templateSources]);
 
+  const handleRemoveTemplateSource = useCallback(
+    async (source: TeamTemplateSource): Promise<void> => {
+      if (source.isDefault) return;
+      const confirmed = await confirm({
+        title: '删除模板源',
+        message: `确定删除模板源“${source.name}”吗？已扫描出的模板也会从列表中移除。`,
+        confirmLabel: '删除',
+        cancelLabel: '取消',
+        variant: 'danger',
+      });
+      if (!confirmed) return;
+
+      setTemplateLoading(true);
+      setTemplateError(null);
+      try {
+        const saved = await api.teams.saveTemplateSources(
+          templateSources.filter((item) => item.id !== source.id)
+        );
+        setTemplateSources(saved.sources);
+        setTeamTemplates(saved.templates);
+      } catch (error) {
+        setTemplateError(error instanceof Error ? error.message : '删除模板源失败');
+      } finally {
+        setTemplateLoading(false);
+      }
+    },
+    [templateSources]
+  );
+
   const handleUseTemplate = useCallback(
     (template: TeamTemplateSummary): void => {
       setCopyData({
@@ -879,7 +908,8 @@ export const TeamListView = (): React.JSX.Element => {
         <DialogHeader>
           <DialogTitle className="text-sm">从团队模板创建</DialogTitle>
           <DialogDescription className="text-xs">
-            从团队模板仓库读取可复用团队。默认源为 HermitTeams，仓库根目录下含有 hermit-team.json
+            从团队模板仓库读取可复用团队。默认源为 Hermit 官方团队模板
+            https://github.com/yancyuu/HermitTeams.git，仓库根目录下含有 hermit-team.json
             的一级目录会被识别为模板。
           </DialogDescription>
         </DialogHeader>
@@ -893,7 +923,7 @@ export const TeamListView = (): React.JSX.Element => {
                 className="h-8 text-xs"
                 value={newTemplateSourceUrl}
                 onChange={(event) => setNewTemplateSourceUrl(event.target.value)}
-                placeholder="https://github.com/company/hermit-teams.git"
+                placeholder="https://github.com/yancyuu/HermitTeams.git"
               />
             </div>
             <Button
@@ -911,11 +941,22 @@ export const TeamListView = (): React.JSX.Element => {
               {templateSources.map((source) => (
                 <span
                   key={source.id}
-                  className="rounded bg-[var(--color-surface-raised)] px-1.5 py-0.5 text-[10px] text-[var(--color-text-muted)]"
+                  className="inline-flex items-center gap-1 rounded bg-[var(--color-surface-raised)] px-1.5 py-0.5 text-[10px] text-[var(--color-text-muted)]"
                   title={source.url}
                 >
                   {source.name}
                   {source.lastError ? ' · 同步失败' : ''}
+                  {!source.isDefault ? (
+                    <button
+                      type="button"
+                      className="rounded p-0.5 text-[var(--color-text-muted)] transition-colors hover:bg-red-500/10 hover:text-red-300"
+                      aria-label={`删除模板源 ${source.name}`}
+                      disabled={templateLoading}
+                      onClick={() => void handleRemoveTemplateSource(source)}
+                    >
+                      <Trash2 size={10} />
+                    </button>
+                  ) : null}
                 </span>
               ))}
             </div>

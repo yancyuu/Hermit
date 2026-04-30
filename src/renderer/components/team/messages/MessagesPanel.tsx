@@ -50,10 +50,15 @@ import { MessagesFilterPopover } from './MessagesFilterPopover';
 import { StatusBlock } from './StatusBlock';
 
 import type { TimelineItem } from '../activity/LeadThoughtsGroup';
-import type { ActionMode } from './ActionModeSelector';
 import type { MessagesFilterState } from './MessagesFilterPopover';
 import type { TeamMessagesPanelMode } from '@renderer/types/teamMessagesPanelMode';
-import type { InboxMessage, ResolvedTeamMember, TaskRef, TeamTaskWithKanban } from '@shared/types';
+import type {
+  AgentActionMode,
+  InboxMessage,
+  ResolvedTeamMember,
+  TaskRef,
+  TeamTaskWithKanban,
+} from '@shared/types';
 
 interface TimeWindow {
   start: number;
@@ -507,7 +512,7 @@ export const MessagesPanel = memo(function MessagesPanel({
       attachments?: Parameters<typeof sendTeamMessage>[1] extends { attachments?: infer A }
         ? A
         : never,
-      actionMode?: ActionMode,
+      actionMode?: AgentActionMode,
       taskRefs?: TaskRef[]
     ) => {
       const sentAtMs = Date.now();
@@ -550,7 +555,7 @@ export const MessagesPanel = memo(function MessagesPanel({
       toTeam: string,
       text: string,
       summary?: string,
-      actionMode?: ActionMode,
+      actionMode?: AgentActionMode,
       taskRefs?: TaskRef[]
     ) => {
       void sendCrossTeamMessage({

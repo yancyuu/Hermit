@@ -3,7 +3,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { MarkdownViewer } from '@renderer/components/chat/viewers/MarkdownViewer';
 import { AttachmentPreviewList } from '@renderer/components/team/attachments/AttachmentPreviewList';
 import { DropZoneOverlay } from '@renderer/components/team/attachments/DropZoneOverlay';
-import { ActionModeSelector } from '@renderer/components/team/messages/ActionModeSelector';
 import { OpenCodeDeliveryWarning } from '@renderer/components/team/messages/OpenCodeDeliveryWarning';
 import {
   Dialog,
@@ -37,11 +36,11 @@ import { AlertCircle, Paperclip, Send, X } from 'lucide-react';
 
 import { MemberBadge } from '../MemberBadge';
 
-import type { ActionMode } from '@renderer/components/team/messages/ActionModeSelector';
 import type { InlineChip } from '@renderer/types/inlineChip';
 import type { MentionSuggestion } from '@renderer/types/mention';
 import type { OpenCodeRuntimeDeliveryDebugDetails } from '@renderer/utils/openCodeRuntimeDeliveryDiagnostics';
 import type {
+  AgentActionMode,
   AttachmentPayload,
   ResolvedTeamMember,
   SendMessageResult,
@@ -74,15 +73,11 @@ interface SendMessageDialogProps {
     text: string,
     summary?: string,
     attachments?: AttachmentPayload[],
-    actionMode?: ActionMode,
+    actionMode?: AgentActionMode,
     taskRefs?: TaskRef[]
   ) => void | Promise<SendMessageResult | void>;
   onClose: () => void;
 }
-
-// Sticky action mode within the current session.
-// Each dialog open still re-derives the default from the current team shape.
-let stickyActionMode: ActionMode = 'delegate';
 
 export const SendMessageDialog = ({
   open,
@@ -116,13 +111,6 @@ export const SendMessageDialog = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileRestrictionError, setFileRestrictionError] = useState<string | null>(null);
   const fileRestrictionTimerRef = useRef(0);
-  const [actionMode, setActionModeState] = useState<ActionMode>(stickyActionMode);
-  const actionModeRef = useRef<ActionMode>(stickyActionMode);
-  const setActionMode = useCallback((mode: ActionMode) => {
-    actionModeRef.current = mode;
-    stickyActionMode = mode;
-    setActionModeState(mode);
-  }, []);
 
   const {
     attachments,
@@ -138,9 +126,6 @@ export const SendMessageDialog = ({
 
   const selectedMember = members.find((m) => m.name === member);
   const isLeadRecipient = selectedMember ? isLeadMember(selectedMember) : false;
-  const hasTeammates = members.length > 1;
-  const canDelegate = hasTeammates && isLeadRecipient;
-  const shouldAutoDelegate = canDelegate;
   const supportsAttachments = isLeadRecipient && !!isTeamAlive;
   const canAttach = supportsAttachments && canAddMore;
   const attachmentRestrictionReason = !supportsAttachments
@@ -149,37 +134,13 @@ export const SendMessageDialog = ({
       : '团队在线时才能添加文件'
     : undefined;
 
-  // Auto-switch to delegate when lead recipient is selected, but don't
-  // override user's explicit choice on dialog open.
-  const prevShouldAutoDelegateRef = useRef(shouldAutoDelegate);
-  useEffect(() => {
-    if (!canDelegate && actionMode === 'delegate') {
-      setActionMode('do');
-      return;
-    }
-
-    // Skip the initial mount — honour the sticky mode
-    if (prevShouldAutoDelegateRef.current === shouldAutoDelegate) return;
-    prevShouldAutoDelegateRef.current = shouldAutoDelegate;
-
-    if (shouldAutoDelegate) {
-      setActionMode('delegate');
-    } else {
-      setActionModeState((prev) => (prev === 'delegate' ? 'do' : prev));
-    }
-  }, [actionMode, canDelegate, setActionMode, shouldAutoDelegate]);
-
   const [pendingAutoClose, setPendingAutoClose] = useState(false);
   // Reset form on open transition (avoid setState in render)
   useEffect(() => {
     if (open && !prevOpenRef.current) {
       const leadName = members.find((m) => isLeadMember(m))?.name;
       const nextRecipient = defaultRecipient ?? leadName ?? '';
-      const nextRecipientMember = members.find((candidate) => candidate.name === nextRecipient);
-      const nextCanDelegate =
-        members.length > 1 && Boolean(nextRecipientMember && isLeadMember(nextRecipientMember));
       setMember(nextRecipient);
-      setActionMode(nextCanDelegate ? 'delegate' : 'do');
       setQuote(quotedMessage);
       setQuoteExpanded(false);
       prevResultRef.current = lastResult;
@@ -200,7 +161,6 @@ export const SendMessageDialog = ({
     quotedMessage,
     lastResult,
     members,
-    setActionMode,
     textDraft,
     chipDraft,
   ]);
@@ -275,7 +235,7 @@ export const SendMessageDialog = ({
         finalText,
         trimmedText,
         attachments.length > 0 ? attachments : undefined,
-        actionMode,
+        undefined,
         taskRefs
       )
     )
@@ -524,13 +484,6 @@ export const SendMessageDialog = ({
                 maxRows={12}
                 maxLength={MAX_TEXT_LENGTH}
                 disabled={sending}
-                cornerActionLeft={
-                  <ActionModeSelector
-                    value={actionMode}
-                    onChange={setActionMode}
-                    showDelegate={canDelegate}
-                  />
-                }
                 cornerAction={
                   <button
                     type="button"

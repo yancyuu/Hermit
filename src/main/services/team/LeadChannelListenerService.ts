@@ -385,7 +385,6 @@ export class LeadChannelListenerService {
             text: `[${channel.name}]\n聊天：${chatId}\n\n${text}`,
             messageId: inboundMessage.messageId,
             source: 'inbox',
-            actionMode: 'ask',
             externalChannel: {
               provider: 'feishu',
               channelId: channel.id,

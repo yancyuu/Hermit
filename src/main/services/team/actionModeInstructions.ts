@@ -1,12 +1,6 @@
 import { AGENT_BLOCK_CLOSE, AGENT_BLOCK_OPEN } from '@shared/constants/agentBlocks';
-import * as agentTeamsControllerModule from 'agent-teams-controller';
 
 import type { AgentActionMode } from '@shared/types';
-
-const { protocols } = agentTeamsControllerModule;
-
-const LEAD_DELEGATE_DESCRIPTION =
-  'Strict orchestration mode for leads. Delegate the work and any needed investigation to teammates, coordinate it, and do not implement or personally research it yourself unless you are truly in SOLO MODE.';
 
 const ACTION_MODE_BLOCKS: Record<AgentActionMode, string[]> = {
   do: [
@@ -35,10 +29,6 @@ const ACTION_MODE_BLOCKS: Record<AgentActionMode, string[]> = {
     '- If you are not the lead or no delegation target exists, do not execute the work yourself; explain the limitation briefly and request a different mode or a lead handoff.',
   ],
 };
-
-export function buildActionModeProtocol(): string {
-  return protocols.buildActionModeProtocolText(LEAD_DELEGATE_DESCRIPTION);
-}
 
 export function buildActionModeAgentBlock(mode: AgentActionMode | undefined): string {
   if (!mode) {

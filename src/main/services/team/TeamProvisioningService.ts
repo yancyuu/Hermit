@@ -173,7 +173,6 @@ import {
   type RuntimeEvidenceKind,
 } from './opencode/store/RuntimeRunTombstoneStore';
 import { OpenCodeTaskLogAttributionStore } from './taskLogs/stream/OpenCodeTaskLogAttributionStore';
-import { buildActionModeProtocol } from './actionModeInstructions';
 import { isAgentTeamsToolUse } from './agentTeamsToolNames';
 import { atomicWriteAsync } from './atomicWrite';
 import { peekAutoResumeService } from './AutoResumeService';
@@ -2656,10 +2655,6 @@ function buildReconnectMemberSpawnPrompt(
   const workflowBlock = member.workflow?.trim()
     ? `\n\nYour workflow and how you should behave:${formatWorkflowBlock(member.workflow, '     ')}`
     : '';
-  const actionModeProtocol = indentMultiline(
-    protocols.buildActionModeProtocolText(protocols.MEMBER_DELEGATE_DESCRIPTION),
-    '     '
-  );
   const providerArgLine =
     member.providerId && member.providerId !== 'anthropic'
       ? `   - provider: "${member.providerId}"\n`
@@ -3069,7 +3064,6 @@ function buildPersistentLeadContext(opts: {
   const { teamName, leadName, isSolo, members, compact, feishuChannels } = opts;
   const languageInstruction = getAgentLanguageInstruction();
   const agentBlockPolicy = buildAgentBlockUsagePolicy();
-  const actionModeProtocol = buildActionModeProtocol();
   const teamCtlOps = buildTeamCtlOpsInstructions(teamName, leadName, members);
 
   const soloConstraint = isSolo
@@ -3114,17 +3108,17 @@ function buildPersistentLeadContext(opts: {
 - 不要使用 SendMessage to="*"（广播）。不支持 "*" 地址，它会创建一个名为 "*" 的幽灵参与者，而不是触达所有成员。如需通知多个成员，请按名字分别发送 SendMessage。
 - 保持任务看板高信噪比：避免为琐碎微项创建任务。
 - 对已分配或实质性工作使用团队任务看板。
+- 用户不再选择“询问/委托/执行”。每条来自 "user" 的消息都由你根据消息内容、团队规则、成员职责、任务看板和当前 runtime 状态自行判断下一步；不要要求用户先选模式，也不要向用户暴露 ask/delegate/do 这类内部标签。
+- 路由判断规则：如果是问题、解释、讨论或规划请求，能直接回答就直接回答；如果是非 solo 团队中的可执行工作，优先拆成看板任务、分配给合适成员，并用 SendMessage "user" 给出简短可见确认；如果意图不明确，按收益选择简短澄清或创建 investigation/triage 任务。
 - 委派优先（后续所有回合的行为规则）：当 "user" 给你工作时，最高优先级是：(a) 拆解为任务，(b) 在团队看板创建任务，(c) 分配给成员，(d) SendMessage "user" 简短确认（任务 ID + owner）。除非团队确实是 SOLO MODE（无成员），否则不要自己开始实现。
 - 非 solo 团队中，你默认第一步是委派，而不是个人调查。不要为了决定 owner 或范围就自己阅读/搜索代码库、检查文件或做根因研究。
 - 如果请求不明确或仍需要技术发现，请立即为最合适的成员创建粗粒度 investigation/triage 任务。由该成员负责代码检查、范围细化，并创建执行所需的后续任务。
 - 只有当人类明确要求你本人做分析/规划，或确实没有合适成员负责调查时，才先由负责人侧研究。
-- 内置 Agent 使用规则：内置 Agent 工具只允许用于不带 team_name 的普通 Claude Code 风格 subagents，并且只在 action mode 为 DO 的回合使用。在 ASK 或 DELEGATE 模式中，把 Agent 视为禁用。不要在普通负责人工作中使用带 team_name 的 Agent 来重新启动团队或创建持久成员。
+- 内置 Agent 使用规则：内置 Agent 工具只允许用于不带 team_name 的普通 Claude Code 风格 subagents；不要在普通负责人工作中使用带 team_name 的 Agent 来重新启动团队或创建持久成员。
 - 不要用内置 TaskCreate 工具创建团队看板任务。在该团队 runtime 中，只通过 MCP task 工具创建看板任务（task_create、task_create_from_message 等）。
 - 给 "user"（人类）发消息时：使用普通人类语言。如果任务需要状态更新，请你自己通过 board MCP 工具完成；不要要求用户运行命令。${soloConstraint}
 
 ${teamCtlOps}
-
-${actionModeProtocol}
 
 沟通协议（重要：你正在 headless 运行，没有人会看到你的普通文本输出）：
 - 当你收到来自成员的 <teammate-message> 且该消息期待你的反应时，默认操作是使用 SendMessage 工具回复该成员。不要用普通 assistant 文本回答成员到负责人的沟通，因为这类文本不会送回成员。

@@ -257,7 +257,7 @@ function buildPendingDiagnosticPhrase({
     formatNamedPendingDiagnostic('等待启动初始化', groups.runtimeProcess),
     formatNamedPendingDiagnostic('候选进程', groups.runtimeCandidate),
     formatNamedPendingDiagnostic('等待权限', groups.permission),
-    formatNamedPendingDiagnostic('未找到运行时', groups.noRuntime),
+    formatNamedPendingDiagnostic('未检测到成员进程', groups.noRuntime),
   ].filter(Boolean);
   if (namedParts.length > 0) {
     return namedParts.join(', ');
@@ -270,7 +270,7 @@ function buildPendingDiagnosticPhrase({
     formatCountPendingDiagnostic(summary.runtimeProcessPendingCount, '个等待启动初始化'),
     formatCountPendingDiagnostic(summary.runtimeCandidatePendingCount, '个候选进程'),
     formatCountPendingDiagnostic(summary.permissionPendingCount, '个等待权限'),
-    formatCountPendingDiagnostic(summary.noRuntimePendingCount, '个未找到运行时'),
+    formatCountPendingDiagnostic(summary.noRuntimePendingCount, '个未检测到成员进程'),
   ].filter(Boolean);
   return countParts.length > 0 ? countParts.join(', ') : fallbackJoiningPhrase;
 }

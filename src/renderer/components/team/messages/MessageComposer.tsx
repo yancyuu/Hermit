@@ -4,7 +4,6 @@ import { api } from '@renderer/api';
 import { AttachmentPreviewList } from '@renderer/components/team/attachments/AttachmentPreviewList';
 import { DropZoneOverlay } from '@renderer/components/team/attachments/DropZoneOverlay';
 import { MemberBadge } from '@renderer/components/team/MemberBadge';
-import { ActionModeSelector } from '@renderer/components/team/messages/ActionModeSelector';
 import { OpenCodeDeliveryWarning } from '@renderer/components/team/messages/OpenCodeDeliveryWarning';
 import { MentionableTextarea } from '@renderer/components/ui/MentionableTextarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@renderer/components/ui/popover';
@@ -36,10 +35,10 @@ import {
 import { AlertCircle, Check, ChevronDown, Mic, Paperclip, Search, Send } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 
-import type { ActionMode } from '@renderer/components/team/messages/ActionModeSelector';
 import type { MentionSuggestion } from '@renderer/types/mention';
 import type { OpenCodeRuntimeDeliveryDebugDetails } from '@renderer/utils/openCodeRuntimeDeliveryDiagnostics';
 import type {
+  AgentActionMode,
   AttachmentPayload,
   ResolvedTeamMember,
   SendMessageResult,
@@ -63,14 +62,14 @@ interface MessageComposerProps {
     text: string,
     summary?: string,
     attachments?: AttachmentPayload[],
-    actionMode?: ActionMode,
+    actionMode?: AgentActionMode,
     taskRefs?: TaskRef[]
   ) => void;
   onCrossTeamSend?: (
     toTeam: string,
     text: string,
     summary?: string,
-    actionMode?: ActionMode,
+    actionMode?: AgentActionMode,
     taskRefs?: TaskRef[]
   ) => void;
 }
@@ -255,55 +254,6 @@ export const MessageComposer = ({
   const selectedMember = members.find((m) => m.name === recipient);
   const selectedResolvedColor = selectedMember ? colorMap.get(selectedMember.name) : undefined;
   const isLeadRecipient = selectedMember ? isLeadMember(selectedMember) : false;
-  const hasTeammates = members.length > 1;
-  const canDelegate = hasTeammates && (isCrossTeam || isLeadRecipient);
-  const shouldAutoDelegate = isLeadRecipient && canDelegate;
-
-  const { actionMode, setActionMode, isLoaded: draftLoaded } = draft;
-
-  // Re-focus textarea after action mode changes (Do/Ask/Delegate button clicks)
-  const prevActionModeRef = useRef(actionMode);
-  useEffect(() => {
-    if (prevActionModeRef.current !== actionMode) {
-      prevActionModeRef.current = actionMode;
-      internalTextareaRef.current?.focus();
-    }
-  }, [actionMode]);
-
-  // Auto-select delegate when lead recipient is chosen by the user.
-  // Wait until draft is restored from IndexedDB (draftLoaded) before running,
-  // so we don't overwrite the persisted actionMode during initialization.
-  // After draft loads, only auto-switch on subsequent recipient changes.
-  const isInitializedRef = useRef(false);
-  const prevShouldAutoDelegateRef = useRef(shouldAutoDelegate);
-  useEffect(() => {
-    if (!draftLoaded) return;
-
-    if (!canDelegate && actionMode === 'delegate') {
-      setActionMode('do');
-      return;
-    }
-
-    // On first run after load, just record the baseline — don't overwrite
-    if (!isInitializedRef.current) {
-      isInitializedRef.current = true;
-      prevShouldAutoDelegateRef.current = shouldAutoDelegate;
-      if (shouldAutoDelegate && actionMode === 'do') {
-        setActionMode('delegate');
-      }
-      return;
-    }
-
-    // Only react when delegate availability actually changes
-    if (shouldAutoDelegate === prevShouldAutoDelegateRef.current) return;
-    prevShouldAutoDelegateRef.current = shouldAutoDelegate;
-
-    if (shouldAutoDelegate) {
-      setActionMode('delegate');
-    } else if (actionMode === 'delegate') {
-      setActionMode('do');
-    }
-  }, [actionMode, canDelegate, draftLoaded, setActionMode, shouldAutoDelegate]);
   // NOTE: lead context ring disabled — usage formula is inaccurate
   // const isLeadAgentRecipient = selectedMember?.agentType === 'lead';
   // const leadContext = useStore((s) =>
@@ -343,12 +293,6 @@ export const MessageComposer = ({
   // Track whether we initiated a send — clear draft only on confirmed success
   const pendingSendRef = useRef(false);
 
-  const handleCycleActionMode = useCallback(() => {
-    const modes: ActionMode[] = canDelegate ? ['do', 'ask', 'delegate'] : ['do', 'ask'];
-    const idx = modes.indexOf(actionMode);
-    setActionMode(modes[(idx + 1) % modes.length]);
-  }, [actionMode, canDelegate, setActionMode]);
-
   const handleSend = useCallback(() => {
     if (!canSend) return;
     dismissMentionsRef.current?.();
@@ -356,7 +300,7 @@ export const MessageComposer = ({
     const taskRefs = extractTaskRefsFromText(draft.text, taskSuggestions);
     const serialized = serializeChipsWithText(trimmed, draft.chips);
     if (isCrossTeam && selectedTeam && onCrossTeamSend) {
-      onCrossTeamSend(selectedTeam, serialized, trimmed, actionMode, taskRefs);
+      onCrossTeamSend(selectedTeam, serialized, trimmed, undefined, taskRefs);
     } else {
       // Summary should stay compact (no expanded chip markdown)
       onSend(
@@ -364,12 +308,11 @@ export const MessageComposer = ({
         serialized,
         trimmed,
         draft.attachments.length > 0 ? draft.attachments : undefined,
-        actionMode,
+        undefined,
         taskRefs
       );
     }
   }, [
-    actionMode,
     canSend,
     recipient,
     trimmed,
@@ -871,7 +814,6 @@ export const MessageComposer = ({
           projectPath={projectPath}
           onFileChipInsert={draft.addChip}
           onModEnter={handleSend}
-          onShiftTab={handleCycleActionMode}
           dismissMentionsRef={dismissMentionsRef}
           extraTips={['Tips：你可以输入 "/" 来运行 Claude 命令。']}
           surfaceClassName="message-composer-shell message-composer-orbit-surface border border-transparent bg-[var(--color-surface-raised)] shadow-[0_8px_24px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(255,255,255,0.03)]"
@@ -885,13 +827,6 @@ export const MessageComposer = ({
           hintText={crossTeamHintText}
           showHint={!isCompactLayout}
           cornerActionInset={isCompactLayout ? 'compact' : 'default'}
-          cornerActionLeft={
-            <ActionModeSelector
-              value={actionMode}
-              onChange={setActionMode}
-              showDelegate={canDelegate}
-            />
-          }
           cornerAction={
             <div className="flex items-center gap-2">
               {/* NOTE: ContextRing disabled — usage formula is inaccurate */}
