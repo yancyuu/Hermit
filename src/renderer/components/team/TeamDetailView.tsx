@@ -2279,9 +2279,25 @@ export const TeamDetailView = ({
                           size="sm"
                           className="h-7 gap-1 px-2 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                           disabled={isTeamProvisioning}
-                          onClick={handleChangeLeadRuntime}
+                          onClick={() => setEditDialogOpen(true)}
                         >
                           <Pencil size={12} />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        {isTeamProvisioning ? '团队仍在编排中，暂时无法编辑' : '编辑团队'}
+                      </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 gap-1 px-2 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                          disabled={isTeamProvisioning}
+                          onClick={handleChangeLeadRuntime}
+                        >
+                          <Terminal size={12} />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent side="bottom">

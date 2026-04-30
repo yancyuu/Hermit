@@ -156,6 +156,7 @@ import {
   SshConnectionManager,
   TaskBoundaryParser,
   TeamDataService,
+  getLeadChannelListenerService,
   TeamLogSourceTracker,
   TeammateToolTracker,
   TeamMemberLogsFinder,
@@ -1187,6 +1188,18 @@ async function initializeServices(): Promise<void> {
   registerCodexAccountIpc(ipcMain, codexAccountFeature);
   registerRecentProjectsIpc(ipcMain, recentProjectsFeature);
   registerRuntimeProviderManagementIpc(ipcMain, runtimeProviderManagementFeature);
+  void getLeadChannelListenerService()
+    .autoStartEnabledFeishuChannels()
+    .then((result) => {
+      if (result.started.length > 0 || result.failed.length > 0) {
+        logger.info(
+          `[Init] Feishu channels auto-started=${result.started.length}, failed=${result.failed.length}`
+        );
+      }
+    })
+    .catch((error: unknown) =>
+      logger.warn(`[Init] Feishu channel auto-start failed: ${String(error)}`)
+    );
 
   // Forward SSH state changes to renderer and HTTP SSE clients
   sshConnectionManager.on('state-change', (status: unknown) => {

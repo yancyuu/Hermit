@@ -6,11 +6,13 @@ import {
   isTaskChangeSummaryCacheable,
   type TaskChangeStateBucket,
 } from '@shared/utils/taskChangeState';
+import { execFile } from 'child_process';
 import { createHash } from 'crypto';
 import { existsSync } from 'fs';
 import { mkdtemp, readdir, readFile, rm, stat, writeFile } from 'fs/promises';
 import * as os from 'os';
 import * as path from 'path';
+import { promisify } from 'util';
 
 import { JsonTaskChangeSummaryCacheRepository } from './cache/JsonTaskChangeSummaryCacheRepository';
 import {
@@ -33,6 +35,7 @@ import {
 } from './taskChangeWorkerTypes';
 import { TeamConfigReader } from './TeamConfigReader';
 import { TeamMetaStore } from './TeamMetaStore';
+import { countLineChanges } from './UnifiedLineCounter';
 
 import type { TaskChangePresenceRepository } from './cache/TaskChangePresenceRepository';
 import type { OpenCodeLedgerBackfillPort } from './opencode/bridge/OpenCodeReadinessBridge';
@@ -41,11 +44,20 @@ import type { TaskBoundaryParser } from './TaskBoundaryParser';
 import type { TaskChangeWorkerClient } from './TaskChangeWorkerClient';
 import type { TeamLogSourceTracker } from './TeamLogSourceTracker';
 import type { TeamMemberLogsFinder } from './TeamMemberLogsFinder';
-import type { AgentChangeSet, ChangeStats, TaskChangeSetV2 } from '@shared/types';
+import type {
+  AgentChangeSet,
+  ChangeStats,
+  FileChangeSummary,
+  TaskChangeSetV2,
+} from '@shared/types';
 
 const logger = createLogger('Service:ChangeExtractorService');
 const OPEN_CODE_AUTO_BACKFILL_ATTRIBUTION_MODE = 'strict-delivery' as const;
 const OPEN_CODE_MAX_DISCOVERED_LANES = 500;
+const GIT_FALLBACK_TIMEOUT_MS = 10_000;
+const GIT_FALLBACK_MAX_BUFFER = 10 * 1024 * 1024;
+const GIT_FALLBACK_MAX_TEXT_BYTES = 512 * 1024;
+const execFileAsync = promisify(execFile);
 
 /** Кеш-запись: данные + mtime файла + время протухания */
 interface CacheEntry {
@@ -131,14 +143,19 @@ export class ChangeExtractorService {
       memberName,
       projectPath
     );
+    const effectiveResult =
+      result.totalFiles === 0
+        ? ((await this.buildGitWorkingTreeAgentFallback(teamName, memberName, projectPath)) ??
+          result)
+        : result;
 
     this.cache.set(cacheKey, {
-      data: result,
+      data: effectiveResult,
       mtime: latestMtime,
       expiresAt: Date.now() + this.cacheTtl,
     });
 
-    return result;
+    return effectiveResult;
   }
 
   /** Получить изменения для конкретной задачи (Phase 3: per-task scoping) */
@@ -332,14 +349,21 @@ export class ChangeExtractorService {
   private async computeTaskChangesPreferred(
     input: ResolvedTaskChangeComputeInput
   ): Promise<TaskChangeSetV2> {
+    const withGitFallback = async (result: TaskChangeSetV2): Promise<TaskChangeSetV2> => {
+      if (result.totalFiles > 0) {
+        return result;
+      }
+      return (await this.buildGitWorkingTreeTaskFallback(input, result)) ?? result;
+    };
+
     if (!this.taskChangeWorkerClient.isAvailable()) {
-      return this.taskChangeComputer.computeTaskChanges(input);
+      return withGitFallback(await this.taskChangeComputer.computeTaskChanges(input));
     }
 
     try {
       const result = await this.taskChangeWorkerClient.computeTaskChanges(input);
       if (this.isValidWorkerTaskChangeResult(result, input)) {
-        return result;
+        return withGitFallback(result);
       }
       logger.warn(
         `Task change worker returned malformed result for ${input.teamName}/${input.taskId}; falling back inline.`
@@ -350,7 +374,239 @@ export class ChangeExtractorService {
       );
     }
 
-    return this.taskChangeComputer.computeTaskChanges(input);
+    return withGitFallback(await this.taskChangeComputer.computeTaskChanges(input));
+  }
+
+  private async buildGitWorkingTreeAgentFallback(
+    teamName: string,
+    memberName: string,
+    projectPath?: string
+  ): Promise<AgentChangeSet | null> {
+    const files = await this.readGitWorkingTreeFallbackFiles(projectPath);
+    if (files.length === 0) {
+      return null;
+    }
+    return {
+      teamName,
+      memberName,
+      files,
+      totalLinesAdded: files.reduce((sum, file) => sum + file.linesAdded, 0),
+      totalLinesRemoved: files.reduce((sum, file) => sum + file.linesRemoved, 0),
+      totalFiles: files.length,
+      computedAt: new Date().toISOString(),
+    };
+  }
+
+  private async buildGitWorkingTreeTaskFallback(
+    input: ResolvedTaskChangeComputeInput,
+    emptyResult: TaskChangeSetV2
+  ): Promise<TaskChangeSetV2 | null> {
+    const files = await this.readGitWorkingTreeFallbackFiles(input.projectPath);
+    if (files.length === 0) {
+      return null;
+    }
+    return {
+      ...emptyResult,
+      files,
+      totalLinesAdded: files.reduce((sum, file) => sum + file.linesAdded, 0),
+      totalLinesRemoved: files.reduce((sum, file) => sum + file.linesRemoved, 0),
+      totalFiles: files.length,
+      confidence: 'fallback',
+      computedAt: new Date().toISOString(),
+      scope: {
+        ...emptyResult.scope,
+        memberName: input.taskMeta?.owner ?? emptyResult.scope.memberName,
+        filePaths: files.map((file) => file.filePath),
+        confidence: {
+          tier: 4,
+          label: 'fallback',
+          reason: 'No task-scoped change log found; showing current git working tree changes.',
+        },
+      },
+      warnings: [
+        ...emptyResult.warnings,
+        '未找到任务级代码变更记录，已临时展示当前 Git 工作区未提交变更。',
+      ],
+      diffStatCompleteness: 'partial',
+    };
+  }
+
+  private async readGitWorkingTreeFallbackFiles(
+    projectPath: string | undefined
+  ): Promise<FileChangeSummary[]> {
+    if (!projectPath || !(await this.isGitWorkingTree(projectPath))) {
+      return [];
+    }
+
+    const [tracked, untracked] = await Promise.all([
+      this.listTrackedGitChanges(projectPath),
+      this.listUntrackedGitFiles(projectPath),
+    ]);
+    const rows = new Map<string, { status: string; path: string }>();
+    for (const row of tracked) {
+      rows.set(row.path, row);
+    }
+    for (const row of untracked) {
+      rows.set(row.path, row);
+    }
+
+    const files: FileChangeSummary[] = [];
+    for (const row of [...rows.values()].sort((left, right) =>
+      left.path.localeCompare(right.path)
+    )) {
+      const file = await this.buildGitFallbackFile(projectPath, row.path, row.status);
+      if (file) {
+        files.push(file);
+      }
+    }
+    return files;
+  }
+
+  private async isGitWorkingTree(projectPath: string): Promise<boolean> {
+    try {
+      await this.execGit(projectPath, ['rev-parse', '--is-inside-work-tree']);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async listTrackedGitChanges(
+    projectPath: string
+  ): Promise<{ status: string; path: string }[]> {
+    try {
+      const stdout = await this.execGit(projectPath, ['diff', '--name-status', 'HEAD', '--']);
+      return stdout
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .flatMap((line) => {
+          const parts = line.split('\t');
+          const status = parts[0] ?? '';
+          const filePath = parts[parts.length - 1] ?? '';
+          return filePath ? [{ status, path: filePath }] : [];
+        });
+    } catch {
+      return [];
+    }
+  }
+
+  private async listUntrackedGitFiles(
+    projectPath: string
+  ): Promise<{ status: string; path: string }[]> {
+    try {
+      const stdout = await this.execGit(projectPath, [
+        'ls-files',
+        '--others',
+        '--exclude-standard',
+      ]);
+      return stdout
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((filePath) => ({ status: 'A', path: filePath }));
+    } catch {
+      return [];
+    }
+  }
+
+  private async buildGitFallbackFile(
+    projectPath: string,
+    relativePath: string,
+    status: string
+  ): Promise<FileChangeSummary | null> {
+    const operation = status.startsWith('D')
+      ? 'delete'
+      : status.startsWith('A')
+        ? 'create'
+        : 'modify';
+    const filePath = path.join(projectPath, relativePath);
+    const [originalFullContent, modifiedFullContent] = await Promise.all([
+      operation === 'create'
+        ? Promise.resolve('')
+        : this.readGitHeadFile(projectPath, relativePath),
+      operation === 'delete' ? Promise.resolve('') : this.readWorkingTreeTextFile(filePath),
+    ]);
+    if (originalFullContent == null || modifiedFullContent == null) {
+      return null;
+    }
+    if (originalFullContent === modifiedFullContent) {
+      return null;
+    }
+
+    const lineCounts = countLineChanges(originalFullContent, modifiedFullContent);
+    const now = new Date().toISOString();
+    return {
+      filePath,
+      relativePath,
+      snippets: [
+        {
+          toolUseId: `git-fallback:${relativePath}`,
+          filePath,
+          toolName: 'PostToolUse',
+          type: 'hook-snapshot',
+          oldString: '',
+          newString: '',
+          replaceAll: false,
+          timestamp: now,
+          isError: false,
+          ledger: {
+            eventId: `git-fallback:${relativePath}`,
+            source: 'ledger-snapshot',
+            confidence: 'low',
+            originalFullContent,
+            modifiedFullContent,
+            beforeHash: null,
+            afterHash: null,
+            operation,
+            linesAdded: lineCounts.added,
+            linesRemoved: lineCounts.removed,
+            textAvailability: 'full-text',
+          },
+        },
+      ],
+      linesAdded: lineCounts.added,
+      linesRemoved: lineCounts.removed,
+      isNewFile: operation === 'create',
+      changeKey: `git-fallback:${relativePath}`,
+      diffStatKnown: true,
+      ledgerSummary: {
+        latestOperation: operation,
+        createdInTask: operation === 'create',
+        deletedInTask: operation === 'delete',
+        contentAvailability: 'full-text',
+        reviewability: 'full-text',
+      },
+    };
+  }
+
+  private async readGitHeadFile(projectPath: string, relativePath: string): Promise<string | null> {
+    try {
+      return await this.execGit(projectPath, ['show', `HEAD:${relativePath}`]);
+    } catch {
+      return '';
+    }
+  }
+
+  private async readWorkingTreeTextFile(filePath: string): Promise<string | null> {
+    try {
+      const fileStat = await stat(filePath);
+      if (!fileStat.isFile() || fileStat.size > GIT_FALLBACK_MAX_TEXT_BYTES) {
+        return null;
+      }
+      return await readFile(filePath, 'utf8');
+    } catch {
+      return null;
+    }
+  }
+
+  private async execGit(projectPath: string, args: string[]): Promise<string> {
+    const { stdout } = await execFileAsync('git', args, {
+      cwd: projectPath,
+      timeout: GIT_FALLBACK_TIMEOUT_MS,
+      maxBuffer: GIT_FALLBACK_MAX_BUFFER,
+    });
+    return stdout;
   }
 
   private async readLedgerTaskChanges(

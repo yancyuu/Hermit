@@ -820,13 +820,13 @@ export const MessageComposer = ({
           surfaceDecoration="orbit-border"
           surfaceFadeColor="var(--color-surface-raised)"
           className="border-transparent shadow-none"
-          minRows={isCompactLayout ? 1 : 2}
+          minRows={1}
           maxRows={6}
           maxLength={MAX_TEXT_LENGTH}
           disabled={sending}
           hintText={crossTeamHintText}
           showHint={!isCompactLayout}
-          cornerActionInset={isCompactLayout ? 'compact' : 'default'}
+          cornerActionInset="compact"
           cornerAction={
             <div className="flex items-center gap-2">
               {/* NOTE: ContextRing disabled — usage formula is inaccurate */}

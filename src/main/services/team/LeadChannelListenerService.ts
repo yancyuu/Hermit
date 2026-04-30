@@ -44,6 +44,15 @@ interface LeadChannelEventLedgerEntry {
   messageId: string;
 }
 
+interface RecentFeishuTarget {
+  provider: 'feishu';
+  channelId: string;
+  channelName?: string;
+  chatId: string;
+  senderId?: string;
+  observedAt: string;
+}
+
 export interface LeadChannelInboundMessage {
   channelId: string;
   channelName: string;
@@ -183,6 +192,7 @@ export class LeadChannelListenerService {
   private readonly channelBindings = new Map<string, Set<string>>();
   private readonly statusByTeamChannel = new Map<string, Map<string, LeadChannelStatus>>();
   private readonly connectingHintTimerByTeamChannel = new Map<string, NodeJS.Timeout>();
+  private readonly recentFeishuTargetByTeam = new Map<string, RecentFeishuTarget>();
   private inboundMessageHandler:
     | ((teamName: string, message: LeadChannelInboundMessage) => boolean | Promise<boolean>)
     | null = null;
@@ -229,6 +239,42 @@ export class LeadChannelListenerService {
     await fs.promises.mkdir(path.dirname(configPath), { recursive: true });
     await atomicWriteAsync(configPath, `${JSON.stringify(config, null, 2)}\n`);
     return this.getSnapshot(teamName);
+  }
+
+  async autoStartEnabledFeishuChannels(): Promise<{
+    started: string[];
+    failed: { channelId: string; message: string }[];
+  }> {
+    const globalConfig = await this.readGlobalConfig();
+    const started: string[] = [];
+    const failed: { channelId: string; message: string }[] = [];
+
+    for (const channel of globalConfig.channels) {
+      if (channel.provider !== 'feishu' || channel.enabled === false) {
+        continue;
+      }
+      const statusOwner = channel.boundTeam ?? GLOBAL_CHANNEL_STATUS_OWNER;
+      try {
+        await this.startFeishu(channel.id);
+        started.push(channel.id);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        failed.push({ channelId: channel.id, message });
+        this.clearConnectingHint(statusOwner, channel.id);
+        this.setStatus(statusOwner, channel.id, {
+          running: false,
+          state: 'error',
+          message: `自动连接失败：${message}`,
+          startedAt: null,
+          lastEventAt: null,
+          channelId: channel.id,
+          channelName: channel.name,
+        });
+        logger.warn(`[${statusOwner}/${channel.id}] Feishu auto-start failed: ${message}`);
+      }
+    }
+
+    return { started, failed };
   }
 
   async startFeishu(channelId: string): Promise<LeadChannelSnapshot | null> {
@@ -367,6 +413,14 @@ export class LeadChannelListenerService {
           });
           return;
         }
+        this.rememberRecentFeishuTarget(targetTeam, {
+          provider: 'feishu',
+          channelId: channel.id,
+          channelName: channel.name,
+          chatId,
+          senderId,
+          observedAt: new Date().toISOString(),
+        });
         const deliveredDirect =
           (await Promise.resolve(this.inboundMessageHandler?.(targetTeam, inboundMessage)).catch(
             (error: unknown) => {
@@ -442,6 +496,19 @@ export class LeadChannelListenerService {
       message: '负责人回复已发送到飞书。',
       lastEventAt: new Date().toISOString(),
     });
+  }
+
+  async sendToRecentFeishuTarget(teamName: string, text: string): Promise<boolean> {
+    const target = this.recentFeishuTargetByTeam.get(teamName);
+    if (!target) {
+      return false;
+    }
+    await this.sendFeishuReply(target.channelId, target.chatId, text);
+    return true;
+  }
+
+  private rememberRecentFeishuTarget(teamName: string, target: RecentFeishuTarget): void {
+    this.recentFeishuTargetByTeam.set(teamName, target);
   }
 
   async stopFeishu(channelId?: string): Promise<LeadChannelSnapshot | null> {

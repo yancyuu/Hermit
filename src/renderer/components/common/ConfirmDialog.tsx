@@ -109,7 +109,7 @@ export const ConfirmDialog = (): React.JSX.Element | null => {
   const isDanger = state.variant === 'danger';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center">
       {/* Backdrop */}
       <button
         className="absolute inset-0 cursor-default"

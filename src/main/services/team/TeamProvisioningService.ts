@@ -18258,6 +18258,18 @@ export class TeamProvisioningService {
       if (recipient === 'user') {
         // User-directed messages go to sentMessages.json (canonical outbound store)
         this.persistSentMessage(run.teamName, msg);
+        if (run.leadRelayCapture && !run.leadRelayCapture.settled) {
+          run.leadRelayCapture.textParts.push(strippedCrossTeamContent);
+          run.leadRelayCapture.resolveOnce(strippedCrossTeamContent);
+        } else {
+          void getLeadChannelListenerService()
+            .sendToRecentFeishuTarget(run.teamName, strippedCrossTeamContent)
+            .catch((error: unknown) => {
+              logger.warn(
+                `[${run.teamName}] Failed to push proactive lead message to Feishu: ${String(error)}`
+              );
+            });
+        }
         this.teamChangeEmitter?.({
           type: 'inbox',
           teamName: run.teamName,

@@ -247,49 +247,49 @@ const StatusBadge = ({ status }: { status: TeamStatus }): React.JSX.Element => {
   switch (status) {
     case 'active':
       return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
+        <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
           <span className="size-1.5 animate-pulse rounded-full bg-emerald-400" />
           活跃
         </span>
       );
     case 'idle':
       return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
+        <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
           <span className="size-1.5 rounded-full bg-emerald-400" />
           运行中
         </span>
       );
     case 'provisioning':
       return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium text-amber-400">
+        <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium text-amber-400">
           <span className="size-1.5 animate-pulse rounded-full bg-amber-400" />
           启动中...
         </span>
       );
     case 'offline':
       return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-zinc-500/15 px-2 py-0.5 text-[10px] font-medium text-zinc-500">
+        <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-zinc-500/15 px-2 py-0.5 text-[10px] font-medium text-zinc-500">
           <span className="size-1.5 rounded-full bg-zinc-500" />
           离线
         </span>
       );
     case 'partial_failure':
       return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium text-amber-400">
+        <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium text-amber-400">
           <span className="size-1.5 rounded-full bg-amber-400" />
           部分启动失败
         </span>
       );
     case 'partial_skipped':
       return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-sky-500/15 px-2 py-0.5 text-[10px] font-medium text-sky-300">
+        <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-sky-500/15 px-2 py-0.5 text-[10px] font-medium text-sky-300">
           <span className="size-1.5 rounded-full bg-sky-300" />
           已跳过部分成员
         </span>
       );
     case 'partial_pending':
       return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium text-amber-300">
+        <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium text-amber-300">
           <span className="size-1.5 rounded-full bg-amber-300" />
           启动待完成
         </span>
@@ -937,27 +937,42 @@ export const TeamListView = (): React.JSX.Element => {
             </Button>
           </div>
           {templateSources.length > 0 ? (
-            <div className="mt-2 flex flex-wrap gap-1.5">
+            <div className="mt-3 space-y-1.5">
               {templateSources.map((source) => (
-                <span
+                <div
                   key={source.id}
-                  className="inline-flex items-center gap-1 rounded bg-[var(--color-surface-raised)] px-1.5 py-0.5 text-[10px] text-[var(--color-text-muted)]"
+                  className="flex min-w-0 items-center gap-2 rounded bg-[var(--color-surface-raised)] px-2 py-1"
                   title={source.url}
                 >
-                  {source.name}
-                  {source.lastError ? ' · 同步失败' : ''}
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-[11px] text-[var(--color-text-secondary)]">
+                      {source.name}
+                      {source.isDefault ? ' · 默认' : ''}
+                      {source.lastError ? ' · 同步失败' : ''}
+                    </div>
+                    <div className="truncate text-[10px] text-[var(--color-text-muted)]">
+                      {source.url}
+                    </div>
+                  </div>
                   {!source.isDefault ? (
-                    <button
+                    <Button
                       type="button"
-                      className="rounded p-0.5 text-[var(--color-text-muted)] transition-colors hover:bg-red-500/10 hover:text-red-300"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 shrink-0 gap-1 px-2 text-[11px] text-red-300 hover:bg-red-500/10 hover:text-red-200"
                       aria-label={`删除模板源 ${source.name}`}
                       disabled={templateLoading}
-                      onClick={() => void handleRemoveTemplateSource(source)}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        void handleRemoveTemplateSource(source);
+                      }}
                     >
-                      <Trash2 size={10} />
-                    </button>
+                      <Trash2 size={12} />
+                      删除
+                    </Button>
                   ) : null}
-                </span>
+                </div>
               ))}
             </div>
           ) : null}
@@ -1167,9 +1182,9 @@ export const TeamListView = (): React.JSX.Element => {
                 }}
               >
                 <div className="flex flex-1 flex-col">
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between gap-2">
                     <div className="flex min-w-0 flex-1 items-center gap-2">
-                      <h3 className="truncate text-sm font-semibold text-[var(--color-text)]">
+                      <h3 className="min-w-0 flex-1 truncate text-sm font-semibold text-[var(--color-text)]">
                         {team.displayName}
                       </h3>
                       <StatusBadge status={status} />
