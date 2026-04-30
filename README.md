@@ -13,7 +13,7 @@
 <h1 align="center"><a href="https://github.com/yancyuu/Hermit">Hermit</a></h1>
 
 <p align="center">
-  <strong><code>拥有编程能力 + 拥有编程环境 = 拥有一切。</code></strong>
+  <strong><code>当 Agent 拥有工程能力、工作环境和组织上下文，软件交付方式就会被重写。</code></strong>
 </p>
 
 <p align="center">
