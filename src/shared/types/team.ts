@@ -1486,6 +1486,7 @@ export interface SaveLeadChannelConfigRequest {
 
 export interface GlobalLeadChannelSnapshot {
   config: LeadChannelConfig;
+  statusesByChannel?: Record<string, LeadChannelStatus>;
 }
 
 export interface RemoveMemberRequest {

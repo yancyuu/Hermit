@@ -11,7 +11,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@renderer/components/ui/select';
-import { AlertTriangle, CheckCircle2, Loader2, PlugZap, Plus, Trash2, Unplug } from 'lucide-react';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  ChevronDown,
+  ChevronRight,
+  Loader2,
+  PlugZap,
+  Plus,
+  Trash2,
+  Unplug,
+} from 'lucide-react';
 
 import { SettingsSectionHeader } from '../components/SettingsSectionHeader';
 
@@ -85,18 +95,22 @@ export const ChannelsSection = (): React.JSX.Element => {
   const [message, setMessage] = useState<string | null>(null);
   const [busyChannelId, setBusyChannelId] = useState<string | null>(null);
   const [statusesByChannel, setStatusesByChannel] = useState<Record<string, LeadChannelStatus>>({});
+  const [expandedChannelIds, setExpandedChannelIds] = useState<Set<string>>(new Set());
 
   const refreshStatuses = useCallback(async (channels: FeishuChannelDraft[]): Promise<void> => {
-    const teamsToRefresh = Array.from(
+    const snapshot = await api.teams.getGlobalLeadChannel().catch(() => null);
+    const nextStatuses: Record<string, LeadChannelStatus> = {
+      ...(snapshot?.statusesByChannel ?? {}),
+    };
+    const boundTeams = Array.from(
       new Set(channels.map((channel) => channel.boundTeam).filter((team): team is string => !!team))
     );
-    const snapshots = await Promise.all(
-      teamsToRefresh.map((teamName) => api.teams.getLeadChannel(teamName).catch(() => null))
+    const teamSnapshots = await Promise.all(
+      boundTeams.map((teamName) => api.teams.getLeadChannel(teamName).catch(() => null))
     );
-    const nextStatuses: Record<string, LeadChannelStatus> = {};
-    for (const snapshot of snapshots) {
-      if (!snapshot) continue;
-      Object.assign(nextStatuses, snapshot.statusesByChannel);
+    for (const teamSnapshot of teamSnapshots) {
+      if (!teamSnapshot) continue;
+      Object.assign(nextStatuses, teamSnapshot.statusesByChannel);
     }
     setStatusesByChannel(nextStatuses);
   }, []);
@@ -238,6 +252,11 @@ export const ChannelsSection = (): React.JSX.Element => {
         delete next[channelId];
         return next;
       });
+      setExpandedChannelIds((prev) => {
+        const next = new Set(prev);
+        next.delete(channelId);
+        return next;
+      });
       setMessage('渠道实例已删除并保存。');
     } catch {
       // save() already sets the visible error.
@@ -257,7 +276,7 @@ export const ChannelsSection = (): React.JSX.Element => {
     <div className="space-y-4">
       <SettingsSectionHeader icon={<PlugZap className="size-3.5" />} title="渠道集成" />
       <p className="-mt-4 text-xs text-[var(--color-text-muted)]">
-        将外部消息源绑定到团队负责人。连接时会自动保存配置，避免“已编辑但未生效”。
+        连接外部消息源。消息进入后需要 @ 团队或使用 /team 团队名，才会投递到对应团队。
       </p>
 
       <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-raised)]">
@@ -280,166 +299,192 @@ export const ChannelsSection = (): React.JSX.Element => {
           {feishuChannels.map((channel, index) => (
             <div
               key={channel.id}
-              className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface)] p-3"
+              className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface)]"
             >
-              <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-xs font-medium text-[var(--color-text)]">
-                      飞书实例 {index + 1}
-                    </p>
-                    <span
-                      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] ${getStatusClassName(statusesByChannel[channel.id])}`}
-                    >
-                      {statusesByChannel[channel.id]?.state === 'connected' ? (
-                        <CheckCircle2 className="size-3" />
-                      ) : statusesByChannel[channel.id]?.state === 'error' ? (
-                        <AlertTriangle className="size-3" />
-                      ) : busyChannelId === channel.id ? (
-                        <Loader2 className="size-3 animate-spin" />
-                      ) : null}
-                      {getStatusLabel(statusesByChannel[channel.id])}
-                    </span>
-                  </div>
-                  {statusesByChannel[channel.id]?.lastEventAt ? (
-                    <p className="mt-1 text-[10px] text-[var(--color-text-muted)]">
-                      最近事件：
-                      {new Date(statusesByChannel[channel.id].lastEventAt!).toLocaleString()}
-                    </p>
-                  ) : null}
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 gap-1 px-2 text-xs text-red-300 hover:bg-red-500/10 hover:text-red-200"
-                  onClick={() => void removeChannel(channel.id)}
-                  disabled={saving || busyChannelId === channel.id}
-                >
-                  <Trash2 className="size-3.5" />
-                  删除
-                </Button>
-              </div>
-              <div className="grid gap-2 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor={`${channel.id}-name`}>实例名称</Label>
-                  <Input
-                    id={`${channel.id}-name`}
-                    value={channel.name}
-                    onChange={(event) =>
-                      updateFeishuChannel(channel.id, (item) => ({
-                        ...item,
-                        name: event.target.value,
-                      }))
-                    }
-                    placeholder="如：售前飞书群"
-                    disabled={saving}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor={`${channel.id}-app-id`}>App ID</Label>
-                  <Input
-                    id={`${channel.id}-app-id`}
-                    value={channel.feishu.appId}
-                    onChange={(event) =>
-                      updateFeishuChannel(channel.id, (item) => ({
-                        ...item,
-                        feishu: { ...item.feishu, appId: event.target.value },
-                      }))
-                    }
-                    placeholder="cli_xxx"
-                    disabled={saving}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor={`${channel.id}-app-secret`}>App Secret</Label>
-                  <Input
-                    id={`${channel.id}-app-secret`}
-                    type="password"
-                    value={channel.feishu.appSecret}
-                    onChange={(event) =>
-                      updateFeishuChannel(channel.id, (item) => ({
-                        ...item,
-                        feishu: { ...item.feishu, appSecret: event.target.value },
-                      }))
-                    }
-                    placeholder="飞书应用密钥"
-                    disabled={saving}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>绑定团队</Label>
-                  <Select
-                    value={channel.boundTeam ?? '__none__'}
-                    onValueChange={(value) =>
-                      updateFeishuChannel(channel.id, (item) => ({
-                        ...item,
-                        boundTeam: value === '__none__' ? undefined : value,
-                      }))
-                    }
-                    disabled={saving}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="选择要绑定的团队" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none__">不绑定</SelectItem>
-                      {teams.map((team) => (
-                        <SelectItem key={team.teamName} value={team.teamName}>
-                          {team.displayName || team.teamName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="mt-3 space-y-2">
-                <p className="text-[11px] leading-relaxed text-[var(--color-text-muted)]">
-                  连接前会保存当前实例列表和密钥。修改团队或密钥后直接重新连接即可生效。
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    className="h-7 gap-1 text-xs"
-                    disabled={
-                      !channel.boundTeam ||
-                      !channel.feishu.appId.trim() ||
-                      !channel.feishu.appSecret.trim() ||
-                      busyChannelId === channel.id
-                    }
-                    onClick={() => void startChannel(channel.id)}
-                  >
-                    {busyChannelId === channel.id ? (
-                      <Loader2 className="size-3 animate-spin" />
-                    ) : (
-                      <PlugZap className="size-3" />
-                    )}
-                    {busyChannelId === channel.id ? '保存并连接中...' : '保存并连接'}
-                  </Button>
-                  {isChannelRunning(statusesByChannel[channel.id]) ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-7 gap-1 text-xs"
-                      disabled={busyChannelId === channel.id}
-                      onClick={() => void stopChannel(channel.id)}
-                    >
-                      <Unplug className="size-3" />
-                      断开
-                    </Button>
-                  ) : null}
-                </div>
-              </div>
+              {(() => {
+                const isExpanded = expandedChannelIds.has(channel.id);
+                return (
+                  <>
+                    <div className="flex flex-wrap items-center justify-between gap-3 p-3">
+                      <button
+                        type="button"
+                        className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                        onClick={() =>
+                          setExpandedChannelIds((prev) => {
+                            const next = new Set(prev);
+                            if (next.has(channel.id)) next.delete(channel.id);
+                            else next.add(channel.id);
+                            return next;
+                          })
+                        }
+                      >
+                        {isExpanded ? (
+                          <ChevronDown className="size-3.5 shrink-0 text-[var(--color-text-muted)]" />
+                        ) : (
+                          <ChevronRight className="size-3.5 shrink-0 text-[var(--color-text-muted)]" />
+                        )}
+                        <span className="truncate text-xs font-medium text-[var(--color-text)]">
+                          {channel.name.trim() || `飞书实例 ${index + 1}`}
+                        </span>
+                        <span
+                          className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] ${getStatusClassName(statusesByChannel[channel.id])}`}
+                        >
+                          {statusesByChannel[channel.id]?.state === 'connected' ? (
+                            <CheckCircle2 className="size-3" />
+                          ) : statusesByChannel[channel.id]?.state === 'error' ? (
+                            <AlertTriangle className="size-3" />
+                          ) : busyChannelId === channel.id ? (
+                            <Loader2 className="size-3 animate-spin" />
+                          ) : null}
+                          {getStatusLabel(statusesByChannel[channel.id])}
+                        </span>
+                      </button>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          className="h-7 gap-1 text-xs"
+                          disabled={
+                            !channel.feishu.appId.trim() ||
+                            !channel.feishu.appSecret.trim() ||
+                            busyChannelId === channel.id
+                          }
+                          onClick={() => void startChannel(channel.id)}
+                        >
+                          {busyChannelId === channel.id ? (
+                            <Loader2 className="size-3 animate-spin" />
+                          ) : (
+                            <PlugZap className="size-3" />
+                          )}
+                          {busyChannelId === channel.id ? '连接中...' : '保存并连接'}
+                        </Button>
+                        {isChannelRunning(statusesByChannel[channel.id]) ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-7 gap-1 text-xs"
+                            disabled={busyChannelId === channel.id}
+                            onClick={() => void stopChannel(channel.id)}
+                          >
+                            <Unplug className="size-3" />
+                            断开
+                          </Button>
+                        ) : null}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 gap-1 px-2 text-xs text-red-300 hover:bg-red-500/10 hover:text-red-200"
+                          onClick={() => void removeChannel(channel.id)}
+                          disabled={saving || busyChannelId === channel.id}
+                        >
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                    {statusesByChannel[channel.id]?.lastEventAt ? (
+                      <p className="-mt-2 px-8 pb-2 text-[10px] text-[var(--color-text-muted)]">
+                        最近事件：
+                        {new Date(statusesByChannel[channel.id].lastEventAt!).toLocaleString()}
+                      </p>
+                    ) : null}
+                    {isExpanded ? (
+                      <div className="space-y-3 border-t border-[var(--color-border-subtle)] p-3">
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          <div className="space-y-1.5">
+                            <Label htmlFor={`${channel.id}-name`}>实例名称</Label>
+                            <Input
+                              id={`${channel.id}-name`}
+                              value={channel.name}
+                              onChange={(event) =>
+                                updateFeishuChannel(channel.id, (item) => ({
+                                  ...item,
+                                  name: event.target.value,
+                                }))
+                              }
+                              placeholder="如：项目管理"
+                              disabled={saving}
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label htmlFor={`${channel.id}-app-id`}>App ID</Label>
+                            <Input
+                              id={`${channel.id}-app-id`}
+                              value={channel.feishu.appId}
+                              onChange={(event) =>
+                                updateFeishuChannel(channel.id, (item) => ({
+                                  ...item,
+                                  feishu: { ...item.feishu, appId: event.target.value },
+                                }))
+                              }
+                              placeholder="cli_xxx"
+                              disabled={saving}
+                            />
+                          </div>
+                          <div className="space-y-1.5 sm:col-span-2">
+                            <Label htmlFor={`${channel.id}-app-secret`}>App Secret</Label>
+                            <Input
+                              id={`${channel.id}-app-secret`}
+                              type="password"
+                              value={channel.feishu.appSecret}
+                              onChange={(event) =>
+                                updateFeishuChannel(channel.id, (item) => ({
+                                  ...item,
+                                  feishu: { ...item.feishu, appSecret: event.target.value },
+                                }))
+                              }
+                              placeholder="飞书应用密钥"
+                              disabled={saving}
+                            />
+                          </div>
+                          <div className="space-y-1.5 sm:col-span-2">
+                            <Label>默认投递团队（可选）</Label>
+                            <Select
+                              value={channel.boundTeam ?? '__manual__'}
+                              onValueChange={(value) =>
+                                updateFeishuChannel(channel.id, (item) => ({
+                                  ...item,
+                                  boundTeam: value === '__manual__' ? undefined : value,
+                                }))
+                              }
+                              disabled={saving}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="不绑定，按 @团队 路由" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="__manual__">不绑定，要求消息 @团队</SelectItem>
+                                {teams.map((team) => (
+                                  <SelectItem key={team.teamName} value={team.teamName}>
+                                    {team.displayName || team.teamName}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <p className="text-[11px] leading-relaxed text-[var(--color-text-muted)]">
+                          可选绑定一个默认团队。未绑定时，发送者需要在消息开头 @ 团队，或使用 /team
+                          团队名，系统才会投递到对应团队。
+                        </p>
+                      </div>
+                    ) : null}
+                  </>
+                );
+              })()}
             </div>
           ))}
           <div className="flex flex-wrap items-center gap-2">
             <Button
               type="button"
               variant="outline"
-              onClick={() => setFeishuChannels((channels) => [...channels, createFeishuDraft()])}
+              onClick={() => {
+                const next = createFeishuDraft();
+                setFeishuChannels((channels) => [...channels, next]);
+                setExpandedChannelIds((prev) => new Set(prev).add(next.id));
+              }}
               disabled={saving}
             >
               <Plus className="mr-1 size-3.5" />

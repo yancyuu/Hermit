@@ -1001,7 +1001,10 @@ export class HttpAPIClient implements ElectronAPI {
       };
     },
     getGlobalLeadChannel: async () => {
-      return { config: { channels: [], feishu: { enabled: false, appId: '', appSecret: '' } } };
+      return {
+        config: { channels: [], feishu: { enabled: false, appId: '', appSecret: '' } },
+        statusesByChannel: {},
+      };
     },
     saveGlobalLeadChannel: async () => {
       throw new Error('渠道集成仅在 Electron 模式可用');
