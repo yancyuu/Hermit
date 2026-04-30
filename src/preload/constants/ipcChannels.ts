@@ -273,6 +273,15 @@ export const TEAM_LAUNCH = 'team:launch';
 /** Warm up provisioning runtime before create */
 export const TEAM_PREPARE_PROVISIONING = 'team:prepareProvisioning';
 
+/** List configured team template sources and scanned templates */
+export const TEAM_TEMPLATE_SOURCES_LIST = 'team:templateSources:list';
+
+/** Save configured team template sources */
+export const TEAM_TEMPLATE_SOURCES_SAVE = 'team:templateSources:save';
+
+/** Pull/refresh team template repositories and rescan templates */
+export const TEAM_TEMPLATE_SOURCES_REFRESH = 'team:templateSources:refresh';
+
 /** Get provisioning status by runId */
 export const TEAM_PROVISIONING_STATUS = 'team:provisioningStatus';
 

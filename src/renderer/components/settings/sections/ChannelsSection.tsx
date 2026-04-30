@@ -116,6 +116,25 @@ export const ChannelsSection = (): React.JSX.Element => {
   }, []);
 
   useEffect(() => {
+    if (feishuChannels.length === 0) return;
+    const hasActiveChannel = feishuChannels.some((channel) => {
+      const status = statusesByChannel[channel.id];
+      return (
+        busyChannelId === channel.id ||
+        status?.state === 'connecting' ||
+        status?.state === 'reconnecting' ||
+        status?.running === true
+      );
+    });
+    if (!hasActiveChannel) return;
+
+    const interval = window.setInterval(() => {
+      void refreshStatuses(feishuChannels);
+    }, 2000);
+    return () => window.clearInterval(interval);
+  }, [busyChannelId, feishuChannels, refreshStatuses, statusesByChannel]);
+
+  useEffect(() => {
     let cancelled = false;
     void api.teams
       .list()

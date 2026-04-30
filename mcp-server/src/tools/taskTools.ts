@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import { agentBlocks, getController } from '../controller';
 import { assertConfiguredTeam } from '../utils/teamConfig';
-import { jsonTextContent, taskWriteResult, slimTask } from '../utils/format';
+import { jsonTextContent, taskWriteResult, slimTask, slimTaskForList } from '../utils/format';
 
 /** stripAgentBlocks from canonical agentBlocks module — single source of truth for the tag format. */
 const stripAgentBlocksFn = (text: string): string => agentBlocks.stripAgentBlocks(text);
@@ -102,18 +102,20 @@ export function registerTaskTools(server: Pick<FastMCP, 'addTool'>) {
       const controller = getController(teamName, claudeDir);
       return await Promise.resolve(
         jsonTextContent(
-          controller.tasks.createTask(
-            buildCreateTaskPayload({
-              subject,
-              description,
-              owner,
-              createdBy,
-              from,
-              blockedBy,
-              related,
-              prompt,
-              startImmediately,
-            })
+          taskWriteResult(
+            controller.tasks.createTask(
+              buildCreateTaskPayload({
+                subject,
+                description,
+                owner,
+                createdBy,
+                from,
+                blockedBy,
+                related,
+                prompt,
+                startImmediately,
+              })
+            ) as Record<string, unknown>
           )
         )
       );
@@ -221,19 +223,21 @@ export function registerTaskTools(server: Pick<FastMCP, 'addTool'>) {
       // 5. Forward into canonical create-task path
       return await Promise.resolve(
         jsonTextContent(
-          controller.tasks.createTask(
-            buildCreateTaskPayload({
-              subject,
-              description,
-              owner,
-              createdBy,
-              blockedBy,
-              related,
-              prompt,
-              startImmediately,
-              sourceMessageId: messageId,
-              sourceMessage,
-            })
+          taskWriteResult(
+            controller.tasks.createTask(
+              buildCreateTaskPayload({
+                subject,
+                description,
+                owner,
+                createdBy,
+                blockedBy,
+                related,
+                prompt,
+                startImmediately,
+                sourceMessageId: messageId,
+                sourceMessage,
+              })
+            ) as Record<string, unknown>
           )
         )
       );
@@ -302,19 +306,19 @@ export function registerTaskTools(server: Pick<FastMCP, 'addTool'>) {
       limit,
     }) => {
       assertConfiguredTeam(teamName, claudeDir);
-      return await Promise.resolve(
-        jsonTextContent(
-          getController(teamName, claudeDir).tasks.listTaskInventory({
-            ...(owner ? { owner } : {}),
-            ...(status ? { status } : {}),
-            ...(reviewState ? { reviewState } : {}),
-            ...(kanbanColumn ? { kanbanColumn } : {}),
-            ...(relatedTo ? { relatedTo } : {}),
-            ...(blockedBy ? { blockedBy } : {}),
-            limit: normalizeTaskListLimit(limit),
-          })
-        )
-      );
+      const rows = getController(teamName, claudeDir).tasks.listTaskInventory({
+        ...(owner ? { owner } : {}),
+        ...(status ? { status } : {}),
+        ...(reviewState ? { reviewState } : {}),
+        ...(kanbanColumn ? { kanbanColumn } : {}),
+        ...(relatedTo ? { relatedTo } : {}),
+        ...(blockedBy ? { blockedBy } : {}),
+        limit: normalizeTaskListLimit(limit),
+      });
+      const slimmed = Array.isArray(rows)
+        ? rows.map((row) => slimTaskForList(row as Record<string, unknown>))
+        : rows;
+      return await Promise.resolve(jsonTextContent(slimmed));
     },
   });
 

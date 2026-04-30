@@ -1286,6 +1286,41 @@ export interface TeamCreateConfigRequest {
   fastMode?: TeamFastMode;
 }
 
+export interface TeamTemplateSource {
+  id: string;
+  name: string;
+  url: string;
+  enabled: boolean;
+  branch?: string;
+  isDefault?: boolean;
+  lastSyncedAt?: string;
+  lastError?: string;
+}
+
+export interface TeamTemplateMember {
+  name: string;
+  role?: string;
+  workflow?: string;
+  workflowFile?: string;
+}
+
+export interface TeamTemplateSummary {
+  sourceId: string;
+  sourceName: string;
+  templateId: string;
+  displayName: string;
+  description?: string;
+  tags?: string[];
+  members: TeamTemplateMember[];
+  skillPaths?: string[];
+  memoryPaths?: string[];
+}
+
+export interface TeamTemplateSourcesSnapshot {
+  sources: TeamTemplateSource[];
+  templates: TeamTemplateSummary[];
+}
+
 export interface TeamCreateResponse {
   runId: string;
 }

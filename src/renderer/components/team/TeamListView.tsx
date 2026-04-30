@@ -5,6 +5,13 @@ import { api, isElectronMode } from '@renderer/api';
 import { confirm } from '@renderer/components/common/ConfirmDialog';
 import { Badge } from '@renderer/components/ui/badge';
 import { Button } from '@renderer/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@renderer/components/ui/dialog';
 import { Input } from '@renderer/components/ui/input';
 import {
   Tooltip,
@@ -34,6 +41,7 @@ import {
   CheckCircle,
   Clock,
   Copy,
+  Download,
   FolderOpen,
   GitBranch,
   Play,
@@ -63,6 +71,8 @@ import type {
   TeamMemberSnapshot,
   TeamSummary,
   TeamSummaryMember,
+  TeamTemplateSource,
+  TeamTemplateSummary,
 } from '@shared/types';
 
 function generateUniqueName(sourceName: string, existingNames: string[]): string {
@@ -108,6 +118,21 @@ function resolveLaunchDialogMembers(members: readonly TeamMemberSnapshot[]): Res
   });
 }
 
+function formatTeamRoleLabel(role: string): string {
+  const normalized = role.trim().toLowerCase();
+  const labels: Record<string, string> = {
+    reviewer: '审查',
+    architect: '架构',
+    developer: '开发',
+    engineer: '工程',
+    tester: '测试',
+    pm: '产品',
+    'product-manager': '产品',
+    designer: '设计',
+  };
+  return labels[normalized] ?? role;
+}
+
 function renderMemberChips(members: TeamSummaryMember[], isLight: boolean): React.JSX.Element {
   const teamColorMap = buildMemberColorMap(members);
   return (
@@ -132,7 +157,9 @@ function renderMemberChips(members: TeamSummaryMember[], isLight: boolean): Reac
               {m.name}
             </span>
             {m.role ? (
-              <span className="text-[9px] text-[var(--color-text-muted)]">{m.role}</span>
+              <span className="text-[9px] text-[var(--color-text-muted)]">
+                {formatTeamRoleLabel(m.role)}
+              </span>
             ) : null}
           </span>
         );
@@ -274,6 +301,12 @@ export const TeamListView = (): React.JSX.Element => {
   const { isLight } = useTheme();
   const electronMode = isElectronMode();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showTemplateDialog, setShowTemplateDialog] = useState(false);
+  const [templateLoading, setTemplateLoading] = useState(false);
+  const [templateError, setTemplateError] = useState<string | null>(null);
+  const [templateSources, setTemplateSources] = useState<TeamTemplateSource[]>([]);
+  const [teamTemplates, setTeamTemplates] = useState<TeamTemplateSummary[]>([]);
+  const [newTemplateSourceUrl, setNewTemplateSourceUrl] = useState('');
   const [copyData, setCopyData] = useState<TeamCopyData | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<TeamListFilterState>(EMPTY_TEAM_FILTER);
@@ -708,6 +741,84 @@ export const TeamListView = (): React.JSX.Element => {
     setCopyData(null);
   }, []);
 
+  const loadTemplates = useCallback(async (refresh = false): Promise<void> => {
+    setTemplateLoading(true);
+    setTemplateError(null);
+    try {
+      const snapshot = refresh
+        ? await api.teams.refreshTemplateSources()
+        : await api.teams.listTemplateSources();
+      setTemplateSources(snapshot.sources);
+      setTeamTemplates(snapshot.templates);
+    } catch (error) {
+      setTemplateError(error instanceof Error ? error.message : '读取团队模板失败');
+    } finally {
+      setTemplateLoading(false);
+    }
+  }, []);
+
+  const openTemplateDialog = useCallback((): void => {
+    setShowTemplateDialog(true);
+    void loadTemplates(true);
+  }, [loadTemplates]);
+
+  const handleAddTemplateSource = useCallback(async (): Promise<void> => {
+    const url = newTemplateSourceUrl.trim();
+    if (!url) return;
+    setTemplateLoading(true);
+    setTemplateError(null);
+    try {
+      const sourceId = url
+        .replace(/\.git$/, '')
+        .split(/[/:]/)
+        .filter(Boolean)
+        .slice(-2)
+        .join('-')
+        .toLowerCase()
+        .replace(/[^a-z0-9._-]+/g, '-');
+      const nextSources: TeamTemplateSource[] = [
+        ...templateSources,
+        {
+          id: sourceId || `source-${Date.now().toString(36)}`,
+          name: sourceId || '自定义模板源',
+          url,
+          enabled: true,
+          branch: 'main',
+        },
+      ];
+      const saved = await api.teams.saveTemplateSources(nextSources);
+      setTemplateSources(saved.sources);
+      const refreshed = await api.teams.refreshTemplateSources();
+      setTemplateSources(refreshed.sources);
+      setTeamTemplates(refreshed.templates);
+      setNewTemplateSourceUrl('');
+    } catch (error) {
+      setTemplateError(error instanceof Error ? error.message : '添加模板源失败');
+    } finally {
+      setTemplateLoading(false);
+    }
+  }, [newTemplateSourceUrl, templateSources]);
+
+  const handleUseTemplate = useCallback(
+    (template: TeamTemplateSummary): void => {
+      setCopyData({
+        teamName: generateUniqueName(
+          template.templateId,
+          teams.map((team) => team.teamName)
+        ),
+        description: template.description,
+        members: template.members.map((member) => ({
+          name: member.name,
+          role: member.role,
+          workflow: member.workflow,
+        })),
+      });
+      setShowTemplateDialog(false);
+      setShowCreateDialog(true);
+    },
+    [teams]
+  );
+
   const handleCreateSubmit = useCallback(
     async (request: TeamCreateRequest) => {
       await createTeam(request);
@@ -762,11 +873,136 @@ export const TeamListView = (): React.JSX.Element => {
     />
   );
 
+  const templateDialogElement = (
+    <Dialog open={showTemplateDialog} onOpenChange={setShowTemplateDialog}>
+      <DialogContent className="max-w-3xl">
+        <DialogHeader>
+          <DialogTitle className="text-sm">从团队模板创建</DialogTitle>
+          <DialogDescription className="text-xs">
+            从团队模板仓库读取可复用团队。默认源为 HermitTeams，仓库根目录下含有 hermit-team.json
+            的一级目录会被识别为模板。
+          </DialogDescription>
+        </DialogHeader>
+        <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-3">
+          <div className="flex flex-wrap items-end gap-2">
+            <div className="min-w-0 flex-1 space-y-1">
+              <label className="text-[11px] font-medium text-[var(--color-text-secondary)]">
+                添加模板源
+              </label>
+              <Input
+                className="h-8 text-xs"
+                value={newTemplateSourceUrl}
+                onChange={(event) => setNewTemplateSourceUrl(event.target.value)}
+                placeholder="https://github.com/company/hermit-teams.git"
+              />
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs"
+              disabled={templateLoading || !newTemplateSourceUrl.trim()}
+              onClick={() => void handleAddTemplateSource()}
+            >
+              添加并刷新
+            </Button>
+          </div>
+          {templateSources.length > 0 ? (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {templateSources.map((source) => (
+                <span
+                  key={source.id}
+                  className="rounded bg-[var(--color-surface-raised)] px-1.5 py-0.5 text-[10px] text-[var(--color-text-muted)]"
+                  title={source.url}
+                >
+                  {source.name}
+                  {source.lastError ? ' · 同步失败' : ''}
+                </span>
+              ))}
+            </div>
+          ) : null}
+        </div>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs text-[var(--color-text-muted)]">
+            {teamTemplates.length > 0 ? `已发现 ${teamTemplates.length} 个模板` : '暂无模板缓存'}
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 gap-1 text-xs"
+            disabled={templateLoading}
+            onClick={() => void loadTemplates(true)}
+          >
+            <Download size={12} className={templateLoading ? 'animate-pulse' : ''} />
+            {templateLoading ? '刷新中...' : '刷新模板源'}
+          </Button>
+        </div>
+        {templateError ? (
+          <p className="rounded border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">
+            {templateError}
+          </p>
+        ) : null}
+        <div className="max-h-[56vh] space-y-2 overflow-auto pr-1">
+          {teamTemplates.map((template) => (
+            <div
+              key={`${template.sourceId}:${template.templateId}`}
+              className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-3"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-sm font-medium text-[var(--color-text)]">
+                      {template.displayName}
+                    </h3>
+                    <span className="rounded bg-[var(--color-surface-raised)] px-1.5 py-0.5 text-[10px] text-[var(--color-text-muted)]">
+                      {template.templateId}
+                    </span>
+                  </div>
+                  <p className="mt-1 line-clamp-2 text-xs text-[var(--color-text-muted)]">
+                    {template.description || '暂无描述'}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {template.members.map((member) => (
+                      <span
+                        key={member.name}
+                        className="rounded bg-blue-500/10 px-1.5 py-0.5 text-[10px] text-blue-300"
+                      >
+                        {member.name}
+                        {member.role ? ` · ${formatTeamRoleLabel(member.role)}` : ''}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-[10px] text-[var(--color-text-muted)]">
+                    来源：{template.sourceName}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  className="h-7 shrink-0 text-xs"
+                  onClick={() => handleUseTemplate(template)}
+                >
+                  使用模板
+                </Button>
+              </div>
+            </div>
+          ))}
+          {!templateLoading && teamTemplates.length === 0 ? (
+            <div className="rounded-md border border-dashed border-[var(--color-border)] p-6 text-center text-xs text-[var(--color-text-muted)]">
+              没有发现模板。请刷新模板源，或确认仓库根目录下存在 */hermit-team.json。
+            </div>
+          ) : null}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+
   const renderHeader = (): React.JSX.Element => (
     <div className="mb-4">
       <div className="flex items-center justify-between">
         <h2 className="text-base font-semibold text-[var(--color-text)]">选择团队</h2>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" disabled={!canCreate} onClick={openTemplateDialog}>
+            从模板创建
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -999,19 +1235,19 @@ export const TeamListView = (): React.JSX.Element => {
                             runtimeProcessPendingCount: team.runtimeProcessPendingCount,
                             includePeriod: true,
                           })
-                        : 'Last launch is still reconciling.'}
+                        : '上次启动仍在收敛中。'}
                     </p>
                   ) : team.partialLaunchFailure || team.teamLaunchState === 'partial_failure' ? (
                     <p className="mt-2 text-[11px] text-amber-400">
                       {team.missingMembers?.length
-                        ? `Last launch stopped before ${team.missingMembers.length}/${team.expectedMemberCount ?? team.missingMembers.length} teammate${team.missingMembers.length === 1 ? '' : 's'} joined.`
-                        : 'Last launch stopped before all teammates joined.'}
+                        ? `上次启动在 ${team.missingMembers.length}/${team.expectedMemberCount ?? team.missingMembers.length} 名成员加入前停止。`
+                        : '上次启动在所有成员加入前停止。'}
                     </p>
                   ) : team.teamLaunchState === 'partial_skipped' ? (
                     <p className="mt-2 text-[11px] text-sky-300">
                       {team.skippedMembers?.length
-                        ? `Last launch skipped ${team.skippedMembers.length}/${team.expectedMemberCount ?? team.skippedMembers.length} teammate${team.skippedMembers.length === 1 ? '' : 's'}.`
-                        : 'Last launch has skipped teammates.'}
+                        ? `上次启动跳过了 ${team.skippedMembers.length}/${team.expectedMemberCount ?? team.skippedMembers.length} 名成员。`
+                        : '上次启动有成员被跳过。'}
                     </p>
                   ) : null}
                   <div className="mt-3 flex flex-wrap items-center gap-1.5">
@@ -1019,11 +1255,11 @@ export const TeamListView = (): React.JSX.Element => {
                       renderMemberChips(team.members, isLight)
                     ) : team.memberCount === 0 ? (
                       <Badge variant="secondary" className="text-[10px] font-normal">
-                        Solo
+                        单人团队
                       </Badge>
                     ) : (
                       <Badge variant="secondary" className="text-[10px] font-normal">
-                        Members: {team.memberCount}
+                        成员：{team.memberCount}
                       </Badge>
                     )}
                   </div>
@@ -1044,7 +1280,7 @@ export const TeamListView = (): React.JSX.Element => {
                               aria-valuenow={completed}
                               aria-valuemin={0}
                               aria-valuemax={totalTasks}
-                              aria-label={`Tasks ${completed}/${totalTasks} completed`}
+                              aria-label={`任务 ${completed}/${totalTasks} 已完成`}
                             >
                               <div
                                 className="h-full rounded-full bg-emerald-500 transition-all duration-200"
@@ -1060,19 +1296,19 @@ export const TeamListView = (): React.JSX.Element => {
                               {inProgress > 0 && (
                                 <span className="inline-flex items-center gap-1">
                                   <Play size={10} className="shrink-0 text-blue-400" />
-                                  {inProgress} in_progress
+                                  {inProgress} 进行中
                                 </span>
                               )}
                               {pending > 0 && (
                                 <span className="inline-flex items-center gap-1">
                                   <Clock size={10} className="shrink-0 text-amber-400" />
-                                  {pending} pending
+                                  {pending} 待办
                                 </span>
                               )}
                               {completed > 0 && (
                                 <span className="inline-flex items-center gap-1">
                                   <CheckCircle size={10} className="shrink-0 text-emerald-400" />
-                                  {completed} completed
+                                  {completed} 已完成
                                 </span>
                               )}
                             </div>
@@ -1169,6 +1405,7 @@ export const TeamListView = (): React.JSX.Element => {
       <div className="size-full overflow-auto p-4">
         {renderHeader()}
         {renderContent()}
+        {templateDialogElement}
         {createDialogElement}
         {launchDialogElement}
       </div>

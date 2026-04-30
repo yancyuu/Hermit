@@ -144,7 +144,6 @@ const APP_TEAM_RUNTIME_DISALLOWED_TOOLS = 'TeamDelete,TodoWrite,TaskCreate,TaskU
 
 import type {
   EffortLevel,
-  MachineProfile,
   Project,
   TeamCreateRequest,
   TeamFastMode,
@@ -442,8 +441,6 @@ export const CreateTeamDialog = ({
   }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [conflictDismissed, setConflictDismissed] = useState(false);
-  const [machineProfiles, setMachineProfiles] = useState<MachineProfile[]>([]);
-  const [selectedMachineId, setSelectedMachineId] = useState('local');
   const [selectedProviderId, setSelectedProviderIdRaw] = useState<TeamProviderId>(() =>
     normalizeLeadProviderForMode(getStoredTeamProvider(), multimodelEnabled)
   );
@@ -468,17 +465,6 @@ export const CreateTeamDialog = ({
   useEffect(() => {
     migrateLegacyCreateTeamPreferences();
   }, []);
-
-  useEffect(() => {
-    if (!open) return;
-    void api.ssh
-      .listMachines()
-      .then(setMachineProfiles)
-      .catch((error: unknown) => {
-        console.warn('[CreateTeamDialog] Failed to load machine profiles:', error);
-        setMachineProfiles([]);
-      });
-  }, [open]);
 
   // Re-read localStorage when advancedKey changes
   useEffect(() => {
@@ -560,7 +546,6 @@ export const CreateTeamDialog = ({
     setPrepareWarnings([]);
     setPrepareChecks([]);
     setConflictDismissed(false);
-    setSelectedMachineId('local');
   };
 
   const resetFormState = (): void => {
@@ -1321,11 +1306,8 @@ export const CreateTeamDialog = ({
   const isNameProvisioning =
     provisioningTeamNames.includes(sanitizedTeamName) && !isNameTakenByExistingTeam;
   const executionTarget = useMemo(
-    () =>
-      selectedMachineId === 'local'
-        ? { type: 'local' as const, cwd: effectiveCwd || undefined }
-        : { type: 'ssh' as const, machineId: selectedMachineId, cwd: effectiveCwd || undefined },
-    [effectiveCwd, selectedMachineId]
+    () => ({ type: 'local' as const, cwd: effectiveCwd || undefined }),
+    [effectiveCwd]
   );
 
   const request = useMemo<TeamCreateRequest>(() => {
@@ -1893,31 +1875,6 @@ export const CreateTeamDialog = ({
                   projectsError={projectsError}
                   fieldError={fieldErrors.cwd}
                 />
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="team-execution-target">运行位置</Label>
-                  <select
-                    id="team-execution-target"
-                    value={selectedMachineId}
-                    onChange={(event) => setSelectedMachineId(event.target.value)}
-                    className="h-9 w-full rounded-md border px-3 text-sm"
-                    style={{
-                      backgroundColor: 'var(--color-surface-raised)',
-                      borderColor: 'var(--color-border)',
-                      color: 'var(--color-text)',
-                    }}
-                  >
-                    <option value="local">本机</option>
-                    {machineProfiles.map((machine) => (
-                      <option key={machine.id} value={machine.id}>
-                        {machine.displayName || machine.name}（{machine.username}@{machine.host}）
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                    MVP 先做团队级分配：每个团队整体选择一台机器运行。
-                  </p>
-                </div>
 
                 <OptionalSettingsSection
                   title="可选启动设置"

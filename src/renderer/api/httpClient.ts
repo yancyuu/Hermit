@@ -69,6 +69,8 @@ import type {
   TeamProvisioningModelVerificationMode,
   TeamProvisioningPrepareResult,
   TeamProvisioningProgress,
+  TeamTemplateSource,
+  TeamTemplateSourcesSnapshot,
   TeamsAPI,
   TeamSummary,
   TeamTask,
@@ -795,6 +797,17 @@ export class HttpAPIClient implements ElectronAPI {
       _modelVerificationMode?: TeamProvisioningModelVerificationMode
     ): Promise<TeamProvisioningPrepareResult> => {
       throw new Error('Team provisioning is not available in browser mode');
+    },
+    listTemplateSources: async (): Promise<TeamTemplateSourcesSnapshot> => {
+      return { sources: [], templates: [] };
+    },
+    saveTemplateSources: async (
+      _sources: TeamTemplateSource[]
+    ): Promise<TeamTemplateSourcesSnapshot> => {
+      throw new Error('Team template sources are not available in browser mode');
+    },
+    refreshTemplateSources: async (): Promise<TeamTemplateSourcesSnapshot> => {
+      throw new Error('Team template sources are not available in browser mode');
     },
     createTeam: async (_request: TeamCreateRequest): Promise<TeamCreateResponse> => {
       throw new Error('Team provisioning is not available in browser mode');

@@ -156,6 +156,23 @@ function extractFeishuText(event: unknown): string {
   return rawContent;
 }
 
+function assertFeishuApiResponseOk(response: unknown, action: string): string | null {
+  if (!response || typeof response !== 'object') {
+    return null;
+  }
+  const row = response as {
+    code?: unknown;
+    msg?: unknown;
+    data?: { message_id?: unknown };
+  };
+  if (typeof row.code === 'number' && row.code !== 0) {
+    const message =
+      typeof row.msg === 'string' && row.msg.trim() ? row.msg.trim() : 'unknown error';
+    throw new Error(`${action} failed: code=${row.code}, msg=${message}`);
+  }
+  return typeof row.data?.message_id === 'string' ? row.data.message_id : null;
+}
+
 export class LeadChannelListenerService {
   private readonly inboxWriter = new TeamInboxWriter();
   private readonly configReader = new TeamConfigReader();
@@ -404,7 +421,7 @@ export class LeadChannelListenerService {
     const channel = globalConfig.channels.find((c) => c.id === channelId);
     const boundTeam = channel?.boundTeam;
     const statusOwner = boundTeam ?? GLOBAL_CHANNEL_STATUS_OWNER;
-    await client.im.message.create({
+    const response = await client.im.message.create({
       params: {
         receive_id_type: 'chat_id',
       },
@@ -414,6 +431,12 @@ export class LeadChannelListenerService {
         msg_type: 'text',
       },
     });
+    const messageId = assertFeishuApiResponseOk(response, 'send Feishu reply');
+    logger.info(
+      `[${statusOwner}/${channelId}] Feishu reply sent to chat ${chatId}${
+        messageId ? ` (messageId=${messageId})` : ''
+      }`
+    );
     this.patchStatus(statusOwner, channelId, {
       running: true,
       state: 'connected',

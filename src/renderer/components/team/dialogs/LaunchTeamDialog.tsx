@@ -138,7 +138,6 @@ import type { MentionSuggestion } from '@renderer/types/mention';
 import type {
   CreateScheduleInput,
   EffortLevel,
-  MachineProfile,
   Project,
   ResolvedTeamMember,
   Schedule,
@@ -367,8 +366,6 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
   const [projectsError, setProjectsError] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [machineProfiles, setMachineProfiles] = useState<MachineProfile[]>([]);
-  const [selectedMachineId, setSelectedMachineId] = useState('local');
 
   const [selectedProviderId, setSelectedProviderIdRaw] = useState<TeamProviderId>(() =>
     normalizeLeadProviderForMode(getStoredTeamProvider(), multimodelEnabled)
@@ -492,16 +489,6 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
     if (!open) {
       lastPrepareRequestSignatureRef.current = null;
     }
-  }, [open]);
-  useEffect(() => {
-    if (!open) return;
-    void api.ssh
-      .listMachines()
-      .then(setMachineProfiles)
-      .catch((error: unknown) => {
-        console.warn('[LaunchTeamDialog] Failed to load machine profiles:', error);
-        setMachineProfiles([]);
-      });
   }, [open]);
   const runtimeProviderStatusById = useMemo(
     () =>
@@ -666,7 +653,6 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
     setCustomCwd('');
     setClearContext(false);
     setConflictDismissed(false);
-    setSelectedMachineId('local');
     setMembersDrafts([]);
     setSyncModelsWithLead(false);
     chipDraft.clearChipDraft();
@@ -1852,10 +1838,7 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
           const launchRequest: TeamLaunchRequest = {
             teamName: effectiveTeamName,
             cwd: effectiveCwd,
-            executionTarget:
-              selectedMachineId === 'local'
-                ? { type: 'local', cwd: effectiveCwd || undefined }
-                : { type: 'ssh', machineId: selectedMachineId, cwd: effectiveCwd || undefined },
+            executionTarget: { type: 'local', cwd: effectiveCwd || undefined },
             prompt: promptDraft.value.trim() || undefined,
             providerId: selectedProviderId,
             providerBackendId:
@@ -2257,33 +2240,6 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
             projectsLoading={projectsLoading}
             projectsError={projectsError}
           />
-
-          {isLaunchMode ? (
-            <div className="space-y-1.5">
-              <Label htmlFor="launch-execution-target">运行位置</Label>
-              <select
-                id="launch-execution-target"
-                value={selectedMachineId}
-                onChange={(event) => setSelectedMachineId(event.target.value)}
-                className="h-9 w-full rounded-md border px-3 text-sm"
-                style={{
-                  backgroundColor: 'var(--color-surface-raised)',
-                  borderColor: 'var(--color-border)',
-                  color: 'var(--color-text)',
-                }}
-              >
-                <option value="local">本机</option>
-                {machineProfiles.map((machine) => (
-                  <option key={machine.id} value={machine.id}>
-                    {machine.displayName || machine.name}（{machine.username}@{machine.host}）
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                MVP 先支持整支团队运行在同一台 SSH 机器。
-              </p>
-            </div>
-          ) : null}
 
           {/* ═══════════════════════════════════════════════════════════════════
               Launch: optional settings

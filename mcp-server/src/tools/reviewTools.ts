@@ -49,9 +49,11 @@ export function registerReviewTools(server: Pick<FastMCP, 'addTool'>) {
       assertConfiguredTeam(teamName, claudeDir);
       return await Promise.resolve(
         jsonTextContent(
-          getController(teamName, claudeDir).review.startReview(taskId, {
-            ...(from ? { from } : {}),
-          }) as Record<string, unknown>
+          slimTask(
+            getController(teamName, claudeDir).review.startReview(taskId, {
+              ...(from ? { from } : {}),
+            }) as Record<string, unknown>
+          )
         )
       );
     },

@@ -1,7 +1,7 @@
 /**
  * MoreMenu - Dropdown menu behind a "..." icon for less-frequent toolbar actions.
  *
- * Groups: Teams, Settings, Extensions, Search, Schedules, Export (session-only), Analyze (session-only).
+ * Groups: Notifications, Settings, Search, Export (session-only), Analyze (session-only).
  * Closes on outside click or Escape.
  */
 
@@ -16,12 +16,11 @@ import {
   Braces,
   Calendar,
   FileText,
+  Bell,
   MoreHorizontal,
-  Puzzle,
   Search,
   Settings,
   Type,
-  Users,
 } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -33,6 +32,7 @@ interface MoreMenuProps {
   activeTab: Tab | undefined;
   activeTabSessionDetail: SessionDetail | null;
   activeTabId: string | null;
+  unreadCount: number;
 }
 
 interface MenuItem {
@@ -47,27 +47,19 @@ export const MoreMenu = ({
   activeTab,
   activeTabSessionDetail,
   activeTabId,
+  unreadCount,
 }: Readonly<MoreMenuProps>): React.JSX.Element => {
   const [isOpen, setIsOpen] = useState(false);
   const [buttonHover, setButtonHover] = useState(false);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const {
-    openCommandPalette,
-    openExtensionsTab,
-    openSessionReport,
-    openSchedulesTab,
-    openSettingsTab,
-    openTeamsTab,
-  } = useStore(
+  const { openCommandPalette, openNotificationsTab, openSessionReport, openSettingsTab } = useStore(
     useShallow((s) => ({
       openCommandPalette: () => s.openCommandPalette(),
-      openExtensionsTab: () => s.openExtensionsTab(),
+      openNotificationsTab: () => s.openNotificationsTab(),
       openSessionReport: (tabId: string) => s.openSessionReport(tabId),
-      openSchedulesTab: () => s.openSchedulesTab(),
       openSettingsTab: () => s.openSettingsTab(),
-      openTeamsTab: () => s.openTeamsTab(),
     }))
   );
 
@@ -114,29 +106,11 @@ export const MoreMenu = ({
   // Build menu sections
   const topItems: MenuItem[] = [
     {
-      id: 'teams',
-      label: '团队',
-      icon: Users,
+      id: 'notifications',
+      label: unreadCount > 0 ? `通知 (${unreadCount > 99 ? '99+' : unreadCount})` : '通知',
+      icon: Bell,
       onClick: () => {
-        openTeamsTab();
-        setIsOpen(false);
-      },
-    },
-    {
-      id: 'settings',
-      label: '设置',
-      icon: Settings,
-      onClick: () => {
-        openSettingsTab();
-        setIsOpen(false);
-      },
-    },
-    {
-      id: 'extensions',
-      label: '扩展',
-      icon: Puzzle,
-      onClick: () => {
-        openExtensionsTab();
+        openNotificationsTab();
         setIsOpen(false);
       },
     },
@@ -151,11 +125,11 @@ export const MoreMenu = ({
       },
     },
     {
-      id: 'schedules',
-      label: '计划任务',
-      icon: Calendar,
+      id: 'settings',
+      label: '设置',
+      icon: Settings,
       onClick: () => {
-        openSchedulesTab();
+        openSettingsTab();
         setIsOpen(false);
       },
     },

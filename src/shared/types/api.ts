@@ -84,6 +84,8 @@ import type {
   TeamProvisioningPrepareResult,
   TeamProvisioningProgress,
   TeamSummary,
+  TeamTemplateSource,
+  TeamTemplateSourcesSnapshot,
   TeamTask,
   TeamTaskStatus,
   TeamUpdateConfigRequest,
@@ -500,6 +502,9 @@ export interface TeamsAPI {
     limitContext?: boolean,
     modelVerificationMode?: TeamProvisioningModelVerificationMode
   ) => Promise<TeamProvisioningPrepareResult>;
+  listTemplateSources: () => Promise<TeamTemplateSourcesSnapshot>;
+  saveTemplateSources: (sources: TeamTemplateSource[]) => Promise<TeamTemplateSourcesSnapshot>;
+  refreshTemplateSources: () => Promise<TeamTemplateSourcesSnapshot>;
   createTeam: (request: TeamCreateRequest) => Promise<TeamCreateResponse>;
   getProvisioningStatus: (runId: string) => Promise<TeamProvisioningProgress>;
   cancelProvisioning: (runId: string) => Promise<void>;

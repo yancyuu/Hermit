@@ -424,7 +424,7 @@ const TEAM_NAME_PATTERN = /^[a-z0-9][a-z0-9-]{0,127}$/;
 const RUN_TIMEOUT_MS = 300_000;
 const VERIFY_TIMEOUT_MS = 15_000;
 const MCP_PREFLIGHT_INITIALIZE_TIMEOUT_MS = 45_000;
-const MEMBER_BOOTSTRAP_PARALLEL_WINDOW = 1;
+const MEMBER_BOOTSTRAP_PARALLEL_WINDOW = 4;
 
 // MCP preflight is process-global: agent-teams server is bundled with the app,
 // so one successful validation covers all subsequent team launches.
@@ -3241,6 +3241,27 @@ function buildTaskBoardSnapshot(tasks: TeamTask[]): string {
   return `\n当前任务看板（in_progress/pending）：\n${lines.join('\n')}\n`;
 }
 
+function buildBootstrapTaskBoardSummary(tasks: TeamTask[]): string {
+  const active = tasks.filter(
+    (t) => (t.status === 'pending' || t.status === 'in_progress') && !t.id.startsWith('_internal')
+  );
+  if (active.length === 0) return '\n看板上没有 pending/in_progress 任务。\n';
+  const pending = active.filter((task) => task.status === 'pending').length;
+  const inProgress = active.filter((task) => task.status === 'in_progress').length;
+  const owners = Array.from(
+    new Set(active.map((task) => task.owner).filter((owner): owner is string => Boolean(owner)))
+  );
+  return [
+    '',
+    `当前看板有 ${active.length} 个待恢复任务（pending: ${pending}, in_progress: ${inProgress}）。`,
+    owners.length > 0 ? `涉及 owner：${owners.join(', ')}。` : null,
+    '本轮是启动/bootstrap 回合，不要读取任务详情或开始执行任务；团队 ready 后再恢复工作。',
+    '',
+  ]
+    .filter((line): line is string => line !== null)
+    .join('\n');
+}
+
 function buildDeterministicLaunchHydrationPrompt(
   request: TeamLaunchRequest,
   members: TeamCreateRequest['members'],
@@ -3258,7 +3279,7 @@ function buildDeterministicLaunchHydrationPrompt(
     ? `\n重新连接稳定后需要应用的原始用户指令：\n${request.prompt.trim()}\n`
     : '';
   const hasOriginalUserPrompt = Boolean(request.prompt?.trim());
-  const taskBoardSnapshot = buildTaskBoardSnapshot(tasks);
+  const taskBoardSnapshot = buildBootstrapTaskBoardSummary(tasks);
   const persistentContext = buildBootstrapLeadContext({
     teamName: request.teamName,
     leadName,
@@ -15100,13 +15121,17 @@ export class TeamProvisioningService {
           externalTargets.set(`${channel.channelId}:${channel.chatId}`, channel);
         }
         for (const channel of externalTargets.values()) {
-          void getLeadChannelListenerService()
-            .sendFeishuReply(channel.channelId, channel.chatId, cleanReply)
-            .catch((error: unknown) =>
-              logger.warn(
-                `[${teamName}] Failed to send lead reply to Feishu channel ${channel.channelId}: ${String(error)}`
-              )
+          try {
+            await getLeadChannelListenerService().sendFeishuReply(
+              channel.channelId,
+              channel.chatId,
+              cleanReply
             );
+          } catch (error: unknown) {
+            logger.warn(
+              `[${teamName}] Failed to send lead reply to Feishu channel ${channel.channelId}: ${String(error)}`
+            );
+          }
         }
 
         const relayMsg: InboxMessage = {
@@ -15594,12 +15619,12 @@ export class TeamProvisioningService {
         continue;
       }
 
-      this.setMemberSpawnStatus(
+      this.appendMemberBootstrapDiagnostic(
         run,
         expected,
-        'error',
-        'Teammate was not registered in config.json during launch. Persistent spawn failed.'
+        'not registered in config.json yet; keeping launch pending'
       );
+      this.emitMemberSpawnChange(run, expected);
     }
   }
 

@@ -269,6 +269,12 @@ export const KanbanTaskCard = memo(
             }}
           />
         ) : null}
+        {canDisplay && task.changePresence === 'no_changes' ? (
+          <span className="inline-flex items-center gap-0.5 text-[9px] text-[var(--color-text-muted)]">
+            <FileCode size={9} className="opacity-50" />
+            无变更
+          </span>
+        ) : null}
         <UnreadCommentsBadge unreadCount={unreadCount} totalCount={task.comments?.length ?? 0} />
         {onDeleteTask ? (
           <TaskActionIconButton

@@ -75,6 +75,9 @@ import {
   TEAM_START_TASK,
   TEAM_START_TASK_BY_USER,
   TEAM_STOP,
+  TEAM_TEMPLATE_SOURCES_LIST,
+  TEAM_TEMPLATE_SOURCES_REFRESH,
+  TEAM_TEMPLATE_SOURCES_SAVE,
   TEAM_TOOL_APPROVAL_READ_FILE,
   TEAM_TOOL_APPROVAL_RESPOND,
   TEAM_TOOL_APPROVAL_SETTINGS,
@@ -139,6 +142,7 @@ import { mergeLiveLeadProcessMessages } from '../services/team/mergeLiveLeadProc
 import { TeamAttachmentStore } from '../services/team/TeamAttachmentStore';
 import { TeamMembersMetaStore } from '../services/team/TeamMembersMetaStore';
 import { TeamMetaStore } from '../services/team/TeamMetaStore';
+import { getTeamTemplateSourceService } from '../services/team/TeamTemplateSourceService';
 import { buildAddMemberSpawnMessage } from '../services/team/TeamProvisioningService';
 import { TeamTaskAttachmentStore } from '../services/team/TeamTaskAttachmentStore';
 
@@ -216,6 +220,7 @@ import type {
   TeamProvisioningPrepareResult,
   TeamProvisioningProgress,
   TeamSummary,
+  TeamTemplateSourcesSnapshot,
   TeamTask,
   TeamTaskStatus,
   TeamUpdateConfigRequest,
@@ -605,6 +610,9 @@ export function registerTeamHandlers(ipcMain: IpcMain): void {
   ipcMain.handle(TEAM_SET_TOOL_ACTIVITY_TRACKING, handleSetToolActivityTracking);
   ipcMain.handle(TEAM_GET_CLAUDE_LOGS, handleGetClaudeLogs);
   ipcMain.handle(TEAM_PREPARE_PROVISIONING, handlePrepareProvisioning);
+  ipcMain.handle(TEAM_TEMPLATE_SOURCES_LIST, handleTemplateSourcesList);
+  ipcMain.handle(TEAM_TEMPLATE_SOURCES_SAVE, handleTemplateSourcesSave);
+  ipcMain.handle(TEAM_TEMPLATE_SOURCES_REFRESH, handleTemplateSourcesRefresh);
   ipcMain.handle(TEAM_CREATE, handleCreateTeam);
   ipcMain.handle(TEAM_LAUNCH, handleLaunchTeam);
   ipcMain.handle(TEAM_PROVISIONING_STATUS, handleProvisioningStatus);
@@ -689,6 +697,9 @@ export function removeTeamHandlers(ipcMain: IpcMain): void {
   ipcMain.removeHandler(TEAM_SET_TOOL_ACTIVITY_TRACKING);
   ipcMain.removeHandler(TEAM_GET_CLAUDE_LOGS);
   ipcMain.removeHandler(TEAM_PREPARE_PROVISIONING);
+  ipcMain.removeHandler(TEAM_TEMPLATE_SOURCES_LIST);
+  ipcMain.removeHandler(TEAM_TEMPLATE_SOURCES_SAVE);
+  ipcMain.removeHandler(TEAM_TEMPLATE_SOURCES_REFRESH);
   ipcMain.removeHandler(TEAM_CREATE);
   ipcMain.removeHandler(TEAM_LAUNCH);
   ipcMain.removeHandler(TEAM_PROVISIONING_STATUS);
@@ -2116,6 +2127,25 @@ async function handlePrepareProvisioning(
       limitContext: validatedLimitContext,
       modelVerificationMode: validatedModelVerificationMode,
     })
+  );
+}
+
+async function handleTemplateSourcesList(): Promise<IpcResult<TeamTemplateSourcesSnapshot>> {
+  return wrapTeamHandler('templateSourcesList', () => getTeamTemplateSourceService().getSnapshot());
+}
+
+async function handleTemplateSourcesSave(
+  _event: IpcMainInvokeEvent,
+  sources: unknown
+): Promise<IpcResult<TeamTemplateSourcesSnapshot>> {
+  return wrapTeamHandler('templateSourcesSave', () =>
+    getTeamTemplateSourceService().saveSources(sources)
+  );
+}
+
+async function handleTemplateSourcesRefresh(): Promise<IpcResult<TeamTemplateSourcesSnapshot>> {
+  return wrapTeamHandler('templateSourcesRefresh', () =>
+    getTeamTemplateSourceService().refreshSources()
   );
 }
 

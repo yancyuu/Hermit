@@ -9,7 +9,7 @@ import { useMemo, useState } from 'react';
 import { isElectronMode } from '@renderer/api';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@renderer/components/ui/tooltip';
 import { useStore } from '@renderer/store';
-import { Bell, PanelRight } from 'lucide-react';
+import { Calendar, PanelRight, Puzzle, Users } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 
 import { MoreMenu } from './MoreMenu';
@@ -17,7 +17,9 @@ import { MoreMenu } from './MoreMenu';
 export const TabBarActions = (): React.JSX.Element => {
   const {
     unreadCount,
-    openNotificationsTab,
+    openExtensionsTab,
+    openSchedulesTab,
+    openTeamsTab,
     activeTabId,
     openTabs,
     tabSessionData,
@@ -28,7 +30,9 @@ export const TabBarActions = (): React.JSX.Element => {
   } = useStore(
     useShallow((s) => ({
       unreadCount: s.unreadCount,
-      openNotificationsTab: s.openNotificationsTab,
+      openExtensionsTab: s.openExtensionsTab,
+      openSchedulesTab: s.openSchedulesTab,
+      openTeamsTab: s.openTeamsTab,
       activeTabId: s.activeTabId,
       openTabs: s.openTabs,
       tabSessionData: s.tabSessionData,
@@ -40,7 +44,9 @@ export const TabBarActions = (): React.JSX.Element => {
   );
 
   // Hover states for buttons
-  const [notificationsHover, setNotificationsHover] = useState(false);
+  const [teamsHover, setTeamsHover] = useState(false);
+  const [extensionsHover, setExtensionsHover] = useState(false);
+  const [schedulesHover, setSchedulesHover] = useState(false);
   const [githubHover, setGithubHover] = useState(false);
   const [expandHover, setExpandHover] = useState(false);
   const [updateHover, setUpdateHover] = useState(false);
@@ -82,29 +88,62 @@ export const TabBarActions = (): React.JSX.Element => {
         </Tooltip>
       )}
 
-      {/* Notifications bell icon */}
+      {/* Primary app areas */}
       <Tooltip>
         <TooltipTrigger asChild>
           <button
-            onClick={openNotificationsTab}
-            onMouseEnter={() => setNotificationsHover(true)}
-            onMouseLeave={() => setNotificationsHover(false)}
-            className="relative rounded-md p-2 transition-colors"
+            onClick={openTeamsTab}
+            onMouseEnter={() => setTeamsHover(true)}
+            onMouseLeave={() => setTeamsHover(false)}
+            className="rounded-md p-2 transition-colors"
             style={{
-              color: notificationsHover ? 'var(--color-text)' : 'var(--color-text-muted)',
-              backgroundColor: notificationsHover ? 'var(--color-surface-raised)' : 'transparent',
+              color: teamsHover ? 'var(--color-text)' : 'var(--color-text-muted)',
+              backgroundColor: teamsHover ? 'var(--color-surface-raised)' : 'transparent',
             }}
-            aria-label="通知"
+            aria-label="团队"
           >
-            <Bell className="size-4" />
-            {unreadCount > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-xs font-medium text-white">
-                {unreadCount > 99 ? '99+' : unreadCount}
-              </span>
-            )}
+            <Users className="size-4" />
           </button>
         </TooltipTrigger>
-        <TooltipContent side="bottom">通知</TooltipContent>
+        <TooltipContent side="bottom">团队</TooltipContent>
+      </Tooltip>
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            onClick={openExtensionsTab}
+            onMouseEnter={() => setExtensionsHover(true)}
+            onMouseLeave={() => setExtensionsHover(false)}
+            className="rounded-md p-2 transition-colors"
+            style={{
+              color: extensionsHover ? 'var(--color-text)' : 'var(--color-text-muted)',
+              backgroundColor: extensionsHover ? 'var(--color-surface-raised)' : 'transparent',
+            }}
+            aria-label="扩展"
+          >
+            <Puzzle className="size-4" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">扩展</TooltipContent>
+      </Tooltip>
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            onClick={openSchedulesTab}
+            onMouseEnter={() => setSchedulesHover(true)}
+            onMouseLeave={() => setSchedulesHover(false)}
+            className="rounded-md p-2 transition-colors"
+            style={{
+              color: schedulesHover ? 'var(--color-text)' : 'var(--color-text-muted)',
+              backgroundColor: schedulesHover ? 'var(--color-surface-raised)' : 'transparent',
+            }}
+            aria-label="定时任务"
+          >
+            <Calendar className="size-4" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">定时任务</TooltipContent>
       </Tooltip>
 
       {/* GitHub link */}
@@ -136,11 +175,12 @@ export const TabBarActions = (): React.JSX.Element => {
         <TooltipContent side="bottom">GitHub</TooltipContent>
       </Tooltip>
 
-      {/* More menu (Teams, Settings, Extensions, Search, Export, Analyze, Schedules) */}
+      {/* More menu (Notifications, Settings, Search, Export, Analyze) */}
       <MoreMenu
         activeTab={activeTab}
         activeTabSessionDetail={activeTabSessionDetail}
         activeTabId={activeTabId}
+        unreadCount={unreadCount}
       />
 
       {/* Expand sidebar — rightmost, only when collapsed */}

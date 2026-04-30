@@ -189,6 +189,9 @@ import {
   TEAM_START_TASK,
   TEAM_START_TASK_BY_USER,
   TEAM_STOP,
+  TEAM_TEMPLATE_SOURCES_LIST,
+  TEAM_TEMPLATE_SOURCES_REFRESH,
+  TEAM_TEMPLATE_SOURCES_SAVE,
   TEAM_TOOL_APPROVAL_EVENT,
   TEAM_TOOL_APPROVAL_READ_FILE,
   TEAM_TOOL_APPROVAL_RESPOND,
@@ -328,6 +331,8 @@ import type {
   TeamProvisioningPrepareResult,
   TeamProvisioningProgress,
   TeamSummary,
+  TeamTemplateSource,
+  TeamTemplateSourcesSnapshot,
   TeamTask,
   TeamTaskStatus,
   TeamUpdateConfigRequest,
@@ -926,6 +931,15 @@ const electronAPI: ElectronAPI = {
         limitContext,
         modelVerificationMode
       );
+    },
+    listTemplateSources: async () => {
+      return invokeIpcWithResult<TeamTemplateSourcesSnapshot>(TEAM_TEMPLATE_SOURCES_LIST);
+    },
+    saveTemplateSources: async (sources: TeamTemplateSource[]) => {
+      return invokeIpcWithResult<TeamTemplateSourcesSnapshot>(TEAM_TEMPLATE_SOURCES_SAVE, sources);
+    },
+    refreshTemplateSources: async () => {
+      return invokeIpcWithResult<TeamTemplateSourcesSnapshot>(TEAM_TEMPLATE_SOURCES_REFRESH);
     },
     createTeam: async (request: TeamCreateRequest) => {
       return invokeIpcWithResult<TeamCreateResponse>(TEAM_CREATE, request);
