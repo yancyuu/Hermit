@@ -268,8 +268,8 @@ describe('MessagesPanel idle summary invariants', () => {
 
     expect(host.textContent).toContain('passive-idle');
     expect(host.textContent).toContain('human-reply');
-    expect(host.textContent).toContain('1 new');
-    expect(host.textContent).not.toContain('2 new');
+    expect(host.textContent).toContain('1 条新消息');
+    expect(host.textContent).not.toContain('2 条新消息');
 
     await act(async () => {
       root.unmount();

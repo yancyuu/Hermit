@@ -126,8 +126,8 @@ describe('TaskLogStreamSection', () => {
       await flushMicrotasks();
     });
 
-    expect(host.textContent).toContain('Task Log Stream');
-    expect(host.textContent).toContain('No task log stream yet');
+    expect(host.textContent).toContain('任务日志流');
+    expect(host.textContent).toContain('暂无任务日志流');
 
     await act(async () => {
       root.unmount();
@@ -210,7 +210,7 @@ describe('TaskLogStreamSection', () => {
       await flushMicrotasks();
     });
 
-    expect(host.textContent).toContain('All');
+    expect(host.textContent).toContain('全部');
     expect(host.textContent).toContain('tom');
     expect(host.textContent).toContain('alice');
     expect(host.querySelectorAll('[data-testid="member-execution-log"]')).toHaveLength(3);
@@ -261,7 +261,7 @@ describe('TaskLogStreamSection', () => {
       await flushMicrotasks();
     });
 
-    expect(host.textContent).toContain('Task-scoped OpenCode runtime logs projected');
+    expect(host.textContent).toContain('按任务聚合的 OpenCode 运行日志');
 
     await act(async () => {
       root.unmount();
@@ -304,8 +304,8 @@ describe('TaskLogStreamSection', () => {
       await flushMicrotasks();
     });
 
-    expect(host.textContent).toContain('matched task tool markers');
-    expect(host.textContent).toContain('across 2 spans');
+    expect(host.textContent).toContain('根据匹配到的任务工具标记');
+    expect(host.textContent).toContain('覆盖 2 个片段');
 
     await act(async () => {
       root.unmount();

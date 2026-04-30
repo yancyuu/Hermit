@@ -41,7 +41,7 @@ describe('buildSlashCommandSuggestions', () => {
       {
         name: 'review-skill',
         command: '/review-skill',
-        subtitle: 'Project skill - Shared',
+        subtitle: expect.stringContaining('Project skill'),
         type: 'skill',
       }
     );

@@ -8,7 +8,16 @@ import {
 
 describe('teamMessageExpandStorage', () => {
   beforeEach(() => {
-    localStorage.clear();
+    if (typeof localStorage.clear === 'function') {
+      localStorage.clear();
+    } else {
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i += 1) {
+        const key = localStorage.key(i);
+        if (key) keysToRemove.push(key);
+      }
+      keysToRemove.forEach((key) => localStorage.removeItem(key));
+    }
   });
 
   it('stores overrides per team', () => {

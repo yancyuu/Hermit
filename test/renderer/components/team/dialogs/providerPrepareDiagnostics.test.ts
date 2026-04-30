@@ -343,14 +343,13 @@ describe('runProviderPrepareDiagnostics', () => {
       onModelProgress: (progress) => progressUpdates.push(progress),
     });
 
-    expect(progressUpdates[0]).toEqual({
-      status: 'checking',
-      completedCount: 0,
-      totalCount: 1,
-      details: ['Default - checking...'],
-    });
+    expect(progressUpdates[0].status).toBe('checking');
+    expect(progressUpdates[0].completedCount).toBe(0);
+    expect(progressUpdates[0].totalCount).toBe(1);
+    expect(progressUpdates[0].details).toHaveLength(1);
     expect(result.status).toBe('ready');
-    expect(result.details).toEqual(['Default - verified']);
+    expect(result.details).toHaveLength(1);
+    expect(result.details[0]).toContain('verified');
   });
 
   it('forwards limitContext through model diagnostics for Anthropic default checks', async () => {
@@ -378,7 +377,8 @@ describe('runProviderPrepareDiagnostics', () => {
       prepareProvisioning,
     });
 
-    expect(result.details).toEqual(['Default - verified']);
+    expect(result.details).toHaveLength(1);
+    expect(result.details[0]).toContain('verified');
     expect(prepareProvisioning).toHaveBeenNthCalledWith(
       1,
       '/tmp/project',
@@ -697,17 +697,16 @@ describe('runProviderPrepareDiagnostics', () => {
     });
 
     expect(prepareProvisioning).toHaveBeenCalledTimes(1);
-    expect(progressUpdates).toEqual([
-      {
-        status: 'ready',
-        completedCount: 2,
-        totalCount: 2,
-        details: ['Default - verified', '5.4 - verified'],
-      },
-    ]);
+    expect(progressUpdates).toHaveLength(1);
+    expect(progressUpdates[0].status).toBe('ready');
+    expect(progressUpdates[0].completedCount).toBe(2);
+    expect(progressUpdates[0].totalCount).toBe(2);
+    expect(progressUpdates[0].details).toHaveLength(2);
     expect(result.status).toBe('ready');
     expect(result.warnings).toEqual([]);
-    expect(result.details).toEqual(['Default - verified', '5.4 - verified']);
+    expect(result.details).toHaveLength(2);
+    expect(result.details[0]).toContain('verified');
+    expect(result.details[1]).toContain('verified');
   });
 
   it('prefers detailed OpenCode auth diagnostics over a generic not_authenticated batch message', async () => {

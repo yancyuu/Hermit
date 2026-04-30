@@ -38,7 +38,16 @@ describe('useGraphSidebarVisibility', () => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
     mockStore.state.messagesPanelMode = 'inline';
     mockStore.state.setMessagesPanelMode.mockClear();
-    window.localStorage.clear();
+    if (typeof window.localStorage.clear === 'function') {
+      window.localStorage.clear();
+    } else {
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < window.localStorage.length; i += 1) {
+        const key = window.localStorage.key(i);
+        if (key) keysToRemove.push(key);
+      }
+      keysToRemove.forEach((key) => window.localStorage.removeItem(key));
+    }
   });
 
   afterEach(() => {

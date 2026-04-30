@@ -108,6 +108,7 @@ vi.mock('../../../../../src/renderer/components/ui/tabs', async () => {
         {
           type: 'button',
           'data-state': context?.value === value ? 'active' : 'inactive',
+          'data-value': value,
           onClick: () => context?.onValueChange(value),
         },
         children
@@ -134,10 +135,11 @@ function flushMicrotasks(): Promise<void> {
   return Promise.resolve();
 }
 
-function findTabButton(host: HTMLElement, label: string): HTMLButtonElement | null {
+function findTabButton(host: HTMLElement, value: string): HTMLButtonElement | null {
   return (
-    Array.from(host.querySelectorAll('button')).find((button) => button.textContent?.includes(label)) ??
-    null
+    Array.from(host.querySelectorAll('button[data-state]')).find(
+      (button) => button.getAttribute('data-value') === value
+    ) ?? null
   ) as HTMLButtonElement | null;
 }
 
@@ -191,10 +193,11 @@ describe('TaskLogsPanel', () => {
       await flushMicrotasks();
     });
 
-    expect(host.textContent).toContain('Task Log Stream');
-    expect(host.textContent).toContain('Task Activity');
-    expect(host.textContent).toContain('Execution Sessions');
-    expect(findTabButton(host, 'Task Log Stream')?.getAttribute('data-state')).toBe('active');
+    expect(host.textContent).toBeTruthy();
+    expect(findTabButton(host, 'stream')).not.toBeNull();
+    expect(findTabButton(host, 'activity')).not.toBeNull();
+    expect(findTabButton(host, 'sessions')).not.toBeNull();
+    expect(findTabButton(host, 'stream')?.getAttribute('data-state')).toBe('active');
     expect(host.querySelector('[data-testid="task-log-stream"]')).not.toBeNull();
     expect(taskLogStreamProps.calls.at(-1)).toMatchObject({
       teamName: 'demo',
@@ -203,7 +206,7 @@ describe('TaskLogsPanel', () => {
       liveEnabled: true,
     });
 
-    const activityTab = findTabButton(host, 'Task Activity');
+    const activityTab = findTabButton(host, 'activity');
     expect(activityTab).not.toBeNull();
 
     await act(async () => {
@@ -211,7 +214,7 @@ describe('TaskLogsPanel', () => {
       await flushMicrotasks();
     });
 
-    expect(findTabButton(host, 'Task Activity')?.getAttribute('data-state')).toBe('active');
+    expect(findTabButton(host, 'activity')?.getAttribute('data-state')).toBe('active');
     expect(host.querySelector('[data-testid="task-activity"]')).not.toBeNull();
     expect(taskActivityProps.calls.at(-1)).toMatchObject({
       teamName: 'demo',
@@ -219,7 +222,7 @@ describe('TaskLogsPanel', () => {
       enabled: true,
     });
 
-    const sessionsTab = findTabButton(host, 'Execution Sessions');
+    const sessionsTab = findTabButton(host, 'sessions');
     expect(sessionsTab).not.toBeNull();
 
     await act(async () => {
@@ -227,7 +230,7 @@ describe('TaskLogsPanel', () => {
       await flushMicrotasks();
     });
 
-    expect(findTabButton(host, 'Execution Sessions')?.getAttribute('data-state')).toBe('active');
+    expect(findTabButton(host, 'sessions')?.getAttribute('data-state')).toBe('active');
     expect(host.querySelector('[data-testid="execution-sessions"]')).not.toBeNull();
     expect(executionSessionsProps.calls.at(-1)).toMatchObject({
       teamName: 'demo',
@@ -254,9 +257,10 @@ describe('TaskLogsPanel', () => {
     });
 
     expect(host.querySelector('[data-testid="task-log-stream"]')).toBeNull();
-    expect(findTabButton(host, 'Task Activity')?.getAttribute('data-state')).toBe('active');
+    expect(findTabButton(host, 'activity')?.getAttribute('data-state')).toBe('active');
     expect(host.querySelector('[data-testid="task-activity"]')).not.toBeNull();
-    expect(host.textContent).not.toContain('Task Log Stream');
+    // Stream tab should not be present
+    expect(findTabButton(host, 'stream')).toBeNull();
     expect(apiState.setTaskLogStreamTracking).not.toHaveBeenCalled();
     expect(apiState.onTeamChange).not.toHaveBeenCalled();
 
@@ -330,7 +334,7 @@ describe('TaskLogsPanel', () => {
     expect(handler).toBeTypeOf('function');
     expect(activityStates).toEqual([false]);
 
-    const activityTab = findTabButton(host, 'Task Activity');
+    const activityTab = findTabButton(host, 'activity');
     expect(activityTab).not.toBeNull();
 
     await act(async () => {
@@ -439,7 +443,7 @@ describe('TaskLogsPanel', () => {
       await flushMicrotasks();
     });
 
-    const activityTab = findTabButton(host, 'Task Activity');
+    const activityTab = findTabButton(host, 'activity');
     expect(activityTab).not.toBeNull();
 
     await act(async () => {
@@ -462,7 +466,7 @@ describe('TaskLogsPanel', () => {
 
     expect(taskActivityProps.calls.at(-1)).toMatchObject({ enabled: false });
 
-    const sessionsTab = findTabButton(host, 'Execution Sessions');
+    const sessionsTab = findTabButton(host, 'sessions');
     expect(sessionsTab).not.toBeNull();
 
     await act(async () => {

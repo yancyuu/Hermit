@@ -9181,7 +9181,7 @@ describe('Team agent launch matrix safe e2e', () => {
     });
     expect(run.memberSpawnToolUseIds.has('tool-bob-result-error')).toBe(false);
     expect(run.provisioningOutputParts.join('\n')).toContain(
-      'Teammate "bob" failed to start: spawn denied by runtime'
+      '成员 "bob" 启动失败：spawn denied by runtime'
     );
     expect(progressEvents.at(-1)).toMatchObject({
       state: 'assembling',

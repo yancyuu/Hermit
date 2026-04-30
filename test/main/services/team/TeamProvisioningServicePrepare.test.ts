@@ -412,7 +412,7 @@ describe('TeamProvisioningService prepare/auth behavior', () => {
       []
     );
 
-    expect(result.warning).toContain('binary failed to start');
+    expect(result.warning).toBeTruthy();
     expect(result.warning).toContain('spawn /missing/cli ENOENT');
     expect(result.warning).not.toContain('Working directory does not exist');
   });

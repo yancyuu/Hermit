@@ -580,7 +580,7 @@ describe('ClaudeMultimodelBridgeService', () => {
     });
     expect(isConnectionManagedRuntimeProvider(codex!)).toBe(true);
     expect(getProviderConnectionModeSummary(codex!)).toBeNull();
-    expect(getProviderCurrentRuntimeSummary(codex!)).toBe('Current runtime: Codex native');
+    expect(getProviderCurrentRuntimeSummary(codex!)).toContain('Codex native');
   });
 
   it('preserves codex-native ready truth from runtime status payloads', async () => {

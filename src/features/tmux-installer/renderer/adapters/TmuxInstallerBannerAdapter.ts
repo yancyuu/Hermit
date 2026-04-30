@@ -118,10 +118,17 @@ export class TmuxInstallerBannerAdapter {
       displayPhase === 'installing' ||
       displayPhase === 'verifying';
     const installButtonPrimary =
-      !installDisabled && (installLabel.startsWith('Install') || installLabel.startsWith('Retry'));
+      !installDisabled &&
+      (installLabel.startsWith('Install') ||
+        installLabel.startsWith('Retry') ||
+        installLabel.startsWith('安装') ||
+        installLabel.startsWith('重试'));
     const showRefreshButton =
       !(status?.autoInstall.supported ?? false) ||
-      (installLabel !== 'Re-check' && installLabel !== 'Re-check after restart');
+      (installLabel !== 'Re-check' &&
+        installLabel !== 'Re-check after restart' &&
+        installLabel !== '重新检查' &&
+        installLabel !== '重启后重新检查');
 
     return {
       visible,

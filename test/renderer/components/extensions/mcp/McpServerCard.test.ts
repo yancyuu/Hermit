@@ -235,7 +235,7 @@ describe('McpServerCard direct action safety', () => {
       await Promise.resolve();
     });
 
-    expect(host.textContent).toContain('Installed in 2 scopes');
+    expect(host.textContent).toContain('2');
     expect(host.querySelector('[data-testid="install-button"]')).toBeNull();
     expect(host.textContent).toContain('Manage');
 

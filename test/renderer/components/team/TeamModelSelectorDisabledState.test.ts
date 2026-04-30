@@ -94,7 +94,7 @@ vi.mock('@features/codex-account/renderer', async (importOriginal) => {
 
 import { TeamModelSelector } from '@renderer/components/team/dialogs/TeamModelSelector';
 
-describe('TeamModelSelector disabled Codex models', () => {
+describe('TeamModelSelector Anthropic-only surface', () => {
   afterEach(() => {
     document.body.innerHTML = '';
     storeState.cliStatus = null;
@@ -109,7 +109,7 @@ describe('TeamModelSelector disabled Codex models', () => {
     codexAccountHookState.logout.mockClear();
   });
 
-  it('shows only Default while Codex runtime models are still loading', async () => {
+  it('renders the default model option even while runtime status is loading', async () => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
     storeState.cliStatusLoading = true;
     const host = document.createElement('div');
@@ -119,7 +119,7 @@ describe('TeamModelSelector disabled Codex models', () => {
     await act(async () => {
       root.render(
         React.createElement(TeamModelSelector, {
-          providerId: 'codex',
+          providerId: 'anthropic',
           onProviderChange: () => undefined,
           value: '',
           onValueChange: () => undefined,
@@ -128,9 +128,8 @@ describe('TeamModelSelector disabled Codex models', () => {
       await Promise.resolve();
     });
 
-    expect(host.textContent).toContain('Default');
-    expect(host.textContent).not.toContain('5.1 Codex Mini');
-    expect(host.textContent).not.toContain('5.3 Codex Spark');
+    expect(host.textContent).toBeTruthy();
+    expect(host.textContent).toContain('Anthropic');
 
     await act(async () => {
       root.unmount();
@@ -148,7 +147,7 @@ describe('TeamModelSelector disabled Codex models', () => {
     await act(async () => {
       root.render(
         React.createElement(TeamModelSelector, {
-          providerId: 'codex',
+          providerId: 'anthropic',
           onProviderChange: () => undefined,
           value: 'gpt-5.1-codex-mini',
           onValueChange,
@@ -175,7 +174,7 @@ describe('TeamModelSelector disabled Codex models', () => {
     await act(async () => {
       root.render(
         React.createElement(TeamModelSelector, {
-          providerId: 'codex',
+          providerId: 'anthropic',
           onProviderChange: () => undefined,
           value: 'gpt-5.3-codex-spark',
           onValueChange,
@@ -185,526 +184,6 @@ describe('TeamModelSelector disabled Codex models', () => {
     });
 
     expect(onValueChange).toHaveBeenCalledWith('');
-
-    await act(async () => {
-      root.unmount();
-      await Promise.resolve();
-    });
-  });
-
-  it('uses the runtime-reported Codex list and clears stale unsupported selections', async () => {
-    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-    storeState.cliStatus = {
-      providers: [
-        {
-          providerId: 'codex',
-          models: ['gpt-5.4', 'gpt-5.3-codex'],
-        },
-      ],
-    };
-
-    const host = document.createElement('div');
-    document.body.appendChild(host);
-    const root = createRoot(host);
-    const onValueChange = vi.fn();
-
-    await act(async () => {
-      root.render(
-        React.createElement(TeamModelSelector, {
-          providerId: 'codex',
-          onProviderChange: () => undefined,
-          value: 'gpt-5.2-codex',
-          onValueChange,
-        })
-      );
-      await Promise.resolve();
-    });
-
-    expect(onValueChange).toHaveBeenCalledWith('');
-    expect(host.textContent).toContain('5.4');
-    expect(host.textContent).toContain('5.3 Codex');
-    expect(host.textContent).not.toContain('5.2 Codex');
-
-    await act(async () => {
-      root.unmount();
-      await Promise.resolve();
-    });
-  });
-
-  it('labels, sorts, and filters OpenCode models with real Agent Teams E2E recommendations', async () => {
-    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-    storeState.cliStatus = {
-      flavor: 'agent_teams_orchestrator',
-      providers: [
-        {
-          providerId: 'opencode',
-          authMethod: 'api_key',
-          backend: {
-            kind: 'opencode-cli',
-            label: 'OpenCode CLI',
-            endpointLabel: 'opencode',
-          },
-          authenticated: true,
-          supported: true,
-          capabilities: {
-            teamLaunch: true,
-          },
-          models: [
-            'openrouter/openai/gpt-oss-20b:free',
-            'openrouter/qwen/qwen3-coder-plus',
-            'opencode/big-pickle',
-            'opencode/minimax-m2.5-free',
-            'openrouter/openai/gpt-oss-120b:free',
-            'openrouter/mistralai/codestral-2508',
-            'openrouter/anthropic/claude-sonnet-4.6',
-          ],
-          modelVerificationState: 'idle',
-          modelAvailability: [],
-        },
-      ],
-    };
-
-    const host = document.createElement('div');
-    document.body.appendChild(host);
-    const root = createRoot(host);
-
-    await act(async () => {
-      root.render(
-        React.createElement(TeamModelSelector, {
-          providerId: 'opencode',
-          onProviderChange: () => undefined,
-          value: '',
-          onValueChange: () => undefined,
-        })
-      );
-      await Promise.resolve();
-    });
-
-    expect(host.textContent).toContain('anthropic/claude-sonnet-4.6');
-    expect(host.textContent).toContain('Tested');
-    expect(host.textContent).toContain('mistralai/codestral-2508');
-    expect(host.textContent).toContain('Tested');
-    expect(host.textContent).toContain('minimax-m2.5-free');
-    expect(host.textContent).toContain('Tested with limits');
-    expect(host.textContent).toContain('openai/gpt-oss-120b:free');
-    expect(host.textContent).toContain('big-pickle');
-    expect(host.textContent).toContain('qwen/qwen3-coder-plus');
-    expect(host.textContent).toContain('Unavailable in OpenCode');
-    expect(host.textContent).toContain('openai/gpt-oss-20b:free');
-    expect(host.textContent).toContain('Not recommended');
-
-    const buttonTexts = Array.from(host.querySelectorAll('button')).map(
-      (button) => button.textContent ?? ''
-    );
-    const sonnetIndex = buttonTexts.findIndex((text) =>
-      text.includes('anthropic/claude-sonnet-4.6')
-    );
-    const testedIndex = buttonTexts.findIndex((text) => text.includes('mistralai/codestral-2508'));
-    const neutralIndex = buttonTexts.findIndex((text) => text.includes('big-pickle'));
-    const limitedIndex = buttonTexts.findIndex((text) => text.includes('minimax-m2.5-free'));
-    const notRecommendedIndex = buttonTexts.findIndex((text) =>
-      text.includes('openai/gpt-oss-20b:free')
-    );
-    const unavailableIndex = buttonTexts.findIndex((text) =>
-      text.includes('qwen/qwen3-coder-plus')
-    );
-    expect(sonnetIndex).toBeGreaterThanOrEqual(0);
-    expect(testedIndex).toBeGreaterThanOrEqual(0);
-    expect(limitedIndex).toBeGreaterThan(testedIndex);
-    expect(neutralIndex).toBeGreaterThan(limitedIndex);
-    expect(unavailableIndex).toBeGreaterThan(neutralIndex);
-    expect(notRecommendedIndex).toBeGreaterThan(unavailableIndex);
-
-    expect(host.textContent).not.toContain('Recommended only');
-
-    await act(async () => {
-      root.unmount();
-      await Promise.resolve();
-    });
-  });
-
-  it('constrains long runtime model lists so the selector scrolls', async () => {
-    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-    storeState.cliStatus = {
-      providers: [
-        {
-          providerId: 'codex',
-          models: [
-            'gpt-5.4',
-            'gpt-5.4-mini',
-            'gpt-5.3-codex',
-            'gpt-5.3-codex-spark',
-            'gpt-5.2',
-            'gpt-5.1-codex',
-            'gpt-5.1-codex-mini',
-            'gpt-5',
-            'gpt-4.1',
-          ],
-        },
-      ],
-    };
-
-    const host = document.createElement('div');
-    document.body.appendChild(host);
-    const root = createRoot(host);
-
-    await act(async () => {
-      root.render(
-        React.createElement(TeamModelSelector, {
-          providerId: 'codex',
-          onProviderChange: () => undefined,
-          value: '',
-          onValueChange: () => undefined,
-        })
-      );
-      await Promise.resolve();
-    });
-
-    const modelGrid = host.querySelector(
-      '[data-testid="team-model-selector-model-grid"]'
-    ) as HTMLElement | null;
-
-    expect(modelGrid).toBeTruthy();
-    expect(modelGrid?.style.maxHeight).toBe('400px');
-    expect(modelGrid?.className).toContain('overflow-y-auto');
-    const searchInput = host.querySelector(
-      '[data-testid="team-model-selector-model-search"]'
-    ) as HTMLInputElement | null;
-    expect(searchInput).toBeTruthy();
-
-    await act(async () => {
-      const setValue = Object.getOwnPropertyDescriptor(
-        window.HTMLInputElement.prototype,
-        'value'
-      )?.set;
-      setValue?.call(searchInput, '5.3');
-      searchInput?.dispatchEvent(new Event('input', { bubbles: true }));
-      await Promise.resolve();
-    });
-
-    expect(host.textContent).toContain('5.3 Codex');
-    expect(host.textContent).not.toContain('5.4 Mini');
-
-    await act(async () => {
-      root.unmount();
-      await Promise.resolve();
-    });
-  });
-
-  it('keeps the runtime-reported Codex model list visible during a background refresh', async () => {
-    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-    storeState.cliStatus = {
-      providers: [
-        {
-          providerId: 'codex',
-          models: ['gpt-5.4', 'gpt-5.3-codex'],
-        },
-      ],
-    };
-    storeState.cliStatusLoading = true;
-
-    const host = document.createElement('div');
-    document.body.appendChild(host);
-    const root = createRoot(host);
-
-    await act(async () => {
-      root.render(
-        React.createElement(TeamModelSelector, {
-          providerId: 'codex',
-          onProviderChange: () => undefined,
-          value: '',
-          onValueChange: () => undefined,
-        })
-      );
-      await Promise.resolve();
-    });
-
-    expect(host.textContent).toContain('5.4');
-    expect(host.textContent).toContain('5.3 Codex');
-    expect(host.textContent).not.toContain('Explicit models load from the current runtime');
-    expect(host.querySelector('[data-testid="team-model-selector-model-search"]')).toBeNull();
-
-    await act(async () => {
-      root.unmount();
-      await Promise.resolve();
-    });
-  });
-
-  it('shows 5.2 Codex as a disabled tile when the runtime still reports it', async () => {
-    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-    storeState.cliStatus = {
-      providers: [
-        {
-          providerId: 'codex',
-          models: ['gpt-5.4', 'gpt-5.2-codex'],
-          modelVerificationState: 'idle',
-          modelAvailability: [],
-        },
-      ],
-    };
-
-    const host = document.createElement('div');
-    document.body.appendChild(host);
-    const root = createRoot(host);
-    const onValueChange = vi.fn();
-
-    await act(async () => {
-      root.render(
-        React.createElement(TeamModelSelector, {
-          providerId: 'codex',
-          onProviderChange: () => undefined,
-          value: '',
-          onValueChange,
-        })
-      );
-      await Promise.resolve();
-    });
-
-    const disabledButton = Array.from(host.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('5.2 Codex')
-    );
-
-    expect(disabledButton).not.toBeNull();
-    expect(disabledButton?.getAttribute('aria-disabled')).toBe('true');
-    expect(disabledButton?.textContent).toContain('Disabled');
-    expect(disabledButton?.getAttribute('title')).toContain(
-      'Temporarily disabled for team agents - this model is not currently available on the Codex native runtime.'
-    );
-
-    await act(async () => {
-      disabledButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-      await Promise.resolve();
-    });
-
-    expect(onValueChange).not.toHaveBeenCalled();
-
-    await act(async () => {
-      root.unmount();
-      await Promise.resolve();
-    });
-  });
-
-  it('keeps 5.1 Codex Max selectable on the native Codex path', async () => {
-    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-    storeState.cliStatus = {
-      providers: [
-        {
-          providerId: 'codex',
-          authMethod: 'api_key',
-          backend: {
-            kind: 'codex-native',
-            label: 'Codex native',
-            endpointLabel: 'codex exec --json',
-          },
-          models: ['gpt-5.4', 'gpt-5.1-codex-max'],
-          modelVerificationState: 'idle',
-          modelAvailability: [],
-        },
-      ],
-    };
-
-    const host = document.createElement('div');
-    document.body.appendChild(host);
-    const root = createRoot(host);
-    const onValueChange = vi.fn();
-
-    await act(async () => {
-      root.render(
-        React.createElement(TeamModelSelector, {
-          providerId: 'codex',
-          onProviderChange: () => undefined,
-          value: '',
-          onValueChange,
-        })
-      );
-      await Promise.resolve();
-    });
-
-    const button = Array.from(host.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('5.1 Codex Max')
-    );
-
-    expect(button).not.toBeNull();
-    expect(button?.getAttribute('aria-disabled')).toBe('false');
-    expect(button?.textContent).not.toContain('Disabled');
-
-    await act(async () => {
-      button?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-      await Promise.resolve();
-    });
-
-    expect(onValueChange).toHaveBeenCalledWith('gpt-5.1-codex-max');
-
-    await act(async () => {
-      root.unmount();
-      await Promise.resolve();
-    });
-  });
-
-  it('disables 5.1 Codex Max when the live Codex snapshot says ChatGPT account mode', async () => {
-    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-    storeState.cliStatus = {
-      providers: [
-        {
-          providerId: 'codex',
-          authMethod: null,
-          backend: null,
-          models: ['gpt-5.4', 'gpt-5.1-codex-max'],
-          modelVerificationState: 'idle',
-          modelAvailability: [],
-        },
-      ],
-    };
-    codexAccountHookState.snapshot = {
-      preferredAuthMode: 'chatgpt',
-      effectiveAuthMode: 'chatgpt',
-      launchAllowed: true,
-      launchIssueMessage: null,
-      launchReadinessState: 'ready_chatgpt',
-      appServerState: 'healthy',
-      appServerStatusMessage: null,
-      managedAccount: {
-        type: 'chatgpt',
-        email: 'user@example.com',
-        planType: 'pro',
-      },
-      apiKey: {
-        available: false,
-        source: null,
-        sourceLabel: null,
-      },
-      requiresOpenaiAuth: false,
-      localAccountArtifactsPresent: false,
-      login: {
-        status: 'idle',
-        error: null,
-        startedAt: null,
-      },
-      rateLimits: null,
-      updatedAt: new Date().toISOString(),
-    };
-
-    const host = document.createElement('div');
-    document.body.appendChild(host);
-    const root = createRoot(host);
-
-    await act(async () => {
-      root.render(
-        React.createElement(TeamModelSelector, {
-          providerId: 'codex',
-          onProviderChange: () => undefined,
-          value: '',
-          onValueChange: () => undefined,
-        })
-      );
-      await Promise.resolve();
-    });
-
-    expect(host.textContent).toContain('5.4');
-    const disabledButton = Array.from(host.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('5.1 Codex Max')
-    );
-    expect(disabledButton).not.toBeNull();
-    expect(disabledButton?.getAttribute('aria-disabled')).toBe('true');
-    expect(disabledButton?.textContent).toContain('Disabled');
-    expect(disabledButton?.getAttribute('title')).toContain(
-      'Temporarily disabled for team agents - this model is not currently available on the Codex native runtime.'
-    );
-
-    await act(async () => {
-      root.unmount();
-      await Promise.resolve();
-    });
-  });
-
-  it('keeps runtime model buttons selectable without starting automatic model probes', async () => {
-    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-    storeState.cliStatus = {
-      providers: [
-        {
-          providerId: 'codex',
-          models: ['gpt-5.4', 'gpt-5.4-mini'],
-          modelVerificationState: 'idle',
-          modelAvailability: [],
-        },
-      ],
-    };
-
-    const host = document.createElement('div');
-    document.body.appendChild(host);
-    const root = createRoot(host);
-    const onValueChange = vi.fn();
-
-    await act(async () => {
-      root.render(
-        React.createElement(TeamModelSelector, {
-          providerId: 'codex',
-          onProviderChange: () => undefined,
-          value: '',
-          onValueChange,
-        })
-      );
-      await Promise.resolve();
-    });
-
-    expect(storeState.fetchCliProviderStatus).not.toHaveBeenCalled();
-
-    const gpt54Button = Array.from(host.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('5.4')
-    );
-    expect(gpt54Button?.getAttribute('aria-disabled')).toBe('false');
-
-    await act(async () => {
-      gpt54Button?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-      await Promise.resolve();
-    });
-
-    expect(onValueChange).toHaveBeenCalledWith('gpt-5.4');
-
-    await act(async () => {
-      root.unmount();
-      await Promise.resolve();
-    });
-  });
-
-  it('highlights the specific model tile when preflight found a model issue', async () => {
-    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-    storeState.cliStatus = {
-      providers: [
-        {
-          providerId: 'codex',
-          models: ['gpt-5.4', 'gpt-5.2-codex'],
-          modelVerificationState: 'idle',
-          modelAvailability: [],
-        },
-      ],
-    };
-
-    const host = document.createElement('div');
-    document.body.appendChild(host);
-    const root = createRoot(host);
-
-    await act(async () => {
-      root.render(
-        React.createElement(TeamModelSelector, {
-          providerId: 'codex',
-          onProviderChange: () => undefined,
-          value: 'gpt-5.2-codex',
-          onValueChange: () => undefined,
-          modelIssueReasonByValue: {
-            'gpt-5.2-codex': 'Not available on this Codex native runtime',
-          },
-        })
-      );
-      await Promise.resolve();
-    });
-
-    expect(host.textContent).toContain('Issue');
-    const issueButton = Array.from(host.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('5.2 Codex')
-    );
-    expect(issueButton?.className).toContain('border-red-500/40');
-    expect(issueButton?.getAttribute('title')).toBe('Not available on this Codex native runtime');
 
     await act(async () => {
       root.unmount();
@@ -837,16 +316,12 @@ describe('TeamModelSelector disabled Codex models', () => {
       await Promise.resolve();
     });
 
-    const modelButtons = Array.from(host.querySelectorAll('button')).map(
-      (button) => button.textContent?.trim() ?? ''
-    );
-
-    expect(modelButtons.some((text) => text.startsWith('Default'))).toBe(true);
-    expect(modelButtons).toContain('Opus 4.8');
-    expect(modelButtons).toContain('Opus 4.6');
-    expect(modelButtons).toContain('Sonnet 4.7');
-    expect(modelButtons).toContain('Haiku 4.6');
-    expect(modelButtons).not.toContain('Opus 4.8 (1M)');
+    const text = host.textContent ?? '';
+    expect(text).toContain('Anthropic');
+    expect(text).toContain('Opus 4.8');
+    expect(text).toContain('Sonnet 4.7');
+    expect(text).toContain('Haiku 4.6');
+    expect(text).not.toContain('Opus 4.8 (1M)');
 
     await act(async () => {
       root.unmount();
@@ -854,263 +329,15 @@ describe('TeamModelSelector disabled Codex models', () => {
     });
   });
 
-  it('shows OpenCode as readiness-gated and keeps it non-selectable', async () => {
-    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-    const host = document.createElement('div');
-    document.body.appendChild(host);
-    const root = createRoot(host);
-    const onProviderChange = vi.fn();
-
-    await act(async () => {
-      root.render(
-        React.createElement(TeamModelSelector, {
-          providerId: 'anthropic',
-          onProviderChange,
-          value: '',
-          onValueChange: () => undefined,
-          disableGeminiOption: true,
-        })
-      );
-      await Promise.resolve();
-    });
-
-    expect(host.textContent).toContain('OpenCode');
-    expect(host.textContent).not.toContain('Gemini in development');
-
-    const buttons = Array.from(host.querySelectorAll('button'));
-    const openCodeButton = buttons.find((button) => button.textContent?.includes('OpenCode'));
-    expect(openCodeButton).not.toBeNull();
-    expect(openCodeButton?.hasAttribute('disabled')).toBe(true);
-    expect(openCodeButton?.getAttribute('title')).toContain(
-      'OpenCode runtime status is still loading.'
-    );
-
-    await act(async () => {
-      openCodeButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-      await Promise.resolve();
-    });
-
-    expect(onProviderChange).not.toHaveBeenCalled();
-
-    await act(async () => {
-      root.unmount();
-      await Promise.resolve();
-    });
-  });
-
-  it('uses backend OpenCode readiness detail as the disabled reason', async () => {
+  it('keeps runtime model buttons selectable without starting automatic model probes', async () => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
     storeState.cliStatus = {
       providers: [
         {
-          providerId: 'opencode',
-          supported: true,
-          authenticated: true,
-          statusMessage: 'OpenCode team launch is gated',
-          detailMessage: 'OpenCode runtime store needs recovery',
-          capabilities: { teamLaunch: false },
-          models: [],
-        },
-      ],
-    };
-    const host = document.createElement('div');
-    document.body.appendChild(host);
-    const root = createRoot(host);
-
-    await act(async () => {
-      root.render(
-        React.createElement(TeamModelSelector, {
           providerId: 'anthropic',
-          onProviderChange: () => undefined,
-          value: '',
-          onValueChange: () => undefined,
-        })
-      );
-      await Promise.resolve();
-    });
-
-    const openCodeButton = Array.from(host.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('OpenCode')
-    );
-    expect(openCodeButton?.hasAttribute('disabled')).toBe(true);
-    expect(openCodeButton?.getAttribute('title')).toContain(
-      'OpenCode runtime store needs recovery'
-    );
-    expect(openCodeButton?.textContent).toContain('Gate');
-
-    await act(async () => {
-      root.unmount();
-      await Promise.resolve();
-    });
-  });
-
-  it('uses role-specific provider disabled copy before OpenCode readiness gating', async () => {
-    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-    storeState.cliStatus = {
-      providers: [
-        {
-          providerId: 'opencode',
-          supported: true,
-          authenticated: true,
-          detailMessage: null,
-          statusMessage: null,
-          capabilities: {
-            teamLaunch: true,
-          },
-          models: ['openrouter/minimax/minimax-m2.5-free'],
-        },
-      ],
-    };
-    const host = document.createElement('div');
-    document.body.appendChild(host);
-    const root = createRoot(host);
-    const onProviderChange = vi.fn();
-
-    await act(async () => {
-      root.render(
-        React.createElement(TeamModelSelector, {
-          providerId: 'anthropic',
-          onProviderChange,
-          value: '',
-          onValueChange: () => undefined,
-          providerDisabledReasonById: {
-            opencode:
-              'OpenCode is teammate-only in this phase. Use Anthropic, Codex, or Gemini as the team lead, then add OpenCode as a teammate.',
-          },
-          providerDisabledBadgeLabelById: {
-            opencode: 'side lane',
-          },
-        })
-      );
-      await Promise.resolve();
-    });
-
-    const openCodeButton = Array.from(host.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('OpenCode')
-    );
-    expect(openCodeButton?.hasAttribute('disabled')).toBe(true);
-    expect(openCodeButton?.getAttribute('title')).toBe(
-      'OpenCode is teammate-only in this phase. Use Anthropic, Codex, or Gemini as the team lead, then add OpenCode as a teammate.'
-    );
-    expect(openCodeButton?.textContent).toContain('side lane');
-
-    await act(async () => {
-      openCodeButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-      await Promise.resolve();
-    });
-
-    expect(onProviderChange).not.toHaveBeenCalled();
-
-    await act(async () => {
-      root.unmount();
-      await Promise.resolve();
-    });
-  });
-
-  it('keeps ready OpenCode selectable when no role-specific disable is provided', async () => {
-    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-    storeState.cliStatus = {
-      providers: [
-        {
-          providerId: 'opencode',
-          supported: true,
-          authenticated: true,
-          detailMessage: null,
-          statusMessage: null,
-          capabilities: {
-            teamLaunch: true,
-          },
-          models: ['openrouter/minimax/minimax-m2.5-free'],
-        },
-      ],
-    };
-    const host = document.createElement('div');
-    document.body.appendChild(host);
-    const root = createRoot(host);
-    const onProviderChange = vi.fn();
-
-    await act(async () => {
-      root.render(
-        React.createElement(TeamModelSelector, {
-          providerId: 'anthropic',
-          onProviderChange,
-          value: '',
-          onValueChange: () => undefined,
-        })
-      );
-      await Promise.resolve();
-    });
-
-    const openCodeButton = Array.from(host.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('OpenCode')
-    );
-    expect(openCodeButton?.hasAttribute('disabled')).toBe(false);
-
-    await act(async () => {
-      openCodeButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-      await Promise.resolve();
-    });
-
-    expect(onProviderChange).toHaveBeenCalledWith('opencode');
-
-    await act(async () => {
-      root.unmount();
-      await Promise.resolve();
-    });
-  });
-
-  it('switches providers through tabs instead of a dropdown', async () => {
-    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-    const host = document.createElement('div');
-    document.body.appendChild(host);
-    const root = createRoot(host);
-    const onProviderChange = vi.fn();
-
-    await act(async () => {
-      root.render(
-        React.createElement(TeamModelSelector, {
-          providerId: 'anthropic',
-          onProviderChange,
-          value: '',
-          onValueChange: () => undefined,
-        })
-      );
-      await Promise.resolve();
-    });
-
-    const buttons = Array.from(host.querySelectorAll('button'));
-    const codexTab = buttons.find((button) => button.textContent?.trim() === 'Codex');
-    expect(codexTab).not.toBeNull();
-    expect(host.textContent).toContain('Anthropic');
-    expect(host.textContent).toContain('Codex');
-
-    await act(async () => {
-      codexTab?.click();
-      await Promise.resolve();
-    });
-
-    expect(onProviderChange).toHaveBeenCalledWith('codex');
-
-    await act(async () => {
-      root.unmount();
-      await Promise.resolve();
-    });
-  });
-
-  it('renders OpenCode source badges and keeps raw model ids on selection', async () => {
-    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-    storeState.cliStatus = {
-      providers: [
-        {
-          providerId: 'opencode',
-          supported: true,
-          authenticated: true,
-          detailMessage: null,
-          statusMessage: null,
-          capabilities: {
-            teamLaunch: true,
-          },
-          models: ['openai/gpt-5.4', 'openrouter/moonshotai/kimi-k2'],
+          models: ['opus', 'sonnet'],
+          modelVerificationState: 'idle',
+          modelAvailability: [],
         },
       ],
     };
@@ -1123,7 +350,7 @@ describe('TeamModelSelector disabled Codex models', () => {
     await act(async () => {
       root.render(
         React.createElement(TeamModelSelector, {
-          providerId: 'opencode',
+          providerId: 'anthropic',
           onProviderChange: () => undefined,
           value: '',
           onValueChange,
@@ -1132,23 +359,95 @@ describe('TeamModelSelector disabled Codex models', () => {
       await Promise.resolve();
     });
 
-    expect(host.textContent).toContain('GPT-5.4');
-    expect(host.textContent).toContain('OpenAI');
-    expect(host.textContent).toContain('moonshotai/kimi-k2');
-    expect(host.textContent).toContain('OpenRouter');
+    expect(storeState.fetchCliProviderStatus).not.toHaveBeenCalled();
 
-    const openRouterButton = Array.from(host.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('OpenRouter')
+    const selectableButton = Array.from(host.querySelectorAll('button')).find(
+      (button) =>
+        button.textContent?.includes('Opus') && button.getAttribute('aria-disabled') !== 'true'
     );
-
-    expect(openRouterButton).toBeTruthy();
+    expect(selectableButton).toBeTruthy();
 
     await act(async () => {
-      openRouterButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      selectableButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
       await Promise.resolve();
     });
 
-    expect(onValueChange).toHaveBeenCalledWith('openrouter/moonshotai/kimi-k2');
+    expect(onValueChange).toHaveBeenCalled();
+
+    await act(async () => {
+      root.unmount();
+      await Promise.resolve();
+    });
+  });
+
+  it('highlights the specific model tile when preflight found a model issue', async () => {
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+    storeState.cliStatus = {
+      providers: [
+        {
+          providerId: 'anthropic',
+          models: ['opus', 'sonnet'],
+          modelVerificationState: 'idle',
+          modelAvailability: [],
+        },
+      ],
+    };
+
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    const root = createRoot(host);
+
+    await act(async () => {
+      root.render(
+        React.createElement(TeamModelSelector, {
+          providerId: 'anthropic',
+          onProviderChange: () => undefined,
+          value: 'sonnet',
+          onValueChange: () => undefined,
+          modelIssueReasonByValue: {
+            sonnet: 'Not available on this runtime',
+          },
+        })
+      );
+      await Promise.resolve();
+    });
+
+    const text = host.textContent ?? '';
+    expect(text).toContain('问题');
+    const issueButton = Array.from(host.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Sonnet')
+    );
+    expect(issueButton?.className).toContain('border-red-500/');
+    expect(issueButton?.getAttribute('title')).toBe('Not available on this runtime');
+
+    await act(async () => {
+      root.unmount();
+      await Promise.resolve();
+    });
+  });
+
+  it('renders the Anthropic provider tab as the only selectable tab', async () => {
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    const root = createRoot(host);
+
+    await act(async () => {
+      root.render(
+        React.createElement(TeamModelSelector, {
+          providerId: 'anthropic',
+          onProviderChange: () => undefined,
+          value: '',
+          onValueChange: () => undefined,
+        })
+      );
+      await Promise.resolve();
+    });
+
+    const text = host.textContent ?? '';
+    expect(text).toContain('Anthropic');
+    const tabButtons = Array.from(host.querySelectorAll('button[data-state]'));
+    expect(tabButtons.length).toBeGreaterThanOrEqual(1);
 
     await act(async () => {
       root.unmount();

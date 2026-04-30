@@ -297,7 +297,7 @@ describe('CustomMcpServerDialog project scope', () => {
 
     expect(host.textContent).toContain('MCP writes unavailable');
     const installButton = Array.from(host.querySelectorAll('button')).find(
-      (button) => button.textContent?.includes('Install')
+      (button) => button.textContent?.includes('安装')
     ) as HTMLButtonElement | undefined;
     expect(installButton).toBeDefined();
     expect(installButton?.disabled).toBe(true);
@@ -325,7 +325,7 @@ describe('CustomMcpServerDialog project scope', () => {
     });
 
     const addEnvButton = Array.from(host.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('Add')
+      button.textContent?.includes('添加')
     ) as HTMLButtonElement;
     await act(async () => {
       addEnvButton.click();
@@ -387,7 +387,7 @@ describe('CustomMcpServerDialog project scope', () => {
     });
 
     const addEnvButton = Array.from(host.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('Add')
+      button.textContent?.includes('添加')
     ) as HTMLButtonElement;
     await act(async () => {
       addEnvButton.click();
@@ -460,7 +460,7 @@ describe('CustomMcpServerDialog project scope', () => {
     });
 
     const installButton = Array.from(host.querySelectorAll('button')).find(
-      (button) => button.textContent === 'Install'
+      (button) => button.textContent?.includes('安装')
     ) as HTMLButtonElement;
     expect(installButton.disabled).toBe(false);
 
@@ -514,7 +514,7 @@ describe('CustomMcpServerDialog project scope', () => {
     });
 
     const installButton = Array.from(host.querySelectorAll('button')).find(
-      (button) => button.textContent === 'Install'
+      (button) => button.textContent?.includes('安装')
     ) as HTMLButtonElement;
     expect(installButton.disabled).toBe(false);
 

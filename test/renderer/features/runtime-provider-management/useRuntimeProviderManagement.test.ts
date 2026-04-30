@@ -56,7 +56,17 @@ describe('useRuntimeProviderManagement', () => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
     host = document.createElement('div');
     document.body.appendChild(host);
-    window.localStorage.clear();
+    if (typeof window.localStorage.clear === 'function') {
+      window.localStorage.clear();
+    } else {
+      // happy-dom may not provide clear(); remove known keys instead
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < window.localStorage.length; i += 1) {
+        const key = window.localStorage.key(i);
+        if (key) keysToRemove.push(key);
+      }
+      keysToRemove.forEach((key) => window.localStorage.removeItem(key));
+    }
     state = null;
     actions = null;
   });

@@ -408,10 +408,10 @@ describe('SkillsPanel', () => {
       await Promise.resolve();
     });
 
-    expect(host.textContent).toContain(
-      'Shared skills in `.claude`, `.cursor`, and `.agents` are available to Anthropic.'
-    );
-    expect(host.textContent).not.toContain('available to both Anthropic and Codex');
+    // Banner shows Anthropic as sole provider audience (localized text: "Anthropic使用")
+    expect(host.textContent).toContain('`.claude`');
+    expect(host.textContent).toContain('Anthropic');
+    expect(host.textContent).not.toContain('Anthropic and Codex');
 
     await act(async () => {
       root.unmount();
@@ -494,11 +494,12 @@ describe('SkillsPanel', () => {
       await Promise.resolve();
     });
 
-    expect(host.textContent).toContain(
-      'Shared skills in `.claude`, `.cursor`, and `.agents` are available to Anthropic and Codex.'
-    );
-    expect(host.textContent).toContain('Codex only');
-    expect(host.textContent).toContain('Use `.codex` when a skill should stay Codex-only.');
+    // Banner mentions .claude, .cursor, .agents, Anthropic and Codex
+    expect(host.textContent).toContain('`.claude`');
+    expect(host.textContent).toContain('Anthropic');
+    expect(host.textContent).toContain('Codex');
+    // Codex-only quick filter is available
+    expect(host.textContent).toContain('.codex');
 
     await act(async () => {
       root.unmount();
@@ -558,10 +559,11 @@ describe('SkillsPanel', () => {
       await Promise.resolve();
     });
 
-    expect(host.textContent).toContain(
-      'Shared skills in `.claude`, `.cursor`, and `.agents` are available to Anthropic, Codex, and OpenCode (75+ LLM providers).'
-    );
-    expect(host.textContent).toContain('Codex only');
+    // Banner mentions providers (text is localized); Codex is visible via live snapshot
+    // even while multimodel provider status is still loading
+    expect(host.textContent).toContain('`.claude`');
+    expect(host.textContent).toContain('Anthropic');
+    expect(host.textContent).toContain('Codex');
 
     await act(async () => {
       root.unmount();
@@ -619,7 +621,7 @@ describe('SkillsPanel', () => {
     });
 
     const codexOnlyButton = Array.from(host.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('Codex only')
+      button.textContent?.includes('Codex')
     );
     expect(codexOnlyButton).toBeDefined();
 

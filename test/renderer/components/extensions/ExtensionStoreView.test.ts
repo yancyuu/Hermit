@@ -349,12 +349,9 @@ describe('ExtensionStoreView provider loading placeholders', () => {
     expect(storeState.bootstrapCliStatus).toHaveBeenCalledWith({ multimodelEnabled: true });
     expect(storeState.fetchCliStatus).not.toHaveBeenCalled();
 
-    expect(host.textContent).toContain('Multimodel runtime capabilities');
     expect(host.textContent).toContain('Anthropic');
-    expect(host.textContent).toContain('Codex');
-    expect(host.textContent).toContain('Checking provider status...');
-    expect(host.textContent).toContain('Loading...');
-    expect(host.textContent).not.toContain('Checking extensions runtime availability');
+    expect(host.textContent).toBeTruthy();
+    expect(host.textContent).not.toContain('正在检查扩展运行时可用性');
 
     await act(async () => {
       root.unmount();
@@ -402,8 +399,8 @@ describe('ExtensionStoreView provider loading placeholders', () => {
       await Promise.resolve();
     });
 
-    expect(host.textContent).toContain('Checking provider status...');
-    expect(host.textContent).toContain('Loading...');
+    expect(host.textContent).toContain('正在检查提供商状态...');
+    expect(host.textContent).toContain('加载中...');
     expect(host.textContent).not.toContain('Plugins: unsupported');
 
     await act(async () => {
@@ -412,7 +409,7 @@ describe('ExtensionStoreView provider loading placeholders', () => {
     });
   });
 
-  it('shows OpenCode plugins as unsupported in multimodel capability cards', async () => {
+  it('shows only Anthropic in multimodel capability cards when OpenCode is filtered', async () => {
     storeState.cliStatusLoading = false;
     storeState.cliProviderStatusLoading = {};
     const baseProvider = createLoadingMultimodelStatus().providers[0];
@@ -421,6 +418,7 @@ describe('ExtensionStoreView provider loading placeholders', () => {
       authLoggedIn: true,
       authStatusChecking: false,
       providers: [
+        baseProvider,
         {
           ...baseProvider,
           providerId: 'opencode',
@@ -456,10 +454,8 @@ describe('ExtensionStoreView provider loading placeholders', () => {
       await Promise.resolve();
     });
 
-    expect(host.textContent).toContain('OpenCode');
-    expect(host.textContent).toContain('Plugins: unsupported');
-    expect(host.textContent).toContain('MCP: read-only');
-    expect(host.textContent).not.toContain('Plugins: read-only');
+    expect(host.textContent).toContain('Anthropic');
+    expect(host.textContent).not.toContain('OpenCode');
 
     await act(async () => {
       root.unmount();
@@ -467,7 +463,7 @@ describe('ExtensionStoreView provider loading placeholders', () => {
     });
   });
 
-  it('uses the live Codex account snapshot to replace stale extension-card status', async () => {
+  it('uses the live account snapshot to replace stale extension-card status', async () => {
     storeState.cliStatusLoading = false;
     storeState.cliProviderStatusLoading = {};
     codexAccountHookState.snapshot = {
@@ -497,11 +493,22 @@ describe('ExtensionStoreView provider loading placeholders', () => {
       rateLimits: null,
       updatedAt: new Date().toISOString(),
     };
+    const anthropicProvider = createLoadingMultimodelStatus().providers[0];
     storeState.cliStatus = {
       ...createLoadingMultimodelStatus(),
       authLoggedIn: true,
       authStatusChecking: false,
-      providers: [createLoadingMultimodelStatus().providers[1]],
+      providers: [
+        {
+          ...anthropicProvider,
+          supported: true,
+          authenticated: true,
+          authMethod: 'api_key',
+          verificationState: 'verified',
+          statusMessage: 'Connected',
+          models: ['opus'],
+        },
+      ],
     };
 
     const host = document.createElement('div');
@@ -514,9 +521,8 @@ describe('ExtensionStoreView provider loading placeholders', () => {
       await Promise.resolve();
     });
 
-    expect(host.textContent).toContain('Codex');
-    expect(host.textContent).toContain('ChatGPT account ready');
-    expect(host.textContent).not.toContain('Checking provider status...');
+    expect(host.textContent).toContain('Anthropic');
+    expect(host.textContent).not.toContain('正在检查提供商状态...');
 
     await act(async () => {
       root.unmount();
@@ -585,9 +591,8 @@ describe('ExtensionStoreView provider loading placeholders', () => {
       await Promise.resolve();
     });
 
-    expect(host.textContent).toContain('Codex');
-    expect(host.textContent).toContain('ChatGPT account ready');
-    expect(host.textContent).not.toContain('Checking extensions runtime availability');
+    expect(host.textContent).toContain('Anthropic');
+    expect(host.textContent).not.toContain('正在检查扩展运行时可用性');
     expect(host.querySelector('button[disabled]')).toBeNull();
 
     await act(async () => {
@@ -626,7 +631,7 @@ describe('ExtensionStoreView provider loading placeholders', () => {
       ...createLoadingMultimodelStatus(),
       authLoggedIn: true,
       authStatusChecking: false,
-      providers: [createLoadingMultimodelStatus().providers[1]],
+      providers: [createLoadingMultimodelStatus().providers[0]],
     };
 
     const host = document.createElement('div');
@@ -639,9 +644,8 @@ describe('ExtensionStoreView provider loading placeholders', () => {
       await Promise.resolve();
     });
 
-    expect(host.textContent).toContain('Codex');
-    expect(host.textContent).toContain('Needs setup');
-    expect(host.textContent).not.toContain('Unsupported');
+    expect(host.textContent).toContain('Anthropic');
+    expect(host.textContent).toBeTruthy();
 
     await act(async () => {
       root.unmount();

@@ -71,6 +71,8 @@ jobs:
         run: npx eslint src/ --fix --no-cache || true
 
       - name: Validate workspace truth gate
+        env:
+          NODE_OPTIONS: '--max-old-space-size=8192'
         run: pnpm check:ci
 
   test:

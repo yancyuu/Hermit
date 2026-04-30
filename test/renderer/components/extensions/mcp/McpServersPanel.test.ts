@@ -274,7 +274,7 @@ describe('McpServersPanel initial browse loading', () => {
       await Promise.resolve();
     });
 
-    expect(host.textContent).toContain('Run diagnostics from this page');
+    expect(host.textContent).toContain('在此页面运行诊断');
     expect(host.textContent).not.toContain('claude-multimodel mcp diagnose');
     expect(host.textContent).not.toContain('claude mcp list');
 
@@ -310,8 +310,8 @@ describe('McpServersPanel initial browse loading', () => {
       await Promise.resolve();
     });
 
-    expect(host.textContent).toContain('Multimodel runtime not available');
-    expect(host.textContent).toContain('MCP health checks require Multimodel runtime');
+    expect(host.textContent).toContain('not available');
+    expect(host.textContent).toContain('MCP health checks require');
     expect(host.textContent).not.toContain('Claude CLI not installed');
 
     await act(async () => {
@@ -349,11 +349,9 @@ describe('McpServersPanel initial browse loading', () => {
     });
 
     expect(storeState.runMcpDiagnostics).not.toHaveBeenCalled();
-    expect(host.textContent).toContain(
-      'The configured runtime is required. Install or repair it from the Dashboard.'
-    );
+    expect(host.textContent).toContain('需要配置运行时');
     const checkStatusButton = Array.from(host.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('Check Status')
+      button.textContent?.includes('检查状态')
     );
     expect(checkStatusButton).toBeDefined();
     expect((checkStatusButton!).disabled).toBe(true);
@@ -388,7 +386,7 @@ describe('McpServersPanel initial browse loading', () => {
     });
 
     expect(storeState.runMcpDiagnostics).not.toHaveBeenCalled();
-    expect(host.textContent).toContain('Checking runtime availability...');
+    expect(host.textContent).toContain('正在检查运行时可用性');
 
     await act(async () => {
       root.unmount();
@@ -419,7 +417,7 @@ describe('McpServersPanel initial browse loading', () => {
       await Promise.resolve();
     });
 
-    expect(host.textContent).toContain('Waiting for diagnostics results...');
+    expect(host.textContent).toContain('正在等待诊断结果');
 
     await act(async () => {
       root.unmount();
@@ -462,8 +460,8 @@ describe('McpServersPanel initial browse loading', () => {
     });
 
     expect(storeState.runMcpDiagnostics).toHaveBeenCalledTimes(1);
-    expect(host.textContent).not.toContain('Checking runtime availability...');
-    expect(host.textContent).not.toContain('The configured runtime is required.');
+    expect(host.textContent).not.toContain('正在检查运行时可用性');
+    expect(host.textContent).not.toContain('需要配置运行时');
 
     await act(async () => {
       root.unmount();

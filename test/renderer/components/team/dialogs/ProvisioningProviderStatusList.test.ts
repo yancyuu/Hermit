@@ -30,8 +30,9 @@ describe('ProvisioningProviderStatusList', () => {
       await Promise.resolve();
     });
 
-    expect(host.textContent).toContain('Anthropic: waiting');
-    expect(host.textContent).toContain('Codex: waiting');
+    expect(host.textContent).toContain('Anthropic');
+    expect(host.textContent).toContain('等待中');
+    expect(host.textContent).toContain('Codex');
 
     await act(async () => {
       root.unmount();
@@ -64,12 +65,12 @@ describe('ProvisioningProviderStatusList', () => {
       await Promise.resolve();
     });
 
+    expect(host.textContent).toContain('Codex (Codex native)');
+    expect(host.textContent).toContain('1 个模型不可用');
+    expect(host.textContent).toContain('1 个可用');
+    expect(host.textContent).toContain('5.4 Mini - 可用于启动');
     expect(host.textContent).toContain(
-      'Codex (Codex native): Selected model checks - 1 model unavailable, 1 available'
-    );
-    expect(host.textContent).toContain('5.4 Mini - available for launch');
-    expect(host.textContent).toContain(
-      '5.1 Codex Max - unavailable - Not available on this Codex native runtime'
+      '5.1 Codex Max - 不可用 - Not available on this Codex native runtime'
     );
 
     const detailLines = Array.from(host.querySelectorAll('p'));
@@ -120,9 +121,8 @@ describe('ProvisioningProviderStatusList', () => {
       await Promise.resolve();
     });
 
-    expect(host.textContent).toContain(
-      'Codex (Codex native): Selected model checks - 1 model timed out'
-    );
+    expect(host.textContent).toContain('Codex (Codex native)');
+    expect(host.textContent).toContain('1 个模型校验超时');
     expect(host.textContent).toContain('5.3 Codex - check failed - Model verification timed out');
 
     await act(async () => {
@@ -156,8 +156,9 @@ describe('ProvisioningProviderStatusList', () => {
       await Promise.resolve();
     });
 
-    expect(host.textContent).toContain('Anthropic: Selected model checks - 2 available');
-    expect(host.textContent).not.toContain('1 model timed out');
+    expect(host.textContent).toContain('Anthropic');
+    expect(host.textContent).toContain('2 个可用');
+    expect(host.textContent).not.toContain('1 个模型校验超时');
     expect(host.textContent).toContain(
       'One-shot diagnostic timed out after runtime readiness passed'
     );
@@ -193,9 +194,9 @@ describe('ProvisioningProviderStatusList', () => {
       await Promise.resolve();
     });
 
-    expect(host.textContent).toContain(
-      'OpenCode (OpenCode CLI): Selected model checks - 1 compatible, deep verification pending, 1 verified'
-    );
+    expect(host.textContent).toContain('OpenCode (OpenCode CLI)');
+    expect(host.textContent).toContain('1 个模型兼容，深度校验仍在进行');
+    expect(host.textContent).toContain('1 个已验证');
     expect(host.textContent).toContain(
       'minimax-m2.5-free - compatible, deep verification pending...'
     );
@@ -231,7 +232,8 @@ describe('ProvisioningProviderStatusList', () => {
       await Promise.resolve();
     });
 
-    expect(host.textContent).toContain('Codex (Codex native): CLI preflight did not complete');
+    expect(host.textContent).toContain('Codex (Codex native)');
+    expect(host.textContent).toContain('CLI 预检未完成');
 
     await act(async () => {
       root.unmount();
@@ -313,7 +315,7 @@ describe('ProvisioningProviderStatusList', () => {
       })
     ).toEqual({
       state: 'ready',
-      message: 'Selected providers are ready.',
+      message: '所选提供商已就绪。',
     });
   });
 
@@ -356,8 +358,7 @@ describe('ProvisioningProviderStatusList', () => {
       })
     ).toEqual({
       state: 'loading',
-      message:
-        'Deep verification is still running. OpenCode free models may take around 20 seconds.',
+      message: '深度校验仍在进行。OpenCode 免费模型可能需要约 20 秒。',
     });
   });
 });

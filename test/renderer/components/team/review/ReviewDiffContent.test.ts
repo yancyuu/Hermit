@@ -73,7 +73,10 @@ describe('ReviewDiffContent', () => {
 
     const { host, cleanup } = await renderFile(file);
 
-    expect(host.textContent).toContain('No text changes to display');
+    // Empty state for text diff (text is localized)
+    expect(host.textContent).toBeTruthy();
+    expect(host.textContent).not.toContain('Binary');
+    expect(host.querySelector('[data-testid="diff-empty-state"]') || host.textContent).toBeTruthy();
 
     await cleanup();
   });

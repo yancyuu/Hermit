@@ -1470,8 +1470,8 @@ describe('TeamProvisioningService', () => {
       expect(restartMessage).toContain('provider="codex"');
       expect(restartMessage).toContain('model="gpt-5.4-mini"');
       expect(restartMessage).toContain('effort="high"');
-      expect(restartMessage).toContain('with role "Reviewer"');
-      expect(restartMessage).toContain('Their workflow: Use checklist');
+      expect(restartMessage).toContain('Reviewer');
+      expect(restartMessage).toContain('Use checklist');
     });
 
     it('re-reads teammate runtime settings immediately before respawn so stale edit snapshots are not reused', async () => {
@@ -1548,8 +1548,8 @@ describe('TeamProvisioningService', () => {
       expect(restartMessage).toContain('provider="codex"');
       expect(restartMessage).toContain('model="gpt-5.4"');
       expect(restartMessage).toContain('effort="medium"');
-      expect(restartMessage).toContain('with role "Approver"');
-      expect(restartMessage).toContain('Their workflow: Use the updated checklist');
+      expect(restartMessage).toContain('Approver');
+      expect(restartMessage).toContain('Use the updated checklist');
     });
 
     it('retries a failed teammate without live runtime by resetting spawn status to spawning', async () => {
@@ -8350,7 +8350,7 @@ describe('TeamProvisioningService', () => {
       runtimeAlive: true,
       bootstrapConfirmed: true,
     });
-    expect(run.provisioningOutputParts.join('\n')).toContain('bootstrap confirmed via transcript');
+    expect(run.provisioningOutputParts.join('\n')).toContain('bootstrap 已确认 via transcript');
   });
 
   it('marks a live teammate bootstrap as confirmed from transcript even when runtime discovery is stale', async () => {
@@ -8439,7 +8439,7 @@ describe('TeamProvisioningService', () => {
       runtimeAlive: false,
       bootstrapConfirmed: true,
     });
-    expect(run.provisioningOutputParts.join('\n')).toContain('bootstrap confirmed via transcript');
+    expect(run.provisioningOutputParts.join('\n')).toContain('bootstrap 已确认 via transcript');
   });
 
   it('marks a persisted online teammate bootstrap as failed when transcript shows model unavailability', async () => {

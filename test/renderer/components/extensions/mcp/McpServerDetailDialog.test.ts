@@ -452,8 +452,8 @@ describe('McpServerDetailDialog installed entry handling', () => {
       await Promise.resolve();
     });
 
-    expect(host.textContent).toContain('Runtime Status');
-    expect(host.textContent).not.toContain('Claude Status');
+    expect(host.textContent).toContain('运行时状态');
+    expect(host.textContent).not.toContain('Claude 状态');
 
     await act(async () => {
       root.unmount();

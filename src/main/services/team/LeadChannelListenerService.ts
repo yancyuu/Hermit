@@ -160,6 +160,8 @@ export class LeadChannelListenerService {
   private readonly configReader = new TeamConfigReader();
   private readonly wsClientByChannel = new Map<string, InstanceType<typeof Lark.WSClient>>();
   private readonly apiClientByChannel = new Map<string, InstanceType<typeof Lark.Client>>();
+  private readonly senderNameCache = new Map<string, { name: string; fetchedAt: number }>();
+  private static readonly SENDER_CACHE_TTL = 30 * 60 * 1000; // 30 min
   private readonly channelBindings = new Map<string, Set<string>>();
   private readonly statusByTeamChannel = new Map<string, Map<string, LeadChannelStatus>>();
   private readonly connectingHintTimerByTeamChannel = new Map<string, NodeJS.Timeout>();
@@ -633,6 +635,26 @@ export class LeadChannelListenerService {
       });
     }, 12_000);
     this.connectingHintTimerByTeamChannel.set(key, timer);
+  }
+
+  private async resolveFeishuSenderName(
+    apiClient: InstanceType<typeof Lark.Client>,
+    senderId: string
+  ): Promise<string | null> {
+    const cached = this.senderNameCache.get(senderId);
+    if (cached && Date.now() - cached.fetchedAt < LeadChannelListenerService.SENDER_CACHE_TTL) {
+      return cached.name;
+    }
+    try {
+      const resp = await apiClient.contact.user.get({ path: { user_id: senderId } });
+      const name = (resp as { data?: { user?: { name?: string } } })?.data?.user?.name ?? null;
+      if (name) {
+        this.senderNameCache.set(senderId, { name, fetchedAt: Date.now() });
+      }
+      return name;
+    } catch {
+      return null;
+    }
   }
 
   private clearConnectingHint(teamName: string, channelId: string): void {

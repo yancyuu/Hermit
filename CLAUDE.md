@@ -47,6 +47,13 @@ When running build/typecheck/test commands, pipe through `tail -20` to avoid flo
 - `pnpm fix` - Lint fix + format
 - `pnpm quality` - Full check + format check + knip
 
+## 飞书通知
+团队负责人（team-lead）在收到任务完成、重大进展或用户主动询问时，必须通过 feishu-cli 主动通知飞书用户。
+- 飞书聊天 ID：`oc_e7d4204895f8f9d763d9f0e42ead1e5e`（receive-id-type: chat_id）
+- 命令：`feishu-cli msg send --receive-id-type chat_id --receive-id oc_e7d4204895f8f9d763d9f0e42ead1e5e --text "消息内容"`
+- 如果 chat_id 发送失败（机器人不在群里），尝试用 `feishu-cli doc create` 创建文档并分享链接作为替代
+- 通知时机：任务完成、方向调整、阻塞问题、用户主动询问进展
+
 ## Git commits
 Use normal, human-readable messages. Do not add tool-attribution trailers (for example `Made-with: …`) to commit messages.
 

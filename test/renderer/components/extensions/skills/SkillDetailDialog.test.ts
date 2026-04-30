@@ -314,7 +314,7 @@ describe('SkillDetailDialog', () => {
       await Promise.resolve();
     });
 
-    expect(host.textContent).toContain('This skill includes bundled scripts');
+    expect(host.textContent).toContain('包含脚本');
     expect(host.textContent).toContain(
       'This skill includes a scripts directory. Review bundled scripts before trusting it.'
     );
