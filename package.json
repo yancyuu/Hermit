@@ -1,7 +1,7 @@
 {
   "name": "hermit",
   "type": "module",
-  "version": "1.4.7",
+  "version": "1.4.8",
   "description": "Claude Code powered multi-agent workbench for engineering teams",
   "license": "AGPL-3.0",
   "author": {
