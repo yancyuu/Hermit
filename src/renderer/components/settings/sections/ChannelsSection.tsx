@@ -320,7 +320,7 @@ export const ChannelsSection = (): React.JSX.Element => {
                   删除
                 </Button>
               </div>
-              <div className="grid gap-2 md:grid-cols-[minmax(140px,1fr)_minmax(160px,1fr)_minmax(220px,1.3fr)_minmax(170px,1fr)]">
+              <div className="grid gap-2 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor={`${channel.id}-name`}>实例名称</Label>
                   <Input
@@ -393,43 +393,45 @@ export const ChannelsSection = (): React.JSX.Element => {
                   </Select>
                 </div>
               </div>
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-                <p className="text-[11px] text-[var(--color-text-muted)]">
+              <div className="mt-3 space-y-2">
+                <p className="text-[11px] leading-relaxed text-[var(--color-text-muted)]">
                   连接前会保存当前实例列表和密钥。修改团队或密钥后直接重新连接即可生效。
                 </p>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  className="h-7 gap-1 text-xs"
-                  disabled={
-                    !channel.boundTeam ||
-                    !channel.feishu.appId.trim() ||
-                    !channel.feishu.appSecret.trim() ||
-                    busyChannelId === channel.id
-                  }
-                  onClick={() => void startChannel(channel.id)}
-                >
-                  {busyChannelId === channel.id ? (
-                    <Loader2 className="size-3 animate-spin" />
-                  ) : (
-                    <PlugZap className="size-3" />
-                  )}
-                  {busyChannelId === channel.id ? '保存并连接中...' : '保存并连接'}
-                </Button>
-                {isChannelRunning(statusesByChannel[channel.id]) ? (
+                <div className="flex flex-wrap gap-2">
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
                     className="h-7 gap-1 text-xs"
-                    disabled={busyChannelId === channel.id}
-                    onClick={() => void stopChannel(channel.id)}
+                    disabled={
+                      !channel.boundTeam ||
+                      !channel.feishu.appId.trim() ||
+                      !channel.feishu.appSecret.trim() ||
+                      busyChannelId === channel.id
+                    }
+                    onClick={() => void startChannel(channel.id)}
                   >
-                    <Unplug className="size-3" />
-                    断开
+                    {busyChannelId === channel.id ? (
+                      <Loader2 className="size-3 animate-spin" />
+                    ) : (
+                      <PlugZap className="size-3" />
+                    )}
+                    {busyChannelId === channel.id ? '保存并连接中...' : '保存并连接'}
                   </Button>
-                ) : null}
+                  {isChannelRunning(statusesByChannel[channel.id]) ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-7 gap-1 text-xs"
+                      disabled={busyChannelId === channel.id}
+                      onClick={() => void stopChannel(channel.id)}
+                    >
+                      <Unplug className="size-3" />
+                      断开
+                    </Button>
+                  ) : null}
+                </div>
               </div>
             </div>
           ))}

@@ -10,13 +10,7 @@ import { Loader2 } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 
 import { useSettingsConfig, useSettingsHandlers } from './hooks';
-import {
-  AdvancedSection,
-  ChannelsSection,
-  ConnectionSection,
-  GeneralSection,
-  NotificationsSection,
-} from './sections';
+import { AdvancedSection, ChannelsSection, GeneralSection, NotificationsSection } from './sections';
 import { type SettingsSection, SettingsTabs } from './SettingsTabs';
 
 export const SettingsView = (): React.JSX.Element | null => {
@@ -31,8 +25,14 @@ export const SettingsView = (): React.JSX.Element | null => {
   // Consume pending section (avoid setState during render)
   useEffect(() => {
     if (pendingSettingsSection) {
+      const nextSection: SettingsSection =
+        pendingSettingsSection === 'channels' ||
+        pendingSettingsSection === 'notifications' ||
+        pendingSettingsSection === 'advanced'
+          ? pendingSettingsSection
+          : 'general';
       // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional sync on prop change
-      setActiveSection(pendingSettingsSection as SettingsSection);
+      setActiveSection(nextSection);
       clearPendingSettingsSection();
     }
   }, [pendingSettingsSection, clearPendingSettingsSection]);
@@ -135,8 +135,6 @@ export const SettingsView = (): React.JSX.Element | null => {
               onLanguageChange={handlers.handleLanguageChange}
             />
           )}
-
-          {activeSection === 'connection' && <ConnectionSection />}
 
           {activeSection === 'channels' && <ChannelsSection />}
 

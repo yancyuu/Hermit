@@ -7,11 +7,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@renderer/components/ui/tooltip';
-import { Bell, Info, PlugZap, Server, Settings, Wrench } from 'lucide-react';
+import { Bell, Info, PlugZap, Settings, Wrench } from 'lucide-react';
 
 import type { LucideIcon } from 'lucide-react';
 
-export type SettingsSection = 'general' | 'connection' | 'channels' | 'notifications' | 'advanced';
+export type SettingsSection = 'general' | 'channels' | 'notifications' | 'advanced';
 
 interface SettingsTabsProps {
   activeSection: SettingsSection;
@@ -32,13 +32,6 @@ const tabs: TabConfig[] = [
     label: '通用',
     icon: Settings,
     description: '主题、语言、显示密度和启动行为等核心应用偏好。',
-  },
-  {
-    id: 'connection',
-    label: '连接',
-    icon: Server,
-    description: '管理 SSH 主机、远程机器和连接状态。',
-    electronOnly: true,
   },
   {
     id: 'channels',
