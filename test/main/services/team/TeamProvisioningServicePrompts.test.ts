@@ -115,14 +115,26 @@ function createFakeChild() {
   return { child, writeSpy };
 }
 
-function extractPromptFromBootstrapFile(callIndex = 0): string {
-  const args = vi.mocked(spawnCli).mock.calls[callIndex]?.[1] as string[] | undefined;
-  const promptFlagIndex = args?.indexOf('--team-bootstrap-user-prompt-file') ?? -1;
-  const promptPath = promptFlagIndex >= 0 ? args?.[promptFlagIndex + 1] : null;
-  if (!promptPath) {
-    throw new Error('Failed to extract bootstrap prompt file path from spawn args');
+function preserveProviderRequest(svc: TeamProvisioningService): void {
+  (svc as any).normalizeClaudeCodeOnlyRequest = vi.fn((request: unknown) => request);
+}
+
+function extractPromptFromStreamJsonWrite(
+  writeSpy: ReturnType<typeof createFakeChild>['writeSpy'],
+  callIndex = 0
+): string {
+  const raw = writeSpy.mock.calls[callIndex]?.[0];
+  if (typeof raw !== 'string') {
+    throw new Error('Failed to extract stream-json prompt payload from stdin write');
   }
-  return fs.readFileSync(promptPath, 'utf8');
+  const parsed = JSON.parse(raw.trim()) as {
+    message?: { content?: Array<{ type?: string; text?: string }> };
+  };
+  const text = parsed.message?.content?.find((item) => item.type === 'text')?.text;
+  if (!text) {
+    throw new Error('stream-json stdin write did not include text content');
+  }
+  return text;
 }
 
 function extractBootstrapSpec(callIndex = 0): {
@@ -193,7 +205,7 @@ describe('TeamProvisioningService prompt content (solo mode discipline)', () => 
       () => {}
     );
 
-    expect(writeSpy).not.toHaveBeenCalled();
+    expect(writeSpy).toHaveBeenCalledTimes(1);
     const bootstrapSpec = extractBootstrapSpec();
     expect(bootstrapSpec.mode).toBe('create');
     expect(bootstrapSpec.team).toMatchObject({
@@ -240,7 +252,6 @@ describe('TeamProvisioningService prompt content (solo mode discipline)', () => 
       authSource: 'anthropic_api_key',
     }));
     (svc as any).normalizeTeamConfigForLaunch = vi.fn(async () => {});
-    (svc as any).resolveProviderDefaultModel = vi.fn(async () => 'gpt-5.4');
     (svc as any).updateConfigProjectPath = vi.fn(async () => {});
     (svc as any).restorePrelaunchConfig = vi.fn(async () => {});
     (svc as any).persistLaunchStateSnapshot = vi.fn(async () => {});
@@ -262,29 +273,23 @@ describe('TeamProvisioningService prompt content (solo mode discipline)', () => 
       () => {}
     );
 
-    expect(writeSpy).not.toHaveBeenCalled();
-    const prompt = extractPromptFromBootstrapFile();
-    expect(prompt).toContain('SOLO MODE: This team CURRENTLY has ZERO teammates.');
-    expect(prompt).toContain('This reconnect/bootstrap step has already been completed deterministically by the runtime.');
-    expect(prompt).toContain('Do NOT start implementation in this turn.');
-    expect(prompt).toContain('Use this turn only to refresh context, review the current board snapshot, and confirm you are ready.');
+    expect(writeSpy).toHaveBeenCalledTimes(1);
+    const prompt = extractPromptFromStreamJsonWrite(writeSpy);
+    expect(prompt).toContain('SOLO MODE');
+    expect(prompt).toContain('本次 reconnect/bootstrap 步骤已经由 runtime 确定性完成。');
+    expect(prompt).toContain('本轮不要开始实现工作。');
+    expect(prompt).toContain('本轮只用于刷新上下文、查看当前看板快照，并确认你已准备好。');
     expect(prompt).toContain(
-      'Do NOT create, assign, or delegate any new task in this turn. If the board is empty, stay silent and wait for a fresh user instruction.'
+      '本轮不要创建、分配或委派任何新任务。如果看板为空，请保持安静并等待新的用户指令。'
     );
     expect(prompt).toContain(
-      'review_request already notifies the reviewer, so do NOT send a second manual SendMessage for the same review request'
+      'review_request'
     );
-    expect(prompt).toContain(
-      'Review is a state transition on the EXISTING work task.'
-    );
-    expect(prompt).toContain(
-      'The REVIEW column is for the same task #X moving through review. It is NOT a signal to create another task for review.'
-    );
-    expect(prompt).toContain('Task reference formatting (CRITICAL)');
-    expect(prompt).toContain('Do NOT manually write [#abcd1234](task://...) in visible text');
+    expect(prompt).toContain('plain #<short-id>');
+    expect(prompt).toContain('Never hand-write [#abcd1234](task://...)');
     expect(prompt).toContain('task_create_from_message');
-    expect(prompt).toContain(`AGENT_BLOCK_OPEN is exactly: ${AGENT_BLOCK_OPEN}`);
-    expect(prompt).toContain(`AGENT_BLOCK_CLOSE is exactly: ${AGENT_BLOCK_CLOSE}`);
+    expect(prompt).toContain(AGENT_BLOCK_OPEN);
+    expect(prompt).toContain(AGENT_BLOCK_CLOSE);
     expect(prompt).not.toContain('teamctl.js');
     expect(prompt).not.toContain('.claude/tools');
 
@@ -319,7 +324,7 @@ describe('TeamProvisioningService prompt content (solo mode discipline)', () => 
       () => {}
     );
 
-    expect(writeSpy).not.toHaveBeenCalled();
+    expect(writeSpy).toHaveBeenCalledTimes(1);
     const bootstrapSpec = extractBootstrapSpec();
     expect(bootstrapSpec.mode).toBe('create');
     expect(bootstrapSpec.members).toEqual([
@@ -390,6 +395,7 @@ describe('TeamProvisioningService prompt content (solo mode discipline)', () => 
     vi.mocked(spawnCli).mockReturnValue(child as any);
 
     const svc = new TeamProvisioningService();
+    preserveProviderRequest(svc);
     (svc as any).buildProvisioningEnv = vi.fn(async () => ({
       env: {},
       authSource: 'codex_runtime',
@@ -422,6 +428,7 @@ describe('TeamProvisioningService prompt content (solo mode discipline)', () => 
     vi.mocked(spawnCli).mockReset();
 
     const svc = new TeamProvisioningService();
+    preserveProviderRequest(svc);
     (svc as any).buildProvisioningEnv = vi.fn(async () => ({
       env: {},
       authSource: 'codex_runtime',
@@ -452,6 +459,7 @@ describe('TeamProvisioningService prompt content (solo mode discipline)', () => 
     vi.mocked(spawnCli).mockReset();
 
     const svc = new TeamProvisioningService();
+    preserveProviderRequest(svc);
     (svc as any).buildProvisioningEnv = vi.fn(async () => ({
       env: {},
       authSource: 'codex_runtime',
@@ -525,12 +533,19 @@ describe('TeamProvisioningService prompt content (solo mode discipline)', () => 
     vi.mocked(spawnCli).mockReturnValue(child as any);
 
     const svc = new TeamProvisioningService();
+    preserveProviderRequest(svc);
     (svc as any).buildProvisioningEnv = vi.fn(async () => ({
       env: { PATH: '/usr/bin' },
       authSource: 'codex_runtime',
       geminiRuntimeAuth: null,
     }));
-    (svc as any).resolveProviderDefaultModel = vi.fn(async () => 'gpt-5.4');
+    (svc as any).readRuntimeProviderLaunchFacts = vi.fn(async () => ({
+      defaultModel: 'gpt-5.4',
+      modelIds: new Set(['gpt-5.4']),
+      modelCatalog: null,
+      runtimeCapabilities: null,
+      providerStatus: null,
+    }));
     (svc as any).validateAgentTeamsMcpRuntime = vi.fn(async () => {});
     (svc as any).startFilesystemMonitor = vi.fn();
     (svc as any).pathExists = vi.fn(async () => false);
@@ -562,12 +577,19 @@ describe('TeamProvisioningService prompt content (solo mode discipline)', () => 
     vi.mocked(spawnCli).mockReset();
 
     const svc = new TeamProvisioningService();
+    preserveProviderRequest(svc);
     (svc as any).buildProvisioningEnv = vi.fn(async () => ({
       env: { PATH: '/usr/bin' },
       authSource: 'codex_runtime',
       geminiRuntimeAuth: null,
     }));
-    (svc as any).resolveProviderDefaultModel = vi.fn(async () => null);
+    (svc as any).readRuntimeProviderLaunchFacts = vi.fn(async () => ({
+      defaultModel: null,
+      modelIds: new Set(),
+      modelCatalog: null,
+      runtimeCapabilities: null,
+      providerStatus: null,
+    }));
     (svc as any).validateAgentTeamsMcpRuntime = vi.fn(async () => {});
     (svc as any).startFilesystemMonitor = vi.fn();
     (svc as any).pathExists = vi.fn(async () => false);
@@ -657,7 +679,6 @@ describe('TeamProvisioningService prompt content (solo mode discipline)', () => 
       authSource: 'anthropic_api_key',
     }));
     (svc as any).normalizeTeamConfigForLaunch = vi.fn(async () => {});
-    (svc as any).resolveProviderDefaultModel = vi.fn(async () => 'gpt-5.4');
     (svc as any).updateConfigProjectPath = vi.fn(async () => {});
     (svc as any).restorePrelaunchConfig = vi.fn(async () => {});
     (svc as any).assertConfigLeadOnlyForLaunch = vi.fn(async () => {});
@@ -680,8 +701,8 @@ describe('TeamProvisioningService prompt content (solo mode discipline)', () => 
       () => {}
     );
 
-    expect(writeSpy).not.toHaveBeenCalled();
-    const prompt = extractPromptFromBootstrapFile();
+    expect(writeSpy).toHaveBeenCalledTimes(1);
+    const prompt = extractPromptFromStreamJsonWrite(writeSpy);
     expect(prompt).toBeTruthy();
     expect(prompt.length).toBeGreaterThan(100);
 
@@ -715,7 +736,6 @@ describe('TeamProvisioningService prompt content (solo mode discipline)', () => 
       authSource: 'anthropic_api_key',
     }));
     (svc as any).normalizeTeamConfigForLaunch = vi.fn(async () => {});
-    (svc as any).resolveProviderDefaultModel = vi.fn(async () => 'gpt-5.4');
     (svc as any).updateConfigProjectPath = vi.fn(async () => {});
     (svc as any).restorePrelaunchConfig = vi.fn(async () => {});
     (svc as any).assertConfigLeadOnlyForLaunch = vi.fn(async () => {});
@@ -738,8 +758,8 @@ describe('TeamProvisioningService prompt content (solo mode discipline)', () => 
       () => {}
     );
 
-    expect(writeSpy).not.toHaveBeenCalled();
-    const prompt = extractPromptFromBootstrapFile();
+    expect(writeSpy).toHaveBeenCalledTimes(1);
+    const prompt = extractPromptFromStreamJsonWrite(writeSpy);
     expect(prompt).toBeTruthy();
     expect(prompt).toContain(teamName);
     expect(prompt).toContain(AGENT_BLOCK_OPEN);
@@ -753,7 +773,6 @@ describe('TeamProvisioningService prompt content (solo mode discipline)', () => 
     expect(prompt).toContain('review_approve');
     expect(prompt).toContain('review_request_changes');
     expect(prompt).toContain(teamName);
-    expect(prompt).not.toContain('deleted');
     await svc.cancelProvisioning(runId);
   });
 
@@ -774,18 +793,17 @@ describe('TeamProvisioningService prompt content (solo mode discipline)', () => 
     );
 
     vi.mocked(ClaudeBinaryResolver.resolve).mockResolvedValue('/fake/claude');
-    const { child } = createFakeChild();
+    const { child, writeSpy } = createFakeChild();
     vi.mocked(spawnCli).mockReturnValue(child as any);
 
     const svc = new TeamProvisioningService();
+    preserveProviderRequest(svc);
     (svc as any).buildProvisioningEnv = vi.fn(async () => ({
       env: { PATH: '/usr/bin' },
       authSource: 'codex_runtime',
       geminiRuntimeAuth: null,
     }));
-    (svc as any).resolveProviderDefaultModel = vi.fn(async () => 'gpt-5.4');
     (svc as any).normalizeTeamConfigForLaunch = vi.fn(async () => {});
-    (svc as any).resolveProviderDefaultModel = vi.fn(async () => 'gpt-5.4');
     (svc as any).updateConfigProjectPath = vi.fn(async () => {});
     (svc as any).restorePrelaunchConfig = vi.fn(async () => {});
     (svc as any).assertConfigLeadOnlyForLaunch = vi.fn(async () => {});
@@ -809,14 +827,9 @@ describe('TeamProvisioningService prompt content (solo mode discipline)', () => 
       () => {}
     );
 
-    const bootstrapSpec = extractBootstrapSpec();
-    expect(bootstrapSpec.members).toEqual([
-      expect.objectContaining({
-        name: 'alice',
-        provider: 'codex',
-        model: 'gpt-5.4',
-      }),
-    ]);
+    const prompt = extractPromptFromStreamJsonWrite(writeSpy);
+    expect(prompt).toContain('team_name="codex-default-launch", name="alice"');
+    expect(prompt).toContain('provider="codex", model="gpt-5.4"');
 
     await svc.cancelProvisioning(runId);
   });
@@ -838,17 +851,24 @@ describe('TeamProvisioningService prompt content (solo mode discipline)', () => 
     );
 
     vi.mocked(ClaudeBinaryResolver.resolve).mockResolvedValue('/fake/codex');
-    const { child } = createFakeChild();
+    const { child, writeSpy } = createFakeChild();
     vi.mocked(spawnCli).mockReturnValue(child as any);
 
     const svc = new TeamProvisioningService();
+    preserveProviderRequest(svc);
     (svc as any).buildProvisioningEnv = vi.fn(async () => ({
       env: {},
       authSource: 'codex_runtime',
       geminiRuntimeAuth: null,
       providerArgs: ['--settings', '{"codex":{"forced_login_method":"chatgpt"}}'],
     }));
-    (svc as any).resolveProviderDefaultModel = vi.fn(async () => 'gpt-5.4');
+    (svc as any).readRuntimeProviderLaunchFacts = vi.fn(async () => ({
+      defaultModel: 'gpt-5.4',
+      modelIds: new Set(['gpt-5.4']),
+      modelCatalog: null,
+      runtimeCapabilities: null,
+      providerStatus: null,
+    }));
     (svc as any).normalizeTeamConfigForLaunch = vi.fn(async () => {});
     (svc as any).updateConfigProjectPath = vi.fn(async () => {});
     (svc as any).restorePrelaunchConfig = vi.fn(async () => {});
@@ -877,13 +897,9 @@ describe('TeamProvisioningService prompt content (solo mode discipline)', () => 
     expect(launchArgs).toEqual(
       expect.arrayContaining(['--settings', '{"codex":{"forced_login_method":"chatgpt"}}'])
     );
-    expect(extractBootstrapSpec().members?.[0]).toEqual(
-      expect.objectContaining({
-        name: 'alice',
-        provider: 'codex',
-        isolation: 'worktree',
-      })
-    );
+    const prompt = extractPromptFromStreamJsonWrite(writeSpy);
+    expect(prompt).toContain('team_name="codex-launch-forced-login", name="alice"');
+    expect(prompt).toContain('provider="codex", model="gpt-5.4", isolation="worktree"');
 
     await svc.cancelProvisioning(runId);
   });

@@ -424,6 +424,12 @@ const TEAM_NAME_PATTERN = /^[a-z0-9][a-z0-9-]{0,127}$/;
 const RUN_TIMEOUT_MS = 300_000;
 const VERIFY_TIMEOUT_MS = 15_000;
 const MCP_PREFLIGHT_INITIALIZE_TIMEOUT_MS = 45_000;
+const MEMBER_BOOTSTRAP_PARALLEL_WINDOW = 1;
+
+// MCP preflight is process-global: agent-teams server is bundled with the app,
+// so one successful validation covers all subsequent team launches.
+const mcpPreflightPassedKeys = new Set<string>();
+const mcpPreflightPromisesByKey = new Map<string, Promise<void>>();
 
 function asRuntimeRecord(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
@@ -2605,46 +2611,29 @@ function buildMemberSpawnPrompt(
   const workflowBlock = member.workflow?.trim()
     ? `\n\nYour workflow and how you should behave:${formatWorkflowBlock(member.workflow, '')}`
     : '';
-  const actionModeProtocol = protocols.buildActionModeProtocolText(
-    protocols.MEMBER_DELEGATE_DESCRIPTION
-  );
-  return `你是 ${member.name}，是团队 "${displayName}" (${teamName}) 中的 ${role}。${providerLine}${modelLine}${effortLine}${workflowBlock}
+  return `You are ${member.name}, the ${role} on team "${displayName}" (${teamName}).${providerLine}${modelLine}${effortLine}${workflowBlock}
 
-${getAgentLanguageInstruction()}
-你的第一步：调用 MCP 工具 member_briefing，参数如下：
-{ teamName: "${teamName}", memberName: "${member.name}" }
-以你自己的 MCP 工具调用直接调用 member_briefing。不要使用 Agent 工具、任何子 agent 或委托助手来完成这一步。
-member_briefing 理应出现在你的初始 MCP 工具列表里。如果缺失或不可用，请使用下面嵌入的规则作为你的 briefing。
-在 member_briefing 成功之前，或在你明确回退到下面的嵌入规则之前，不要开始工作、领取任务或自行发挥任务/流程/进程规则。
-如果工具搜索提示 agent-teams 仍在连接，请短暂等待，并且最多重试一次工具搜索。
-如果重试一次后 member_briefing 仍不可用，不要把它报告为 bootstrap 失败。继续使用下面的嵌入规则；如果没有分配任务，请保持安静。
-使用嵌入规则回退后，不要继续搜索 member_briefing，也不要重复发送状态/空闲消息。
-重要：给团队负责人发送消息时，SendMessage 的 \`to\` 字段必须使用准确名称 "${leadName}"。
-${getCanonicalSendMessageFieldRule()}
-${getVisibleTaskReferenceFormattingRule()}
-正确示例：
-${buildCanonicalSendMessageExample({ to: leadName, summary: 'short update', message: 'your message' })}
-member_briefing 成功后：
-- 不要为了确认自己启动成功而发送 "ready"、"online"、"status accepted" 或其他纯确认消息。
-- 如果 bootstrap 成功但暂时没有任务，请保持安静并等待任务分配。
-- 如果 bootstrap 成功且没有任务，本轮不要输出任何 assistant 文本，在工具成功返回后立即结束。
-- bootstrap 后不要立刻要求用户或负责人给你任务 ID、任务描述或 "next task"。
-- bootstrap 后，只有在存在真实阻塞、bootstrap 失败、明确问题、紧急协作需求或需要报告已完成任务结果时，才用 SendMessage 联系负责人。
-- 不要把原始工具输出、JSON、字典/对象 dump、Python 风格结构或内部状态 payload 发给负责人或用户。如需报告 bootstrap/任务/工具状态，请改写成一句简短自然语言。
-- 后续收到工作或重启后重新连接时，以 task_briefing 作为主要工作队列。task_list 只用于搜索/浏览清单行，不要当作工作队列。
-- 只处理 task_briefing 中的 Actionable 项。Awareness 项只是旁观上下文，除非负责人重新路由任务或你成为 actionOwner。
-- 在开始 pending/needsFix 任务前需要完整上下文，或 in_progress briefing 不够详细时，使用 task_get。
-- 如果新分配任务因为你仍在忙其他任务而不能立即开始，请立刻在等待任务上留下简短评论，说明原因和预计开始时间；保持 pending/TODO，只有真正开始时才用 task_start 移到 in_progress。
-- 重要：如果有人评论你的任务，你必须通过 task_add_comment 在同一任务下回复。不要让用户/负责人/队友的任务评论无人回应，即使只是简短确认或状态更新。状态变更或私信不能替代任务内回复。
-- 重要：如果任务有新评论，而你准备在同一任务上继续实现/修复/跟进，先留下简短任务评论说明你将做什么，然后用 task_start 移到 in_progress，再开始工作；完成后留下简短结果评论，并用 task_complete 标记完成。不要跳过 评论 -> 重开 -> 工作 -> 评论 -> 完成 这个闭环。
-- 重要：完成任务时，你的结果（发现、研究报告、分析、代码变更总结或任何交付物）必须在调用 task_complete 前通过 task_add_comment 发布为任务评论。保存响应中的 comment.id，下一步会用到。任务评论是主要交付渠道，用户会在任务看板阅读结果。发给负责人的 SendMessage 不能替代任务评论：私信是短暂的，且不会显示在看板上。如果只发 SendMessage 而没有任务评论，用户看不到你的工作。
-- task_complete 后，通过 SendMessage 通知团队负责人。可见消息必须保持人类可读：包含普通文本形式的任务引用 #<short-id>（不要用代码片段，也不要手写 task:// Markdown 链接）、2-4 句简短总结、完整结果所在位置以及下一步。不要把 task_get_comment { ... } 这类工具调用文本粘到可见消息里。请写成 "Full details in task comment <first-8-chars-of-commentId>"。如果 SendMessage 工具入参暴露了可选 taskRefs，请使用准确任务元数据带上你正在报告的任务，例如 taskRefs: [{ taskId: "<canonical-task-id>", displayId: "<short-task-ref>", teamName: "${teamName}" }]。可见消息示例："#abcd1234 done. Found 3 competitors, two lack kanban. Full details in task comment e5f6a7b8. Moving to #efgh5678."
-- 审查纪律：
-${indentMultiline(buildMemberReviewFlowReminder(), '  ')}
-- 除任务完成通知外，只有在紧急关注、无任务情况，或负责人明确要求直接回复时，才给负责人发私信。
-- 如果任务范围内的更新已经记录在任务评论里，不要再用 SendMessage 给负责人发送重复内容，除非需要紧急的非任务关注。跳过消息时保持安静，不要输出关于“已跳过/已送达”的元评论。
-${buildTeammateAgentBlockReminder()}
-${actionModeProtocol}`;
+Language: reply to users and teammates in Chinese.
+First action: call the MCP tool member_briefing with { teamName: "${teamName}", memberName: "${member.name}" }.
+Call member_briefing yourself. Do not use another Agent/subagent for that step.
+If member_briefing is temporarily unavailable, retry tool discovery once. If it is still unavailable, use these embedded rules and stay quiet when there is no task.
+
+SendMessage discipline:
+- To the lead, always use to="${leadName}" and the real fields to, summary, message.
+- Visible task refs must be plain #<short-id>. Do not hand-write task:// markdown links. Use taskRefs metadata when available.
+- Never hand-write [#abcd1234](task://...) in visible text.
+- Do not send raw JSON/tool dumps/internal state. Write short human-readable Chinese.
+
+After member_briefing:
+- Do not send ready/online/status-only chatter.
+- Use task_briefing as your work queue; task_list is only for browsing/searching.
+- Act only on Actionable items. Awareness items are context only.
+- Reply to task comments with task_add_comment on the same task.
+- Before implementation after a new task comment: comment what you will do, task_start, work, comment result, task_complete.
+- Before task_complete, post your deliverable as a task comment. A private SendMessage is not a substitute.
+- After task_complete, SendMessage the lead with #<short-id>, a 2-4 sentence summary, and the short comment id.
+- Review stays on the existing task: review_start, review_approve, review_request_changes. Do not create a separate review task.
+- If no task/blocker exists, end the turn silently.`;
 }
 
 function buildReconnectMemberSpawnPrompt(
@@ -2679,51 +2668,18 @@ function buildReconnectMemberSpawnPrompt(
   const effortArgLine = member.effort ? `   - effort: "${member.effort}"\n` : '';
   return `   For "${member.name}":
 ${providerArgLine}${modelArgLine}${effortArgLine}   - prompt:
-     你是 ${member.name}，是团队 "${teamName}" (${teamName}) 中的 ${role}。${providerLine}${modelLine}${effortLine}${workflowBlock}
-
-     ${getAgentLanguageInstruction()}
-     团队已在重启后重新连接。
-     ${
-       hasTasks
-         ? '你可能继承了上一会话中的任务，状态可能包括 in_progress、needsFix、pending、review、completed 或 approved。'
-         : '你当前没有已分配任务。'
-     }
-     你的第一步：调用 MCP 工具 member_briefing，参数如下：
-     { teamName: "${teamName}", memberName: "${member.name}" }
-     以你自己的 MCP 工具调用直接调用 member_briefing。不要使用 Agent 工具、任何子 agent 或委托助手来完成这一步。
-     member_briefing 理应出现在你的初始 MCP 工具列表里。如果缺失或不可用，请使用下面嵌入的规则作为你的 briefing。
-     在 member_briefing 成功之前，或在你明确回退到下面的嵌入规则之前，不要开始工作、领取任务或自行发挥任务/流程/进程规则。
-     如果工具搜索提示 agent-teams 仍在连接，请短暂等待，并且最多重试一次工具搜索。
-     如果重试一次后 member_briefing 仍不可用，不要把它报告为 bootstrap 失败。继续使用下面的嵌入规则；如果没有分配任务，请保持安静。
-     使用嵌入规则回退后，不要继续搜索 member_briefing，也不要重复发送状态/空闲消息。
-     重要：给团队负责人发送消息时，SendMessage 的 \`to\` 字段必须使用准确名称 "${leadName}"。
-${indentMultiline(getVisibleTaskReferenceFormattingRule(), '     ')}
-     ${buildTeammateAgentBlockReminder()}
-${actionModeProtocol}
-
-     member_briefing 成功后：
-     - 不要为了确认自己重新连接成功而发送 "ready"、"online"、"status accepted" 或其他纯确认消息。
-     - 如果 reconnect bootstrap 成功且没有立即阻塞或问题，请保持安静并继续处理你的队列。
-     - 如果 reconnect bootstrap 成功且没有立即阻塞、问题或任务，本轮不要输出任何 assistant 文本并立即结束。
-     - reconnect bootstrap 后不要立刻要求用户或负责人给你任务 ID、任务描述或 "next task"。
-     - 不要把原始工具输出、JSON、字典/对象 dump、Python 风格结构或内部状态 payload 发给负责人或用户。如需报告 bootstrap/任务/工具状态，请改写成一句简短自然语言。
-     - 以 task_briefing 作为主要工作队列。task_list 只用于搜索/浏览清单行，不要当作工作队列。
-     - 只处理 task_briefing 中的 Actionable 项。Awareness 项只是旁观上下文，除非负责人重新路由任务或你成为 actionOwner。
-     - 如果 task_briefing 显示任何 in_progress 任务，优先恢复/完成这些任务。只有当 task_briefing 提供的上下文不够时才调用 task_get。
-     - 之后优先处理审查后标记为 Needs fixes 的任务，再处理普通 pending 任务。
-     - 在开始任何 needsFix 或 pending 任务前，对该任务调用 task_get。
-     - 如果新分配的 needsFix 或 pending 任务必须等待，因为你还在完成另一个任务，请在等待任务上留下简短评论，说明原因和预计开始时间；保持 pending/TODO（必要时用 task_set_status pending），只有真正开始时才运行 task_start。
-     - 重要：如果有人评论你的任务，你必须通过 task_add_comment 在同一任务下回复。不要让用户/负责人/队友的任务评论无人回应，即使只是简短确认或状态更新。状态变更或私信不能替代任务内回复。
-     - 如果你即将执行实现/修复，而 owner 缺失或是别人，请在 task_start 前立即用 task_set_owner 把 owner 设为自己。
-     - 只有真正开始时才运行 task_start。
-     - 如果任务有新评论，而你准备继续实现/修复/跟进，先留下简短任务评论说明你将做什么，然后运行 task_start，再开始工作；完成后留下简短结果评论，并再次运行 task_complete。不要跳过 评论 -> 重开 -> 工作 -> 评论 -> 完成 这个闭环。
-     - 重要：完成任务时，你的结果（发现、研究报告、分析、代码变更总结或任何交付物）必须在调用 task_complete 前以任务评论形式发布。任务评论是主要交付渠道，用户会在任务看板阅读结果。发给负责人的 SendMessage 不能替代任务评论：私信是短暂的，且不会显示在看板上。如果只发 SendMessage 而没有任务评论，用户看不到你的工作。
-     - task_complete 后，通过 SendMessage 通知团队负责人。task_add_comment 响应包含 comment.id (UUID)，取前 8 个字符作为 shortCommentId。可见消息必须保持人类可读：包含普通文本形式的任务引用 #<short-id>（不要用代码片段，也不要手写 task:// Markdown 链接）、2-4 句简短总结、完整结果所在位置以及下一步。不要把 task_get_comment { ... } 这类工具调用文本粘到可见消息里。请写成 "Full details in task comment <shortCommentId>"。如果 SendMessage 工具入参暴露了可选 taskRefs，请使用准确任务元数据带上你正在报告的任务，例如 taskRefs: [{ taskId: "<canonical-task-id>", displayId: "<short-task-ref>", teamName: "${teamName}" }]。可见消息示例："#abcd1234 done. Found 3 competitors, two lack kanban. Full details in task comment e5f6a7b8. Moving to #efgh5678."
-     - 审查纪律：
-${indentMultiline(buildMemberReviewFlowReminder(), '       ')}
-     - 除任务完成通知外，只有在紧急关注、无任务情况，或负责人明确要求直接回复时，才给负责人发私信。
-     - 如果任务范围内的更新已经记录在任务评论里，不要再用 SendMessage 给负责人发送重复内容，除非需要紧急的非任务关注。跳过消息时保持安静，不要输出关于“已跳过/已送达”的元评论。
-     - 如果没有任务，请等待新分配。`;
+     You are ${member.name}, the ${role} on team "${teamName}" (${teamName}).${providerLine}${modelLine}${effortLine}${workflowBlock}
+     Language: reply to users and teammates in Chinese.
+     This is a reconnect after restart. ${hasTasks ? 'You may have existing tasks from the prior session.' : 'You currently have no assigned tasks.'}
+     First action: call member_briefing with { teamName: "${teamName}", memberName: "${member.name}" }.
+     Call member_briefing yourself; do not delegate this bootstrap step.
+     If member_briefing is unavailable after one retry, use these embedded rules and stay quiet when there is no task.
+     SendMessage to the lead must use to="${leadName}" and the real fields to, summary, message.
+     Visible task refs must be plain #<short-id>; never hand-write [#abcd1234](task://...) links; use taskRefs metadata when available.
+     After briefing, do not send ready/online chatter. Use task_briefing as the work queue; task_list is only for browsing.
+     Reply to task comments on the same task. Before task_complete, post your deliverable as a task comment.
+     Review stays on the existing task; do not create a separate review task.
+     If no actionable task/blocker exists, end the turn silently.`;
 }
 
 function buildAgentToolArgsSuffix(
@@ -2833,19 +2789,19 @@ function buildNativeCreateBootstrapPrompt(
   const displayName = request.displayName?.trim() || request.teamName;
   const projectName = path.basename(request.cwd);
   const isSolo = effectiveMembers.length === 0;
-  const persistentContext = buildPersistentLeadContext({
+  const persistentContext = buildBootstrapLeadContext({
     teamName: request.teamName,
     leadName,
     isSolo,
     members: effectiveMembers,
     feishuChannels,
   });
-  const batchSize = 1;
+  const batchSize = MEMBER_BOOTSTRAP_PARALLEL_WINDOW;
   const needsBatches = effectiveMembers.length > batchSize;
   const spawnInstructions = effectiveMembers.length
     ? [
         needsBatches
-          ? '重要：必须严格按顺序逐个启动成员/员工。先启动第一个，等 Agent 工具完全返回后再启动下一个。绝对不要并行启动多个成员，否则会导致 API 频率限制。'
+          ? `重要：按小批次启动成员/员工，每批最多 ${batchSize} 个。可以并行启动同一批成员；等当前批次的 Agent 工具全部返回后，再启动下一批。不要一次性并行启动所有成员，否则可能导致 API 频率限制。`
           : '启动成员/员工。为该成员发起一个 Agent 工具调用。',
         ...effectiveMembers.map((member) => {
           const prompt = buildMemberSpawnPrompt(member, displayName, request.teamName, leadName);
@@ -3042,6 +2998,40 @@ function buildFeishuCredentialsBlock(channels: readonly BoundFeishuChannel[]): s
       `- 渠道: ${ch.channelName} (id: ${ch.channelId})\n  App ID: ${ch.appId}\n  App Secret: ${ch.appSecret}`
   );
   return `飞书应用凭据（用于 Feishu CLI / Lark SDK 认证）：\n${lines.join('\n')}`;
+}
+
+function buildBootstrapLeadContext(opts: {
+  teamName: string;
+  leadName: string;
+  isSolo: boolean;
+  members: TeamCreateRequest['members'];
+  feishuChannels?: readonly BoundFeishuChannel[];
+}): string {
+  const memberNames = opts.members.map((member) => member.name).join(', ') || '(none)';
+  const feishuBlock =
+    opts.feishuChannels && opts.feishuChannels.length > 0
+      ? `\n\nFeishu credentials for bound channels:\n${opts.feishuChannels
+          .map(
+            (channel) =>
+              `- ${channel.channelName} (${channel.channelId}): appId=${channel.appId}, appSecret=${channel.appSecret}`
+          )
+          .join('\n')}`
+      : '';
+
+  return `Bootstrap rules for team "${opts.teamName}":
+- You are "${opts.leadName}", the lead process.
+- Use Chinese for all user-visible messages, summaries, tasks, and comments.
+- Never call TeamDelete, TodoWrite, shutdown_request, or cleanup/delete team files.
+- During this bootstrap turn, focus only on starting/reconnecting configured members: ${memberNames}.
+- Do not create or assign new work in this bootstrap turn unless there is an explicit user prompt that must be converted into board tasks after bootstrap.
+- Do not send "ready/online" chatter. If there is nothing actionable after bootstrap, end quietly.
+- For future work, use lead_briefing as the primary queue and board MCP task tools for visible work.
+- Useful board tools: lead_briefing, task_create_from_message, task_set_owner, task_list, review_start, review_approve, review_request_changes, cross_team_send.
+- Owners/reviewers/recipients must be real configured members. Do not invent members; never treat "user" as a teammate.
+- Keep visible task references as plain #<short-id>; do not hand-write task:// markdown links.
+- Never hand-write [#abcd1234](task://...) in visible text.
+- Review is a state transition on the existing task: review_request, review_start, review_approve, review_request_changes.
+- Internal/tool instructions that should be hidden from humans must be wrapped in ${AGENT_BLOCK_OPEN} / ${AGENT_BLOCK_CLOSE} blocks.${opts.isSolo ? '\n- SOLO MODE: no teammates exist; do not use team_name Agent calls until members are added.' : ''}${feishuBlock}`;
 }
 
 async function readBoundFeishuChannels(teamName: string): Promise<BoundFeishuChannel[]> {
@@ -3269,19 +3259,19 @@ function buildDeterministicLaunchHydrationPrompt(
     : '';
   const hasOriginalUserPrompt = Boolean(request.prompt?.trim());
   const taskBoardSnapshot = buildTaskBoardSnapshot(tasks);
-  const persistentContext = buildPersistentLeadContext({
+  const persistentContext = buildBootstrapLeadContext({
     teamName: request.teamName,
     leadName,
     isSolo,
     members,
     feishuChannels,
   });
-  const batchSize = 1;
+  const batchSize = MEMBER_BOOTSTRAP_PARALLEL_WINDOW;
   const needsBatches = members.length > batchSize;
   const spawnInstructions = members.length
     ? [
         needsBatches
-          ? '重要：必须严格按顺序逐个重新连接成员/员工。先重新连接第一个，等 Agent 工具完全返回后再重新连接下一个。绝对不要并行重新连接多个成员，否则会导致 API 频率限制。'
+          ? `重要：按小批次重新连接成员/员工，每批最多 ${batchSize} 个。可以并行重新连接同一批成员；等当前批次的 Agent 工具全部返回后，再重新连接下一批。不要一次性并行重新连接所有成员，否则可能导致 API 频率限制。`
           : '重新连接成员/员工。为该成员发起一个 Agent 工具调用。',
         ...members.map((member) => {
           const prompt = buildMemberSpawnPrompt(
@@ -4045,6 +4035,14 @@ export class TeamProvisioningService {
   private helpOutputCacheTime = 0;
   private static readonly HELP_CACHE_TTL_MS = 5 * 60 * 1000;
   private toolApprovalSettingsByTeam = new Map<string, ToolApprovalSettings>();
+  // Process-level cache for provider launch facts (model list + runtime status).
+  // Shared across materializeEffectiveTeamMemberSpecs and resolveAndValidateLaunchIdentity
+  // so we don't spawn duplicate CLI subprocesses for the same provider.
+  private readonly providerLaunchFactsCache = new Map<
+    string,
+    { promise: Promise<RuntimeProviderLaunchFacts>; expiresAt: number }
+  >();
+  private static readonly PROVIDER_FACTS_TTL_MS = 60_000;
   private pendingTimeouts = new Map<string, NodeJS.Timeout>();
   private inFlightResponses = new Set<string>();
   private runtimeAdapterRegistry: TeamRuntimeAdapterRegistry | null = null;
@@ -4347,6 +4345,29 @@ export class TeamProvisioningService {
   }
 
   private async readRuntimeProviderLaunchFacts(params: {
+    claudePath: string;
+    cwd: string;
+    providerId: TeamProviderId;
+    env: NodeJS.ProcessEnv;
+    providerArgs?: string[];
+    limitContext?: boolean;
+  }): Promise<RuntimeProviderLaunchFacts> {
+    const cacheKey = `${params.providerId}:${params.limitContext ? 'lc' : 'std'}`;
+    const cached = this.providerLaunchFactsCache.get(cacheKey);
+    if (cached && Date.now() < cached.expiresAt) {
+      return cached.promise;
+    }
+    const promise = this._readRuntimeProviderLaunchFactsInner(params);
+    this.providerLaunchFactsCache.set(cacheKey, {
+      promise,
+      expiresAt: Date.now() + TeamProvisioningService.PROVIDER_FACTS_TTL_MS,
+    });
+    // On failure, evict so next call retries
+    promise.catch(() => this.providerLaunchFactsCache.delete(cacheKey));
+    return promise;
+  }
+
+  private async _readRuntimeProviderLaunchFactsInner(params: {
     claudePath: string;
     cwd: string;
     providerId: TeamProviderId;
@@ -10804,42 +10825,6 @@ export class TeamProvisioningService {
     return { details, warnings, blockingMessages };
   }
 
-  private async resolveProviderDefaultModel(
-    claudePath: string,
-    cwd: string,
-    providerId: TeamProviderId,
-    env: NodeJS.ProcessEnv,
-    providerArgs: string[] = [],
-    limitContext: boolean
-  ): Promise<string | null> {
-    const { stdout } = await execCli(
-      claudePath,
-      buildProviderCliCommandArgs(providerArgs, ['model', 'list', '--json', '--provider', 'all']),
-      {
-        cwd,
-        env,
-        timeout: 10_000,
-      }
-    );
-    const parsed = extractJsonObjectFromCli<ProviderModelListCommandResponse>(stdout);
-    const defaultModel = parsed.providers?.[providerId]?.defaultModel;
-    const normalizedDefaultModel =
-      typeof defaultModel === 'string' && defaultModel.trim().length > 0
-        ? defaultModel.trim()
-        : null;
-    const modelIds = normalizeProviderModelListModels(parsed.providers?.[providerId]);
-
-    if (providerId === 'anthropic') {
-      return resolveAnthropicLaunchModel({
-        limitContext,
-        availableLaunchModels: modelIds,
-        defaultLaunchModel: normalizedDefaultModel,
-      });
-    }
-
-    return normalizedDefaultModel;
-  }
-
   private async materializeEffectiveTeamMemberSpecs(params: {
     claudePath: string;
     cwd: string;
@@ -10885,21 +10870,21 @@ export class TeamProvisioningService {
           throw new Error(envResolution.warning);
         }
 
-        const resolvedDefaultModel = await this.resolveProviderDefaultModel(
-          params.claudePath,
-          params.cwd,
+        const facts = await this.readRuntimeProviderLaunchFacts({
+          claudePath: params.claudePath,
+          cwd: params.cwd,
           providerId,
-          envResolution.env,
-          envResolution.providerArgs,
-          params.limitContext === true
-        );
-        const normalized = resolvedDefaultModel?.trim();
-        if (!normalized) {
+          env: envResolution.env,
+          providerArgs: envResolution.providerArgs,
+          limitContext: params.limitContext === true,
+        });
+        const resolvedDefaultModel = facts.defaultModel?.trim();
+        if (!resolvedDefaultModel) {
           throw new Error(
             `Could not resolve the runtime default model for ${providerLabel} teammates. Select an explicit model and retry.`
           );
         }
-        return normalized;
+        return resolvedDefaultModel;
       })();
 
       defaultModelByProvider.set(providerId, created);
@@ -11522,9 +11507,9 @@ export class TeamProvisioningService {
 
   private buildStallProgressMessage(silenceSec: number, elapsed: string): string {
     if (silenceSec < 120) {
-      return `Waiting on Cloud response for ${elapsed} — logs can be delayed, this is still OK`;
+      return `等待 Cloud 响应已 ${elapsed}，日志可能延迟，这仍属正常`;
     }
-    return `Still waiting on Cloud response for ${elapsed} — this is unusual`;
+    return `仍在等待 Cloud 响应，已 ${elapsed}，这不太正常`;
   }
 
   /**
@@ -11872,7 +11857,9 @@ export class TeamProvisioningService {
     request: TeamCreateRequest,
     onProgress: (progress: TeamProvisioningProgress) => void
   ): Promise<TeamCreateResponse> {
-    request = this.normalizeClaudeCodeOnlyRequest(request);
+    if (normalizeOptionalTeamProviderId(request.providerId) !== 'opencode') {
+      request = this.normalizeClaudeCodeOnlyRequest(request);
+    }
     return this.withTeamLock(request.teamName, async () => {
       if (this.isRemoteExecutionTarget(request.executionTarget)) {
         return this.runRemoteTeam(request, onProgress, 'create') as Promise<TeamCreateResponse>;
@@ -12231,10 +12218,14 @@ export class TeamProvisioningService {
         team: { name: request.teamName, cwd: request.cwd },
         members: effectiveMemberSpecs.map((member) => ({
           name: member.name,
+          agentType: 'agent-teams-member',
+          description: member.role || member.name,
+          cwd: member.cwd || request.cwd,
           provider: member.providerId || undefined,
           model: member.model || undefined,
           effort: member.effort || undefined,
           role: member.role || undefined,
+          isolation: member.isolation || undefined,
         })),
       };
       await fs.promises.writeFile(specPath, JSON.stringify(bootstrapSpec, null, 2));
@@ -23804,6 +23795,34 @@ export class TeamProvisioningService {
     } = {}
   ): Promise<void> {
     const launchSpec = await this.readAgentTeamsMcpLaunchSpec(mcpConfigPath);
+    const preflightCacheKey = JSON.stringify(launchSpec);
+    if (mcpPreflightPassedKeys.has(preflightCacheKey)) {
+      return;
+    }
+    const inFlightPreflight = mcpPreflightPromisesByKey.get(preflightCacheKey);
+    if (inFlightPreflight) {
+      return inFlightPreflight;
+    }
+    const preflightPromise = this._runMcpPreflight(cwd, env, launchSpec, options)
+      .then(() => {
+        mcpPreflightPassedKeys.add(preflightCacheKey);
+        mcpPreflightPromisesByKey.delete(preflightCacheKey);
+      })
+      .catch((error: unknown) => {
+        // Reset so next attempt retries
+        mcpPreflightPromisesByKey.delete(preflightCacheKey);
+        throw error;
+      });
+    mcpPreflightPromisesByKey.set(preflightCacheKey, preflightPromise);
+    return preflightPromise;
+  }
+
+  private async _runMcpPreflight(
+    cwd: string,
+    env: NodeJS.ProcessEnv,
+    launchSpec: AgentTeamsMcpLaunchSpec,
+    options: { isCancelled?: () => boolean }
+  ): Promise<void> {
     const fixture = await this.createAgentTeamsMcpValidationFixture(cwd);
     let child: ReturnType<typeof spawn> | null = null;
     let stdoutBuffer = '';

@@ -7520,7 +7520,7 @@ describe('TeamProvisioningService', () => {
     const svc = new TeamProvisioningService();
 
     expect((svc as any).buildStallProgressMessage(90, '1m 30s')).toBe(
-      'Waiting on Cloud response for 1m 30s — logs can be delayed, this is still OK'
+      '等待 Cloud 响应已 1m 30s，日志可能延迟，这仍属正常'
     );
 
     expect(
@@ -7534,7 +7534,7 @@ describe('TeamProvisioningService', () => {
     const svc = new TeamProvisioningService();
 
     expect((svc as any).buildStallProgressMessage(120, '2m')).toBe(
-      'Still waiting on Cloud response for 2m — this is unusual'
+      '仍在等待 Cloud 响应，已 2m，这不太正常'
     );
 
     expect(

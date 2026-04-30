@@ -260,7 +260,7 @@ export const ProvisioningProgressBlock = ({
           <p className="text-xs font-medium text-[var(--color-text)]">{title}</p>
           {elapsed !== null ? (
             <span className="text-[10px] tabular-nums text-[var(--color-text-muted)]">
-              {elapsed}
+              已运行 {elapsed}
             </span>
           ) : null}
           {pid !== undefined ? (

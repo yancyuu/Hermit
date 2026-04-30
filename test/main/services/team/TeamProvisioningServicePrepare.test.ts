@@ -1070,7 +1070,13 @@ describe('TeamProvisioningService prepare/auth behavior', () => {
       authSource: 'codex_runtime',
       geminiRuntimeAuth: null,
     });
-    vi.spyOn(svc as any, 'resolveProviderDefaultModel').mockResolvedValue('gpt-5.4-mini');
+    vi.spyOn(svc as any, 'readRuntimeProviderLaunchFacts').mockResolvedValue({
+      defaultModel: 'gpt-5.4-mini',
+      modelIds: new Set(['gpt-5.4-mini']),
+      modelCatalog: null,
+      runtimeCapabilities: null,
+      providerStatus: null,
+    });
     const spawnProbe = vi.spyOn(svc as any, 'spawnProbe').mockResolvedValue({
       stdout: 'PONG',
       stderr: '',
@@ -2360,8 +2366,8 @@ describe('TeamProvisioningService prepare/auth behavior', () => {
   it('rejects Anthropic max and fast when the exact resolved launch model does not support them', () => {
     const svc = new TeamProvisioningService();
     const facts = {
-      defaultModel: 'opus[1m]',
-      modelIds: new Set(['opus[1m]']),
+      defaultModel: 'opus',
+      modelIds: new Set(['opus']),
       modelCatalog: {
         schemaVersion: 1,
         providerId: 'anthropic',
@@ -2370,11 +2376,11 @@ describe('TeamProvisioningService prepare/auth behavior', () => {
         fetchedAt: '2026-04-21T00:00:00.000Z',
         staleAt: '2026-04-21T00:01:00.000Z',
         defaultModelId: 'opus',
-        defaultLaunchModel: 'opus[1m]',
+        defaultLaunchModel: 'opus',
         models: [
           {
-            id: 'opus[1m]',
-            launchModel: 'opus[1m]',
+            id: 'opus',
+            launchModel: 'opus',
             displayName: 'Opus 4.7 (1M)',
             hidden: false,
             supportedReasoningEfforts: [],
@@ -2417,7 +2423,7 @@ describe('TeamProvisioningService prepare/auth behavior', () => {
         limitContext: false,
         facts,
       })
-    ).toThrow('在当前运行时中不支持该设置');
+    ).toThrow('当前 Anthropic 运行时/模型不支持此 effort');
 
     expect(() =>
       (svc as any).validateRuntimeLaunchSelection({
