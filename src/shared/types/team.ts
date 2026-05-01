@@ -45,6 +45,10 @@ export interface TeamUpdateConfigRequest {
   color?: string;
   language?: string;
   executionTarget?: ExecutionTarget;
+  leadProviderId?: TeamProviderId;
+  leadModel?: string;
+  leadEffort?: EffortLevel;
+  leadWorkflow?: string;
 }
 
 export interface TeamSummaryMember {

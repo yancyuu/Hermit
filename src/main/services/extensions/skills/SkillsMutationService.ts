@@ -6,6 +6,7 @@ import { shell } from 'electron';
 
 import { SkillImportService } from './SkillImportService';
 import { SkillPlanService } from './SkillPlanService';
+import { SkillProjectionService } from './SkillProjectionService';
 import { SkillRootsResolver } from './SkillRootsResolver';
 import { SkillScaffoldService } from './SkillScaffoldService';
 import { SkillsCatalogService } from './SkillsCatalogService';
@@ -24,7 +25,8 @@ export class SkillsMutationService {
     private readonly catalogService = new SkillsCatalogService(),
     private readonly scaffoldService = new SkillScaffoldService(rootsResolver),
     private readonly importService = new SkillImportService(),
-    private readonly planService = new SkillPlanService()
+    private readonly planService = new SkillPlanService(),
+    private readonly projectionService = new SkillProjectionService(rootsResolver)
   ) {}
 
   async previewUpsert(request: SkillUpsertRequest): Promise<SkillReviewPreview> {
@@ -56,6 +58,9 @@ export class SkillsMutationService {
     const plan = await this.planService.buildUpsertPlan(targetSkillDir, files);
     this.assertReviewedPlanMatches(request.reviewPlanId, plan.preview.planId);
     await this.planService.applyPlan(plan);
+    if (request.scope === 'user') {
+      await this.projectionService.syncGlobalSkills();
+    }
 
     return this.catalogService.getDetail(targetSkillDir, request.projectPath);
   }
@@ -80,13 +85,22 @@ export class SkillsMutationService {
     const plan = await this.planService.buildImportPlan(targetSkillDir, inspection.files);
     this.assertReviewedPlanMatches(request.reviewPlanId, plan.preview.planId);
     await this.planService.applyPlan(plan);
+    if (request.scope === 'user') {
+      await this.projectionService.syncGlobalSkills();
+    }
 
     return this.catalogService.getDetail(targetSkillDir, request.projectPath);
   }
 
   async deleteSkill(request: SkillDeleteRequest): Promise<void> {
     const skillDir = this.resolveExistingSkill(request.skillId, request.projectPath);
+    const isUserSkill = this.rootsResolver
+      .resolve(request.projectPath)
+      .some((root) => root.scope === 'user' && isPathWithinRoot(skillDir, root.rootPath));
     await shell.trashItem(skillDir);
+    if (isUserSkill) {
+      await this.projectionService.syncGlobalSkills();
+    }
   }
 
   private async resolveImportTarget(

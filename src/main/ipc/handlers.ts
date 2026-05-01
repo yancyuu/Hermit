@@ -118,6 +118,7 @@ import type { McpInstallService } from '../services/extensions/install/McpInstal
 import type { PluginInstallService } from '../services/extensions/install/PluginInstallService';
 import type { SkillsCatalogService } from '../services/extensions/skills/SkillsCatalogService';
 import type { SkillsMutationService } from '../services/extensions/skills/SkillsMutationService';
+import type { SkillSourceService } from '../services/extensions/skills/SkillSourceService';
 import type { SkillsWatcherService } from '../services/extensions/skills/SkillsWatcherService';
 import type { McpHealthDiagnosticsService } from '../services/extensions/state/McpHealthDiagnosticsService';
 import type { HttpServer } from '../services/infrastructure/HttpServer';
@@ -168,6 +169,7 @@ export function initializeIpcHandlers(
   skillsCatalogService?: SkillsCatalogService,
   skillsMutationService?: SkillsMutationService,
   skillsWatcherService?: SkillsWatcherService,
+  skillSourceService?: SkillSourceService,
   crossTeamService?: CrossTeamService,
   teamBackupService?: TeamBackupService
 ): void {
@@ -221,7 +223,12 @@ export function initializeIpcHandlers(
       apiKeyService,
       mcpHealthDiagnosticsService
     );
-    initializeSkillsHandlers(skillsCatalogService, skillsMutationService, skillsWatcherService);
+    initializeSkillsHandlers(
+      skillsCatalogService,
+      skillsMutationService,
+      skillsWatcherService,
+      skillSourceService
+    );
   }
   if (crossTeamService) {
     initializeCrossTeamHandlers(crossTeamService);

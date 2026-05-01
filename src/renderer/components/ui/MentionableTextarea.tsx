@@ -935,8 +935,13 @@ export const MentionableTextarea = React.forwardRef<HTMLTextAreaElement, Mention
           onShiftTab();
           return;
         }
-        // Enter (without Shift) → submit; Shift+Enter → newline
-        if (e.key === 'Enter' && !e.shiftKey && onModEnter) {
+        const nativeEvent = e.nativeEvent as KeyboardEvent & { isComposing?: boolean };
+        const isComposing =
+          nativeEvent.isComposing === true || e.key === 'Process' || nativeEvent.keyCode === 229;
+
+        // Enter (without Shift) → submit; Shift+Enter → newline.
+        // IME composition also uses Enter to confirm candidates; never submit in that state.
+        if (e.key === 'Enter' && !e.shiftKey && !isComposing && onModEnter) {
           e.preventDefault();
           e.stopPropagation();
           dismiss();

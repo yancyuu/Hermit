@@ -6,6 +6,9 @@ import {
   SKILLS_LIST,
   SKILLS_PREVIEW_IMPORT,
   SKILLS_PREVIEW_UPSERT,
+  SKILLS_SOURCES_LIST,
+  SKILLS_SOURCES_REFRESH,
+  SKILLS_SOURCES_SAVE,
   SKILLS_START_WATCHING,
   SKILLS_STOP_WATCHING,
 } from '@preload/constants/ipcChannels';
@@ -13,6 +16,7 @@ import { createLogger } from '@shared/utils/logger';
 
 import type { SkillsCatalogService } from '../services/extensions/skills/SkillsCatalogService';
 import type { SkillsMutationService } from '../services/extensions/skills/SkillsMutationService';
+import type { SkillSourceService } from '../services/extensions/skills/SkillSourceService';
 import type { SkillsWatcherService } from '../services/extensions/skills/SkillsWatcherService';
 import type {
   SkillCatalogItem,
@@ -20,6 +24,8 @@ import type {
   SkillDetail,
   SkillImportRequest,
   SkillReviewPreview,
+  SkillSource,
+  SkillSourcesSnapshot,
   SkillUpsertRequest,
 } from '@shared/types/extensions';
 import type { IpcMain, IpcMainInvokeEvent } from 'electron';
@@ -28,16 +34,19 @@ const logger = createLogger('IPC:skills');
 
 let skillsCatalogService: SkillsCatalogService | null = null;
 let skillsMutationService: SkillsMutationService | null = null;
+let skillSourceService: SkillSourceService | null = null;
 let skillsWatcherService: SkillsWatcherService | null = null;
 
 export function initializeSkillsHandlers(
   skillsCatalog?: SkillsCatalogService,
   skillsMutations?: SkillsMutationService,
-  skillsWatcher?: SkillsWatcherService
+  skillsWatcher?: SkillsWatcherService,
+  skillSources?: SkillSourceService
 ): void {
   skillsCatalogService = skillsCatalog ?? null;
   skillsMutationService = skillsMutations ?? null;
   skillsWatcherService = skillsWatcher ?? null;
+  skillSourceService = skillSources ?? null;
 }
 
 export function registerSkillsHandlers(ipcMain: IpcMain): void {
@@ -48,6 +57,9 @@ export function registerSkillsHandlers(ipcMain: IpcMain): void {
   ipcMain.handle(SKILLS_PREVIEW_IMPORT, handleSkillsPreviewImport);
   ipcMain.handle(SKILLS_APPLY_IMPORT, handleSkillsApplyImport);
   ipcMain.handle(SKILLS_DELETE, handleSkillsDelete);
+  ipcMain.handle(SKILLS_SOURCES_LIST, handleSkillSourcesList);
+  ipcMain.handle(SKILLS_SOURCES_SAVE, handleSkillSourcesSave);
+  ipcMain.handle(SKILLS_SOURCES_REFRESH, handleSkillSourcesRefresh);
   ipcMain.handle(SKILLS_START_WATCHING, handleSkillsStartWatching);
   ipcMain.handle(SKILLS_STOP_WATCHING, handleSkillsStopWatching);
 }
@@ -60,6 +72,9 @@ export function removeSkillsHandlers(ipcMain: IpcMain): void {
   ipcMain.removeHandler(SKILLS_PREVIEW_IMPORT);
   ipcMain.removeHandler(SKILLS_APPLY_IMPORT);
   ipcMain.removeHandler(SKILLS_DELETE);
+  ipcMain.removeHandler(SKILLS_SOURCES_LIST);
+  ipcMain.removeHandler(SKILLS_SOURCES_SAVE);
+  ipcMain.removeHandler(SKILLS_SOURCES_REFRESH);
   ipcMain.removeHandler(SKILLS_START_WATCHING);
   ipcMain.removeHandler(SKILLS_STOP_WATCHING);
 }
@@ -102,6 +117,13 @@ function getSkillsWatcherService(): SkillsWatcherService {
     throw new Error('Skills watcher service is not initialized');
   }
   return skillsWatcherService;
+}
+
+function getSkillSourceService(): SkillSourceService {
+  if (!skillSourceService) {
+    throw new Error('Skill source service is not initialized');
+  }
+  return skillSourceService;
 }
 
 async function handleSkillsList(
@@ -177,6 +199,21 @@ async function handleSkillsDelete(
     if (!request) throw new Error('request is required');
     return getSkillsMutationService().deleteSkill(request);
   });
+}
+
+async function handleSkillSourcesList(): Promise<IpcResult<SkillSourcesSnapshot>> {
+  return wrapHandler('skillSourcesList', () => getSkillSourceService().getSnapshot());
+}
+
+async function handleSkillSourcesSave(
+  _event: IpcMainInvokeEvent,
+  sources?: SkillSource[]
+): Promise<IpcResult<SkillSourcesSnapshot>> {
+  return wrapHandler('skillSourcesSave', () => getSkillSourceService().saveSources(sources));
+}
+
+async function handleSkillSourcesRefresh(): Promise<IpcResult<SkillSourcesSnapshot>> {
+  return wrapHandler('skillSourcesRefresh', () => getSkillSourceService().refreshSources());
 }
 
 async function handleSkillsStartWatching(

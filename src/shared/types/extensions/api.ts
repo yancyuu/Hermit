@@ -25,6 +25,8 @@ import type {
   SkillDetail,
   SkillImportRequest,
   SkillReviewPreview,
+  SkillSource,
+  SkillSourcesSnapshot,
   SkillUpsertRequest,
   SkillWatcherEvent,
 } from './skill';
@@ -69,6 +71,9 @@ export interface SkillsCatalogAPI {
   previewImport: (request: SkillImportRequest) => Promise<SkillReviewPreview>;
   applyImport: (request: SkillImportRequest) => Promise<SkillDetail | null>;
   deleteSkill: (request: SkillDeleteRequest) => Promise<void>;
+  listSources: () => Promise<SkillSourcesSnapshot>;
+  saveSources: (sources: SkillSource[]) => Promise<SkillSourcesSnapshot>;
+  refreshSources: () => Promise<SkillSourcesSnapshot>;
   startWatching: (projectPath?: string) => Promise<string>;
   stopWatching: (watchId: string) => Promise<void>;
   onChanged: (callback: (event: SkillWatcherEvent) => void) => () => void;

@@ -65,7 +65,6 @@ export const SkillImportDialog = ({
   open,
   projectPath,
   projectLabel,
-  allowCodexRootKind,
   onClose,
   onImported,
 }: SkillImportDialogProps): React.JSX.Element => {
@@ -76,7 +75,7 @@ export const SkillImportDialog = ({
   const [folderName, setFolderName] = useState('');
   const [folderNameEdited, setFolderNameEdited] = useState(false);
   const [scope, setScope] = useState<'user' | 'project'>('user');
-  const [rootKind, setRootKind] = useState<SkillRootKind>('claude');
+  const [rootKind, setRootKind] = useState<SkillRootKind>('hermit');
   const [preview, setPreview] = useState<SkillReviewPreview | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [reviewLoading, setReviewLoading] = useState(false);
@@ -89,7 +88,7 @@ export const SkillImportDialog = ({
     setFolderName('');
     setFolderNameEdited(false);
     setScope(projectPath ? 'project' : 'user');
-    setRootKind('claude');
+    setRootKind(projectPath ? 'claude' : 'hermit');
     setPreview(null);
     setReviewOpen(false);
     setReviewLoading(false);
@@ -123,14 +122,17 @@ export const SkillImportDialog = ({
   }, [open, projectPath, scope]);
 
   useEffect(() => {
-    if (open && rootKind === 'codex' && !allowCodexRootKind) {
+    if (open && scope === 'user' && rootKind !== 'hermit') {
+      setRootKind('hermit');
+    } else if (open && scope === 'project' && rootKind === 'hermit') {
       setRootKind('claude');
     }
-  }, [allowCodexRootKind, open, rootKind]);
+  }, [open, rootKind, scope]);
 
-  const visibleRootDefinitions = SKILL_ROOT_DEFINITIONS.filter(
-    (definition) => definition.rootKind !== 'codex' || allowCodexRootKind
-  );
+  const visibleRootDefinitions =
+    scope === 'user'
+      ? SKILL_ROOT_DEFINITIONS.filter((definition) => definition.rootKind === 'hermit')
+      : SKILL_ROOT_DEFINITIONS.filter((definition) => definition.rootKind !== 'hermit');
 
   async function handleChooseFolder(): Promise<void> {
     const selected = await api.config.selectFolders();
@@ -288,8 +290,9 @@ export const SkillImportDialog = ({
                       <SelectContent>
                         {visibleRootDefinitions.map((definition) => (
                           <SelectItem key={definition.rootKind} value={definition.rootKind}>
-                            {definition.directoryName}
-                            {definition.audience === 'codex' ? ' - 仅 Codex' : ' - 共享'}
+                            {definition.rootKind === 'hermit'
+                              ? '~/.hermit/skills'
+                              : `${definition.directoryName}/skills`}
                           </SelectItem>
                         ))}
                       </SelectContent>

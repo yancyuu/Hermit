@@ -759,7 +759,7 @@ export const TeamListView = (): React.JSX.Element => {
 
   const openTemplateDialog = useCallback((): void => {
     setShowTemplateDialog(true);
-    void loadTemplates(true);
+    void loadTemplates(false);
   }, [loadTemplates]);
 
   const handleAddTemplateSource = useCallback(async (): Promise<void> => {

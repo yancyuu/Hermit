@@ -39,7 +39,7 @@ import {
   getMembersRequiringRuntimeRestart,
 } from './editTeamRuntimeChanges';
 
-import type { ResolvedTeamMember } from '@shared/types';
+import type { ResolvedTeamMember, EffortLevel, TeamProviderId } from '@shared/types';
 
 const TEAM_COLOR_NAMES = [
   'blue',
@@ -65,7 +65,6 @@ interface EditTeamDialogProps {
   isTeamProvisioning?: boolean;
   projectPath?: string | null;
   onClose: () => void;
-  onChangeLeadRuntime: () => void;
   onSaved: () => Promise<void> | void;
 }
 
@@ -109,11 +108,11 @@ function getInvalidMemberNamesError(
     }
     const lower = name.toLowerCase();
     if (lower === 'user' || isLeadMemberName(lower)) {
-      return `成员名称“${name}”为保留名称`;
+      return `成员名称"${name}"为保留名称`;
     }
     const suffixInfo = parseNumericSuffixName(name);
     if (suffixInfo && suffixInfo.suffix >= 2) {
-      return `成员名称“${name}”不可用（保留给 Claude CLI 自动编号），请改用“${suffixInfo.base}”。`;
+      return `成员名称"${name}"不可用（保留给 Claude CLI 自动编号），请改用"${suffixInfo.base}"。`;
     }
   }
   return null;
@@ -146,7 +145,6 @@ export const EditTeamDialog = ({
   isTeamProvisioning = false,
   projectPath,
   onClose,
-  onChangeLeadRuntime,
   onSaved,
 }: EditTeamDialogProps): React.JSX.Element => {
   const { isLight } = useTheme();
@@ -160,6 +158,12 @@ export const EditTeamDialog = ({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saveOutcomeError, setSaveOutcomeError] = useState<string | null>(null);
+  const [leadProviderId, setLeadProviderId] = useState<TeamProviderId>(
+    leadMember?.providerId ?? 'anthropic'
+  );
+  const [leadModel, setLeadModel] = useState(leadMember?.model ?? '');
+  const [leadEffort, setLeadEffort] = useState<EffortLevel | undefined>(leadMember?.effort);
+  const [leadWorkflow, setLeadWorkflow] = useState(leadMember?.workflow ?? '');
   const [membersPendingRestartRetry, setMembersPendingRestartRetry] = useState<
     Record<string, string>
   >({});
@@ -182,12 +186,12 @@ export const EditTeamDialog = ({
       originalName: leadMember.name,
       roleSelection: '',
       customRole: '团队负责人',
-      workflow: leadMember.workflow,
-      providerId: leadMember.providerId,
-      model: leadMember.model ?? '',
-      effort: leadMember.effort,
+      workflow: leadWorkflow || leadMember.workflow,
+      providerId: leadProviderId,
+      model: leadModel,
+      effort: leadEffort,
     });
-  }, [leadMember]);
+  }, [leadMember, leadProviderId, leadModel, leadEffort, leadWorkflow]);
 
   useEffect(() => {
     const wasOpen = wasOpenRef.current;
@@ -199,6 +203,10 @@ export const EditTeamDialog = ({
         setColor(currentColor);
         setMembers(membersToDrafts(currentMembers));
         setTeammateWorktreeDefault(deriveTeammateWorktreeDefault(currentMembers));
+        setLeadProviderId(leadMember?.providerId ?? 'anthropic');
+        setLeadModel(leadMember?.model ?? '');
+        setLeadEffort(leadMember?.effort);
+        setLeadWorkflow(leadMember?.workflow ?? '');
         setError(null);
         setSaveOutcomeError(null);
         setMembersPendingRestartRetry({});
@@ -228,7 +236,7 @@ export const EditTeamDialog = ({
       pendingCommittedSourceSnapshotRef.current = null;
     }
     wasOpenRef.current = open;
-  }, [open, teamName, currentName, currentDescription, currentColor, currentMembers]);
+  }, [open, teamName, currentName, currentDescription, currentColor, currentMembers, leadMember]);
 
   const builtMembers = useMemo(() => buildMembersFromDrafts(members), [members]);
   const invalidMemberNamesError = useMemo(() => getInvalidMemberNamesError(members), [members]);
@@ -363,6 +371,10 @@ export const EditTeamDialog = ({
           name: name.trim(),
           description: description.trim(),
           color,
+          leadProviderId,
+          leadModel: leadModel.trim() || undefined,
+          leadEffort,
+          leadWorkflow: leadWorkflow.trim() || undefined,
         });
         configSaved = true;
         for (const removedMemberName of liveRemovedExistingMembers) {
@@ -534,26 +546,30 @@ export const EditTeamDialog = ({
                       onRoleChange={() => undefined}
                       onCustomRoleChange={() => undefined}
                       onRemove={() => undefined}
-                      onProviderChange={() => undefined}
-                      onModelChange={() => undefined}
-                      onEffortChange={() => undefined}
+                      onProviderChange={(_id, providerId) => {
+                        clearTransientErrors();
+                        setLeadProviderId(providerId);
+                        setLeadModel('');
+                      }}
+                      onModelChange={(_id, model) => {
+                        clearTransientErrors();
+                        setLeadModel(model);
+                      }}
+                      onEffortChange={(_id, effort) => {
+                        clearTransientErrors();
+                        setLeadEffort((effort || undefined) as EffortLevel | undefined);
+                      }}
+                      showWorkflow
+                      onWorkflowChange={(_id, workflow) => {
+                        clearTransientErrors();
+                        setLeadWorkflow(workflow);
+                      }}
                       projectPath={projectPath ?? null}
-                      lockProviderModel
                       lockRole
                       lockedRoleLabel="团队负责人"
                       lockIdentity
                       hideActionButton
-                      modelLockReason="团队负责人运行时请在“重新启动团队”中管理。"
-                      lockedModelAction={{
-                        label: '更改负责人运行时',
-                        description: '打开“重新启动团队”后，可以更改负责人提供商、模型或推理强度。',
-                        onClick: onChangeLeadRuntime,
-                        disabled: isTeamProvisioning,
-                      }}
                     />
-                    <p className="text-[11px] text-[var(--color-text-muted)]">
-                      团队负责人名称和角色在这里为只读。打开负责人行的运行时面板可更改提供商、模型或推理强度。
-                    </p>
                   </div>
                 ) : null
               }
@@ -575,7 +591,7 @@ export const EditTeamDialog = ({
           ) : null}
           {isTeamAlive && hasNewLiveTeammates ? (
             <p className="text-xs text-red-300">
-              团队运行中不能从“编辑团队”新增成员，请改用“添加成员”对话框。
+              团队运行中不能从"编辑团队"新增成员，请改用"添加成员"对话框。
             </p>
           ) : null}
           {isTeamAlive && hasBlockedLiveIdentityChanges ? (

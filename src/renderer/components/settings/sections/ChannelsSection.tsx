@@ -115,6 +115,15 @@ export const ChannelsSection = (): React.JSX.Element => {
     setStatusesByChannel(nextStatuses);
   }, []);
 
+  const refreshChannelStatus = useCallback(async (channel: FeishuChannelDraft): Promise<void> => {
+    const snapshot = channel.boundTeam
+      ? await api.teams.getLeadChannel(channel.boundTeam).catch(() => null)
+      : await api.teams.getGlobalLeadChannel().catch(() => null);
+    const nextStatus = snapshot?.statusesByChannel?.[channel.id];
+    if (!nextStatus) return;
+    setStatusesByChannel((prev) => ({ ...prev, [channel.id]: nextStatus }));
+  }, []);
+
   useEffect(() => {
     if (feishuChannels.length === 0) return;
     const hasActiveChannel = feishuChannels.some((channel) => {
@@ -215,13 +224,38 @@ export const ChannelsSection = (): React.JSX.Element => {
   const startChannel = async (channelId: string): Promise<void> => {
     setBusyChannelId(channelId);
     setMessage(null);
+    const targetChannel = feishuChannels.find((channel) => channel.id === channelId);
+    if (targetChannel) {
+      setStatusesByChannel((prev) => ({
+        ...prev,
+        [channelId]: {
+          running: true,
+          state: 'connecting',
+          message: `正在连接 ${targetChannel.name || '飞书长连接'}...`,
+          startedAt: new Date().toISOString(),
+          lastEventAt: null,
+          channelId,
+          channelName: targetChannel.name,
+        },
+      }));
+    }
     try {
       const savedChannels = await save(feishuChannels);
       const snapshot = await api.teams.startFeishuLeadChannel(channelId);
-      if (snapshot) {
-        setStatusesByChannel((prev) => ({ ...prev, ...snapshot.statusesByChannel }));
+      const savedChannel = savedChannels.find((channel) => channel.id === channelId);
+      const nextStatus =
+        snapshot?.statusesByChannel?.[channelId] ??
+        (savedChannel
+          ? await api.teams
+              .getGlobalLeadChannel()
+              .then((globalSnapshot) => globalSnapshot.statusesByChannel?.[channelId])
+              .catch(() => undefined)
+          : undefined);
+      if (nextStatus) {
+        setStatusesByChannel((prev) => ({ ...prev, [channelId]: nextStatus }));
       } else {
-        await refreshStatuses(savedChannels);
+        const channel = savedChannels.find((item) => item.id === channelId);
+        if (channel) await refreshChannelStatus(channel);
       }
       setMessage('已保存并连接渠道。');
     } catch (error) {
@@ -238,10 +272,12 @@ export const ChannelsSection = (): React.JSX.Element => {
     setMessage(null);
     try {
       const snapshot = await api.teams.stopFeishuLeadChannel(channelId);
-      if (snapshot) {
-        setStatusesByChannel((prev) => ({ ...prev, ...snapshot.statusesByChannel }));
+      const nextStatus = snapshot?.statusesByChannel?.[channelId];
+      if (nextStatus) {
+        setStatusesByChannel((prev) => ({ ...prev, [channelId]: nextStatus }));
       } else {
-        await refreshStatuses(feishuChannels);
+        const channel = feishuChannels.find((item) => item.id === channelId);
+        if (channel) await refreshChannelStatus(channel);
       }
       setMessage('渠道已断开。');
     } catch (error) {

@@ -12,11 +12,11 @@ export interface ResolvedSkillRoot {
   rootPath: string;
 }
 
-const USER_ROOTS: { rootKind: SkillRootKind; segments: string[] }[] = SKILL_ROOT_DEFINITIONS.map(
-  (definition) => ({
-    rootKind: definition.rootKind,
-    segments: [...definition.segments],
-  })
+const USER_CANONICAL_ROOT = SKILL_ROOT_DEFINITIONS.find(
+  (definition) => definition.rootKind === 'hermit'
+)!;
+const PROJECT_RUNTIME_ROOTS = SKILL_ROOT_DEFINITIONS.filter(
+  (definition) => definition.rootKind !== 'hermit'
 );
 
 export class SkillRootsResolver {
@@ -24,17 +24,15 @@ export class SkillRootsResolver {
     const roots: ResolvedSkillRoot[] = [];
     const homeDir = getHomeDir();
 
-    for (const def of USER_ROOTS) {
-      roots.push({
-        scope: 'user',
-        rootKind: def.rootKind,
-        projectRoot: null,
-        rootPath: path.join(homeDir, ...def.segments),
-      });
-    }
+    roots.push({
+      scope: 'user',
+      rootKind: USER_CANONICAL_ROOT.rootKind,
+      projectRoot: null,
+      rootPath: path.join(homeDir, ...USER_CANONICAL_ROOT.segments),
+    });
 
     if (projectPath) {
-      for (const def of USER_ROOTS) {
+      for (const def of PROJECT_RUNTIME_ROOTS) {
         roots.push({
           scope: 'project',
           rootKind: def.rootKind,

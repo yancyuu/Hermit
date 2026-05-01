@@ -1768,7 +1768,7 @@ export const CreateTeamDialog = ({
               validateMemberName={validateMemberNameInline}
               showWorkflow
               showJsonEditor
-              draftKeyPrefix="createTeam"
+              draftKeyPrefix={initialData ? undefined : 'createTeam'}
               projectPath={effectiveCwd || null}
               taskSuggestions={taskSuggestions}
               teamSuggestions={teamMentionSuggestions}

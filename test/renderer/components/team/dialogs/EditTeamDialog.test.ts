@@ -232,31 +232,15 @@ vi.mock('@renderer/components/team/members/MemberDraftRow', () => ({
   MemberDraftRow: ({
     member,
     lockedRoleLabel,
-    lockedModelAction,
   }: {
     member: { name: string };
     lockedRoleLabel?: string;
-    lockedModelAction?: {
-      label: string;
-      onClick: () => void;
-    };
   }) =>
     React.createElement(
       'div',
       null,
       member.name,
       lockedRoleLabel ? ` ${lockedRoleLabel}` : '',
-      lockedModelAction
-        ? React.createElement(
-            'button',
-            {
-              type: 'button',
-              'data-testid': 'lead-runtime-action',
-              onClick: lockedModelAction.onClick,
-            },
-            lockedModelAction.label
-          )
-        : null
     ),
 }));
 
@@ -334,7 +318,6 @@ describe('EditTeamDialog', () => {
         isTeamAlive: true,
         projectPath: '/tmp/project',
         onClose: vi.fn(),
-        onChangeLeadRuntime: vi.fn(),
         onSaved: vi.fn(),
       });
 
@@ -401,7 +384,6 @@ describe('EditTeamDialog', () => {
           isTeamAlive: true,
           projectPath: '/tmp/project',
           onClose: vi.fn(),
-          onChangeLeadRuntime: vi.fn(),
           onSaved: vi.fn(),
         })
       );
@@ -438,7 +420,6 @@ describe('EditTeamDialog', () => {
           isTeamAlive: true,
           projectPath: '/tmp/project',
           onClose: vi.fn(),
-          onChangeLeadRuntime: vi.fn(),
           onSaved: vi.fn(),
         })
       );
@@ -498,7 +479,6 @@ describe('EditTeamDialog', () => {
           isTeamAlive: true,
           projectPath: '/tmp/project',
           onClose: vi.fn(),
-          onChangeLeadRuntime: vi.fn(),
           onSaved: vi.fn(),
         })
       );
@@ -549,7 +529,6 @@ describe('EditTeamDialog', () => {
           isTeamAlive: true,
           projectPath: '/tmp/project',
           onClose: vi.fn(),
-          onChangeLeadRuntime: vi.fn(),
           onSaved: vi.fn(),
         })
       );
@@ -599,7 +578,6 @@ describe('EditTeamDialog', () => {
           isTeamProvisioning: true,
           projectPath: '/tmp/project',
           onClose: vi.fn(),
-          onChangeLeadRuntime: vi.fn(),
           onSaved: vi.fn(),
         })
       );
@@ -641,7 +619,6 @@ describe('EditTeamDialog', () => {
           isTeamAlive: true,
           projectPath: '/tmp/project',
           onClose: vi.fn(),
-          onChangeLeadRuntime: vi.fn(),
           onSaved: vi.fn(),
         })
       );
@@ -693,7 +670,6 @@ describe('EditTeamDialog', () => {
           isTeamAlive: false,
           projectPath: '/tmp/project',
           onClose: vi.fn(),
-          onChangeLeadRuntime: vi.fn(),
           onSaved: vi.fn(),
         })
       );
@@ -737,7 +713,6 @@ describe('EditTeamDialog', () => {
           isTeamAlive: true,
           projectPath: '/tmp/project',
           onClose: vi.fn(),
-          onChangeLeadRuntime: vi.fn(),
           onSaved: vi.fn(),
         })
       );
@@ -796,7 +771,6 @@ describe('EditTeamDialog', () => {
           isTeamAlive: true,
           projectPath: '/tmp/project',
           onClose: vi.fn(),
-          onChangeLeadRuntime: vi.fn(),
           onSaved,
         })
       );
@@ -843,7 +817,6 @@ describe('EditTeamDialog', () => {
         isTeamAlive: true,
         projectPath: '/tmp/project',
         onClose: vi.fn(),
-        onChangeLeadRuntime: vi.fn(),
         onSaved: vi.fn(),
       });
 
@@ -909,7 +882,6 @@ describe('EditTeamDialog', () => {
           isTeamAlive: false,
           projectPath: '/tmp/project',
           onClose: vi.fn(),
-          onChangeLeadRuntime: vi.fn(),
           onSaved: vi.fn(),
         })
       );
@@ -955,7 +927,6 @@ describe('EditTeamDialog', () => {
         isTeamAlive: true,
         projectPath: '/tmp/project',
         onClose: vi.fn(),
-        onChangeLeadRuntime: vi.fn(),
         onSaved: vi.fn(),
       });
 
@@ -1012,7 +983,6 @@ describe('EditTeamDialog', () => {
         isTeamAlive: true,
         projectPath: '/tmp/project',
         onClose: vi.fn(),
-        onChangeLeadRuntime: vi.fn(),
         onSaved,
       });
 
@@ -1050,7 +1020,6 @@ describe('EditTeamDialog', () => {
           isTeamAlive: true,
           projectPath: '/tmp/project',
           onClose: vi.fn(),
-          onChangeLeadRuntime: vi.fn(),
           onSaved,
         })
       );
@@ -1093,7 +1062,6 @@ describe('EditTeamDialog', () => {
           isTeamAlive: true,
           projectPath: '/tmp/project',
           onClose: vi.fn(),
-          onChangeLeadRuntime: vi.fn(),
           onSaved: vi.fn(),
         })
       );
@@ -1137,10 +1105,9 @@ describe('EditTeamDialog', () => {
     });
   });
 
-  it('shows an inline lead runtime action inside the lead context row', async () => {
+  it('shows the lead member row with editable runtime in the members section', async () => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
 
-    const onChangeLeadRuntime = vi.fn();
     const host = document.createElement('div');
     document.body.appendChild(host);
     const root = createRoot(host);
@@ -1163,22 +1130,14 @@ describe('EditTeamDialog', () => {
           } as any,
           projectPath: '/tmp/project',
           onClose: vi.fn(),
-          onChangeLeadRuntime,
           onSaved: vi.fn(),
         })
       );
       await Promise.resolve();
     });
 
-    const button = host.querySelector('[data-testid="lead-runtime-action"]');
-    expect(button).toBeTruthy();
-
-    await act(async () => {
-      button?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-      await Promise.resolve();
-    });
-
-    expect(onChangeLeadRuntime).toHaveBeenCalledTimes(1);
+    expect(host.textContent).toContain('lead');
+    expect(host.textContent).toContain('团队负责人');
 
     await act(async () => {
       root.unmount();

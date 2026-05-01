@@ -4,7 +4,7 @@
 
 export type SkillScope = 'user' | 'project';
 
-export type SkillRootKind = 'claude' | 'cursor' | 'agents' | 'codex';
+export type SkillRootKind = 'hermit' | 'claude' | 'cursor' | 'agents' | 'codex';
 
 export type SkillSourceType = 'filesystem';
 
@@ -155,4 +155,19 @@ export interface SkillWatcherEvent {
   projectPath: string | null;
   path: string;
   type: 'create' | 'change' | 'delete';
+}
+
+export interface SkillSource {
+  id: string;
+  name: string;
+  url: string;
+  enabled: boolean;
+  branch?: string;
+  skillsPath?: string;
+  lastSyncedAt?: string;
+  lastError?: string;
+}
+
+export interface SkillSourcesSnapshot {
+  sources: SkillSource[];
 }

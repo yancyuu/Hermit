@@ -103,6 +103,7 @@ import {
   RUNTIME_MANAGED_API_KEY_ENV_VARS,
   SkillsCatalogService,
   SkillsMutationService,
+  SkillSourceService,
   SkillsWatcherService,
 } from './services/extensions';
 import { startEventLoopLagMonitor } from './services/infrastructure/EventLoopLagMonitor';
@@ -1031,6 +1032,7 @@ async function initializeServices(): Promise<void> {
   const mcpHealthDiagnosticsService = new McpHealthDiagnosticsService(extensionsRuntimeAdapter);
   const skillsCatalogService = new SkillsCatalogService();
   const skillsMutationService = new SkillsMutationService();
+  const skillSourceService = new SkillSourceService();
   skillsWatcherService = new SkillsWatcherService();
   const extensionFacadeService = new ExtensionFacadeService(
     pluginCatalogService,
@@ -1182,6 +1184,7 @@ async function initializeServices(): Promise<void> {
     skillsCatalogService,
     skillsMutationService,
     skillsWatcherService,
+    skillSourceService,
     crossTeamService,
     teamBackupService ?? undefined
   );

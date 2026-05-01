@@ -75,6 +75,7 @@ import type {
   AddMemberRequest,
   AttachmentMeta,
   CreateTaskRequest,
+  EffortLevel,
   GlobalTask,
   InboxMessage,
   KanbanColumnId,
@@ -510,7 +511,7 @@ export class TeamDataService {
       color: getMemberColorByName(leadName),
       agentType: CANONICAL_LEAD_MEMBER_NAME,
       role: 'Team Lead',
-      workflow: undefined,
+      workflow: teamMeta?.workflow,
       isolation: undefined,
       providerId: launchIdentity?.providerId ?? teamMeta?.providerId,
       providerBackendId:
@@ -992,7 +993,15 @@ export class TeamDataService {
 
   async updateConfig(
     teamName: string,
-    updates: { name?: string; description?: string; color?: string }
+    updates: {
+      name?: string;
+      description?: string;
+      color?: string;
+      leadProviderId?: TeamProviderId;
+      leadModel?: string;
+      leadEffort?: EffortLevel;
+      leadWorkflow?: string;
+    }
   ): Promise<TeamConfig | null> {
     return this.configReader.updateConfig(teamName, updates);
   }
@@ -2166,6 +2175,7 @@ export class TeamDataService {
       source: enrichedRequest.source,
       leadSessionId: enrichedRequest.leadSessionId,
       attachments: enrichedRequest.attachments,
+      externalChannel: enrichedRequest.externalChannel,
     }) as SendMessageResult;
     this.invalidateMessageFeed(teamName);
     return result;

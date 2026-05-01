@@ -132,6 +132,26 @@ export class TeamSentMessagesStore {
                 commandLabel: row.commandOutput.commandLabel,
               }
             : undefined,
+        externalChannel:
+          row.externalChannel &&
+          typeof row.externalChannel === 'object' &&
+          row.externalChannel.provider === 'feishu' &&
+          typeof row.externalChannel.channelId === 'string' &&
+          typeof row.externalChannel.chatId === 'string'
+            ? {
+                provider: 'feishu',
+                channelId: row.externalChannel.channelId,
+                channelName:
+                  typeof row.externalChannel.channelName === 'string'
+                    ? row.externalChannel.channelName
+                    : undefined,
+                chatId: row.externalChannel.chatId,
+                senderId:
+                  typeof row.externalChannel.senderId === 'string'
+                    ? row.externalChannel.senderId
+                    : undefined,
+              }
+            : undefined,
       });
     }
 

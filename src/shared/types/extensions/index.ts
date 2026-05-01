@@ -57,6 +57,8 @@ export type {
   SkillRootKind,
   SkillSaveResult,
   SkillScope,
+  SkillSource,
+  SkillSourcesSnapshot,
   SkillSourceType,
   SkillUpsertRequest,
   SkillValidationIssue,

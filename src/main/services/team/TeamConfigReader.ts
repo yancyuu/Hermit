@@ -647,7 +647,16 @@ export class TeamConfigReader {
 
   async updateConfig(
     teamName: string,
-    updates: { name?: string; description?: string; color?: string; language?: string }
+    updates: {
+      name?: string;
+      description?: string;
+      color?: string;
+      language?: string;
+      leadProviderId?: import('@shared/types').TeamProviderId;
+      leadModel?: string;
+      leadEffort?: import('@shared/types').EffortLevel;
+      leadWorkflow?: string;
+    }
   ): Promise<TeamConfig | null> {
     const config = await this.getConfig(teamName);
     if (!config) {
@@ -667,6 +676,25 @@ export class TeamConfigReader {
     }
     const configPath = path.join(getTeamsBasePath(), teamName, 'config.json');
     await fs.promises.writeFile(configPath, JSON.stringify(config, null, 2), 'utf8');
+
+    if (
+      updates.leadProviderId !== undefined ||
+      updates.leadModel !== undefined ||
+      updates.leadEffort !== undefined ||
+      updates.leadWorkflow !== undefined
+    ) {
+      const meta = await this.teamMetaStore.getMeta(teamName);
+      if (meta) {
+        await this.teamMetaStore.writeMeta(teamName, {
+          ...meta,
+          providerId: updates.leadProviderId ?? meta.providerId,
+          model: updates.leadModel ?? meta.model,
+          effort: updates.leadEffort ?? meta.effort,
+          workflow: updates.leadWorkflow ?? meta.workflow,
+        });
+      }
+    }
+
     return config;
   }
 }

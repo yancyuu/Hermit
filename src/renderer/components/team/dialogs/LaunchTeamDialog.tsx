@@ -196,7 +196,10 @@ interface LaunchDialogRelaunchMode extends LaunchDialogBase {
   provisioningError: string | null;
   clearProvisioningError?: (teamName?: string) => void;
   activeTeams?: ActiveTeamRef[];
+  /** Simplified relaunch: only needs a confirmation, no editing. */
   onRelaunch: (request: TeamLaunchRequest, members: TeamCreateRequest['members']) => Promise<void>;
+  /** Current project path for the team (used to rebuild launch request). */
+  projectPath?: string;
 }
 
 interface LaunchDialogScheduleMode {
@@ -429,6 +432,18 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
   );
 
   // ---------------------------------------------------------------------------
+  // Relaunch-only state (saved request for rebuilding launch config)
+  // ---------------------------------------------------------------------------
+
+  const [relaunchSavedRequest, setRelaunchSavedRequest] = useState<TeamLaunchRequest | null>(null);
+  const [relaunchMembers, setRelaunchMembers] = useState<NonNullable<
+    TeamCreateRequest['members']
+  > | null>(null);
+  const relaunchProjectPath = isRelaunch
+    ? ((props as LaunchDialogRelaunchMode).projectPath ?? props.defaultProjectPath ?? '')
+    : '';
+
+  // ---------------------------------------------------------------------------
   // Schedule-only state
   // ---------------------------------------------------------------------------
 
@@ -656,6 +671,9 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
     setMembersDrafts([]);
     setSyncModelsWithLead(false);
     chipDraft.clearChipDraft();
+    // Relaunch state
+    setRelaunchSavedRequest(null);
+    setRelaunchMembers(null);
     // Schedule fields
     setSelectedTeamName('');
     setSchedLabel('');
@@ -735,6 +753,46 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
   useEffect(() => {
     if (!open || !isLaunchMode) return;
 
+    // Relaunch mode: load saved request for simple confirmation flow
+    if (isRelaunch) {
+      let cancelled = false;
+      void (async () => {
+        let savedRequest = null;
+        try {
+          savedRequest = effectiveTeamName
+            ? await api.teams.getSavedRequest(effectiveTeamName)
+            : null;
+        } catch {
+          savedRequest = null;
+        }
+        if (cancelled) return;
+        setRelaunchSavedRequest(savedRequest);
+        setRelaunchMembers(
+          savedRequest?.members && savedRequest.members.length > 0
+            ? savedRequest.members
+            : filterEditableMemberInputs(members)
+        );
+        // Initialize provider/model/effort from saved request
+        const savedProviderId = normalizeLeadProviderForMode(
+          normalizeOptionalTeamProviderId(savedRequest?.providerId) ?? 'anthropic',
+          multimodelEnabled
+        );
+        setSelectedProviderIdRaw(savedProviderId);
+        setSelectedModelRaw(
+          savedProviderId === normalizeOptionalTeamProviderId(savedRequest?.providerId)
+            ? (savedRequest?.model ?? '')
+            : getStoredTeamModel(savedProviderId)
+        );
+        setSelectedEffortRaw(savedRequest?.effort ?? '');
+        setSelectedFastModeRaw(savedRequest?.fastMode ?? getStoredTeamFastMode());
+        setSkipPermissionsRaw(savedRequest?.skipPermissions ?? true);
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    // Initial launch mode: full form population
     let cancelled = false;
     void (async () => {
       let savedRequest = null;
@@ -1790,6 +1848,70 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
   // ---------------------------------------------------------------------------
 
   const handleSubmit = (): void => {
+    // Relaunch mode: simplified flow — provider/model selectors + clearContext
+    if (isRelaunch) {
+      if (!relaunchSavedRequest && !relaunchMembers) {
+        setLocalError('正在加载上次启动配置，请稍候...');
+        return;
+      }
+      if (modelValidationError) {
+        setLocalError(modelValidationError);
+        return;
+      }
+      setLocalError(null);
+      setIsSubmitting(true);
+      void (async () => {
+        try {
+          const saved = relaunchSavedRequest;
+          const launchEffort = resolveTeamEffortForLaunch({
+            providerId: selectedProviderId,
+            selectedEffort,
+          });
+          const launchRequest: TeamLaunchRequest = {
+            teamName: effectiveTeamName,
+            cwd: saved?.cwd ?? relaunchProjectPath ?? effectiveCwd,
+            executionTarget: saved?.executionTarget ?? {
+              type: 'local',
+              cwd: saved?.cwd ?? relaunchProjectPath ?? (effectiveCwd || undefined),
+            },
+            prompt: saved?.prompt,
+            providerId: selectedProviderId,
+            providerBackendId:
+              resolveUiOwnedProviderBackendId(
+                selectedProviderId,
+                runtimeProviderStatusById.get(selectedProviderId)
+              ) ??
+              saved?.providerBackendId ??
+              undefined,
+            model: computeEffectiveTeamModel(
+              selectedModel,
+              false,
+              selectedProviderId,
+              runtimeProviderStatusById.get(selectedProviderId)
+            ),
+            effort: launchEffort,
+            fastMode: selectedFastMode,
+            limitContext: false,
+            clearContext: clearContext || undefined,
+            skipPermissions,
+            worktree: saved?.worktree,
+            extraCliArgs: saved?.extraCliArgs,
+          };
+          const nextMembers = relaunchMembers ?? [];
+          await props.onRelaunch(launchRequest, nextMembers);
+          openTeamTab(effectiveTeamName, relaunchProjectPath || defaultProjectPath);
+          closeDialog();
+        } catch (err) {
+          const message = err instanceof Error ? err.message : '重新启动团队失败';
+          setLocalError(message);
+          console.error('Failed to relaunch team from dialog:', err);
+        } finally {
+          setIsSubmitting(false);
+        }
+      })();
+      return;
+    }
+
     if (validationErrors.length > 0) {
       setLocalError(validationErrors[0]);
       return;
@@ -1862,14 +1984,10 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
             worktree: worktreeEnabled && worktreeName.trim() ? worktreeName.trim() : undefined,
             extraCliArgs: buildLaunchExtraCliArgs(customArgs, teammateLaunchMode),
           };
-          if (isRelaunch) {
-            await props.onRelaunch(launchRequest, nextMembers);
-          } else {
-            await api.teams.replaceMembers(effectiveTeamName, {
-              members: nextMembers,
-            });
-            await props.onLaunch(launchRequest);
-          }
+          await api.teams.replaceMembers(effectiveTeamName, {
+            members: nextMembers,
+          });
+          await props.onLaunch(launchRequest);
           openTeamTab(effectiveTeamName, effectiveCwd || defaultProjectPath);
           closeDialog();
         } else {
@@ -1958,15 +2076,17 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
   // Disabled state
   // ---------------------------------------------------------------------------
 
-  const isDisabled = isLaunchMode
-    ? isSubmitting ||
-      launchInFlight ||
-      validationErrors.length > 0 ||
-      !!modelValidationError ||
-      hasInvalidLaunchMemberNames ||
-      hasDuplicateLaunchMemberNames ||
-      teammateRuntimeCompatibility.blocksSubmission
-    : isSubmitting || validationErrors.length > 0 || !!modelValidationError;
+  const isDisabled = isRelaunch
+    ? isSubmitting || launchInFlight
+    : isLaunchMode
+      ? isSubmitting ||
+        launchInFlight ||
+        validationErrors.length > 0 ||
+        !!modelValidationError ||
+        hasInvalidLaunchMemberNames ||
+        hasDuplicateLaunchMemberNames ||
+        teammateRuntimeCompatibility.blocksSubmission
+      : isSubmitting || validationErrors.length > 0 || !!modelValidationError;
 
   // ---------------------------------------------------------------------------
   // Dynamic labels
@@ -1983,8 +2103,8 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
   const dialogDescription = isLaunchMode ? (
     isRelaunch ? (
       <>
-        停止 <span className="font-mono font-medium">{effectiveTeamName}</span> 的当前运行，并通过
-        Claude CLI 重新启动。
+        停止 <span className="font-mono font-medium">{effectiveTeamName}</span>{' '}
+        的当前运行，并使用现有配置重新启动。
       </>
     ) : (
       <>
@@ -2042,23 +2162,94 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
         </DialogHeader>
 
         {isRelaunch ? (
-          <div
-            className="rounded-md border p-3 text-xs"
-            style={{
-              backgroundColor: 'var(--warning-bg)',
-              borderColor: 'var(--warning-border)',
-              color: 'var(--warning-text)',
-            }}
-          >
-            <div className="flex items-start gap-2">
-              <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-              <div className="min-w-0 flex-1 space-y-1">
-                <p className="font-medium">重新启动会重置当前团队运行实例</p>
-                <p className="opacity-80">
-                  保存这些设置后，系统会停止当前团队进程，持久化最新成员配置，并使用新的运行时重新启动团队。
-                </p>
+          <div className="space-y-3">
+            <div
+              className="rounded-md border p-3 text-xs"
+              style={{
+                backgroundColor: 'var(--warning-bg)',
+                borderColor: 'var(--warning-border)',
+                color: 'var(--warning-text)',
+              }}
+            >
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+                <div className="min-w-0 flex-1 space-y-1">
+                  <p className="font-medium">重新启动会重置当前团队运行实例</p>
+                  <p className="opacity-80">
+                    系统会停止当前团队进程，并使用以下运行时配置重新启动。
+                    如需修改成员或工作流，请先在团队编辑面板中修改。
+                  </p>
+                </div>
               </div>
             </div>
+
+            <div>
+              <TeamModelSelector
+                providerId={selectedProviderId}
+                onProviderChange={setSelectedProviderId}
+                value={selectedModel}
+                onValueChange={setSelectedModel}
+                id="relaunch-model"
+                disableGeminiOption={true}
+              />
+              <EffortLevelSelector
+                value={selectedEffort}
+                onValueChange={setSelectedEffort}
+                id="relaunch-effort"
+                providerId={selectedProviderId}
+                model={selectedModel}
+                limitContext={false}
+              />
+              {selectedProviderId === 'anthropic' ? (
+                <div className="mt-2">
+                  <AnthropicFastModeSelector
+                    value={selectedFastMode}
+                    onValueChange={setSelectedFastMode}
+                    providerFastModeDefault={anthropicProviderFastModeDefault}
+                    model={selectedModel}
+                    limitContext={false}
+                    id="relaunch-fast-mode"
+                  />
+                  {anthropicRuntimeNotice ? (
+                    <div className="bg-amber-500/8 mt-2 rounded-md border border-amber-500/25 px-3 py-2 text-[11px] leading-relaxed text-amber-200">
+                      {anthropicRuntimeNotice}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="relaunch-clear-context"
+                checked={clearContext}
+                onCheckedChange={(checked) => setClearContext(checked === true)}
+              />
+              <Label
+                htmlFor="relaunch-clear-context"
+                className="flex cursor-pointer items-center gap-1.5 text-xs font-normal text-text-secondary"
+              >
+                <RotateCcw className="size-3 shrink-0" />
+                清空上下文（新会话）
+              </Label>
+            </div>
+            {clearContext && (
+              <div
+                className="rounded-md border px-3 py-2 text-xs"
+                style={{
+                  backgroundColor: 'var(--warning-bg)',
+                  borderColor: 'var(--warning-border)',
+                  color: 'var(--warning-text)',
+                }}
+              >
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
+                  <p>
+                    团队负责人会启动一个新会话，不再恢复之前的上下文。已积累的会话记忆和对话历史将不可用。
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         ) : null}
 
@@ -2107,217 +2298,318 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
           />
         ) : null}
 
-        <div className="space-y-4">
-          {/* ═══════════════════════════════════════════════════════════════════
+        {!isRelaunch ? (
+          <div className="space-y-4">
+            {/* ═══════════════════════════════════════════════════════════════════
               Schedule-only: Team selector (standalone mode)
               ═══════════════════════════════════════════════════════════════════ */}
-          {needsTeamSelector ? (
-            <div className="space-y-1.5">
-              <Label className="text-xs">团队</Label>
-              <Combobox
-                options={teamOptions}
-                value={selectedTeamName}
-                onValueChange={setSelectedTeamName}
-                placeholder="选择团队..."
-                searchPlaceholder="搜索团队..."
-                emptyMessage={
-                  teamOptions.length === 0 ? '暂无可用团队，请先创建团队。' : '没有匹配的团队。'
-                }
-                disabled={teamOptions.length === 0}
-                renderOption={(option, isSelected) => {
-                  const colorName = option.meta?.color as string | undefined;
-                  const colorSet = colorName
-                    ? getTeamColorSet(colorName)
-                    : nameColorSet(option.label);
-                  return (
-                    <>
-                      {isSelected ? (
-                        <Check className="mr-2 size-3.5 shrink-0 text-[var(--color-text)]" />
-                      ) : (
-                        <span
-                          className="mr-2 size-3.5 shrink-0 rounded-full"
-                          style={{ backgroundColor: colorSet.text }}
-                        />
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5">
-                          {isSelected ? (
-                            <span
-                              className="size-2 shrink-0 rounded-full"
-                              style={{ backgroundColor: colorSet.text }}
-                            />
+            {needsTeamSelector ? (
+              <div className="space-y-1.5">
+                <Label className="text-xs">团队</Label>
+                <Combobox
+                  options={teamOptions}
+                  value={selectedTeamName}
+                  onValueChange={setSelectedTeamName}
+                  placeholder="选择团队..."
+                  searchPlaceholder="搜索团队..."
+                  emptyMessage={
+                    teamOptions.length === 0 ? '暂无可用团队，请先创建团队。' : '没有匹配的团队。'
+                  }
+                  disabled={teamOptions.length === 0}
+                  renderOption={(option, isSelected) => {
+                    const colorName = option.meta?.color as string | undefined;
+                    const colorSet = colorName
+                      ? getTeamColorSet(colorName)
+                      : nameColorSet(option.label);
+                    return (
+                      <>
+                        {isSelected ? (
+                          <Check className="mr-2 size-3.5 shrink-0 text-[var(--color-text)]" />
+                        ) : (
+                          <span
+                            className="mr-2 size-3.5 shrink-0 rounded-full"
+                            style={{ backgroundColor: colorSet.text }}
+                          />
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5">
+                            {isSelected ? (
+                              <span
+                                className="size-2 shrink-0 rounded-full"
+                                style={{ backgroundColor: colorSet.text }}
+                              />
+                            ) : null}
+                            <p className="truncate font-medium text-[var(--color-text)]">
+                              {option.label}
+                            </p>
+                          </div>
+                          {option.description ? (
+                            <p className="truncate text-[var(--color-text-muted)]">
+                              {option.description}
+                            </p>
                           ) : null}
-                          <p className="truncate font-medium text-[var(--color-text)]">
-                            {option.label}
-                          </p>
                         </div>
-                        {option.description ? (
-                          <p className="truncate text-[var(--color-text-muted)]">
-                            {option.description}
-                          </p>
-                        ) : null}
-                      </div>
-                    </>
-                  );
-                }}
-              />
-            </div>
-          ) : null}
+                      </>
+                    );
+                  }}
+                />
+              </div>
+            ) : null}
 
-          {/* ═══════════════════════════════════════════════════════════════════
+            {/* ═══════════════════════════════════════════════════════════════════
               Schedule-only: Schedule configuration section
               ═══════════════════════════════════════════════════════════════════ */}
-          {isSchedule ? (
-            <div
-              className="rounded-lg border border-[var(--color-border-emphasis)] shadow-sm"
-              style={{
-                backgroundColor: isLight
-                  ? 'color-mix(in srgb, var(--color-surface-overlay) 24%, white 76%)'
-                  : 'var(--color-surface-overlay)',
-              }}
-            >
-              <button
-                type="button"
-                className="flex w-full items-center gap-1.5 px-3 py-2 text-left"
-                onClick={() => setSchedExpanded((v) => !v)}
+            {isSchedule ? (
+              <div
+                className="rounded-lg border border-[var(--color-border-emphasis)] shadow-sm"
+                style={{
+                  backgroundColor: isLight
+                    ? 'color-mix(in srgb, var(--color-surface-overlay) 24%, white 76%)'
+                    : 'var(--color-surface-overlay)',
+                }}
               >
-                {schedExpanded ? (
-                  <ChevronDown className="size-3.5 shrink-0 text-[var(--color-text-muted)]" />
-                ) : (
-                  <ChevronRight className="size-3.5 shrink-0 text-[var(--color-text-muted)]" />
-                )}
-                <span className="text-[11px] font-medium uppercase tracking-wider text-[var(--color-text-muted)]">
-                  定时计划
-                </span>
-                {!schedExpanded && (schedLabel || cronExpression) ? (
-                  <span className="ml-auto truncate text-[11px] text-[var(--color-text-muted)] opacity-70">
-                    {schedLabel || cronExpression}
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-1.5 px-3 py-2 text-left"
+                  onClick={() => setSchedExpanded((v) => !v)}
+                >
+                  {schedExpanded ? (
+                    <ChevronDown className="size-3.5 shrink-0 text-[var(--color-text-muted)]" />
+                  ) : (
+                    <ChevronRight className="size-3.5 shrink-0 text-[var(--color-text-muted)]" />
+                  )}
+                  <span className="text-[11px] font-medium uppercase tracking-wider text-[var(--color-text-muted)]">
+                    定时计划
                   </span>
-                ) : null}
-              </button>
+                  {!schedExpanded && (schedLabel || cronExpression) ? (
+                    <span className="ml-auto truncate text-[11px] text-[var(--color-text-muted)] opacity-70">
+                      {schedLabel || cronExpression}
+                    </span>
+                  ) : null}
+                </button>
 
-              {schedExpanded ? (
-                <div className="space-y-3 border-t border-[var(--color-border)] px-3 pb-3 pt-2">
-                  {/* Label */}
-                  <div className="space-y-1.5">
-                    <Label htmlFor="schedule-label" className="label-optional">
-                      标签（可选）
-                    </Label>
-                    <Input
-                      id="schedule-label"
-                      className="h-8 text-xs"
-                      value={schedLabel}
-                      onChange={(e) => setSchedLabel(e.target.value)}
-                      placeholder="例如：每日代码评审、夜间自动测试..."
+                {schedExpanded ? (
+                  <div className="space-y-3 border-t border-[var(--color-border)] px-3 pb-3 pt-2">
+                    {/* Label */}
+                    <div className="space-y-1.5">
+                      <Label htmlFor="schedule-label" className="label-optional">
+                        标签（可选）
+                      </Label>
+                      <Input
+                        id="schedule-label"
+                        className="h-8 text-xs"
+                        value={schedLabel}
+                        onChange={(e) => setSchedLabel(e.target.value)}
+                        placeholder="例如：每日代码评审、夜间自动测试..."
+                      />
+                    </div>
+
+                    {/* Cron + Timezone + Warmup */}
+                    <CronScheduleInput
+                      cronExpression={cronExpression}
+                      onCronExpressionChange={setCronExpression}
+                      timezone={timezone}
+                      onTimezoneChange={setTimezone}
+                      warmUpMinutes={warmUpMinutes}
+                      onWarmUpMinutesChange={setWarmUpMinutes}
                     />
                   </div>
+                ) : null}
+              </div>
+            ) : null}
 
-                  {/* Cron + Timezone + Warmup */}
-                  <CronScheduleInput
-                    cronExpression={cronExpression}
-                    onCronExpressionChange={setCronExpression}
-                    timezone={timezone}
-                    onTimezoneChange={setTimezone}
-                    warmUpMinutes={warmUpMinutes}
-                    onWarmUpMinutesChange={setWarmUpMinutes}
-                  />
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-
-          {/* ═══════════════════════════════════════════════════════════════════
+            {/* ═══════════════════════════════════════════════════════════════════
               Shared: Working directory
               ═══════════════════════════════════════════════════════════════════ */}
-          <ProjectPathSelector
-            cwdMode={cwdMode}
-            onCwdModeChange={setCwdMode}
-            selectedProjectPath={selectedProjectPath}
-            onSelectedProjectPathChange={setSelectedProjectPath}
-            customCwd={customCwd}
-            onCustomCwdChange={setCustomCwd}
-            projects={projects}
-            projectsLoading={projectsLoading}
-            projectsError={projectsError}
-          />
+            <ProjectPathSelector
+              cwdMode={cwdMode}
+              onCwdModeChange={setCwdMode}
+              selectedProjectPath={selectedProjectPath}
+              onSelectedProjectPathChange={setSelectedProjectPath}
+              customCwd={customCwd}
+              onCustomCwdChange={setCustomCwd}
+              projects={projects}
+              projectsLoading={projectsLoading}
+              projectsError={projectsError}
+            />
 
-          {/* ═══════════════════════════════════════════════════════════════════
+            {/* ═══════════════════════════════════════════════════════════════════
               Launch: optional settings
               Schedule: prompt + execution defaults
               ═══════════════════════════════════════════════════════════════════ */}
-          {isLaunchMode ? (
-            <OptionalSettingsSection
-              title={isRelaunch ? '重新启动设置' : '可选启动设置'}
-              description={
-                isRelaunch
-                  ? '重新启动团队前，请确认成员名单和团队负责人运行时。'
-                  : '默认只需关注项目路径；需要更多控制时再展开这里。'
-              }
-              summary={launchOptionalSummary}
-            >
-              <div className="space-y-4">
-                {selectedProviderId === 'anthropic' ? (
-                  <div className="space-y-2">
-                    <AnthropicFastModeSelector
-                      value={selectedFastMode}
-                      onValueChange={setSelectedFastMode}
-                      providerFastModeDefault={anthropicProviderFastModeDefault}
-                      model={selectedModel}
-                      limitContext={effectiveAnthropicRuntimeLimitContext}
-                      id="launch-fast-mode"
+            {isLaunchMode ? (
+              <OptionalSettingsSection
+                title={isRelaunch ? '重新启动设置' : '可选启动设置'}
+                description={
+                  isRelaunch
+                    ? '重新启动团队前，请确认成员名单和团队负责人运行时。'
+                    : '默认只需关注项目路径；需要更多控制时再展开这里。'
+                }
+                summary={launchOptionalSummary}
+              >
+                <div className="space-y-4">
+                  {selectedProviderId === 'anthropic' ? (
+                    <div className="space-y-2">
+                      <AnthropicFastModeSelector
+                        value={selectedFastMode}
+                        onValueChange={setSelectedFastMode}
+                        providerFastModeDefault={anthropicProviderFastModeDefault}
+                        model={selectedModel}
+                        limitContext={effectiveAnthropicRuntimeLimitContext}
+                        id="launch-fast-mode"
+                      />
+                      {anthropicRuntimeNotice ? (
+                        <div className="bg-amber-500/8 flex items-start gap-2 rounded-md border border-amber-500/25 px-3 py-2 text-[11px] leading-relaxed text-amber-200">
+                          <Info className="mt-0.5 size-3.5 shrink-0 text-amber-300" />
+                          <p>{anthropicRuntimeNotice}</p>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+                  <TeamRosterEditorSection
+                    members={membersDrafts}
+                    onMembersChange={setMembersDrafts}
+                    validateMemberName={validateMemberNameInline}
+                    showWorkflow
+                    showJsonEditor
+                    draftKeyPrefix={`launchTeam:${effectiveTeamName}`}
+                    projectPath={effectiveCwd || null}
+                    taskSuggestions={taskSuggestions}
+                    teamSuggestions={teamMentionSuggestions}
+                    existingMembers={members}
+                    defaultProviderId={selectedProviderId}
+                    inheritedProviderId={selectedProviderId}
+                    inheritedModel={selectedModel}
+                    inheritedEffort={(selectedEffort as EffortLevel) || undefined}
+                    inheritModelSettingsByDefault
+                    lockProviderModel={syncModelsWithLead}
+                    forceInheritedModelSettings={syncModelsWithLead}
+                    modelLockReason="该成员当前与团队负责人模型保持同步。关闭同步后可单独设置提供商、模型或推理强度。"
+                    providerId={selectedProviderId}
+                    model={selectedModel}
+                    effort={(selectedEffort as EffortLevel) || undefined}
+                    limitContext={limitContext}
+                    onProviderChange={setSelectedProviderId}
+                    onModelChange={setSelectedModel}
+                    onEffortChange={setSelectedEffort}
+                    onLimitContextChange={setLimitContext}
+                    syncModelsWithTeammates={syncModelsWithLead}
+                    onSyncModelsWithTeammatesChange={setSyncModelsWithLead}
+                    showWorktreeIsolationControls
+                    teammateWorktreeDefault={teammateWorktreeDefault}
+                    onTeammateWorktreeDefaultChange={setTeammateWorktreeDefault}
+                    leadWarningText={leadRuntimeWarningText}
+                    memberWarningById={combinedMemberRuntimeWarningById}
+                    leadModelIssueText={leadModelIssueText}
+                    memberModelIssueById={memberModelIssueById}
+                    softDeleteMembers
+                    disableGeminiOption={true}
+                  />
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="dialog-prompt" className="label-optional">
+                      给团队负责人的提示（可选）
+                    </Label>
+                    <MentionableTextarea
+                      id="dialog-prompt"
+                      className="min-h-[100px] text-xs"
+                      minRows={4}
+                      maxRows={12}
+                      value={promptDraft.value}
+                      onValueChange={promptDraft.setValue}
+                      suggestions={mentionSuggestions}
+                      projectPath={effectiveCwd || null}
+                      chips={chipDraft.chips}
+                      onChipRemove={chipDraft.removeChip}
+                      onFileChipInsert={chipDraft.addChip}
+                      placeholder="填写给团队负责人的说明..."
+                      footerRight={
+                        promptDraft.isSaved ? (
+                          <span className="text-[10px] text-[var(--color-text-muted)]">已保存</span>
+                        ) : null
+                      }
                     />
-                    {anthropicRuntimeNotice ? (
-                      <div className="bg-amber-500/8 flex items-start gap-2 rounded-md border border-amber-500/25 px-3 py-2 text-[11px] leading-relaxed text-amber-200">
-                        <Info className="mt-0.5 size-3.5 shrink-0 text-amber-300" />
-                        <p>{anthropicRuntimeNotice}</p>
+                  </div>
+
+                  <div>
+                    <SkipPermissionsCheckbox
+                      id="dialog-skip-permissions"
+                      checked={skipPermissions}
+                      onCheckedChange={setSkipPermissions}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    {providerChangeForcesFreshLeadContext ? (
+                      <div
+                        className="rounded-md border px-3 py-2 text-xs"
+                        style={{
+                          backgroundColor: 'var(--warning-bg)',
+                          borderColor: 'var(--warning-border)',
+                          color: 'var(--warning-text)',
+                        }}
+                      >
+                        <div className="flex items-start gap-2">
+                          <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
+                          <p>
+                            提供商已从 {getProviderLabel(previousProviderId!)} 更改为{' '}
+                            {getProviderLabel(selectedProviderId)}
+                            。之前的负责人会话不会恢复，负责人会以全新上下文启动，以正确应用新的运行时。
+                          </p>
+                        </div>
                       </div>
                     ) : null}
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="clear-context"
+                        checked={clearContext}
+                        onCheckedChange={(checked) => setClearContext(checked === true)}
+                      />
+                      <Label
+                        htmlFor="clear-context"
+                        className="flex cursor-pointer items-center gap-1.5 text-xs font-normal text-text-secondary"
+                      >
+                        <RotateCcw className="size-3 shrink-0" />
+                        清空上下文（新会话）
+                      </Label>
+                    </div>
+                    {clearContext && (
+                      <div
+                        className="rounded-md border px-3 py-2 text-xs"
+                        style={{
+                          backgroundColor: 'var(--warning-bg)',
+                          borderColor: 'var(--warning-border)',
+                          color: 'var(--warning-text)',
+                        }}
+                      >
+                        <div className="flex items-start gap-2">
+                          <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
+                          <p>
+                            团队负责人会启动一个新会话，不再恢复之前的上下文。已积累的会话记忆和对话历史将不可用。
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                ) : null}
-                <TeamRosterEditorSection
-                  members={membersDrafts}
-                  onMembersChange={setMembersDrafts}
-                  validateMemberName={validateMemberNameInline}
-                  showWorkflow
-                  showJsonEditor
-                  draftKeyPrefix={`launchTeam:${effectiveTeamName}`}
-                  projectPath={effectiveCwd || null}
-                  taskSuggestions={taskSuggestions}
-                  teamSuggestions={teamMentionSuggestions}
-                  existingMembers={members}
-                  defaultProviderId={selectedProviderId}
-                  inheritedProviderId={selectedProviderId}
-                  inheritedModel={selectedModel}
-                  inheritedEffort={(selectedEffort as EffortLevel) || undefined}
-                  inheritModelSettingsByDefault
-                  lockProviderModel={syncModelsWithLead}
-                  forceInheritedModelSettings={syncModelsWithLead}
-                  modelLockReason="该成员当前与团队负责人模型保持同步。关闭同步后可单独设置提供商、模型或推理强度。"
-                  providerId={selectedProviderId}
-                  model={selectedModel}
-                  effort={(selectedEffort as EffortLevel) || undefined}
-                  limitContext={limitContext}
-                  onProviderChange={setSelectedProviderId}
-                  onModelChange={setSelectedModel}
-                  onEffortChange={setSelectedEffort}
-                  onLimitContextChange={setLimitContext}
-                  syncModelsWithTeammates={syncModelsWithLead}
-                  onSyncModelsWithTeammatesChange={setSyncModelsWithLead}
-                  showWorktreeIsolationControls
-                  teammateWorktreeDefault={teammateWorktreeDefault}
-                  onTeammateWorktreeDefaultChange={setTeammateWorktreeDefault}
-                  leadWarningText={leadRuntimeWarningText}
-                  memberWarningById={combinedMemberRuntimeWarningById}
-                  leadModelIssueText={leadModelIssueText}
-                  memberModelIssueById={memberModelIssueById}
-                  softDeleteMembers
-                  disableGeminiOption={true}
-                />
 
+                  <AdvancedCliSection
+                    teamName={effectiveTeamName}
+                    internalArgs={internalArgs}
+                    worktreeEnabled={worktreeEnabled}
+                    onWorktreeEnabledChange={setWorktreeEnabled}
+                    worktreeName={worktreeName}
+                    onWorktreeNameChange={setWorktreeName}
+                    customArgs={customArgs}
+                    onCustomArgsChange={setCustomArgs}
+                    teammateLaunchMode={teammateLaunchMode}
+                    onTeammateLaunchModeChange={setTeammateLaunchMode}
+                  />
+                </div>
+              </OptionalSettingsSection>
+            ) : (
+              <>
                 <div className="space-y-1.5">
-                  <Label htmlFor="dialog-prompt" className="label-optional">
-                    给团队负责人的提示（可选）
-                  </Label>
+                  <Label htmlFor="dialog-prompt">提示词</Label>
                   <MentionableTextarea
                     id="dialog-prompt"
                     className="min-h-[100px] text-xs"
@@ -2330,206 +2622,107 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
                     chips={chipDraft.chips}
                     onChipRemove={chipDraft.removeChip}
                     onFileChipInsert={chipDraft.addChip}
-                    placeholder="填写给团队负责人的说明..."
+                    placeholder="填写定时执行时给 Claude 的说明..."
                     footerRight={
                       promptDraft.isSaved ? (
                         <span className="text-[10px] text-[var(--color-text-muted)]">已保存</span>
                       ) : null
                     }
                   />
+                  <p className="text-[11px] text-[var(--color-text-muted)]">
+                    该提示词会传递给 <code className="font-mono">claude -p</code> 用于 one-shot
+                    execution
+                  </p>
                 </div>
 
                 <div>
+                  <TeamModelSelector
+                    providerId={selectedProviderId}
+                    onProviderChange={setSelectedProviderId}
+                    value={selectedModel}
+                    onValueChange={setSelectedModel}
+                    id="dialog-model"
+                    disableGeminiOption={true}
+                  />
+                  <EffortLevelSelector
+                    value={selectedEffort}
+                    onValueChange={setSelectedEffort}
+                    id="dialog-effort"
+                    providerId={selectedProviderId}
+                    model={selectedModel}
+                    limitContext={false}
+                  />
+                  {selectedProviderId === 'anthropic' ? (
+                    <div className="mt-2">
+                      <AnthropicFastModeSelector
+                        value={selectedFastMode}
+                        onValueChange={setSelectedFastMode}
+                        providerFastModeDefault={anthropicProviderFastModeDefault}
+                        model={selectedModel}
+                        limitContext={false}
+                        id="dialog-fast-mode"
+                      />
+                      {anthropicRuntimeNotice ? (
+                        <div className="bg-amber-500/8 mt-2 rounded-md border border-amber-500/25 px-3 py-2 text-[11px] leading-relaxed text-amber-200">
+                          {anthropicRuntimeNotice}
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
                   <SkipPermissionsCheckbox
                     id="dialog-skip-permissions"
                     checked={skipPermissions}
                     onCheckedChange={setSkipPermissions}
                   />
                 </div>
+              </>
+            )}
 
-                <div className="space-y-2">
-                  {providerChangeForcesFreshLeadContext ? (
-                    <div
-                      className="rounded-md border px-3 py-2 text-xs"
-                      style={{
-                        backgroundColor: 'var(--warning-bg)',
-                        borderColor: 'var(--warning-border)',
-                        color: 'var(--warning-text)',
-                      }}
-                    >
-                      <div className="flex items-start gap-2">
-                        <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
-                        <p>
-                          提供商已从 {getProviderLabel(previousProviderId!)} 更改为{' '}
-                          {getProviderLabel(selectedProviderId)}
-                          。之前的负责人会话不会恢复，负责人会以全新上下文启动，以正确应用新的运行时。
-                        </p>
-                      </div>
-                    </div>
-                  ) : null}
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      id="clear-context"
-                      checked={clearContext}
-                      onCheckedChange={(checked) => setClearContext(checked === true)}
-                    />
-                    <Label
-                      htmlFor="clear-context"
-                      className="flex cursor-pointer items-center gap-1.5 text-xs font-normal text-text-secondary"
-                    >
-                      <RotateCcw className="size-3 shrink-0" />
-                      清空上下文（新会话）
-                    </Label>
-                  </div>
-                  {clearContext && (
-                    <div
-                      className="rounded-md border px-3 py-2 text-xs"
-                      style={{
-                        backgroundColor: 'var(--warning-bg)',
-                        borderColor: 'var(--warning-border)',
-                        color: 'var(--warning-text)',
-                      }}
-                    >
-                      <div className="flex items-start gap-2">
-                        <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
-                        <p>
-                          团队负责人会启动一个新会话，不再恢复之前的上下文。已积累的会话记忆和对话历史将不可用。
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <AdvancedCliSection
-                  teamName={effectiveTeamName}
-                  internalArgs={internalArgs}
-                  worktreeEnabled={worktreeEnabled}
-                  onWorktreeEnabledChange={setWorktreeEnabled}
-                  worktreeName={worktreeName}
-                  onWorktreeNameChange={setWorktreeName}
-                  customArgs={customArgs}
-                  onCustomArgsChange={setCustomArgs}
-                  teammateLaunchMode={teammateLaunchMode}
-                  onTeammateLaunchModeChange={setTeammateLaunchMode}
-                />
-              </div>
-            </OptionalSettingsSection>
-          ) : (
-            <>
-              <div className="space-y-1.5">
-                <Label htmlFor="dialog-prompt">提示词</Label>
-                <MentionableTextarea
-                  id="dialog-prompt"
-                  className="min-h-[100px] text-xs"
-                  minRows={4}
-                  maxRows={12}
-                  value={promptDraft.value}
-                  onValueChange={promptDraft.setValue}
-                  suggestions={mentionSuggestions}
-                  projectPath={effectiveCwd || null}
-                  chips={chipDraft.chips}
-                  onChipRemove={chipDraft.removeChip}
-                  onFileChipInsert={chipDraft.addChip}
-                  placeholder="填写定时执行时给 Claude 的说明..."
-                  footerRight={
-                    promptDraft.isSaved ? (
-                      <span className="text-[10px] text-[var(--color-text-muted)]">已保存</span>
-                    ) : null
-                  }
-                />
-                <p className="text-[11px] text-[var(--color-text-muted)]">
-                  该提示词会传递给 <code className="font-mono">claude -p</code> 用于 one-shot
-                  execution
-                </p>
-              </div>
-
-              <div>
-                <TeamModelSelector
-                  providerId={selectedProviderId}
-                  onProviderChange={setSelectedProviderId}
-                  value={selectedModel}
-                  onValueChange={setSelectedModel}
-                  id="dialog-model"
-                  disableGeminiOption={true}
-                />
-                <EffortLevelSelector
-                  value={selectedEffort}
-                  onValueChange={setSelectedEffort}
-                  id="dialog-effort"
-                  providerId={selectedProviderId}
-                  model={selectedModel}
-                  limitContext={false}
-                />
-                {selectedProviderId === 'anthropic' ? (
-                  <div className="mt-2">
-                    <AnthropicFastModeSelector
-                      value={selectedFastMode}
-                      onValueChange={setSelectedFastMode}
-                      providerFastModeDefault={anthropicProviderFastModeDefault}
-                      model={selectedModel}
-                      limitContext={false}
-                      id="dialog-fast-mode"
-                    />
-                    {anthropicRuntimeNotice ? (
-                      <div className="bg-amber-500/8 mt-2 rounded-md border border-amber-500/25 px-3 py-2 text-[11px] leading-relaxed text-amber-200">
-                        {anthropicRuntimeNotice}
-                      </div>
-                    ) : null}
-                  </div>
-                ) : null}
-                <SkipPermissionsCheckbox
-                  id="dialog-skip-permissions"
-                  checked={skipPermissions}
-                  onCheckedChange={setSkipPermissions}
-                />
-              </div>
-            </>
-          )}
-
-          {/* ═══════════════════════════════════════════════════════════════════
+            {/* ═══════════════════════════════════════════════════════════════════
               Schedule-only: Execution limits
               ═══════════════════════════════════════════════════════════════════ */}
-          {isSchedule ? (
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label
-                  htmlFor="schedule-max-turns"
-                  className="text-[11px] text-[var(--color-text-muted)]"
-                >
-                  Max turns
-                </Label>
-                <Input
-                  id="schedule-max-turns"
-                  type="number"
-                  min={1}
-                  max={500}
-                  className="h-8 text-xs"
-                  value={maxTurns}
-                  onChange={(e) => setMaxTurns(Math.max(1, parseInt(e.target.value) || 50))}
-                />
-              </div>
+            {isSchedule ? (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="schedule-max-turns"
+                    className="text-[11px] text-[var(--color-text-muted)]"
+                  >
+                    Max turns
+                  </Label>
+                  <Input
+                    id="schedule-max-turns"
+                    type="number"
+                    min={1}
+                    max={500}
+                    className="h-8 text-xs"
+                    value={maxTurns}
+                    onChange={(e) => setMaxTurns(Math.max(1, parseInt(e.target.value) || 50))}
+                  />
+                </div>
 
-              <div className="space-y-1">
-                <Label
-                  htmlFor="schedule-max-budget"
-                  className="text-[11px] text-[var(--color-text-muted)]"
-                >
-                  Max budget (USD)
-                </Label>
-                <Input
-                  id="schedule-max-budget"
-                  type="number"
-                  min={0}
-                  step={0.5}
-                  className="h-8 text-xs"
-                  value={maxBudgetUsd}
-                  onChange={(e) => setMaxBudgetUsd(e.target.value)}
-                  placeholder="不限"
-                />
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="schedule-max-budget"
+                    className="text-[11px] text-[var(--color-text-muted)]"
+                  >
+                    Max budget (USD)
+                  </Label>
+                  <Input
+                    id="schedule-max-budget"
+                    type="number"
+                    min={0}
+                    step={0.5}
+                    className="h-8 text-xs"
+                    value={maxBudgetUsd}
+                    onChange={(e) => setMaxBudgetUsd(e.target.value)}
+                    placeholder="不限"
+                  />
+                </div>
               </div>
-            </div>
-          ) : null}
-        </div>
+            ) : null}
+          </div>
+        ) : null}
 
         {/* Error display */}
         {activeError ? (
@@ -2539,9 +2732,9 @@ export const LaunchTeamDialog = (props: LaunchTeamDialogProps): React.JSX.Elemen
           </div>
         ) : null}
 
-        <DialogFooter className={isLaunchMode ? 'pt-4 sm:justify-between' : 'pt-4'}>
-          {/* Launch-only: CLI warm-up status */}
-          {isLaunchMode ? (
+        <DialogFooter className={isLaunchMode && !isRelaunch ? 'pt-4 sm:justify-between' : 'pt-4'}>
+          {/* Launch-only: CLI warm-up status (not shown for simplified relaunch) */}
+          {isLaunchMode && !isRelaunch ? (
             <div className="min-w-0">
               {effectivePrepare.state === 'idle' || effectivePrepare.state === 'loading' ? (
                 <>

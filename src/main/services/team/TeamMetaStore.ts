@@ -36,6 +36,7 @@ export interface TeamMetaFile {
   worktree?: string;
   extraCliArgs?: string;
   limitContext?: boolean;
+  workflow?: string;
   launchIdentity?: ProviderModelLaunchIdentity;
   createdAt: number;
 }
@@ -208,6 +209,7 @@ export class TeamMetaStore {
       extraCliArgs:
         typeof file.extraCliArgs === 'string' ? file.extraCliArgs.trim() || undefined : undefined,
       limitContext: typeof file.limitContext === 'boolean' ? file.limitContext : undefined,
+      workflow: typeof file.workflow === 'string' ? file.workflow.trim() || undefined : undefined,
       launchIdentity: normalizeLaunchIdentity(file.launchIdentity),
       createdAt: typeof file.createdAt === 'number' ? file.createdAt : Date.now(),
     };
@@ -234,6 +236,7 @@ export class TeamMetaStore {
       worktree: data.worktree?.trim() || undefined,
       extraCliArgs: data.extraCliArgs?.trim() || undefined,
       limitContext: data.limitContext,
+      workflow: data.workflow?.trim() || undefined,
       launchIdentity: normalizeLaunchIdentity(data.launchIdentity),
       createdAt: data.createdAt,
     };

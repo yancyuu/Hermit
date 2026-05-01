@@ -436,7 +436,7 @@ export class LeadChannelListenerService {
             member: leadName,
             to: leadName,
             from: 'user',
-            text: `[${channel.name}]\n聊天：${chatId}\n\n${text}`,
+            text,
             messageId: inboundMessage.messageId,
             source: 'inbox',
             externalChannel: {

@@ -100,6 +100,9 @@ import {
   SKILLS_LIST,
   SKILLS_PREVIEW_IMPORT,
   SKILLS_PREVIEW_UPSERT,
+  SKILLS_SOURCES_LIST,
+  SKILLS_SOURCES_REFRESH,
+  SKILLS_SOURCES_SAVE,
   SKILLS_START_WATCHING,
   SKILLS_STOP_WATCHING,
   SSH_CHECK_MACHINE,
@@ -379,6 +382,8 @@ import type {
   SkillDetail,
   SkillImportRequest,
   SkillReviewPreview,
+  SkillSource,
+  SkillSourcesSnapshot,
   SkillUpsertRequest,
   SkillWatcherEvent,
 } from '@shared/types/extensions';
@@ -1725,6 +1730,10 @@ const electronAPI: ElectronAPI = {
     applyImport: (request: SkillImportRequest) =>
       invokeIpcWithResult<SkillDetail | null>(SKILLS_APPLY_IMPORT, request),
     deleteSkill: (request: SkillDeleteRequest) => invokeIpcWithResult<void>(SKILLS_DELETE, request),
+    listSources: () => invokeIpcWithResult<SkillSourcesSnapshot>(SKILLS_SOURCES_LIST),
+    saveSources: (sources: SkillSource[]) =>
+      invokeIpcWithResult<SkillSourcesSnapshot>(SKILLS_SOURCES_SAVE, sources),
+    refreshSources: () => invokeIpcWithResult<SkillSourcesSnapshot>(SKILLS_SOURCES_REFRESH),
     startWatching: (projectPath?: string) =>
       invokeIpcWithResult<string>(SKILLS_START_WATCHING, projectPath),
     stopWatching: (watchId: string) => invokeIpcWithResult<void>(SKILLS_STOP_WATCHING, watchId),

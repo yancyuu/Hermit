@@ -3,10 +3,11 @@ import { formatSkillRootKind, getSkillAudience } from '@shared/utils/skillRoots'
 import type { SkillCatalogItem } from '@shared/types/extensions';
 
 const ROOT_PRECEDENCE: Record<SkillCatalogItem['rootKind'], number> = {
-  claude: 0,
-  cursor: 1,
-  agents: 2,
-  codex: 3,
+  hermit: 0,
+  claude: 1,
+  cursor: 2,
+  agents: 3,
+  codex: 4,
 };
 
 export class SkillValidator {

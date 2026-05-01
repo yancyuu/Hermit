@@ -75,6 +75,7 @@ import {
   MoveRight,
   RefreshCw,
   Reply,
+  Send,
   X,
 } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
@@ -97,6 +98,36 @@ function parseQualifiedRecipient(
     teamName: trimmed.slice(0, dot),
     memberName: trimmed.slice(dot + 1),
   };
+}
+
+function buildExternalChannelSourceLabel(message: InboxMessage): string | null {
+  const channel = message.externalChannel;
+  if (!channel || channel.provider !== 'feishu') {
+    return null;
+  }
+  const channelName = channel.channelName?.trim() || channel.channelId;
+  const channelLabel =
+    channelName === channel.channelId ? channelName : `${channelName} (${channel.channelId})`;
+  return [
+    '飞书',
+    channelLabel,
+    `chat ${channel.chatId}`,
+    channel.senderId ? `sender ${channel.senderId}` : null,
+  ]
+    .filter((part): part is string => Boolean(part))
+    .join(' · ');
+}
+
+function buildLeadSourceTooltip(message: InboxMessage, leadLabel: string): string {
+  const parts = [`发送者：${leadLabel}`, `消息来源：${message.source ?? 'unknown'}`];
+  const externalLabel = buildExternalChannelSourceLabel(message);
+  if (externalLabel) {
+    parts.push(`渠道：${externalLabel}`);
+  }
+  if (message.leadSessionId) {
+    parts.push(`Session：${message.leadSessionId}`);
+  }
+  return parts.join('\n');
 }
 
 function parseCrossTeamPseudoRecipient(value: string | undefined): string | null {
@@ -697,6 +728,7 @@ export const ActivityItem = memo(
     const crossTeamSentTarget = getCrossTeamSentTarget(message.to, teamName, localMemberNames);
     const crossTeamSentMemberName = getCrossTeamSentMemberName(message.to);
     const isCrossTeam = message.source === CROSS_TEAM_SOURCE || parsedCrossTeamPrefix !== null;
+    const externalChannelSourceLabel = buildExternalChannelSourceLabel(message);
     const isCrossTeamSent =
       message.source === CROSS_TEAM_SENT_SOURCE || crossTeamSentTarget !== null;
     const isCrossTeamAny = isCrossTeam || isCrossTeamSent;
@@ -1012,13 +1044,27 @@ export const ActivityItem = memo(
 
     const leadSourceBadge =
       message.source === 'lead_session' && !isSlashCommandResult ? (
-        <span className="text-[10px] uppercase tracking-wide" style={{ color: CARD_ICON_MUTED }}>
-          session
-        </span>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="inline-flex items-center rounded-full bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-blue-300">
+              session
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-80 whitespace-pre-line text-xs">
+            {buildLeadSourceTooltip(message, message.from)}
+          </TooltipContent>
+        </Tooltip>
       ) : message.source === 'lead_process' && !isSlashCommandResult ? (
-        <span className="text-[10px] uppercase tracking-wide" style={{ color: CARD_ICON_MUTED }}>
-          live
-        </span>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-emerald-300">
+              live
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-80 whitespace-pre-line text-xs">
+            {buildLeadSourceTooltip(message, message.from)}
+          </TooltipContent>
+        </Tooltip>
       ) : null;
 
     const statusBadge = rateLimited ? (
@@ -1588,6 +1634,12 @@ export const ActivityItem = memo(
                 messageId={message.messageId}
                 attachments={message.attachments}
               />
+            ) : null}
+            {externalChannelSourceLabel ? (
+              <div className="mt-2 inline-flex max-w-full items-center gap-1 rounded-full border border-sky-400/20 bg-sky-500/10 px-2 py-0.5 text-[10px] text-sky-300">
+                <Send size={10} className="shrink-0" />
+                <span className="truncate">{externalChannelSourceLabel}</span>
+              </div>
             ) : null}
           </div>
         ) : null}

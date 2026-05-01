@@ -11,11 +11,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@renderer/components/ui
 import { Tooltip, TooltipContent, TooltipTrigger } from '@renderer/components/ui/tooltip';
 import { useStore } from '@renderer/store';
 import { createLoadingMultimodelCliStatus } from '@renderer/store/slices/cliInstallerSlice';
-import { getVisibleMultimodelProviders } from '@renderer/utils/multimodelProviderVisibility';
-import {
-  getCliProviderExtensionCapability,
-  isCliExtensionCapabilityAvailable,
-} from '@shared/utils/providerExtensionCapabilities';
 import {
   formatSkillRootKind,
   getSkillAudience,
@@ -34,6 +29,7 @@ import {
   Info,
   Plus,
   Search,
+  Trash2,
 } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -45,19 +41,17 @@ import { SkillImportDialog } from './SkillImportDialog';
 import { resolveSkillProjectPath } from './skillProjectUtils';
 
 import type { SkillsSortState } from '@renderer/hooks/useExtensionsTabState';
-import type { SkillCatalogItem, SkillDetail, SkillValidationIssue } from '@shared/types/extensions';
+import type {
+  SkillCatalogItem,
+  SkillDetail,
+  SkillSource,
+  SkillValidationIssue,
+} from '@shared/types/extensions';
 
 const SUCCESS_BANNER_MS = 2500;
 const NEW_SKILL_HIGHLIGHT_MS = 4000;
 const USER_SKILLS_CATALOG_KEY = '__user__';
-type SkillsQuickFilter =
-  | 'all'
-  | 'project'
-  | 'personal'
-  | 'shared'
-  | 'codex-only'
-  | 'needs-attention'
-  | 'has-scripts';
+type SkillsQuickFilter = 'all' | 'project' | 'personal';
 
 interface SkillsPanelProps {
   projectPath: string | null;
@@ -125,19 +119,6 @@ function getSkillIssueTone(issue: SkillValidationIssue | null): {
   };
 }
 
-function formatRuntimeAudienceLabel(providerNames: readonly string[]): string {
-  if (providerNames.length === 0) {
-    return '已配置运行时';
-  }
-  if (providerNames.length === 1) {
-    return providerNames[0];
-  }
-  if (providerNames.length === 2) {
-    return `${providerNames[0]} and ${providerNames[1]}`;
-  }
-  return `${providerNames.slice(0, -1).join(', ')}, and ${providerNames.at(-1)}`;
-}
-
 export const SkillsPanel = ({
   projectPath,
   projectLabel,
@@ -169,6 +150,10 @@ export const SkillsPanel = ({
   const [quickFilter, setQuickFilter] = useState<SkillsQuickFilter>('all');
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [highlightedSkillId, setHighlightedSkillId] = useState<string | null>(null);
+  const [skillSources, setSkillSources] = useState<SkillSource[]>([]);
+  const [newSkillSourceUrl, setNewSkillSourceUrl] = useState('');
+  const [skillSourceLoading, setSkillSourceLoading] = useState(false);
+  const [skillSourceError, setSkillSourceError] = useState<string | null>(null);
   const selectedSkillIdRef = useRef<string | null>(selectedSkillId);
   const selectedSkillItemRef = useRef<SkillCatalogItem | null>(null);
   selectedSkillIdRef.current = selectedSkillId;
@@ -207,35 +192,10 @@ export const SkillsPanel = ({
     () => isCodexSkillOverlayAvailable(effectiveCliStatus),
     [effectiveCliStatus]
   );
-  const skillsAudienceLabel = useMemo(() => {
-    if (effectiveCliStatus?.flavor !== 'agent_teams_orchestrator') {
-      return null;
-    }
-
-    const providerNames = getVisibleMultimodelProviders(effectiveCliStatus.providers ?? [])
-      .filter((provider) =>
-        isCliExtensionCapabilityAvailable(getCliProviderExtensionCapability(provider, 'skills'))
-      )
-      .map((provider) => provider.displayName);
-
-    return formatRuntimeAudienceLabel(providerNames);
-  }, [effectiveCliStatus]);
-  const codexOnlySkillsCount = useMemo(
-    () => mergedSkills.filter((skill) => getSkillAudience(skill.rootKind) === 'codex').length,
-    [mergedSkills]
-  );
-  const sharedSkillsCount = mergedSkills.length - codexOnlySkillsCount;
-  const showCodexOnlyUi = codexSkillOverlayAvailable || codexOnlySkillsCount > 0;
   const selectedDetail = selectedSkillId ? (detailById[selectedSkillId] ?? null) : null;
   selectedSkillItemRef.current = selectedSkillId
     ? (selectedDetail?.item ?? mergedSkills.find((skill) => skill.id === selectedSkillId) ?? null)
     : null;
-
-  useEffect(() => {
-    if (quickFilter === 'codex-only' && !showCodexOnlyUi) {
-      setQuickFilter('all');
-    }
-  }, [quickFilter, showCodexOnlyUi]);
 
   useEffect(() => {
     if (!selectedSkillId) return;
@@ -300,6 +260,55 @@ export const SkillsPanel = ({
     };
   }, [fetchSkillDetail, fetchSkillsCatalog, projectPath]);
 
+  useEffect(() => {
+    if (!api.skills) return;
+    void api.skills
+      .listSources()
+      .then((snapshot) => setSkillSources(snapshot.sources))
+      .catch(() => undefined);
+  }, []);
+
+  const saveAndRefreshSkillSources = async (sources: SkillSource[]): Promise<void> => {
+    if (!api.skills) return;
+    setSkillSourceLoading(true);
+    setSkillSourceError(null);
+    try {
+      const saved = await api.skills.saveSources(sources);
+      setSkillSources(saved.sources);
+      const refreshed = await api.skills.refreshSources();
+      setSkillSources(refreshed.sources);
+      await fetchSkillsCatalog(projectPath ?? undefined);
+      setSuccessMessage('Skills 源已同步到 ~/.hermit/skills');
+    } catch (error) {
+      setSkillSourceError(error instanceof Error ? error.message : '同步 Skills 源失败');
+    } finally {
+      setSkillSourceLoading(false);
+    }
+  };
+
+  const handleAddSkillSource = async (): Promise<void> => {
+    const url = newSkillSourceUrl.trim();
+    if (!url) return;
+    const id =
+      url
+        .replace(/\.git$/, '')
+        .split(/[/:]/)
+        .filter(Boolean)
+        .slice(-2)
+        .join('-')
+        .toLowerCase()
+        .replace(/[^a-z0-9._-]+/g, '-') || `source-${Date.now().toString(36)}`;
+    await saveAndRefreshSkillSources([
+      ...skillSources,
+      { id, name: id, url, enabled: true, branch: 'main' },
+    ]);
+    setNewSkillSourceUrl('');
+  };
+
+  const handleRemoveSkillSource = async (sourceId: string): Promise<void> => {
+    await saveAndRefreshSkillSources(skillSources.filter((source) => source.id !== sourceId));
+  };
+
   const visibleSkills = useMemo(() => {
     const q = skillsSearchQuery.trim().toLowerCase();
     const filteredByQuery = q
@@ -319,14 +328,6 @@ export const SkillsPanel = ({
                 return skill.scope === 'project';
               case 'personal':
                 return skill.scope === 'user';
-              case 'shared':
-                return getSkillAudience(skill.rootKind) === 'shared';
-              case 'codex-only':
-                return getSkillAudience(skill.rootKind) === 'codex';
-              case 'needs-attention':
-                return !skill.isValid;
-              case 'has-scripts':
-                return skill.flags.hasScripts;
               default:
                 return true;
             }
@@ -347,11 +348,71 @@ export const SkillsPanel = ({
     <div className="flex flex-col gap-4">
       {effectiveCliStatus?.flavor === 'agent_teams_orchestrator' && (
         <div className="rounded-md border border-blue-500/30 bg-blue-500/5 px-4 py-3 text-sm text-blue-300">
-          `.claude`、`.cursor` 和 `.agents` 中的共享技能可供
-          {skillsAudienceLabel ?? '已配置运行时'}使用。存放在 `.codex` 的技能会在 Codex
-          支持可用时保持 Codex 专用。
+          全局技能由 `~/.hermit/skills` 管理，并在团队启动前投影到各 runtime 的全局 skills
+          目录。项目技能直接安装到你选择的项目 runtime 目录。
         </div>
       )}
+      <div className="bg-surface-raised/20 rounded-xl border border-border p-4">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
+          <div className="min-w-0 flex-1 space-y-1">
+            <h3 className="text-sm font-semibold text-text">全局 Skills 源</h3>
+            <p className="text-xs text-text-muted">
+              Git 源会同步到 `~/.hermit/skills`，随后由 Hermit 投影给 Claude、Cursor、Codex
+              等运行时。
+            </p>
+            <p className="text-xs text-text-muted">
+              打开面板只读取本地缓存；只有点击“添加并同步”或“刷新源”才会访问 GitHub 更新。
+            </p>
+            <input
+              value={newSkillSourceUrl}
+              onChange={(event) => setNewSkillSourceUrl(event.target.value)}
+              placeholder="https://github.com/yancyuu/HermitSkills"
+              className="mt-2 h-8 w-full rounded-md border border-border bg-surface px-2 text-xs text-text"
+            />
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={skillSourceLoading || !newSkillSourceUrl.trim()}
+            onClick={() => void handleAddSkillSource()}
+          >
+            {skillSourceLoading ? '同步中...' : '添加并同步'}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={skillSourceLoading || skillSources.length === 0}
+            onClick={() => void saveAndRefreshSkillSources(skillSources)}
+          >
+            刷新源
+          </Button>
+        </div>
+        {skillSourceError ? <p className="mt-2 text-xs text-red-400">{skillSourceError}</p> : null}
+        {skillSources.length > 0 ? (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {skillSources.map((source) => (
+              <span
+                key={source.id}
+                className="inline-flex max-w-full items-center gap-1 rounded bg-surface-raised px-1.5 py-0.5 text-[10px] text-text-muted"
+                title={source.url}
+              >
+                <span className="max-w-44 truncate">
+                  {source.name}
+                  {source.lastError ? ' · 同步失败' : ''}
+                </span>
+                <button
+                  type="button"
+                  className="-mr-0.5 inline-flex size-4 shrink-0 items-center justify-center rounded hover:bg-red-500/10 hover:text-red-300"
+                  onClick={() => void handleRemoveSkillSource(source.id)}
+                  aria-label={`删除 Skills 源 ${source.name}`}
+                >
+                  <Trash2 size={10} />
+                </button>
+              </span>
+            ))}
+          </div>
+        ) : null}
+      </div>
       <div className="bg-surface-raised/20 rounded-xl border border-border p-4">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div className="min-w-0 flex-1 space-y-1 xl:max-w-2xl">
@@ -367,9 +428,7 @@ export const SkillsPanel = ({
             </p>
             <p className="max-w-2xl text-xs leading-5 text-text-muted">
               需要到处生效的习惯请使用个人技能；只对当前代码库有意义的流程请使用项目技能。
-              {codexSkillOverlayAvailable
-                ? ' 如果某个技能应保持 Codex 专用，请使用 `.codex`。'
-                : ' 现有 `.codex` 技能仍可在这里编辑，但新增 Codex 专用技能需要启用 Codex 运行时。'}
+              全局技能从 Hermit 源统一投影；项目技能直接写入所选项目 runtime 目录。
             </p>
           </div>
 
@@ -447,14 +506,6 @@ export const SkillsPanel = ({
               <Badge variant="secondary" className="font-normal">
                 {userSkills.length} 个个人技能
               </Badge>
-              <Badge variant="secondary" className="font-normal">
-                {sharedSkillsCount} 个共享技能
-              </Badge>
-              {showCodexOnlyUi && (
-                <Badge variant="secondary" className="font-normal">
-                  {codexOnlySkillsCount} 个 Codex 专用
-                </Badge>
-              )}
             </div>
           </div>
         </div>
@@ -466,12 +517,6 @@ export const SkillsPanel = ({
             ['all', '全部技能'],
             ['project', '项目'],
             ['personal', '个人'],
-            ['shared', '共享'],
-            ...(showCodexOnlyUi
-              ? ([['codex-only', 'Codex 专用']] as [SkillsQuickFilter, string][])
-              : []),
-            ['needs-attention', '需要处理'],
-            ['has-scripts', '包含脚本'],
           ] as [SkillsQuickFilter, string][]
         ).map(([value, label]) => (
           <Button

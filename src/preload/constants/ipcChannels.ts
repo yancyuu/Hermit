@@ -774,6 +774,15 @@ export const SKILLS_APPLY_IMPORT = 'skills:applyImport';
 /** Delete an existing skill */
 export const SKILLS_DELETE = 'skills:delete';
 
+/** List configured Git-backed skill sources */
+export const SKILLS_SOURCES_LIST = 'skills:sources:list';
+
+/** Save configured Git-backed skill sources */
+export const SKILLS_SOURCES_SAVE = 'skills:sources:save';
+
+/** Refresh Git-backed skill sources into Hermit global skills */
+export const SKILLS_SOURCES_REFRESH = 'skills:sources:refresh';
+
 /** Start focused watcher for active skill roots */
 export const SKILLS_START_WATCHING = 'skills:startWatching';
 

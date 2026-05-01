@@ -21,6 +21,7 @@ import {
   listTmuxPaneRuntimeInfoForCurrentPlatform,
   type TmuxPaneRuntimeInfo,
 } from '@features/tmux-installer/main';
+import { SkillProjectionService } from '@main/services/extensions/skills/SkillProjectionService';
 import { ConfigManager } from '@main/services/infrastructure/ConfigManager';
 import { NotificationManager } from '@main/services/infrastructure/NotificationManager';
 import { getLeadChannelListenerService } from '@main/services/team/LeadChannelListenerService';
@@ -1406,6 +1407,8 @@ interface ProvisioningRun {
     resolveOnce: (text: string) => void;
     rejectOnce: (error: string) => void;
     timeoutHandle: NodeJS.Timeout;
+    externalChannel?: InboxMessage['externalChannel'];
+    visibleUserMessageCaptured?: boolean;
   } | null;
   activeCrossTeamReplyHints: {
     toTeam: string;
@@ -4088,7 +4091,8 @@ export class TeamProvisioningService {
     private readonly teamMetaStore: TeamMetaStore = new TeamMetaStore(),
     private readonly inboxWriter: TeamInboxWriter = new TeamInboxWriter(),
     private readonly openCodeTaskLogAttributionStore: OpenCodeTaskLogAttributionStore = new OpenCodeTaskLogAttributionStore(),
-    private readonly memberWorktreeManager: TeamMemberWorktreeManager = new TeamMemberWorktreeManager()
+    private readonly memberWorktreeManager: TeamMemberWorktreeManager = new TeamMemberWorktreeManager(),
+    private readonly skillProjectionService: SkillProjectionService = new SkillProjectionService()
   ) {
     this.memberLogsFinder = new TeamMemberLogsFinder(
       this.configReader,
@@ -7398,6 +7402,7 @@ export class TeamProvisioningService {
         messageKind: message.messageKind,
         slashCommand: message.slashCommand,
         commandOutput: message.commandOutput,
+        externalChannel: message.externalChannel,
       });
     } catch (error) {
       logger.warn(`[${teamName}] sent-message persist failed: ${String(error)}`);
@@ -7429,6 +7434,7 @@ export class TeamProvisioningService {
         messageKind: message.messageKind,
         slashCommand: message.slashCommand,
         commandOutput: message.commandOutput,
+        externalChannel: message.externalChannel,
       });
     } catch (error) {
       logger.warn(`[${teamName}] inbox-message persist for ${recipient} failed: ${String(error)}`);
@@ -12002,6 +12008,7 @@ export class TeamProvisioningService {
       }
 
       await ensureCwdExists(request.cwd);
+      await this.skillProjectionService.syncGlobalSkills();
 
       const claudePath = await ClaudeBinaryResolver.resolve();
       if (!claudePath) {
@@ -12457,6 +12464,7 @@ export class TeamProvisioningService {
     }
 
     await ensureCwdExists(request.cwd);
+    await this.skillProjectionService.syncGlobalSkills();
     const effectiveMembers = await this.resolveOpenCodeMemberWorkspacesForRuntime({
       teamName: request.teamName,
       baseCwd: request.cwd,
@@ -12515,6 +12523,7 @@ export class TeamProvisioningService {
       throw new Error(`Team "${request.teamName}" not found — config.json does not exist`);
     }
     await ensureCwdExists(request.cwd);
+    await this.skillProjectionService.syncGlobalSkills();
     const { members, warning } = await this.resolveLaunchExpectedMembers(
       request.teamName,
       configRaw,
@@ -13101,6 +13110,7 @@ export class TeamProvisioningService {
       }
 
       await ensureCwdExists(request.cwd);
+      await this.skillProjectionService.syncGlobalSkills();
 
       const teamsBasePathsToProbe = getTeamsBasePathsToProbe();
       const runId = randomUUID();
@@ -13947,6 +13957,14 @@ export class TeamProvisioningService {
       timeoutHandle: setTimeout(() => {
         rejectCapture(new Error('Timed out waiting for lead external-channel reply'));
       }, captureTimeoutMs),
+      externalChannel: {
+        provider: input.provider,
+        channelId: input.channelId,
+        channelName: input.channelName,
+        chatId: input.chatId,
+        senderId: input.senderId,
+      },
+      visibleUserMessageCaptured: false,
       resolveOnce: (text: string) => {
         if (activeCapture.settled) return;
         activeCapture.settled = true;
@@ -14006,6 +14024,26 @@ export class TeamProvisioningService {
     }
 
     const cleanReply = replyText ? stripAgentBlocks(replyText).trim() : '';
+    if (cleanReply && !activeCapture.visibleUserMessageCaptured) {
+      const replyMessage: InboxMessage = {
+        from: leadName,
+        to: 'user',
+        text: cleanReply,
+        timestamp: nowIso(),
+        read: true,
+        summary: cleanReply.length > 60 ? cleanReply.slice(0, 57) + '...' : cleanReply,
+        messageId: `external-lead-reply-${input.channelId}-${Date.now()}`,
+        source: 'lead_process',
+        externalChannel: activeCapture.externalChannel,
+      };
+      this.persistSentMessage(teamName, replyMessage);
+      this.pushLiveLeadProcessMessage(teamName, replyMessage);
+      this.teamChangeEmitter?.({
+        type: 'inbox',
+        teamName,
+        detail: 'external-channel-lead-reply',
+      });
+    }
     return cleanReply || null;
   }
 
@@ -18257,11 +18295,7 @@ export class TeamProvisioningService {
         continue;
       }
 
-      if (!isNativeSendMessage) {
-        continue;
-      }
-
-      // Suppress SendMessage(to="user") during member_inbox_relay.
+      // Suppress user replies during member_inbox_relay.
       // Context: when relaying inbox messages, the lead sometimes ignores the relay
       // instruction and responds to the user directly instead of forwarding to the
       // target teammate. This filter prevents that wrong response from appearing
@@ -18299,6 +18333,9 @@ export class TeamProvisioningService {
         messageId: `lead-sendmsg-${run.runId}-${Date.now()}`,
         ...(relayOfMessageId ? { relayOfMessageId } : {}),
         source: 'lead_process',
+        ...(recipient === 'user' && run.leadRelayCapture?.externalChannel
+          ? { externalChannel: run.leadRelayCapture.externalChannel }
+          : {}),
       };
 
       this.pushLiveLeadProcessMessage(run.teamName, msg);
@@ -18307,6 +18344,7 @@ export class TeamProvisioningService {
         // User-directed messages go to sentMessages.json (canonical outbound store)
         this.persistSentMessage(run.teamName, msg);
         if (run.leadRelayCapture && !run.leadRelayCapture.settled) {
+          run.leadRelayCapture.visibleUserMessageCaptured = true;
           run.leadRelayCapture.textParts.push(strippedCrossTeamContent);
           run.leadRelayCapture.resolveOnce(strippedCrossTeamContent);
         } else {
@@ -18370,6 +18408,11 @@ export class TeamProvisioningService {
     }
     void getLeadChannelListenerService()
       .sendToRecentFeishuTarget(teamName, cleanText)
+      .then((sent) => {
+        if (!sent) {
+          logger.warn(`[${teamName}] No recent Feishu chat target available for lead user message`);
+        }
+      })
       .catch((error: unknown) => {
         logger.warn(`[${teamName}] Failed to push lead user message to Feishu: ${String(error)}`);
       });

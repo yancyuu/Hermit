@@ -71,7 +71,6 @@ export const SkillEditorDialog = ({
   mode,
   projectPath,
   projectLabel,
-  allowCodexRootKind,
   detail,
   onClose,
   onSaved,
@@ -83,7 +82,7 @@ export const SkillEditorDialog = ({
   const applySkillUpsert = useStore((s) => s.applySkillUpsert);
 
   const [scope, setScope] = useState<'user' | 'project'>('user');
-  const [rootKind, setRootKind] = useState<SkillRootKind>('claude');
+  const [rootKind, setRootKind] = useState<SkillRootKind>('hermit');
   const [folderName, setFolderName] = useState('');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -165,7 +164,7 @@ export const SkillEditorDialog = ({
 
     const item = detail?.item;
     const nextScope = item?.scope ?? (projectPath ? 'project' : 'user');
-    const nextRootKind = item?.rootKind ?? 'claude';
+    const nextRootKind = item?.rootKind ?? (nextScope === 'project' ? 'claude' : 'hermit');
     const nextFolderName = item?.folderName ?? '';
     const nextName = parseInitialName(detail);
     const nextDescription = parseInitialDescription(detail);
@@ -220,7 +219,7 @@ export const SkillEditorDialog = ({
     setReviewLoading(false);
     setSaveLoading(false);
     setMutationError(null);
-  }, [allowCodexRootKind, detail, mode, open, projectPath]);
+  }, [detail, mode, open, projectPath]);
 
   useEffect(() => {
     if (open) {
@@ -241,10 +240,13 @@ export const SkillEditorDialog = ({
   }, [mode, open, projectPath, scope]);
 
   useEffect(() => {
-    if (open && mode === 'create' && rootKind === 'codex' && !allowCodexRootKind) {
+    if (!open || mode !== 'create') return;
+    if (scope === 'user' && rootKind !== 'hermit') {
+      setRootKind('hermit');
+    } else if (scope === 'project' && rootKind === 'hermit') {
       setRootKind('claude');
     }
-  }, [allowCodexRootKind, mode, open, rootKind]);
+  }, [mode, open, rootKind, scope]);
 
   useEffect(() => {
     rawContentRef.current = rawContent;
@@ -299,11 +301,10 @@ export const SkillEditorDialog = ({
   const canUseProjectScope = Boolean(projectPath);
   const visibleRootDefinitions = useMemo(
     () =>
-      SKILL_ROOT_DEFINITIONS.filter(
-        (definition) =>
-          definition.rootKind !== 'codex' || allowCodexRootKind || detail?.item.rootKind === 'codex'
-      ),
-    [allowCodexRootKind, detail?.item.rootKind]
+      scope === 'user'
+        ? SKILL_ROOT_DEFINITIONS.filter((definition) => definition.rootKind === 'hermit')
+        : SKILL_ROOT_DEFINITIONS.filter((definition) => definition.rootKind !== 'hermit'),
+    [scope]
   );
   const instructionsLocked = manualRawEdit || customMarkdownDetected;
   const title = mode === 'create' ? '创建技能' : '编辑技能';
@@ -451,8 +452,9 @@ export const SkillEditorDialog = ({
                       <SelectContent>
                         {visibleRootDefinitions.map((definition) => (
                           <SelectItem key={definition.rootKind} value={definition.rootKind}>
-                            {definition.directoryName}
-                            {definition.audience === 'codex' ? ' - 仅 Codex' : ' - 共享'}
+                            {definition.rootKind === 'hermit'
+                              ? '~/.hermit/skills'
+                              : `${definition.directoryName}/skills`}
                           </SelectItem>
                         ))}
                       </SelectContent>

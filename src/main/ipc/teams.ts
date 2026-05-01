@@ -1156,7 +1156,8 @@ async function handleUpdateConfig(
   if (!updates || typeof updates !== 'object') {
     return { success: false, error: 'Invalid updates object' };
   }
-  const { name, description, color } = updates as TeamUpdateConfigRequest;
+  const { name, description, color, leadProviderId, leadModel, leadEffort, leadWorkflow } =
+    updates as TeamUpdateConfigRequest;
   if (name !== undefined && typeof name !== 'string') {
     return { success: false, error: 'name must be a string' };
   }
@@ -1175,6 +1176,10 @@ async function handleUpdateConfig(
       name,
       description,
       color,
+      leadProviderId,
+      leadModel,
+      leadEffort,
+      leadWorkflow,
     });
     if (!result) {
       throw new Error('Team config not found');
