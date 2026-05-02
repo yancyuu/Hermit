@@ -138,7 +138,18 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: ${{ matrix.dist_command }} --publish never
+        run: |
+          if [ -n "${CSC_LINK:-}" ] && \
+             [ -n "${CSC_KEY_PASSWORD:-}" ] && \
+             [ -n "${APPLE_ID:-}" ] && \
+             [ -n "${APPLE_APP_SPECIFIC_PASSWORD:-}" ] && \
+             [ -n "${APPLE_TEAM_ID:-}" ]; then
+            echo "Building signed and notarized macOS package"
+            ${{ matrix.dist_command }} --publish never
+          else
+            echo "Apple signing secrets are not configured; building unsigned macOS package"
+            ${{ matrix.dist_command }} --publish never -c.mac.identity=null -c.mac.notarize=false
+          fi
 
       - name: Validate packaged bundle (macOS ${{ matrix.arch }})
         run: node ./scripts/electron-builder/verifyBundle.cjs "release/mac-${{ matrix.arch }}/Hermit.app" darwin ${{ matrix.arch }}
