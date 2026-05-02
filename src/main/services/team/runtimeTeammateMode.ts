@@ -72,6 +72,16 @@ export async function resolveDesktopTeammateModeDecision(
     };
   }
 
+  // Windows tmux readiness checks go through WSL detection and can spawn
+  // PowerShell. Default team launches should not pay that cost; users can still
+  // opt in explicitly with --teammate-mode tmux/auto.
+  if (process.platform === 'win32') {
+    return {
+      injectedTeammateMode: null,
+      forceProcessTeammates: false,
+    };
+  }
+
   if (!(await isTmuxAvailable())) {
     return {
       injectedTeammateMode: null,
