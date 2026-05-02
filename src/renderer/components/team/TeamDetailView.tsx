@@ -712,7 +712,7 @@ const LeadContextBridge = memo(function LeadContextBridge({
             />
           ) : (
             <div
-              className="flex h-full flex-col border-r border-[var(--color-border)] bg-[var(--color-surface)]"
+              className="flex h-full flex-col border-0 bg-[var(--color-surface)]"
               style={{ backgroundColor: 'var(--color-surface)' }}
             >
               <div className="flex items-center justify-between border-b border-[var(--color-border)] px-3 py-2">

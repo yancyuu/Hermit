@@ -33,6 +33,7 @@ import {
 
 import { CurrentTaskIndicator } from './CurrentTaskIndicator';
 import { MemberLaunchDiagnosticsButton } from './MemberLaunchDiagnosticsButton';
+import { MemberPresenceDot } from './MemberPresenceDot';
 
 import type { TaskStatusCounts } from '@renderer/utils/pathNormalize';
 import type {
@@ -335,10 +336,7 @@ export const MemberCard = ({
                 loading="lazy"
               />
             </div>
-            <span
-              className={`absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full border-2 border-[var(--color-surface)] ${dotClass}`}
-              aria-label={displayPresenceLabel}
-            />
+            <MemberPresenceDot className={`size-2.5 ${dotClass}`} label={displayPresenceLabel} />
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 items-center gap-1.5 text-sm">

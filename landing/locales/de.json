@@ -1,113 +1,113 @@
 {
   "nav": {
-    "features": "Funktionen",
+    "features": "Capabilities",
     "screenshots": "Screenshots",
-    "comparison": "Vergleich",
+    "comparison": "Compare",
     "download": "Download",
-    "pricing": "Kostenlos",
+    "pricing": "Open Source",
     "faq": "FAQ",
     "viewOnGithub": "View on GitHub"
   },
   "hero": {
-    "badge": "Agent Teams",
-    "downloadNow": "Herunterladen",
-    "ctaPrimary": "Für {platform} herunterladen",
-    "ctaSecondary": "Vergleichen",
-    "preview": "Produktvorschau",
+    "badge": "Hermit",
+    "downloadNow": "Download Hermit",
+    "ctaPrimary": "Download for {platform}",
+    "ctaSecondary": "Compare",
+    "preview": "Product preview",
     "trust": {
-      "agentTeams": "Agenten-Teams",
-      "kanban": "Kanban-Board",
-      "openSource": "Open Source"
+      "agentTeams": "AI Teams",
+      "kanban": "Kanban Workflow",
+      "openSource": "Local-first OSS"
     },
-    "watchDemo": "Demo ansehen",
-    "videoUnavailable": "Video nicht verfügbar"
+    "watchDemo": "Watch Demo",
+    "videoUnavailable": "Video unavailable"
   },
   "download": {
-    "title": "Herunterladen",
-    "detected": "Erkannt",
-    "systemRequirements": "Systemanforderungen",
+    "title": "Download",
+    "detected": "Detected",
+    "systemRequirements": "System requirements",
     "version": "Version {version}"
   },
   "theme": {
-    "dark": "Dunkel",
-    "light": "Hell"
+    "dark": "Dark",
+    "light": "Light"
   },
   "language": {
-    "label": "Sprache",
-    "search": "Sprache suchen…"
+    "label": "Language",
+    "search": "Search language…"
   },
   "features": {
-    "sectionTitle": "Alles für die KI-Agenten-Orchestrierung",
-    "sectionSubtitle": "Leistungsstarke Tools für effektive Multi-Agenten-Zusammenarbeit."
+    "sectionTitle": "Put agents into real engineering workflows",
+    "sectionSubtitle": "Tasks, collaboration, review, logs, and reusable team assets around strong coding runtimes."
   },
   "pricing": {
-    "sectionTitle": "100% Kostenlos. Ohne Haken.",
-    "sectionSubtitle": "Open Source, keine API-Schlüssel, keine Konfiguration. Einfach installieren und loslegen.",
-    "getStarted": "Herunterladen",
-    "popular": "Für immer kostenlos",
-    "note": "100% Open Source. Keine API-Schlüssel. Keine Konfiguration. Läuft vollständig lokal."
+    "sectionTitle": "Hermit itself is free and open source",
+    "sectionSubtitle": "Local-first. Bring your own Claude Code or supported runtime access.",
+    "getStarted": "Download Hermit",
+    "popular": "Open Source",
+    "note": "AGPL-3.0. Local-first, inspectable, and built for engineering teams."
   },
   "testimonials": {
-    "sectionTitle": "Was Entwickler sagen",
-    "sectionSubtitle": "Echtes Feedback von echten Entwicklern",
-    "showMore": "Mehr anzeigen",
-    "showLess": "Weniger anzeigen",
-    "feedbackCta": "Möchten Sie Ihre Erfahrung teilen? Erstellen Sie ein Issue auf"
+    "sectionTitle": "What developers say",
+    "sectionSubtitle": "Real feedback from real builders",
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "feedbackCta": "Want to share your experience? Open an issue on"
   },
   "faq": {
-    "sectionTitle": "Fragen? Wir haben Antworten",
-    "subtitle": "Alles, was Sie über Agent Teams wissen müssen"
+    "sectionTitle": "Frequently Asked Questions",
+    "subtitle": "Hermit, runtimes, and AI engineering teams"
   },
   "comparison": {
-    "sectionTitle": "Wie wir im Vergleich abschneiden",
-    "sectionSubtitle": "Funktionsvergleich mit anderen KI-Coding-Tools.",
-    "feature": "Funktion",
+    "sectionTitle": "How Hermit compares",
+    "sectionSubtitle": "Hermit is an AI engineering team control plane, not a personal assistant or generic model gateway.",
+    "feature": "Feature",
     "features": {
-      "crossTeam": "Teamübergreifende Kommunikation",
-      "agentMessaging": "Agent-zu-Agent-Messaging",
-      "linkedTasks": "Verknüpfte Aufgaben",
-      "sessionAnalysis": "Sitzungsanalyse",
-      "taskAttachments": "Aufgabenanhänge",
-      "hunkReview": "Hunk-Level-Review",
-      "codeEditor": "Integrierter Code-Editor",
-      "fullAutonomy": "Volle Autonomie",
-      "taskDeps": "Aufgabenabhängigkeiten",
-      "reviewWorkflow": "Review-Workflow",
-      "zeroSetup": "Keine Einrichtung",
-      "kanban": "Kanban-Board",
-      "execLog": "Ausführungsprotokoll",
-      "liveProcesses": "Live-Prozesse",
-      "perTaskReview": "Code-Review pro Aufgabe",
-      "flexAutonomy": "Flexible Autonomie",
-      "worktree": "Git-Worktree-Isolation",
-      "multiAgent": "Multi-Agenten-Backend",
-      "price": "Preis"
+      "crossTeam": "Cross-team communication",
+      "agentMessaging": "Agent-to-agent messaging",
+      "linkedTasks": "Linked tasks",
+      "sessionAnalysis": "Session analysis",
+      "taskAttachments": "Task attachments",
+      "hunkReview": "Hunk-level review",
+      "codeEditor": "Built-in code editor",
+      "fullAutonomy": "Full autonomy",
+      "taskDeps": "Task dependencies",
+      "reviewWorkflow": "Review workflow",
+      "zeroSetup": "Zero setup",
+      "kanban": "Kanban board",
+      "execLog": "Execution log viewer",
+      "liveProcesses": "Live processes",
+      "perTaskReview": "Per-task code review",
+      "flexAutonomy": "Flexible autonomy",
+      "worktree": "Git worktree isolation",
+      "multiAgent": "Multi-agent backend",
+      "price": "Price"
     }
   },
   "screenshots": {
-    "sectionTitle": "In Aktion sehen",
-    "sectionSubtitle": "Echte Screenshots der App — Kanban-Board, Code-Review, Agenten-Teams und mehr."
+    "sectionTitle": "See Hermit in action",
+    "sectionSubtitle": "Kanban, team view, code review, execution logs, and task details."
   },
   "common": {
-    "learnMore": "Mehr erfahren"
+    "learnMore": "Learn more"
   },
   "footer": {
-    "copyright": "© {year} Agent Teams",
-    "tagline": "KI-Agenten-Orchestrierung für Entwickler",
+    "copyright": "© {year} Hermit",
+    "tagline": "Local-first AI engineering team workbench",
     "links": {
       "github": "GitHub",
-      "docs": "Dokumentation"
+      "docs": "Docs"
     }
   },
   "meta": {
-    "homeTitle": "Agent Teams - KI-Agenten-Orchestrierung für Entwickler",
-    "homeDescription": "Kostenlose Open-Source-Desktop-App für KI-Agenten-Teams. Kanban-Board, Code-Review, teamübergreifende Kommunikation. Läuft vollständig lokal."
+    "homeTitle": "Hermit - Local-first AI Engineering Team Workbench",
+    "homeDescription": "Hermit organizes Claude Code and other coding agents into AI engineering teams with tasks, messaging, review, logs, and reusable team assets."
   },
   "error": {
-    "notFoundTitle": "Seite nicht gefunden",
-    "notFoundDescription": "Die gesuchte Seite existiert nicht oder wurde verschoben.",
-    "genericTitle": "Etwas ist schiefgelaufen",
-    "genericDescription": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
-    "goHome": "Zur Startseite"
+    "notFoundTitle": "Page not found",
+    "notFoundDescription": "The page you are looking for does not exist or has been moved.",
+    "genericTitle": "Something went wrong",
+    "genericDescription": "An unexpected error occurred. Please try again later.",
+    "goHome": "Go to homepage"
   }
 }

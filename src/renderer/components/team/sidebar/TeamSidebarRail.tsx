@@ -46,7 +46,7 @@ export const TeamSidebarRail = memo(function TeamSidebarRail({
   );
 
   return (
-    <div className="relative flex size-full min-h-0 flex-col overflow-hidden border-0 bg-[var(--color-surface)]">
+    <div className="flex size-full min-h-0 flex-col overflow-hidden bg-[var(--color-surface)]">
       <div className="shrink-0 overflow-hidden px-3">
         <ClaudeLogsSection
           teamName={teamName}
@@ -59,14 +59,10 @@ export const TeamSidebarRail = memo(function TeamSidebarRail({
       <div className="min-h-0 flex-1">
         <MessagesPanel position="sidebar" {...messagesPanelProps} />
       </div>
-      <div className="absolute inset-y-0 right-0 z-30 flex w-2 -translate-x-0.5 items-center justify-center">
-        <div
-          className={`h-full w-1 cursor-col-resize rounded-full transition-colors ${
-            isResizing ? 'bg-blue-500/50' : 'bg-transparent hover:bg-blue-500/30'
-          }`}
-          onMouseDown={onResizeMouseDown}
-        />
-      </div>
+      <div
+        className={`absolute inset-y-0 right-0 z-20 w-1 cursor-col-resize transition-colors hover:bg-blue-500/30 ${isResizing ? 'bg-blue-500/40' : ''}`}
+        onMouseDown={onResizeMouseDown}
+      />
     </div>
   );
 });

@@ -1,113 +1,113 @@
 {
   "nav": {
-    "features": "機能",
-    "screenshots": "スクリーンショット",
-    "comparison": "比較",
-    "download": "ダウンロード",
-    "pricing": "無料",
+    "features": "Capabilities",
+    "screenshots": "Screenshots",
+    "comparison": "Compare",
+    "download": "Download",
+    "pricing": "Open Source",
     "faq": "FAQ",
     "viewOnGithub": "View on GitHub"
   },
   "hero": {
-    "badge": "Agent Teams",
-    "downloadNow": "ダウンロード",
-    "ctaPrimary": "{platform}版をダウンロード",
-    "ctaSecondary": "比較する",
-    "preview": "製品プレビュー",
+    "badge": "Hermit",
+    "downloadNow": "Download Hermit",
+    "ctaPrimary": "Download for {platform}",
+    "ctaSecondary": "Compare",
+    "preview": "Product preview",
     "trust": {
-      "agentTeams": "エージェントチーム",
-      "kanban": "カンバンボード",
-      "openSource": "オープンソース"
+      "agentTeams": "AI Teams",
+      "kanban": "Kanban Workflow",
+      "openSource": "Local-first OSS"
     },
-    "watchDemo": "デモを見る",
-    "videoUnavailable": "動画は利用できません"
+    "watchDemo": "Watch Demo",
+    "videoUnavailable": "Video unavailable"
   },
   "download": {
-    "title": "ダウンロード",
-    "detected": "検出済み",
-    "systemRequirements": "動作環境",
-    "version": "バージョン {version}"
+    "title": "Download",
+    "detected": "Detected",
+    "systemRequirements": "System requirements",
+    "version": "Version {version}"
   },
   "theme": {
-    "dark": "ダーク",
-    "light": "ライト"
+    "dark": "Dark",
+    "light": "Light"
   },
   "language": {
-    "label": "言語",
-    "search": "言語を検索…"
+    "label": "Language",
+    "search": "Search language…"
   },
   "features": {
-    "sectionTitle": "AIエージェントオーケストレーションに必要なすべて",
-    "sectionSubtitle": "マルチエージェント連携を実現する強力なツール。"
+    "sectionTitle": "Put agents into real engineering workflows",
+    "sectionSubtitle": "Tasks, collaboration, review, logs, and reusable team assets around strong coding runtimes."
   },
   "pricing": {
-    "sectionTitle": "100%無料。制約なし。",
-    "sectionSubtitle": "オープンソース、APIキー不要、設定不要。インストールするだけ。",
-    "getStarted": "ダウンロード",
-    "popular": "永久無料",
-    "note": "100%オープンソース。APIキー不要。設定不要。完全にローカルで動作。"
+    "sectionTitle": "Hermit itself is free and open source",
+    "sectionSubtitle": "Local-first. Bring your own Claude Code or supported runtime access.",
+    "getStarted": "Download Hermit",
+    "popular": "Open Source",
+    "note": "AGPL-3.0. Local-first, inspectable, and built for engineering teams."
   },
   "testimonials": {
-    "sectionTitle": "開発者の声",
-    "sectionSubtitle": "実際の開発者からのリアルなフィードバック",
-    "showMore": "もっと見る",
-    "showLess": "折りたたむ",
-    "feedbackCta": "体験を共有しませんか？issueを作成してください："
+    "sectionTitle": "What developers say",
+    "sectionSubtitle": "Real feedback from real builders",
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "feedbackCta": "Want to share your experience? Open an issue on"
   },
   "faq": {
-    "sectionTitle": "よくある質問",
-    "subtitle": "Agent Teamsについて知っておくべきこと"
+    "sectionTitle": "Frequently Asked Questions",
+    "subtitle": "Hermit, runtimes, and AI engineering teams"
   },
   "comparison": {
-    "sectionTitle": "他ツールとの比較",
-    "sectionSubtitle": "他のAIコーディングツールとの機能比較。",
-    "feature": "機能",
+    "sectionTitle": "How Hermit compares",
+    "sectionSubtitle": "Hermit is an AI engineering team control plane, not a personal assistant or generic model gateway.",
+    "feature": "Feature",
     "features": {
-      "crossTeam": "チーム間コミュニケーション",
-      "agentMessaging": "エージェント間メッセージング",
-      "linkedTasks": "タスクリンク",
-      "sessionAnalysis": "セッション分析",
-      "taskAttachments": "タスク添付ファイル",
-      "hunkReview": "ハンクレベルレビュー",
-      "codeEditor": "組み込みコードエディタ",
-      "fullAutonomy": "完全自律",
-      "taskDeps": "タスク依存関係",
-      "reviewWorkflow": "レビューワークフロー",
-      "zeroSetup": "ゼロ設定",
-      "kanban": "カンバンボード",
-      "execLog": "実行ログビューア",
-      "liveProcesses": "ライブプロセス",
-      "perTaskReview": "タスク別コードレビュー",
-      "flexAutonomy": "柔軟な自律性",
-      "worktree": "Git worktree分離",
-      "multiAgent": "マルチエージェントバックエンド",
-      "price": "価格"
+      "crossTeam": "Cross-team communication",
+      "agentMessaging": "Agent-to-agent messaging",
+      "linkedTasks": "Linked tasks",
+      "sessionAnalysis": "Session analysis",
+      "taskAttachments": "Task attachments",
+      "hunkReview": "Hunk-level review",
+      "codeEditor": "Built-in code editor",
+      "fullAutonomy": "Full autonomy",
+      "taskDeps": "Task dependencies",
+      "reviewWorkflow": "Review workflow",
+      "zeroSetup": "Zero setup",
+      "kanban": "Kanban board",
+      "execLog": "Execution log viewer",
+      "liveProcesses": "Live processes",
+      "perTaskReview": "Per-task code review",
+      "flexAutonomy": "Flexible autonomy",
+      "worktree": "Git worktree isolation",
+      "multiAgent": "Multi-agent backend",
+      "price": "Price"
     }
   },
   "screenshots": {
-    "sectionTitle": "実際の画面",
-    "sectionSubtitle": "アプリの実際のスクリーンショット — カンバンボード、コードレビュー、エージェントチームなど。"
+    "sectionTitle": "See Hermit in action",
+    "sectionSubtitle": "Kanban, team view, code review, execution logs, and task details."
   },
   "common": {
-    "learnMore": "詳細"
+    "learnMore": "Learn more"
   },
   "footer": {
-    "copyright": "© {year} Agent Teams",
-    "tagline": "開発者向けAIエージェントオーケストレーション",
+    "copyright": "© {year} Hermit",
+    "tagline": "Local-first AI engineering team workbench",
     "links": {
       "github": "GitHub",
-      "docs": "ドキュメント"
+      "docs": "Docs"
     }
   },
   "meta": {
-    "homeTitle": "Agent Teams - 開発者向けAIエージェントオーケストレーション",
-    "homeDescription": "AIエージェントチームを管理する無料のオープンソースデスクトップアプリ。カンバンボード、コードレビュー、チーム間通信。完全にローカルで動作。"
+    "homeTitle": "Hermit - Local-first AI Engineering Team Workbench",
+    "homeDescription": "Hermit organizes Claude Code and other coding agents into AI engineering teams with tasks, messaging, review, logs, and reusable team assets."
   },
   "error": {
-    "notFoundTitle": "ページが見つかりません",
-    "notFoundDescription": "お探しのページは存在しないか、移動された可能性があります。",
-    "genericTitle": "エラーが発生しました",
-    "genericDescription": "予期しないエラーが発生しました。後でもう一度お試しください。",
-    "goHome": "ホームに戻る"
+    "notFoundTitle": "Page not found",
+    "notFoundDescription": "The page you are looking for does not exist or has been moved.",
+    "genericTitle": "Something went wrong",
+    "genericDescription": "An unexpected error occurred. Please try again later.",
+    "goHome": "Go to homepage"
   }
 }

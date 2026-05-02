@@ -1,7 +1,7 @@
 export const useGithubRepo = () => {
   const config = useRuntimeConfig();
   const githubRepo = computed(
-    () => (config.public.githubRepo as string) || '777genius/claude_agent_teams_ui',
+    () => (config.public.githubRepo as string) || 'yancyuu/Hermit',
   );
   const repoUrl = computed(() => `https://github.com/${githubRepo.value}`);
   const releasesUrl = computed(

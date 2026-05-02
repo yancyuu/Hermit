@@ -11,7 +11,7 @@ const year = new Date().getFullYear();
         >{{ t('footer.copyright', { year }) }} · {{ t('footer.tagline') }}</span
       >
       <div class="app-footer__links">
-        <a class="app-footer__link" href="https://github.com/777genius" target="_blank">Author</a>
+        <a class="app-footer__link" href="https://github.com/yancyuu" target="_blank">Author</a>
         <span class="app-footer__divider" />
         <a class="app-footer__link" :href="repoUrl" target="_blank">GitHub</a>
       </div>

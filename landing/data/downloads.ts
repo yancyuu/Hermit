@@ -8,7 +8,7 @@ export const downloadAssets = [
     arch: 'universal',
     label: 'macOS',
     archLabel: 'Apple Silicon / Intel',
-    fileName: 'Claude-Agent-Teams-UI-arm64.dmg',
+    fileName: 'Hermit-arm64.dmg',
   },
   {
     id: 'windows-x64',
@@ -16,7 +16,7 @@ export const downloadAssets = [
     arch: 'x64',
     label: 'Windows',
     archLabel: '64-bit',
-    fileName: 'Claude-Agent-Teams-UI-Setup.exe',
+    fileName: 'Hermit-Setup.exe',
   },
   {
     id: 'linux-appimage',
@@ -24,6 +24,6 @@ export const downloadAssets = [
     arch: 'x64',
     label: 'Linux',
     archLabel: '64-bit',
-    fileName: 'Claude-Agent-Teams-UI.AppImage',
+    fileName: 'Hermit.AppImage',
   },
 ] as const;

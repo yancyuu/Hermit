@@ -195,7 +195,7 @@ function statusDotColor(status: string) {
       <!-- Header -->
       <div class="hero-demo__header">
         <div class="hero-demo__title-row">
-          <span class="hero-demo__title">Agent Teams</span>
+          <span class="hero-demo__title">Hermit</span>
           <span class="hero-demo__badge-live">
             <span class="hero-demo__live-dot" />
             LIVE

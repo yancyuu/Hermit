@@ -1,4 +1,4 @@
-# Agent Teams Landing
+# Hermit Landing
 
 ## Quick start
 

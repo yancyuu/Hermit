@@ -1,100 +1,118 @@
 {
   "hero": {
-    "title": "Agent Teams",
-    "subtitle": "你是 CTO，智能体是你的团队。它们自己处理任务、互相沟通、审查彼此的代码。你只需看着看板喝咖啡。"
+    "title": "Hermit",
+    "subtitle": "像管理真实工程团队一样管理 AI Agent。负责人拆任务，成员协作执行，看板追踪状态，代码审查承接 diff，日志留下证据。"
   },
   "features": [
     {
       "id": "agentTeams",
-      "title": "智能体团队",
-      "description": "创建具有不同角色的团队。智能体自主并行工作，互相沟通，跨团队协作。"
+      "title": "AI 工程团队",
+      "description": "创建负责人和多个成员。每个成员都有角色、工作流、Inbox 和运行时，不再只是一次性子任务。"
     },
     {
       "id": "kanban",
-      "title": "看板",
-      "description": "任务状态随智能体工作实时变化。拖拽、分配、审查——全在可视化看板上完成。"
+      "title": "任务看板",
+      "description": "需求、执行、审查、返工和完成都沉淀在看板里。任务状态、评论和负责人一眼可见。"
     },
     {
       "id": "codeReview",
-      "title": "代码审查",
-      "description": "按任务查看 diff，支持批准、拒绝和评论。内置代码编辑器，支持 Git。"
+      "title": "按任务代码审查",
+      "description": "每个任务都能查看文件 diff，支持接受、拒绝和评论具体变更块，让 Agent 交付可审查。"
     },
     {
-      "id": "crossTeam",
-      "title": "跨团队通信",
-      "description": "智能体在团队内部和团队之间互相发送消息。支持直接消息、任务评论和快捷操作。"
+      "id": "messages",
+      "title": "成员消息与评论",
+      "description": "负责人、成员和用户通过 Inbox、任务评论和跨团队消息协作，讨论不会散落在聊天记录里。"
     },
     {
-      "id": "soloMode",
-      "title": "单人模式",
-      "description": "从一个自我管理任务的智能体开始。需要更多能力时，随时扩展为完整团队。"
+      "id": "logs",
+      "title": "执行日志与诊断",
+      "description": "查看工具调用、运行日志、进程状态、启动超时和权限阻塞，知道每个成员到底卡在哪里。"
     },
     {
-      "id": "liveProcesses",
-      "title": "实时进程",
-      "description": "查看运行中的智能体，在浏览器中打开 URL，实时监控 token 使用和会话上下文。"
+      "id": "assets",
+      "title": "Skills 与团队模板",
+      "description": "把角色分工、审查标准、排障流程和内部 SOP 沉淀成可版本化的企业数字团队资产。"
     }
   ],
   "faq": [
     {
       "id": "whatIsIt",
-      "question": "什么是 Agent Teams？",
-      "answer": "一个桌面应用，通过我们自己的本地协调层来编排 AI 智能体团队。每个智能体都有角色，可自主工作，在看板上协作，并且可以运行在 Anthropic 或 Codex 上。"
+      "question": "Hermit 是什么？",
+      "answer": "Hermit 是本地优先的 AI 工程团队工作台。它默认复用官方 Claude Code / claude CLI，把 Agent 放进团队、看板、消息、审查和日志构成的工程交付流程。"
     },
     {
-      "id": "isFree",
-      "question": "真的免费吗？",
-      "answer": "是的。应用本身 100% 免费且开源。应用没有自己的付费方案。要运行智能体，你只需要接入受支持的 provider/runtime，例如 Anthropic 或 Codex。"
-    },
-    {
-      "id": "platforms",
-      "question": "支持哪些平台？",
-      "answer": "macOS（Apple Silicon 和 Intel）、Windows 和 Linux。"
-    },
-    {
-      "id": "howItWorks",
-      "question": "它是如何工作的？",
-      "answer": "安装应用，创建团队，分配角色——智能体开始并行工作。你通过看板监控进度，审查代码 diff，直接与智能体沟通。"
+      "id": "free",
+      "question": "它免费吗？",
+      "answer": "Hermit 本身是免费开源的 AGPL-3.0 项目。你仍需要自己拥有对应运行时的访问权限，例如 Claude Code 订阅或未来接入的其他运行时账号。"
     },
     {
       "id": "privacy",
-      "question": "我的代码安全吗？",
-      "answer": "一切在你的本地机器上运行。不会向外部服务器发送任何数据。你的代码、对话和智能体活动完全私密。"
+      "question": "我的代码会上传到 Hermit 服务吗？",
+      "answer": "不会。Hermit 运行在你的机器上，读取你选择的项目目录和本地 Claude 数据。真实模型请求由你配置的运行时发起，Hermit 不托管你的核心代码。"
     },
     {
-      "id": "requirements",
-      "question": "开始需要什么？",
-      "answer": "只需安装应用 - 它会在界面中引导你完成 runtime 检测和 provider 认证。零配置上手，几分钟即可运行。"
+      "id": "runtime",
+      "question": "支持哪些运行时？",
+      "answer": "当前主线优先支持官方 Claude Code / claude CLI。仓库里已经有 Cursor CLI runtime adapter 的基础切片，用于 headless / solo 场景探索；不要假设默认存在 OpenCode、Codex 或 Gemini 运行时。"
+    },
+    {
+      "id": "windows",
+      "question": "Windows 上启动慢怎么办？",
+      "answer": "Windows 的文件扫描、杀软和 CLI 启动更容易拖慢首屏。Hermit 已采用小批次成员启动、更长 teammate grace window 和延迟 watcher 等策略，后续还会继续优化启动分批和诊断。"
+    },
+    {
+      "id": "templates",
+      "question": "团队模板和 Skills 如何复用？",
+      "answer": "产品方向是通过多个 GitHub / 企业 Git 源同步 Skills、团队模板、角色工作流和运行时预设，让企业知识像代码一样被审查、发布和回滚。"
     }
   ],
   "download": {
-    "title": "下载",
-    "note": "选择你的平台，开始使用 AI 智能体团队。"
+    "title": "下载 Hermit",
+    "note": "选择你的平台，启动本地 AI 工程团队工作台。"
   },
   "testimonials": [
-    { "id": "user1", "name": "Alex K.", "role": "技术主管", "text": "终于有一个工具让我像管理工程团队一样管理 AI 智能体了。看板对于追踪并行智能体工作来说是变革性的。" },
-    { "id": "user2", "name": "Sarah M.", "role": "全栈开发", "text": "单人模式适合快速任务。需要更多算力时，几秒内组建完整团队。跨团队通信开箱即用。" },
-    { "id": "user3", "name": "David R.", "role": "高级工程师", "text": "代码审查流程设计得很棒——按任务查看 diff，批准/拒绝/评论。像有一支真正听指令的初级开发团队。" },
-    { "id": "user4", "name": "Yuki T.", "role": "DevOps 工程师", "text": "实时进程监控和上下文追踪非常有用。能看到每个智能体在做什么以及使用了多少上下文。" },
-    { "id": "user5", "name": "Maria S.", "role": "独立开发者", "text": "零配置启动是真的——安装应用，认证一次，5分钟内智能体就在我的代码库上工作了。没有 API 密钥，没有配置文件。" },
-    { "id": "user6", "name": "Chris L.", "role": "创业公司 CTO", "text": "这彻底改变了我的原型开发方式。为不同技术栈设置智能体团队，让它们并行工作。生产力提升 10 倍，不夸张。" }
+    {
+      "id": "user1",
+      "name": "工程负责人",
+      "role": "团队 Lead",
+      "text": "我不再把复杂需求塞进单个聊天窗口，而是让负责人拆任务、成员执行、审查成员看 diff。"
+    },
+    {
+      "id": "user2",
+      "name": "独立开发者",
+      "role": "全栈工程师",
+      "text": "个人项目也能用。只有一个负责人时，看板、日志和审查仍然让长任务更可控。"
+    },
+    {
+      "id": "user3",
+      "name": "平台工程师",
+      "role": "DevOps",
+      "text": "执行日志和成员状态很关键。不是只看最终回答，而是知道进程、工具和任务到底发生了什么。"
+    },
+    {
+      "id": "user4",
+      "name": "架构师",
+      "role": "Staff Engineer",
+      "text": "最喜欢的是它把经验沉淀成团队资产，而不是又造一个模型网关。"
+    }
   ],
   "pricing": [
     {
       "id": "free",
-      "name": "永久免费",
+      "name": "开源免费",
       "price": "$0",
-      "period": "永久",
-      "description": "全部功能。无限制，无需 API 密钥，无需信用卡。",
+      "period": "Hermit 本身",
+      "description": "本地优先、免费开源。使用时需要你自己的 Claude Code 或其他运行时访问权限。",
       "features": [
-        "无限智能体团队",
-        "实时更新的看板",
-        "带 diff 查看的代码审查",
-        "跨团队通信",
-        "单人和团队模式",
-        "实时进程监控",
-        "内置代码编辑器",
-        "MCP 集成"
+        "本地桌面工作台",
+        "Agent 团队与看板",
+        "任务评论和消息",
+        "按任务代码审查",
+        "执行日志和进程诊断",
+        "内置编辑器",
+        "MCP 集成",
+        "Skills / 团队模板路线"
       ],
       "highlighted": true
     }

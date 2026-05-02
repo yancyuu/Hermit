@@ -38,7 +38,7 @@ type ResolveResult = { url: string; version: string | null } | null;
 
 // --- Парсинг GitHub Release → наш формат ---
 
-const CACHE_KEY = "cat_releases";
+const CACHE_KEY = "hermit_releases";
 const CACHE_TTL = 10 * 60 * 1000; // 10 минут
 
 const emptyVariant: Variant = { url: null, platformKey: null, version: null };
@@ -111,7 +111,7 @@ function writeCache(data: DownloadsApiResponse): void {
 
 export const useReleaseDownloads = () => {
   const config = useRuntimeConfig();
-  const githubRepo = (config.public.githubRepo as string) || "777genius/claude_agent_teams_ui";
+  const githubRepo = (config.public.githubRepo as string) || "yancyuu/Hermit";
 
   const fallbackUrl =
     (config.public.githubReleasesUrl as string) ||

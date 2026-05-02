@@ -1,23 +1,23 @@
 {
   "nav": {
-    "features": "功能",
+    "features": "能力",
     "screenshots": "截图",
     "comparison": "对比",
     "download": "下载",
-    "pricing": "免费",
+    "pricing": "开源",
     "faq": "常见问题",
-    "viewOnGithub": "View on GitHub"
+    "viewOnGithub": "GitHub"
   },
   "hero": {
-    "badge": "Agent Teams",
+    "badge": "Hermit",
     "downloadNow": "立即下载",
     "ctaPrimary": "下载 {platform} 版",
-    "ctaSecondary": "对比",
+    "ctaSecondary": "查看对比",
     "preview": "产品预览",
     "trust": {
-      "agentTeams": "智能体团队",
-      "kanban": "看板",
-      "openSource": "开源"
+      "agentTeams": "AI 工程团队",
+      "kanban": "任务看板",
+      "openSource": "本地开源"
     },
     "watchDemo": "观看演示",
     "videoUnavailable": "视频不可用"
@@ -37,15 +37,15 @@
     "search": "搜索语言…"
   },
   "features": {
-    "sectionTitle": "AI 智能体编排所需的一切",
-    "sectionSubtitle": "强大的工具，让多智能体协作真正有效。"
+    "sectionTitle": "把 Agent 放进真实工程流程",
+    "sectionSubtitle": "不是再接一个模型，而是把任务、协作、审查、日志和团队资产组织起来。"
   },
   "pricing": {
-    "sectionTitle": "100% 免费，没有附加条件。",
-    "sectionSubtitle": "开源，无需 API 密钥，无需配置。安装即用。",
+    "sectionTitle": "Hermit 本身免费开源",
+    "sectionSubtitle": "本地优先，不托管你的核心代码。使用时带上你自己的 Claude Code 或其他运行时访问权限。",
     "getStarted": "立即下载",
-    "popular": "永久免费",
-    "note": "100% 开源。无需 API 密钥。无需配置。完全本地运行。"
+    "popular": "开源免费",
+    "note": "AGPL-3.0。可本地运行，可审查，可按企业流程二次开发。"
   },
   "testimonials": {
     "sectionTitle": "开发者怎么说",
@@ -55,12 +55,12 @@
     "feedbackCta": "想分享您的体验？请在以下平台提交 issue"
   },
   "faq": {
-    "sectionTitle": "有问题？我们有答案",
-    "subtitle": "关于 Agent Teams 的一切"
+    "sectionTitle": "常见问题",
+    "subtitle": "关于 Hermit、运行时和团队协作"
   },
   "comparison": {
-    "sectionTitle": "功能对比",
-    "sectionSubtitle": "与其他 AI 编程工具的逐项功能对比。",
+    "sectionTitle": "和常见方案的区别",
+    "sectionSubtitle": "Hermit 更像 AI 工程团队控制面，而不是个人助手或通用模型网关。",
     "feature": "功能",
     "features": {
       "crossTeam": "跨团队通信",
@@ -86,22 +86,22 @@
   },
   "screenshots": {
     "sectionTitle": "实际效果展示",
-    "sectionSubtitle": "应用的真实截图——看板、代码审查、智能体团队等等。"
+    "sectionSubtitle": "看板、团队视图、代码审查、执行日志和任务详情。"
   },
   "common": {
     "learnMore": "了解更多"
   },
   "footer": {
-    "copyright": "© {year} Agent Teams",
-    "tagline": "面向开发者的 AI 智能体编排",
+    "copyright": "© {year} Hermit",
+    "tagline": "本地优先的 AI 工程团队工作台",
     "links": {
       "github": "GitHub",
       "docs": "文档"
     }
   },
   "meta": {
-    "homeTitle": "Agent Teams - 面向开发者的 AI 智能体编排",
-    "homeDescription": "免费开源桌面应用，用于组建 AI 智能体团队。看板、代码审查、跨团队通信。完全本地运行。"
+    "homeTitle": "Hermit - 本地优先的 AI 工程团队工作台",
+    "homeDescription": "Hermit 把 Claude Code 等编程 Agent 组织成能接任务、协作、审查、复盘和复用的数字工程团队。"
   },
   "error": {
     "notFoundTitle": "页面未找到",

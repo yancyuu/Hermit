@@ -1,6 +1,6 @@
 export default defineEventHandler((event) => {
   const config = useRuntimeConfig();
-  const siteUrl = (config.public.siteUrl as string) || "https://777genius.github.io/claude_agent_teams_ui";
+  const siteUrl = (config.public.siteUrl as string) || "https://yancyuu.github.io/Hermit";
 
   setHeader(event, "content-type", "text/plain; charset=utf-8");
 

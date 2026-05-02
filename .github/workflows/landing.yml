@@ -32,9 +32,9 @@ jobs:
       - name: Generate static site
         working-directory: landing
         env:
-          NUXT_APP_BASE_URL: /claude_agent_teams_ui/
-          NUXT_PUBLIC_SITE_URL: https://777genius.github.io/claude_agent_teams_ui
-          NUXT_PUBLIC_GITHUB_REPO: 777genius/claude_agent_teams_ui
+          NUXT_APP_BASE_URL: /Hermit/
+          NUXT_PUBLIC_SITE_URL: https://yancyuu.github.io/Hermit
+          NUXT_PUBLIC_GITHUB_REPO: yancyuu/Hermit
         run: npx nuxt generate
 
       - uses: actions/configure-pages@v5

@@ -1,100 +1,118 @@
 {
   "hero": {
-    "title": "Agent Teams",
-    "subtitle": "Sie sind der CTO, Agenten sind Ihr Team. Sie erledigen Aufgaben, kommunizieren untereinander, reviewen Code. Sie schauen aufs Kanban-Board und trinken Kaffee."
+    "title": "Hermit",
+    "subtitle": "A local-first workbench for managing AI engineering teams. Leads split work, agents collaborate, kanban tracks state, code review anchors diffs, and logs preserve evidence."
   },
   "features": [
     {
       "id": "agentTeams",
-      "title": "Agenten-Teams",
-      "description": "Erstellen Sie Teams mit verschiedenen Rollen. Agenten arbeiten parallel und autonom, kommunizieren untereinander und kollaborieren teamübergreifend."
+      "title": "AI Engineering Teams",
+      "description": "Create a lead and multiple persistent members with roles, workflows, inboxes, and runtimes."
     },
     {
       "id": "kanban",
-      "title": "Kanban-Board",
-      "description": "Aufgabenstatus ändern sich in Echtzeit. Ziehen, zuweisen, reviewen — alles auf einem visuellen Board."
+      "title": "Kanban Workflow",
+      "description": "Turn requests into visible tasks with owners, comments, state transitions, review, and completion."
     },
     {
       "id": "codeReview",
-      "title": "Code-Review",
-      "description": "Diff-Ansicht pro Aufgabe mit Annehmen, Ablehnen und Kommentieren. Integrierter Code-Editor mit Git-Unterstützung."
+      "title": "Task-level Code Review",
+      "description": "Review diffs per task, accept or reject hunks, and keep delivery evidence close to the work."
     },
     {
-      "id": "crossTeam",
-      "title": "Teamübergreifende Kommunikation",
-      "description": "Agenten kommunizieren inner- und teamübergreifend. Direktnachrichten, Aufgabenkommentare und Schnellaktionen."
+      "id": "messages",
+      "title": "Member Messaging",
+      "description": "Coordinate through inboxes, task comments, direct messages, and cross-team links."
     },
     {
-      "id": "soloMode",
-      "title": "Solo-Modus",
-      "description": "Starten Sie mit einem einzelnen Agenten, der seine Aufgaben selbst verwaltet. Erweitern Sie jederzeit zum vollständigen Team."
+      "id": "logs",
+      "title": "Execution Logs",
+      "description": "Inspect tool calls, process state, startup diagnostics, permission blocks, and runtime output."
     },
     {
-      "id": "liveProcesses",
-      "title": "Live-Prozesse",
-      "description": "Sehen Sie laufende Agenten, öffnen Sie URLs im Browser, überwachen Sie Token-Nutzung und Sitzungskontext in Echtzeit."
+      "id": "assets",
+      "title": "Skills and Team Templates",
+      "description": "Version roles, review standards, SOPs, and reusable team patterns through Git-backed sources."
     }
   ],
   "faq": [
     {
       "id": "whatIsIt",
-      "question": "Was ist Agent Teams?",
-      "answer": "Eine Desktop-App zur Orchestrierung von KI-Agententeams mit unserer eigenen lokalen Koordinationsschicht. Agenten haben Rollen, arbeiten autonom, kollaborieren über ein Kanban-Board und können mit Anthropic oder Codex laufen."
+      "question": "What is Hermit?",
+      "answer": "Hermit is a local-first AI engineering team workbench. It currently defaults to the official Claude Code / claude CLI and wraps it with teams, kanban, messaging, review, and logs."
     },
     {
-      "id": "isFree",
-      "question": "Ist es wirklich kostenlos?",
-      "answer": "Ja. Die App ist 100% kostenlos und Open Source. Die App selbst hat kein Bezahlmodell. Um Agenten auszuführen, brauchen Sie nur Zugriff auf einen unterstützten Provider bzw. Runtime wie Anthropic oder Codex."
-    },
-    {
-      "id": "platforms",
-      "question": "Welche Plattformen werden unterstützt?",
-      "answer": "macOS (Apple Silicon und Intel), Windows und Linux."
-    },
-    {
-      "id": "howItWorks",
-      "question": "Wie funktioniert es?",
-      "answer": "App installieren, Team erstellen, Rollen zuweisen — Agenten beginnen parallel zu arbeiten. Sie verfolgen den Fortschritt am Kanban-Board, reviewen Code-Diffs und kommunizieren direkt mit Agenten."
+      "id": "free",
+      "question": "Is it free?",
+      "answer": "Hermit itself is free and open source under AGPL-3.0. You still need access to the runtime you choose, such as Claude Code today or other adapters in the future."
     },
     {
       "id": "privacy",
-      "question": "Ist mein Code sicher?",
-      "answer": "Alles läuft lokal auf Ihrem Rechner. Keine Daten werden an externe Server gesendet. Ihr Code, Gespräche und Agentenaktivität bleiben vollständig privat."
+      "question": "Does Hermit host my code?",
+      "answer": "No. Hermit runs on your machine, reads your selected project folders and local Claude data, and does not host your core code."
     },
     {
-      "id": "requirements",
-      "question": "Was brauche ich zum Start?",
-      "answer": "Einfach die App installieren - sie führt Sie in der UI durch Runtime-Erkennung und Provider-Authentifizierung. Zero-Setup-Onboarding bringt Sie in Minuten zum Laufen."
+      "id": "runtime",
+      "question": "Which runtimes are supported?",
+      "answer": "The main path targets the official Claude Code / claude CLI. A Cursor CLI adapter foundation exists for headless and solo exploration; do not assume OpenCode, Codex, or Gemini runtimes are available by default."
+    },
+    {
+      "id": "windows",
+      "question": "Why can Windows feel slower?",
+      "answer": "Windows file scanning, antivirus, and CLI startup can slow first paint and teammate bootstrap. Hermit uses smaller launch batches, a wider grace window, and deferred watchers to reduce false failures."
+    },
+    {
+      "id": "templates",
+      "question": "How will teams and skills be shared?",
+      "answer": "The product direction is Git-backed skill and team-template sources, so organizational knowledge can be reviewed, versioned, reused, and rolled back like code."
     }
   ],
   "download": {
-    "title": "Herunterladen",
-    "note": "Wählen Sie Ihre Plattform und starten Sie mit KI-Agenten-Teams."
+    "title": "Download Hermit",
+    "note": "Choose your platform and start managing a local AI engineering team."
   },
   "testimonials": [
-    { "id": "user1", "name": "Alex K.", "role": "Tech Lead", "text": "Endlich ein Tool, das KI-Agenten wie ein Engineering-Team verwaltet. Das Kanban-Board ist ein Game-Changer für parallele Arbeit." },
-    { "id": "user2", "name": "Sarah M.", "role": "Full-Stack-Entwicklerin", "text": "Solo-Modus ist perfekt für schnelle Aufgaben. Bei Bedarf starte ich in Sekunden ein vollständiges Team. Teamübergreifende Kommunikation funktioniert einfach." },
-    { "id": "user3", "name": "David R.", "role": "Senior Engineer", "text": "Der Code-Review-Workflow ist brillant — Diff-Ansicht pro Aufgabe, Annehmen/Ablehnen, Kommentare. Wie ein Team, das tatsächlich Anweisungen befolgt." },
-    { "id": "user4", "name": "Yuki T.", "role": "DevOps Engineer", "text": "Live-Prozessüberwachung und Kontext-Tracking sind unglaublich nützlich. Ich sehe genau, was jeder Agent tut." },
-    { "id": "user5", "name": "Maria S.", "role": "Indie-Entwicklerin", "text": "Zero-Setup-Onboarding ist echt — App installiert, einmal authentifiziert, und in 5 Minuten arbeiteten Agenten an meinem Code." },
-    { "id": "user6", "name": "Chris L.", "role": "Startup-CTO", "text": "Hat mein Prototyping komplett verändert. Teams für verschiedene Stack-Teile aufsetzen und parallel arbeiten lassen. 10x Produktivitätssteigerung." }
+    {
+      "id": "user1",
+      "name": "Engineering Lead",
+      "role": "Team Lead",
+      "text": "Instead of one giant chat, I can split work into tasks, assign agents, review diffs, and keep the whole process visible."
+    },
+    {
+      "id": "user2",
+      "name": "Indie Builder",
+      "role": "Full-stack Developer",
+      "text": "Even solo mode is useful: the board, logs, and review flow make long-running agent work much easier to control."
+    },
+    {
+      "id": "user3",
+      "name": "Platform Engineer",
+      "role": "DevOps",
+      "text": "The logs and member diagnostics are the difference between hoping an agent works and actually knowing what happened."
+    },
+    {
+      "id": "user4",
+      "name": "Architect",
+      "role": "Staff Engineer",
+      "text": "Hermit focuses on reusable team assets instead of becoming yet another model gateway. That is the right layer."
+    }
   ],
   "pricing": [
     {
       "id": "free",
-      "name": "Für immer kostenlos",
-      "price": "0€",
-      "period": "für immer",
-      "description": "Alles inklusive. Keine Limits, keine API-Schlüssel, keine Kreditkarte.",
+      "name": "Open Source",
+      "price": "$0",
+      "period": "Hermit itself",
+      "description": "Local-first and open source. Bring your own Claude Code or other supported runtime access.",
       "features": [
-        "Unbegrenzte Agenten-Teams",
-        "Kanban-Board mit Echtzeit-Updates",
-        "Code-Review mit Diff-Ansicht",
-        "Teamübergreifende Kommunikation",
-        "Solo- und Team-Modi",
-        "Live-Prozessüberwachung",
-        "Integrierter Code-Editor",
-        "MCP-Integration"
+        "Local desktop workbench",
+        "Agent teams and kanban",
+        "Task comments and messaging",
+        "Task-level code review",
+        "Execution logs and diagnostics",
+        "Built-in editor",
+        "MCP integration",
+        "Skills and team-template roadmap"
       ],
       "highlighted": true
     }

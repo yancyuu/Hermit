@@ -1,23 +1,23 @@
 {
   "nav": {
-    "features": "Features",
+    "features": "Capabilities",
     "screenshots": "Screenshots",
     "comparison": "Compare",
     "download": "Download",
-    "pricing": "Free",
+    "pricing": "Open Source",
     "faq": "FAQ",
     "viewOnGithub": "View on GitHub"
   },
   "hero": {
-    "badge": "Agent Teams",
-    "downloadNow": "Download Now",
+    "badge": "Hermit",
+    "downloadNow": "Download Hermit",
     "ctaPrimary": "Download for {platform}",
     "ctaSecondary": "Compare",
     "preview": "Product preview",
     "trust": {
-      "agentTeams": "Agent Teams",
-      "kanban": "Kanban Board",
-      "openSource": "Open Source"
+      "agentTeams": "AI Teams",
+      "kanban": "Kanban Workflow",
+      "openSource": "Local-first OSS"
     },
     "watchDemo": "Watch Demo",
     "videoUnavailable": "Video unavailable"
@@ -37,15 +37,15 @@
     "search": "Search language…"
   },
   "features": {
-    "sectionTitle": "Everything you need for AI agent orchestration",
-    "sectionSubtitle": "Powerful tools that make multi-agent collaboration actually work."
+    "sectionTitle": "Put agents into real engineering workflows",
+    "sectionSubtitle": "Tasks, collaboration, review, logs, and reusable team assets around strong coding runtimes."
   },
   "pricing": {
-    "sectionTitle": "100% Free. No strings attached.",
-    "sectionSubtitle": "Open source, no API keys, no configuration. Just install and go.",
-    "getStarted": "Download Now",
-    "popular": "Free Forever",
-    "note": "100% open source. No API keys. No configuration. Runs entirely locally."
+    "sectionTitle": "Hermit itself is free and open source",
+    "sectionSubtitle": "Local-first. Bring your own Claude Code or supported runtime access.",
+    "getStarted": "Download Hermit",
+    "popular": "Open Source",
+    "note": "AGPL-3.0. Local-first, inspectable, and built for engineering teams."
   },
   "testimonials": {
     "sectionTitle": "What developers say",
@@ -55,12 +55,12 @@
     "feedbackCta": "Want to share your experience? Open an issue on"
   },
   "faq": {
-    "sectionTitle": "Got questions? We've got answers",
-    "subtitle": "Everything you need to know about Agent Teams"
+    "sectionTitle": "Frequently Asked Questions",
+    "subtitle": "Hermit, runtimes, and AI engineering teams"
   },
   "comparison": {
-    "sectionTitle": "How we compare",
-    "sectionSubtitle": "Feature-by-feature comparison with other AI coding tools.",
+    "sectionTitle": "How Hermit compares",
+    "sectionSubtitle": "Hermit is an AI engineering team control plane, not a personal assistant or generic model gateway.",
     "feature": "Feature",
     "features": {
       "crossTeam": "Cross-team communication",
@@ -85,23 +85,23 @@
     }
   },
   "screenshots": {
-    "sectionTitle": "See it in action",
-    "sectionSubtitle": "Real screenshots from the app — kanban board, code review, agent teams, and more."
+    "sectionTitle": "See Hermit in action",
+    "sectionSubtitle": "Kanban, team view, code review, execution logs, and task details."
   },
   "common": {
     "learnMore": "Learn more"
   },
   "footer": {
-    "copyright": "© {year} Agent Teams",
-    "tagline": "AI agent orchestration for developers",
+    "copyright": "© {year} Hermit",
+    "tagline": "Local-first AI engineering team workbench",
     "links": {
       "github": "GitHub",
-      "docs": "Documentation"
+      "docs": "Docs"
     }
   },
   "meta": {
-    "homeTitle": "Agent Teams - AI Agent Orchestration for Developers",
-    "homeDescription": "Free, open-source desktop app for assembling AI agent teams. Kanban board, code review, cross-team communication. Runs entirely locally."
+    "homeTitle": "Hermit - Local-first AI Engineering Team Workbench",
+    "homeDescription": "Hermit organizes Claude Code and other coding agents into AI engineering teams with tasks, messaging, review, logs, and reusable team assets."
   },
   "error": {
     "notFoundTitle": "Page not found",

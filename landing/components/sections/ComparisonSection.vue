@@ -155,7 +155,7 @@ const rows = computed<ComparisonRow[]>(() => [
   },
   {
     feature: t('comparison.features.multiAgent'),
-    us: { status: 'soon', note: 'In development', noteLink: 'https://github.com/Alishahryar1/free-claude-code' },
+    us: { status: 'soon', note: 'Adapter roadmap' },
     vibeKanban: { status: 'yes', note: '6+ agents' },
     aperant: { status: 'yes', note: '11 providers' },
     cursor: { status: 'yes', note: 'Multi-model' },
@@ -172,7 +172,7 @@ const rows = computed<ComparisonRow[]>(() => [
 ])
 
 const competitors = [
-  { key: 'us', name: 'Agent Teams', highlight: true },
+  { key: 'us', name: 'Hermit', highlight: true },
   { key: 'vibeKanban', name: 'Vibe Kanban' },
   { key: 'aperant', name: 'Aperant' },
   { key: 'cursor', name: 'Cursor' },
@@ -199,7 +199,7 @@ function getStatusIcon(status: string): string {
     case 'partial': return '\u25D2'
     case 'na': return '\u2014'
     case 'free': return 'Free'
-    case 'soon': return '\uD83D\uDCC5'
+    case 'soon': return 'Soon'
     default: return ''
   }
 }
