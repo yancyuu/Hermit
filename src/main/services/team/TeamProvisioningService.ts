@@ -424,7 +424,7 @@ const TEAM_NAME_PATTERN = /^[a-z0-9][a-z0-9-]{0,127}$/;
 const RUN_TIMEOUT_MS = 300_000;
 const VERIFY_TIMEOUT_MS = 15_000;
 const MCP_PREFLIGHT_INITIALIZE_TIMEOUT_MS = 45_000;
-const MEMBER_BOOTSTRAP_PARALLEL_WINDOW = 4;
+const MEMBER_BOOTSTRAP_PARALLEL_WINDOW = 3;
 
 // MCP preflight is process-global: agent-teams server is bundled with the app,
 // so one successful validation covers all subsequent team launches.
@@ -1567,7 +1567,7 @@ interface PromptSizeSummary {
   lines: number;
 }
 
-const MEMBER_LAUNCH_GRACE_MS = 90_000;
+const MEMBER_LAUNCH_GRACE_MS = 180_000;
 const MEMBER_BOOTSTRAP_STALL_MS = 5 * 60_000;
 
 export function shouldWarnOnUnreadableMemberAuditConfig(params: {

@@ -46,7 +46,7 @@ export const TeamSidebarRail = memo(function TeamSidebarRail({
   );
 
   return (
-    <div className="border-[var(--color-border)]/60 relative flex size-full min-h-0 flex-col overflow-hidden border-l bg-[var(--color-surface)]">
+    <div className="relative flex size-full min-h-0 flex-col overflow-hidden border-0 bg-[var(--color-surface)]">
       <div className="shrink-0 overflow-hidden px-3">
         <ClaudeLogsSection
           teamName={teamName}

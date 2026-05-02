@@ -1202,7 +1202,7 @@ export const ChangeReviewDialog = ({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-surface">
+    <div className="fixed inset-0 z-50 m-0 flex h-screen w-screen flex-col overflow-hidden border-0 bg-surface">
       {/* Header */}
       <div
         className="flex items-center justify-between border-b border-border bg-surface-sidebar px-4 py-3"

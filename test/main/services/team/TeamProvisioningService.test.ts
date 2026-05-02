@@ -986,7 +986,7 @@ describe('TeamProvisioningService', () => {
     it('does not carry stale persisted runtimeAlive through launch-state reconcile', async () => {
       const teamName = 'persisted-stale-runtime-status-team';
       const projectPath = '/Users/test/project';
-      const acceptedAt = new Date(Date.now() - 120_000).toISOString();
+      const acceptedAt = new Date(Date.now() - 181_000).toISOString();
       writeLaunchConfig(teamName, projectPath, 'lead-session', ['alice']);
       writeLaunchState(teamName, 'lead-session', {
         alice: {
@@ -6334,13 +6334,13 @@ describe('TeamProvisioningService', () => {
               status: 'waiting',
               launchState: 'runtime_pending_bootstrap',
               agentToolAccepted: true,
-              firstSpawnAcceptedAt: new Date(Date.now() - 120_000).toISOString(),
+              firstSpawnAcceptedAt: new Date(Date.now() - 181_000).toISOString(),
             }),
           ],
         ]),
       });
       run.pendingMemberRestarts.set('bob', {
-        requestedAt: new Date(Date.now() - 120_000).toISOString(),
+        requestedAt: new Date(Date.now() - 181_000).toISOString(),
         desired: {
           name: 'bob',
           providerId: 'codex',
@@ -6377,7 +6377,7 @@ describe('TeamProvisioningService', () => {
               runtimeAlive: true,
               livenessSource: 'process',
               bootstrapConfirmed: false,
-              firstSpawnAcceptedAt: new Date(Date.now() - 120_000).toISOString(),
+              firstSpawnAcceptedAt: new Date(Date.now() - 181_000).toISOString(),
             }),
           ],
         ]),

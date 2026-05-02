@@ -30,7 +30,7 @@ describe('TeamProvisioningService audit warning policy', () => {
   });
 
   it('warns on unreadable config only after a teammate has exceeded the launch grace window', () => {
-    const nowMs = Date.parse('2026-04-09T12:02:00.000Z');
+    const nowMs = Date.parse('2026-04-09T12:04:00.000Z');
     const memberSpawnStatuses = new Map([
       [
         'alice',
@@ -52,7 +52,7 @@ describe('TeamProvisioningService audit warning policy', () => {
   });
 
   it('only warns about missing registered members after grace expiry', () => {
-    const nowMs = Date.parse('2026-04-09T12:02:00.000Z');
+    const nowMs = Date.parse('2026-04-09T12:04:00.000Z');
 
     expect(
       shouldWarnOnMissingRegisteredMember({

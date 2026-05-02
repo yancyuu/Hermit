@@ -525,7 +525,7 @@ export const ProjectEditorOverlay = ({
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 flex flex-col bg-surface"
+      className="fixed inset-0 z-50 m-0 flex h-screen w-screen flex-col overflow-hidden border-0 bg-surface"
       tabIndex={-1}
       role="dialog"
       aria-modal="true"
