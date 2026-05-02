@@ -429,6 +429,17 @@ function isBinaryCompatible(format, archs, targetPlatform, targetArch) {
   return archs.has(targetArch);
 }
 
+function shouldIgnoreNativeBinaryMismatch(relativePath, metadata, targetPlatform) {
+  const normalizedPath = relativePath.split(path.sep).join('/');
+
+  return (
+    targetPlatform === 'win32' &&
+    normalizedPath === 'resources/elevate.exe' &&
+    metadata.format === 'pe' &&
+    metadata.archs.has('ia32')
+  );
+}
+
 async function validateNativeBinaries(appOutDir, targetPlatform, targetArch) {
   const mismatches = [];
   const files = await walkFiles(appOutDir);
@@ -443,8 +454,13 @@ async function validateNativeBinaries(appOutDir, targetPlatform, targetArch) {
       continue;
     }
 
+    const relativePath = path.relative(appOutDir, filePath);
+    if (shouldIgnoreNativeBinaryMismatch(relativePath, metadata, targetPlatform)) {
+      continue;
+    }
+
     mismatches.push({
-      path: path.relative(appOutDir, filePath),
+      path: relativePath,
       format: metadata.format,
       archs: [...metadata.archs].sort(),
     });
@@ -490,6 +506,7 @@ module.exports._internal = {
   parsePortableExecutable,
   pruneSsh2Artifacts,
   pruneNodePtyArtifacts,
+  shouldIgnoreNativeBinaryMismatch,
   validateNativeBinaries,
   walkFiles,
 };

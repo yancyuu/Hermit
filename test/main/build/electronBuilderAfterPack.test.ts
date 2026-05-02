@@ -195,6 +195,25 @@ describe('electron-builder afterPack', () => {
     ]);
   });
 
+  it('allows electron-builder Windows elevate helper without hiding app binaries', async () => {
+    const tempDir = createTempDir();
+    tempDirs.push(tempDir);
+
+    writeFile(path.join(tempDir, 'resources', 'elevate.exe'), createPortableExecutableBuffer('ia32'));
+    writeFile(
+      path.join(tempDir, 'resources', 'app.asar.unpacked', 'node_modules', 'bad', 'bad.exe'),
+      createPortableExecutableBuffer('ia32')
+    );
+
+    await expect(validateNativeBinaries(tempDir, 'win32', 'x64')).resolves.toEqual([
+      {
+        path: path.join('resources', 'app.asar.unpacked', 'node_modules', 'bad', 'bad.exe'),
+        format: 'pe',
+        archs: ['ia32'],
+      },
+    ]);
+  });
+
   it('accepts a clean arm64 mac bundle after pruning', async () => {
     const tempDir = createTempDir();
     tempDirs.push(tempDir);

@@ -164,25 +164,34 @@ Hermit 的核心取舍是：不重新发明 Agent 大脑，而是在强运行时
 
 如果 macOS 图形界面启动后找不到 `claude`，请确认 Claude Code 已安装，或在设置里配置 CLI 路径。常见路径包括 Homebrew、npm/nvm、`~/.claude/local/bin` 等。
 
-<table align="center">
-<tr>
-<td align="center">
+<p align="center">
   <a href="https://github.com/yancyuu/Hermit/releases/latest/download/Hermit-arm64.dmg">
-    <img src="https://img.shields.io/badge/macOS-下载最新版本-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS" />
+    <img src="https://img.shields.io/badge/macOS_Apple_Silicon-DMG-000000?style=for-the-badge&logo=apple&logoColor=white" alt="下载 macOS Apple Silicon DMG" />
   </a>
-</td>
-<td align="center">
+  <a href="https://github.com/yancyuu/Hermit/releases/latest/download/Hermit-x64.dmg">
+    <img src="https://img.shields.io/badge/macOS_Intel-DMG-000000?style=for-the-badge&logo=apple&logoColor=white" alt="下载 macOS Intel DMG" />
+  </a>
   <a href="https://github.com/yancyuu/Hermit/releases/latest/download/Hermit-Setup.exe">
-    <img src="https://img.shields.io/badge/Windows-下载最新版本-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Windows" />
+    <img src="https://img.shields.io/badge/Windows-Setup.exe-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="下载 Windows 安装包" />
   </a>
-</td>
-<td align="center">
+</p>
+
+<p align="center">
   <a href="https://github.com/yancyuu/Hermit/releases/latest/download/Hermit.AppImage">
-    <img src="https://img.shields.io/badge/Linux-下载最新版本-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux" />
+    <img src="https://img.shields.io/badge/Linux-AppImage-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="下载 Linux AppImage" />
   </a>
-</td>
-</tr>
-</table>
+  <a href="https://github.com/yancyuu/Hermit/releases/latest/download/Hermit-amd64.deb">
+    <img src="https://img.shields.io/badge/Linux-DEB-A81D33?style=for-the-badge&logo=debian&logoColor=white" alt="下载 Linux DEB" />
+  </a>
+  <a href="https://github.com/yancyuu/Hermit/releases/latest/download/Hermit-x86_64.rpm">
+    <img src="https://img.shields.io/badge/Linux-RPM-EE0000?style=for-the-badge&logo=redhat&logoColor=white" alt="下载 Linux RPM" />
+  </a>
+  <a href="https://github.com/yancyuu/Hermit/releases/latest/download/Hermit.pacman">
+    <img src="https://img.shields.io/badge/Linux-pacman-1793D1?style=for-the-badge&logo=archlinux&logoColor=white" alt="下载 Linux pacman 包" />
+  </a>
+</p>
+
+> 如果上面的稳定链接暂时不可用，请到 [Releases](https://github.com/yancyuu/Hermit/releases/latest) 页面下载对应版本资产。
 
 ## 典型使用场景
 
