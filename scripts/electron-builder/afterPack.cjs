@@ -123,6 +123,14 @@ function shouldKeepNodePtyBin(entryName, platform, archLabel) {
   );
 }
 
+function shouldKeepNodePtyConpty(entryName, platform, archLabel) {
+  if (platform !== 'win32' || !entryName.startsWith('win10-')) {
+    return false;
+  }
+
+  return entryName === `win10-${archLabel}`;
+}
+
 async function pruneNodePtyArtifacts(appOutDir, platform, archLabel) {
   const removedPaths = [];
   const nodePtyRoots = await findNodePtyRoots(appOutDir);
@@ -153,6 +161,97 @@ async function pruneNodePtyArtifacts(appOutDir, platform, archLabel) {
         await fs.promises.rm(absolutePath, { recursive: true, force: true });
         removedPaths.push(absolutePath);
       }
+    }
+
+    const thirdPartyDir = path.join(nodePtyRoot, 'third_party', 'conpty');
+    let versions;
+    try {
+      versions = await fs.promises.readdir(thirdPartyDir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+
+    for (const version of versions) {
+      if (!version.isDirectory()) {
+        continue;
+      }
+
+      const versionDir = path.join(thirdPartyDir, version.name);
+      let entries;
+      try {
+        entries = await fs.promises.readdir(versionDir, { withFileTypes: true });
+      } catch {
+        continue;
+      }
+
+      for (const entry of entries) {
+        if (!entry.isDirectory()) {
+          continue;
+        }
+
+        if (shouldKeepNodePtyConpty(entry.name, platform, archLabel)) {
+          continue;
+        }
+
+        const absolutePath = path.join(versionDir, entry.name);
+        await fs.promises.rm(absolutePath, { recursive: true, force: true });
+        removedPaths.push(absolutePath);
+      }
+    }
+  }
+
+  return removedPaths;
+}
+
+async function findPackageRoots(appOutDir, packageName) {
+  const roots = [];
+  const queue = [appOutDir];
+
+  while (queue.length > 0) {
+    const currentDir = queue.pop();
+    if (!currentDir) {
+      continue;
+    }
+
+    const baseName = path.basename(currentDir);
+    if (baseName === packageName) {
+      roots.push(currentDir);
+      continue;
+    }
+
+    let entries;
+    try {
+      entries = await fs.promises.readdir(currentDir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        queue.push(path.join(currentDir, entry.name));
+      }
+    }
+  }
+
+  return roots;
+}
+
+async function pruneSsh2Artifacts(appOutDir, platform, archLabel) {
+  if (platform !== 'win32' || archLabel === 'ia32') {
+    return [];
+  }
+
+  const removedPaths = [];
+  const ssh2Roots = await findPackageRoots(appOutDir, 'ssh2');
+
+  for (const ssh2Root of ssh2Roots) {
+    const pageantPath = path.join(ssh2Root, 'util', 'pagent.exe');
+    try {
+      await fs.promises.access(pageantPath);
+      await fs.promises.rm(pageantPath, { force: true });
+      removedPaths.push(pageantPath);
+    } catch {
+      // Best effort: validation below still catches the file if it remains.
     }
   }
 
@@ -358,7 +457,10 @@ async function afterPack(context) {
   const targetPlatform = context.electronPlatformName;
   const targetArch = getArchLabel(context.arch);
 
-  const removedPaths = await pruneNodePtyArtifacts(context.appOutDir, targetPlatform, targetArch);
+  const removedPaths = [
+    ...(await pruneNodePtyArtifacts(context.appOutDir, targetPlatform, targetArch)),
+    ...(await pruneSsh2Artifacts(context.appOutDir, targetPlatform, targetArch)),
+  ];
   const mismatches = await validateNativeBinaries(context.appOutDir, targetPlatform, targetArch);
 
   if (mismatches.length > 0) {
@@ -386,6 +488,7 @@ module.exports._internal = {
   parseElf,
   parseMachO,
   parsePortableExecutable,
+  pruneSsh2Artifacts,
   pruneNodePtyArtifacts,
   validateNativeBinaries,
   walkFiles,

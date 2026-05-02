@@ -13,6 +13,7 @@ const {
   parseMachO,
   parsePortableExecutable,
   pruneNodePtyArtifacts,
+  pruneSsh2Artifacts,
   validateNativeBinaries,
 } = afterPackModule._internal;
 
@@ -45,8 +46,8 @@ function createElfBuffer(arch: 'arm64' | 'x64'): Buffer {
   return buffer;
 }
 
-function createPortableExecutableBuffer(arch: 'arm64' | 'x64'): Buffer {
-  const machine = arch === 'arm64' ? 0xaa64 : 0x8664;
+function createPortableExecutableBuffer(arch: 'arm64' | 'x64' | 'ia32'): Buffer {
+  const machine = arch === 'arm64' ? 0xaa64 : arch === 'ia32' ? 0x014c : 0x8664;
   const buffer = Buffer.alloc(256);
   buffer[0] = 0x4d;
   buffer[1] = 0x5a;
@@ -132,6 +133,48 @@ describe('electron-builder afterPack', () => {
     expect(fs.existsSync(path.join(prebuildsDir, 'darwin-arm64'))).toBe(true);
     expect(fs.existsSync(path.join(binDir, 'darwin-arm64-143'))).toBe(true);
     expect(fs.existsSync(path.join(prebuildsDir, 'darwin-x64'))).toBe(false);
+  });
+
+  it('prunes Windows-only foreign native helper binaries', async () => {
+    const tempDir = createTempDir();
+    tempDirs.push(tempDir);
+    const nodePtyConptyDir = path.join(
+      tempDir,
+      'resources',
+      'app.asar.unpacked',
+      'node_modules',
+      'node-pty',
+      'third_party',
+      'conpty',
+      '1.23.251008001'
+    );
+    const ssh2UtilDir = path.join(
+      tempDir,
+      'resources',
+      'app.asar.unpacked',
+      'node_modules',
+      'ssh2',
+      'util'
+    );
+
+    writeFile(
+      path.join(nodePtyConptyDir, 'win10-x64', 'conpty.dll'),
+      createPortableExecutableBuffer('x64')
+    );
+    writeFile(
+      path.join(nodePtyConptyDir, 'win10-arm64', 'conpty.dll'),
+      createPortableExecutableBuffer('arm64')
+    );
+    writeFile(path.join(ssh2UtilDir, 'pagent.exe'), createPortableExecutableBuffer('ia32'));
+
+    const removedNodePty = await pruneNodePtyArtifacts(tempDir, 'win32', 'x64');
+    const removedSsh2 = await pruneSsh2Artifacts(tempDir, 'win32', 'x64');
+
+    expect(removedNodePty).toContain(path.join(nodePtyConptyDir, 'win10-arm64'));
+    expect(removedSsh2).toContain(path.join(ssh2UtilDir, 'pagent.exe'));
+    expect(fs.existsSync(path.join(nodePtyConptyDir, 'win10-x64'))).toBe(true);
+    expect(fs.existsSync(path.join(nodePtyConptyDir, 'win10-arm64'))).toBe(false);
+    expect(fs.existsSync(path.join(ssh2UtilDir, 'pagent.exe'))).toBe(false);
   });
 
   it('fails validation when a foreign-arch native binary remains in the bundle', async () => {
