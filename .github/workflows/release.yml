@@ -145,7 +145,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="${GITHUB_REF#refs/tags/}"
-          for f in release/*.dmg release/*.zip release/*.blockmap; do
+          for f in release/*.dmg release/*.zip; do
             [ -f "$f" ] || continue
             echo "Uploading: $f"
             gh release upload "$TAG" "$f" --repo "$GITHUB_REPOSITORY" --clobber 2>&1 || \
@@ -224,7 +224,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="${GITHUB_REF#refs/tags/}"
-          for f in release/*.exe release/*.blockmap; do
+          for f in release/*.exe; do
             [ -f "$f" ] || continue
             echo "Uploading: $f"
             gh release upload "$TAG" "$f" --repo "$GITHUB_REPOSITORY" --clobber 2>&1 || \
@@ -306,7 +306,7 @@ jobs:
           set -x
           TAG="${GITHUB_REF#refs/tags/}"
           ls -la release/ || true
-          for f in release/*.AppImage release/*.deb release/*.rpm release/*.pacman release/*.blockmap; do
+          for f in release/*.AppImage release/*.deb release/*.rpm release/*.pacman; do
             [ -f "$f" ] || continue
             echo "Uploading: $f"
             gh release upload "$TAG" "$f" --repo "$GITHUB_REPOSITORY" --clobber 2>&1 || \

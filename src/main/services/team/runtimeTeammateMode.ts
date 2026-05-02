@@ -84,3 +84,21 @@ export async function resolveDesktopTeammateModeDecision(
     forceProcessTeammates: false,
   };
 }
+
+export function applyDesktopTeammateModeDecisionToEnv(
+  env: NodeJS.ProcessEnv,
+  decision: Pick<DesktopTeammateModeDecision, 'forceProcessTeammates'>
+): void {
+  if (decision.forceProcessTeammates) {
+    env.CLAUDE_TEAM_FORCE_PROCESS_TEAMMATES = '1';
+    return;
+  }
+
+  delete env.CLAUDE_TEAM_FORCE_PROCESS_TEAMMATES;
+}
+
+export function buildDesktopTeammateModeCliArgs(
+  decision: Pick<DesktopTeammateModeDecision, 'injectedTeammateMode'>
+): string[] {
+  return decision.injectedTeammateMode ? ['--teammate-mode', decision.injectedTeammateMode] : [];
+}

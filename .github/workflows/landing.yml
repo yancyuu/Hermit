@@ -3,7 +3,10 @@ name: Deploy Landing to GitHub Pages
 on:
   push:
     branches: [main]
-    paths: [landing/**]
+    paths:
+      - landing/**
+      - README.md
+      - .github/workflows/landing.yml
   workflow_dispatch:
 
 permissions:

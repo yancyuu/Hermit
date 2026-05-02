@@ -191,7 +191,11 @@ import {
   buildProgressAssistantOutput,
   buildProgressLogsTail,
 } from './progressPayload';
-import { resolveDesktopTeammateModeDecision } from './runtimeTeammateMode';
+import {
+  applyDesktopTeammateModeDecisionToEnv,
+  buildDesktopTeammateModeCliArgs,
+  resolveDesktopTeammateModeDecision,
+} from './runtimeTeammateMode';
 import {
   choosePreferredLaunchSnapshot,
   clearBootstrapState,
@@ -12193,9 +12197,7 @@ export class TeamProvisioningService {
       );
       const promptSize = getPromptSizeSummary(nativeBootstrapPrompt);
       let child: ReturnType<typeof spawn>;
-      // Force members to run as independent processes (not in-process sub-agents).
-      // Combined with strong sequential prompt instructions, this prevents API rate limiting.
-      shellEnv.CLAUDE_TEAM_FORCE_PROCESS_TEAMMATES = '1';
+      applyDesktopTeammateModeDecisionToEnv(shellEnv, teammateModeDecision);
       const mcpConfigPath = mcpConfigPathResult;
       run.mcpConfigPath = mcpConfigPath;
       // Start MCP validation concurrently — we'll await it after spawning the CLI
@@ -12247,6 +12249,7 @@ export class TeamProvisioningService {
         ...(launchIdentity.resolvedEffort ? ['--effort', launchIdentity.resolvedEffort] : []),
         ...providerFastModeArgs,
         ...(request.worktree ? ['--worktree', request.worktree] : []),
+        ...buildDesktopTeammateModeCliArgs(teammateModeDecision),
         ...parseCliArgs(request.extraCliArgs),
         ...providerArgs,
       ];
@@ -12276,7 +12279,6 @@ export class TeamProvisioningService {
 
       // Enable deterministic bootstrap for CLI-controlled sequential member spawning
       shellEnv.CLAUDE_ENABLE_DETERMINISTIC_TEAM_BOOTSTRAP = '1';
-      shellEnv.CLAUDE_TEAM_FORCE_PROCESS_TEAMMATES = '1';
       const runtimeWarning = buildRuntimeLaunchWarning(request, shellEnv, {
         geminiRuntimeAuth,
         promptSize,
@@ -13346,8 +13348,7 @@ export class TeamProvisioningService {
       );
       const promptSize = getPromptSizeSummary(prompt);
       let child: ReturnType<typeof spawn>;
-      // Force members to run as independent processes (not in-process sub-agents).
-      shellEnv.CLAUDE_TEAM_FORCE_PROCESS_TEAMMATES = '1';
+      applyDesktopTeammateModeDecisionToEnv(shellEnv, teammateModeDecision);
       const mcpConfigPath = mcpConfigPathResult;
       run.mcpConfigPath = mcpConfigPath;
       // Start MCP validation concurrently — we'll await it after spawning the CLI
@@ -13411,6 +13412,7 @@ export class TeamProvisioningService {
       if (request.worktree) {
         launchArgs.push('--worktree', request.worktree);
       }
+      launchArgs.push(...buildDesktopTeammateModeCliArgs(teammateModeDecision));
       launchArgs.push(...parseCliArgs(request.extraCliArgs));
       launchArgs.push(...providerArgs);
       const runtimeWarning = buildRuntimeLaunchWarning(request, shellEnv, {

@@ -8,6 +8,22 @@ importers:
 
   .:
     dependencies:
+      '@fastify/cors':
+        specifier: ^11.2.0
+        version: 11.2.0
+      '@fastify/static':
+        specifier: ^9.0.0
+        version: 9.0.0
+      agent-teams-controller:
+        specifier: workspace:*
+        version: link:agent-teams-controller
+      fastify:
+        specifier: ^5.7.4
+        version: 5.7.4
+      node-pty:
+        specifier: ^1.1.0
+        version: 1.1.0
+    devDependencies:
       '@claude-teams/agent-graph':
         specifier: workspace:*
         version: link:packages/agent-graph
@@ -98,12 +114,15 @@ importers:
       '@dnd-kit/utilities':
         specifier: ^3.2.2
         version: 3.2.2(react@19.2.4)
-      '@fastify/cors':
-        specifier: ^11.2.0
-        version: 11.2.0
-      '@fastify/static':
-        specifier: ^9.0.0
-        version: 9.0.0
+      '@electron/rebuild':
+        specifier: ^4.0.3
+        version: 4.0.3
+      '@eslint-community/eslint-plugin-eslint-comments':
+        specifier: ^4.6.0
+        version: 4.6.0(eslint@9.39.2(jiti@1.21.7))
+      '@eslint/js':
+        specifier: ^9.39.2
+        version: 9.39.2
       '@floating-ui/dom':
         specifier: ^1.7.6
         version: 1.7.6
@@ -152,6 +171,12 @@ importers:
       '@sentry/react':
         specifier: ^10.45.0
         version: 10.45.0(react@19.2.4)
+      '@sentry/vite-plugin':
+        specifier: ^5.1.1
+        version: 5.1.1(encoding@0.1.13)(rollup@4.60.0)
+      '@tailwindcss/typography':
+        specifier: ^0.5.19
+        version: 0.5.19(tailwindcss@3.4.19(tsx@4.21.0)(yaml@2.8.2))
       '@tanstack/react-virtual':
         specifier: ^3.10.8
         version: 3.13.18(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -170,163 +195,6 @@ importers:
       '@tiptap/starter-kit':
         specifier: ^3.20.4
         version: 3.20.4
-      '@xterm/addon-fit':
-        specifier: ^0.11.0
-        version: 0.11.0
-      '@xterm/addon-web-links':
-        specifier: ^0.12.0
-        version: 0.12.0
-      '@xterm/xterm':
-        specifier: ^6.0.0
-        version: 6.0.0
-      agent-teams-controller:
-        specifier: workspace:*
-        version: link:agent-teams-controller
-      chokidar:
-        specifier: ^4.0.3
-        version: 4.0.3
-      class-variance-authority:
-        specifier: ^0.7.1
-        version: 0.7.1
-      clsx:
-        specifier: ^2.1.1
-        version: 2.1.1
-      cmdk:
-        specifier: 1.0.4
-        version: 1.0.4(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      croner:
-        specifier: ^10.0.1
-        version: 10.0.1
-      cronstrue:
-        specifier: ^3.13.0
-        version: 3.13.0
-      date-fns:
-        specifier: ^3.6.0
-        version: 3.6.0
-      diff:
-        specifier: ^8.0.3
-        version: 8.0.3
-      dompurify:
-        specifier: ^3.3.1
-        version: 3.3.1
-      electron-updater:
-        specifier: ^6.7.3
-        version: 6.7.3
-      fastify:
-        specifier: ^5.7.4
-        version: 5.7.4
-      highlight.js:
-        specifier: ^11.11.1
-        version: 11.11.1
-      idb-keyval:
-        specifier: ^6.2.2
-        version: 6.2.2
-      isbinaryfile:
-        specifier: ^6.0.0
-        version: 6.0.0
-      json-schema-ref-resolver:
-        specifier: ^3.0.0
-        version: 3.0.0
-      lucide-react:
-        specifier: ^0.577.0
-        version: 0.577.0(react@19.2.4)
-      mdast-util-to-hast:
-        specifier: ^13.2.1
-        version: 13.2.1
-      mermaid:
-        specifier: ^11.12.3
-        version: 11.12.3
-      motion:
-        specifier: 12.38.0
-        version: 12.38.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      node-diff3:
-        specifier: ^3.2.0
-        version: 3.2.0
-      node-pty:
-        specifier: ^1.1.0
-        version: 1.1.0
-      pidusage:
-        specifier: 4.0.1
-        version: 4.0.1
-      react:
-        specifier: ^19.0.0
-        version: 19.2.4
-      react-dom:
-        specifier: ^19.0.0
-        version: 19.2.4(react@19.2.4)
-      react-grid-layout:
-        specifier: ^2.2.2
-        version: 2.2.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      react-markdown:
-        specifier: ^10.1.0
-        version: 10.1.0(@types/react@19.2.14)(react@19.2.4)
-      react-modal-sheet:
-        specifier: 5.6.0
-        version: 5.6.0(motion@12.38.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      react-resizable:
-        specifier: ^3.1.3
-        version: 3.1.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      rehype-highlight:
-        specifier: ^7.0.2
-        version: 7.0.2
-      rehype-raw:
-        specifier: ^7.0.0
-        version: 7.0.0
-      rehype-sanitize:
-        specifier: ^6.0.0
-        version: 6.0.0
-      remark-gfm:
-        specifier: ^4.0.1
-        version: 4.0.1
-      remark-parse:
-        specifier: ^11.0.0
-        version: 11.0.0
-      simple-git:
-        specifier: ^3.32.3
-        version: 3.32.3
-      ssh-config:
-        specifier: ^5.0.4
-        version: 5.0.4
-      ssh2:
-        specifier: ^1.17.0
-        version: 1.17.0
-      strip-markdown:
-        specifier: ^6.0.0
-        version: 6.0.0
-      tailwind-merge:
-        specifier: ^3.5.0
-        version: 3.5.0
-      tailwindcss-animate:
-        specifier: ^1.0.7
-        version: 1.0.7(tailwindcss@3.4.19(tsx@4.21.0)(yaml@2.8.2))
-      unified:
-        specifier: ^11.0.5
-        version: 11.0.5
-      yaml:
-        specifier: ^2.8.2
-        version: 2.8.2
-      yet-another-react-lightbox:
-        specifier: ^3.29.1
-        version: 3.29.1(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      zustand:
-        specifier: ^4.5.0
-        version: 4.5.7(@types/react@19.2.14)(react@19.2.4)
-    devDependencies:
-      '@electron/rebuild':
-        specifier: ^4.0.3
-        version: 4.0.3
-      '@eslint-community/eslint-plugin-eslint-comments':
-        specifier: ^4.6.0
-        version: 4.6.0(eslint@9.39.2(jiti@1.21.7))
-      '@eslint/js':
-        specifier: ^9.39.2
-        version: 9.39.2
-      '@sentry/vite-plugin':
-        specifier: ^5.1.1
-        version: 5.1.1(encoding@0.1.13)(rollup@4.60.0)
-      '@tailwindcss/typography':
-        specifier: ^0.5.19
-        version: 0.5.19(tailwindcss@3.4.19(tsx@4.21.0)(yaml@2.8.2))
       '@types/hast':
         specifier: ^3.0.4
         version: 3.0.4
@@ -354,15 +222,54 @@ importers:
       '@vitest/coverage-v8':
         specifier: ^3.1.4
         version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.0.7)(happy-dom@20.0.2)(sass@1.98.0)(terser@5.46.0))
+      '@xterm/addon-fit':
+        specifier: ^0.11.0
+        version: 0.11.0
+      '@xterm/addon-web-links':
+        specifier: ^0.12.0
+        version: 0.12.0
+      '@xterm/xterm':
+        specifier: ^6.0.0
+        version: 6.0.0
       autoprefixer:
         specifier: ^10.4.17
         version: 10.4.23(postcss@8.5.6)
+      chokidar:
+        specifier: ^4.0.3
+        version: 4.0.3
+      class-variance-authority:
+        specifier: ^0.7.1
+        version: 0.7.1
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
+      cmdk:
+        specifier: 1.0.4
+        version: 1.0.4(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      croner:
+        specifier: ^10.0.1
+        version: 10.0.1
+      cronstrue:
+        specifier: ^3.13.0
+        version: 3.13.0
+      date-fns:
+        specifier: ^3.6.0
+        version: 3.6.0
+      diff:
+        specifier: ^8.0.3
+        version: 8.0.3
+      dompurify:
+        specifier: ^3.3.1
+        version: 3.3.1
       electron:
         specifier: ^40.3.0
         version: 40.3.0
       electron-builder:
         specifier: ^26.8.1
         version: 26.8.1(electron-builder-squirrel-windows@26.8.1)
+      electron-updater:
+        specifier: ^6.7.3
+        version: 6.7.3
       electron-vite:
         specifier: ^5.0.0
         version: 5.0.0(vite@5.4.21(@types/node@25.0.7)(sass@1.98.0)(terser@5.46.0))
@@ -411,15 +318,45 @@ importers:
       happy-dom:
         specifier: ^20.0.2
         version: 20.0.2
+      highlight.js:
+        specifier: ^11.11.1
+        version: 11.11.1
       husky:
         specifier: ^9.1.7
         version: 9.1.7
+      idb-keyval:
+        specifier: ^6.2.2
+        version: 6.2.2
+      isbinaryfile:
+        specifier: ^6.0.0
+        version: 6.0.0
+      json-schema-ref-resolver:
+        specifier: ^3.0.0
+        version: 3.0.0
       knip:
         specifier: ^5.82.1
         version: 5.82.1(@types/node@25.0.7)(typescript@5.9.3)
       lint-staged:
         specifier: ^16.2.7
         version: 16.2.7
+      lucide-react:
+        specifier: ^0.577.0
+        version: 0.577.0(react@19.2.4)
+      mdast-util-to-hast:
+        specifier: ^13.2.1
+        version: 13.2.1
+      mermaid:
+        specifier: ^11.12.3
+        version: 11.12.3
+      motion:
+        specifier: 12.38.0
+        version: 12.38.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      node-diff3:
+        specifier: ^3.2.0
+        version: 3.2.0
+      pidusage:
+        specifier: 4.0.1
+        version: 4.0.1
       postcss:
         specifier: ^8.4.35
         version: 8.5.6
@@ -429,9 +366,60 @@ importers:
       prettier-plugin-tailwindcss:
         specifier: ^0.7.2
         version: 0.7.2(prettier@3.8.1)
+      react:
+        specifier: ^19.0.0
+        version: 19.2.4
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.4(react@19.2.4)
+      react-grid-layout:
+        specifier: ^2.2.2
+        version: 2.2.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react-markdown:
+        specifier: ^10.1.0
+        version: 10.1.0(@types/react@19.2.14)(react@19.2.4)
+      react-modal-sheet:
+        specifier: 5.6.0
+        version: 5.6.0(motion@12.38.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react-resizable:
+        specifier: ^3.1.3
+        version: 3.1.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      rehype-highlight:
+        specifier: ^7.0.2
+        version: 7.0.2
+      rehype-raw:
+        specifier: ^7.0.0
+        version: 7.0.0
+      rehype-sanitize:
+        specifier: ^6.0.0
+        version: 6.0.0
+      remark-gfm:
+        specifier: ^4.0.1
+        version: 4.0.1
+      remark-parse:
+        specifier: ^11.0.0
+        version: 11.0.0
+      simple-git:
+        specifier: ^3.32.3
+        version: 3.32.3
+      ssh-config:
+        specifier: ^5.0.4
+        version: 5.0.4
+      ssh2:
+        specifier: ^1.17.0
+        version: 1.17.0
+      strip-markdown:
+        specifier: ^6.0.0
+        version: 6.0.0
+      tailwind-merge:
+        specifier: ^3.5.0
+        version: 3.5.0
       tailwindcss:
         specifier: ^3.4.1
         version: 3.4.19(tsx@4.21.0)(yaml@2.8.2)
+      tailwindcss-animate:
+        specifier: ^1.0.7
+        version: 1.0.7(tailwindcss@3.4.19(tsx@4.21.0)(yaml@2.8.2))
       tsx:
         specifier: ^4.21.0
         version: 4.21.0
@@ -441,12 +429,24 @@ importers:
       typescript-eslint:
         specifier: ^8.54.0
         version: 8.54.0(eslint@9.39.2(jiti@1.21.7))(typescript@5.9.3)
+      unified:
+        specifier: ^11.0.5
+        version: 11.0.5
       vite:
         specifier: ^5.4.2
         version: 5.4.21(@types/node@25.0.7)(sass@1.98.0)(terser@5.46.0)
       vitest:
         specifier: ^3.1.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@25.0.7)(happy-dom@20.0.2)(sass@1.98.0)(terser@5.46.0)
+      yaml:
+        specifier: ^2.8.2
+        version: 2.8.2
+      yet-another-react-lightbox:
+        specifier: ^3.29.1
+        version: 3.29.1(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      zustand:
+        specifier: ^4.5.0
+        version: 4.5.7(@types/react@19.2.14)(react@19.2.4)
 
   agent-teams-controller: {}
 
