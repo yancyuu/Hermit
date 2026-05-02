@@ -421,7 +421,7 @@ const TeamSpawnStatusWatcher = memo(function TeamSpawnStatusWatcher({
   return null;
 });
 
-const TEAM_AGENT_RUNTIME_REFRESH_MS = 5_000;
+const TEAM_AGENT_RUNTIME_REFRESH_MS = 15_000;
 
 const TeamAgentRuntimeWatcher = memo(function TeamAgentRuntimeWatcher({
   teamName,

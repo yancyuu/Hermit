@@ -19,6 +19,7 @@ export interface ResolveTeamMemberRuntimeLivenessInput {
   persistedRuntimeSessionId?: string;
   trackedSpawnStatus?: MemberSpawnStatusEntry;
   runtimePid?: number;
+  runtimePidAlive?: boolean;
   runtimeSessionId?: string;
   pane?: TmuxPaneRuntimeInfo;
   processRows: readonly RuntimeProcessTableRow[];
@@ -223,6 +224,18 @@ export function resolveTeamMemberRuntimeLiveness(
   }
 
   const runtimePid = input.runtimePid ?? input.persistedRuntimePid;
+  if (runtimePid && input.runtimePidAlive === true) {
+    return result({
+      alive: true,
+      livenessKind: 'runtime_process_candidate',
+      pidSource: 'persisted_metadata',
+      pid: runtimePid,
+      runtimeSessionId,
+      runtimeDiagnostic: 'runtime pid is alive',
+      diagnostics: [...diagnostics, 'verified runtime pid with direct process probe'],
+    });
+  }
+
   const runtimePidRow =
     typeof runtimePid === 'number' && runtimePid > 0
       ? input.processRows.find((row) => row.pid === runtimePid)

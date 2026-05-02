@@ -16378,11 +16378,20 @@ export class TeamProvisioningService {
           }
         : undefined;
       const status = this.findTrackedMemberSpawnStatus(run, memberName) ?? adapterStatus;
+      const runtimePid = launchMember?.runtimePid ?? metadata.metricsPid;
+      const runtimePidAlive =
+        process.platform === 'win32' &&
+        typeof runtimePid === 'number' &&
+        Number.isFinite(runtimePid) &&
+        runtimePid > 0
+          ? isProcessAlive(runtimePid)
+          : undefined;
+      const shouldUseHostProcessTableForProvider =
+        metadata.providerId === 'opencode' || launchMember?.providerId === 'opencode';
       const shouldUseWindowsHostRows =
         process.platform === 'win32' &&
-        (metadata.providerId === 'opencode' ||
-          launchMember?.providerId === 'opencode' ||
-          metadata.backendType !== 'tmux') &&
+        runtimePidAlive !== true &&
+        shouldUseHostProcessTableForProvider &&
         currentRuntimeAdapterRun?.members?.[memberName]?.runtimeAlive !== true &&
         currentRuntimeAdapterRun?.members?.[memberName]?.bootstrapConfirmed !== true;
       const hostProcessRows = shouldUseWindowsHostRows ? await getWindowsHostProcessRows() : [];
@@ -16399,10 +16408,11 @@ export class TeamProvisioningService {
         backendType: metadata.backendType,
         providerId: metadata.providerId ?? launchMember?.providerId,
         tmuxPaneId: metadata.tmuxPaneId,
-        persistedRuntimePid: launchMember?.runtimePid ?? metadata.metricsPid,
+        persistedRuntimePid: runtimePid,
         persistedRuntimeSessionId: launchMember?.runtimeSessionId ?? metadata.runtimeSessionId,
         trackedSpawnStatus: status,
         runtimePid: metadata.metricsPid,
+        runtimePidAlive,
         runtimeSessionId: metadata.runtimeSessionId,
         pane: paneId ? paneInfoById.get(paneId) : undefined,
         processRows: memberProcessRows,

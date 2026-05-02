@@ -25,7 +25,11 @@ const PROCESS_TABLE_ARGS = [
   '-Command',
   PROCESS_TABLE_SCRIPT,
 ];
-const PROCESS_TABLE_CACHE_TTL_MS = 3_000;
+// Reading full Windows command lines requires spawning PowerShell + CIM, which is
+// visibly expensive when runtime status is polled. Keep this coarse-grained and
+// share one snapshot across all runtime liveness checks.
+const PROCESS_TABLE_CACHE_TTL_MS = 30_000;
+const PROCESS_TABLE_ERROR_CACHE_TTL_MS = 10_000;
 
 let cachedProcessTable: {
   expiresAtMs: number;
@@ -95,10 +99,18 @@ export async function listWindowsProcessTable(
       },
       (error, stdout, stderr) => {
         if (error) {
+          cachedProcessTable = {
+            expiresAtMs: Date.now() + PROCESS_TABLE_ERROR_CACHE_TTL_MS,
+            rows: [],
+          };
           reject(error);
           return;
         }
         if (stderr?.trim()) {
+          cachedProcessTable = {
+            expiresAtMs: Date.now() + PROCESS_TABLE_ERROR_CACHE_TTL_MS,
+            rows: [],
+          };
           reject(new Error(stderr.trim()));
           return;
         }
