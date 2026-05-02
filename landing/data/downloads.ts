@@ -1,6 +1,16 @@
 export type DownloadOs = 'macos' | 'windows' | 'linux';
 export type DownloadArch = 'arm64' | 'x64' | 'universal';
 
+export interface DownloadAsset {
+  id: string;
+  os: DownloadOs;
+  arch: DownloadArch;
+  label: string;
+  archLabel: string;
+  fileName: string;
+  fileNameByArch?: Partial<Record<DownloadArch, string>>;
+}
+
 export const downloadAssets = [
   {
     id: 'macos',
@@ -9,6 +19,10 @@ export const downloadAssets = [
     label: 'macOS',
     archLabel: 'Apple Silicon / Intel',
     fileName: 'Hermit-arm64.dmg',
+    fileNameByArch: {
+      arm64: 'Hermit-arm64.dmg',
+      x64: 'Hermit-x64.dmg',
+    },
   },
   {
     id: 'windows-x64',
@@ -26,4 +40,4 @@ export const downloadAssets = [
     archLabel: '64-bit',
     fileName: 'Hermit.AppImage',
   },
-] as const;
+] as const satisfies readonly DownloadAsset[];

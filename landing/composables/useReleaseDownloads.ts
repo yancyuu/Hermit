@@ -73,7 +73,11 @@ function parseGitHubRelease(release: GitHubRelease): DownloadsApiResponse {
       },
       windows: {
         x64: toVariant(
-          findAsset(assets, /[-_]Setup\.exe$/i) || findAsset(assets, /\.exe$/i) || findAsset(assets, /\.msi$/i),
+          findAsset(assets, /^Hermit\.Setup\.[\w.-]+\.exe$/i) ||
+            findAsset(assets, /^Hermit-Setup\.exe$/i) ||
+            findAsset(assets, /[-_]Setup(?:\.[\w.-]+)?\.exe$/i) ||
+            findAsset(assets, /\.exe$/i) ||
+            findAsset(assets, /\.msi$/i),
           version
         ),
       },

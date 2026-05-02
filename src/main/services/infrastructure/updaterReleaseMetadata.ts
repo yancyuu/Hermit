@@ -1,12 +1,17 @@
 const REPO_OWNER = 'yancyuu';
 const REPO_NAME = 'Hermit';
 
+function normalizeReleaseVersion(version: string): string {
+  return version.trim().replace(/^v/i, '');
+}
+
 export function buildReleaseAssetBase(version: string, repoName = REPO_NAME): string {
-  return `https://github.com/${REPO_OWNER}/${repoName}/releases/download/v${version}`;
+  return `https://github.com/${REPO_OWNER}/${repoName}/releases/download/${version}`;
 }
 
 export function buildReleaseAssetBases(version: string): readonly string[] {
-  return [buildReleaseAssetBase(version)];
+  const normalized = normalizeReleaseVersion(version);
+  return [buildReleaseAssetBase(normalized), buildReleaseAssetBase(`v${normalized}`)];
 }
 
 export function getExpectedReleaseAssetUrl(
@@ -14,17 +19,18 @@ export function getExpectedReleaseAssetUrl(
   platform: NodeJS.Platform,
   arch: NodeJS.Architecture
 ): string | null {
-  const base = buildReleaseAssetBase(version);
+  const normalized = normalizeReleaseVersion(version);
+  const base = buildReleaseAssetBase(normalized);
 
   switch (platform) {
     case 'darwin':
       return arch === 'arm64'
-        ? `${base}/Hermit-${version}-arm64.dmg`
-        : `${base}/Hermit-${version}-x64.dmg`;
+        ? `${base}/Hermit-${normalized}-arm64.dmg`
+        : `${base}/Hermit-${normalized}-x64.dmg`;
     case 'win32':
-      return `${base}/Hermit.Setup.${version}.exe`;
+      return `${base}/Hermit.Setup.${normalized}.exe`;
     case 'linux':
-      return `${base}/Hermit-${version}.AppImage`;
+      return `${base}/Hermit-${normalized}.AppImage`;
     default:
       return null;
   }
@@ -40,7 +46,7 @@ export function getExpectedReleaseAssetUrls(
     return [];
   }
 
-  const primaryBase = buildReleaseAssetBase(version);
+  const primaryBase = buildReleaseAssetBase(normalizeReleaseVersion(version));
   return buildReleaseAssetBases(version).map((base) => assetUrl.replace(primaryBase, base));
 }
 
@@ -56,9 +62,10 @@ export function getExpectedLatestMacArtifacts(
   version: string,
   arch: Extract<NodeJS.Architecture, 'arm64' | 'x64'>
 ): readonly string[] {
+  const normalized = normalizeReleaseVersion(version);
   return arch === 'arm64'
-    ? [`Hermit-${version}-arm64-mac.zip`, `Hermit-${version}-arm64.dmg`]
-    : [`Hermit-${version}-x64-mac.zip`, `Hermit-${version}-x64.dmg`];
+    ? [`Hermit-${normalized}-arm64-mac.zip`, `Hermit-${normalized}-arm64.dmg`]
+    : [`Hermit-${normalized}-x64-mac.zip`, `Hermit-${normalized}-x64.dmg`];
 }
 
 function stripYamlScalar(rawValue: string): string {

@@ -44,9 +44,15 @@ const visibleAssets = computed(() => {
   return [first, detected, ...rest];
 });
 
-const getDownloadUrl = (asset: { os: string; arch: string; fileName: string }) => {
+const getDownloadUrl = (asset: {
+  os: string;
+  arch: string;
+  fileName: string;
+  fileNameByArch?: Partial<Record<DownloadArch, string>>;
+}) => {
   const arch = (asset.os === 'macos' ? downloadStore.macArch : asset.arch) as DownloadArch;
-  return resolve(asset.os as DownloadOs, arch)?.url || releaseDownloadUrl(asset.fileName);
+  const fallbackFileName = asset.fileNameByArch?.[arch] || asset.fileName;
+  return resolve(asset.os as DownloadOs, arch)?.url || releaseDownloadUrl(fallbackFileName);
 };
 
 const getDownloadArch = (asset: { os: string; arch: string }) => {

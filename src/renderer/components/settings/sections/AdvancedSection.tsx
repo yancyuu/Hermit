@@ -33,13 +33,16 @@ export const AdvancedSection = ({
   const isElectron = useMemo(() => isElectronMode(), []);
   const [version, setVersion] = useState<string>('');
   const [configEditorOpen, setConfigEditorOpen] = useState(false);
-  const { updateStatus, availableVersion, checkForUpdates } = useStore(
-    useShallow((s) => ({
-      updateStatus: s.updateStatus,
-      availableVersion: s.availableVersion,
-      checkForUpdates: s.checkForUpdates,
-    }))
-  );
+  const { updateStatus, availableVersion, checkForUpdates, openUpdateDialog, installUpdate } =
+    useStore(
+      useShallow((s) => ({
+        updateStatus: s.updateStatus,
+        availableVersion: s.availableVersion,
+        checkForUpdates: s.checkForUpdates,
+        openUpdateDialog: s.openUpdateDialog,
+        installUpdate: s.installUpdate,
+      }))
+    );
 
   // Auto-revert "not-available" / "error" status back to idle after a brief display
   const revertTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -59,8 +62,16 @@ export const AdvancedSection = ({
   }, []);
 
   const handleCheckForUpdates = useCallback(() => {
+    if (updateStatus === 'downloaded') {
+      installUpdate();
+      return;
+    }
+    if (updateStatus === 'available') {
+      openUpdateDialog();
+      return;
+    }
     checkForUpdates();
-  }, [checkForUpdates]);
+  }, [checkForUpdates, installUpdate, openUpdateDialog, updateStatus]);
 
   const getUpdateButtonContent = (): React.JSX.Element => {
     switch (updateStatus) {

@@ -26,7 +26,8 @@ const heroDownloadUrl = computed(() => {
   const asset = downloadStore.selectedAsset;
   if (!asset) return latestReleaseUrl.value;
   const arch = asset.os === 'macos' ? downloadStore.macArch : asset.arch;
-  return resolve(asset.os, arch)?.url || releaseDownloadUrl(asset.fileName);
+  const fallbackFileName = asset.fileNameByArch?.[arch] || asset.fileName;
+  return resolve(asset.os, arch)?.url || releaseDownloadUrl(fallbackFileName);
 });
 </script>
 
