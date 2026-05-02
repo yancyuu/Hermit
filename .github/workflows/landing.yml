@@ -37,10 +37,6 @@ jobs:
           NUXT_PUBLIC_GITHUB_REPO: yancyuu/Hermit
         run: npx nuxt generate
 
-      - uses: actions/configure-pages@v5
-        with:
-          enablement: true
-
       - uses: actions/upload-pages-artifact@v3
         with:
           path: landing/.output/public
