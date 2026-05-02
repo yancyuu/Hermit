@@ -361,7 +361,7 @@ export function resolveTeamMemberRuntimeLiveness(
       alive: false,
       livenessKind: 'registered_only',
       runtimeSessionId,
-      runtimeDiagnostic: 'registered runtime metadata without live process',
+      runtimeDiagnostic: '等待成员重启完成',
       runtimeDiagnosticSeverity: 'warning',
       diagnostics: [...diagnostics, 'member has persisted runtime metadata only'],
     });

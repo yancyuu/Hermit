@@ -1758,6 +1758,17 @@ export const TeamDetailView = ({
     [data?.isAlive, launchTeam, teamName]
   );
 
+  const handleRestartTeamFromEdit = useCallback(async (): Promise<void> => {
+    if (!data?.config.projectPath) {
+      throw new Error('团队缺少项目路径，无法自动重启。');
+    }
+    await api.teams.stop(teamName);
+    await launchTeam({
+      teamName,
+      cwd: data.config.projectPath,
+    });
+  }, [data?.config.projectPath, launchTeam, teamName]);
+
   const handleRestartMember = useCallback(
     async (memberName: string): Promise<void> => {
       await restartMember(teamName, memberName);
@@ -2842,6 +2853,7 @@ export const TeamDetailView = ({
                 projectPath={data.config.projectPath}
                 onClose={() => setEditDialogOpen(false)}
                 onSaved={() => void selectTeam(teamName)}
+                onRestartTeam={handleRestartTeamFromEdit}
               />
 
               <AddMemberDialog

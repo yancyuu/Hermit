@@ -129,19 +129,19 @@ Hermit 本地工作台
 
 ## 竞品对标
 
-| 基础能力 | Hermit | Claude Dashboard | OpenClaw 类 Agent 框架 | Hermes 类中心网关 | Vibe Kanban / OpenHands 类产品 |
-|---|---:|---:|---:|---:|---:|
-| 直接复用 Claude Code Runtime | ✅ | ✅ | ❌ | ❌ | ⚠️ |
-| 面向多运行时适配 | ⚠️ | ❌ | ⚠️ | ✅ | ⚠️ |
-| 多成员团队模型（负责人 + 成员） | ✅ | ❌ | ⚠️ | ⚠️ | ⚠️ |
-| 成员独立 Inbox / 消息协作 | ✅ | ❌ | ⚠️ | ⚠️ | ❌ |
-| 看板任务状态闭环 | ✅ | ⚠️ | ❌ | ❌ | ✅ |
-| 代码审查 / diff 审批流 | ✅ | ⚠️ | ❌ | ❌ | ⚠️ |
-| 本地优先，不托管核心代码 | ✅ | ✅ | ✅ | ⚠️ | ⚠️ |
-| Skills / 团队模板版本化 | 🚧 | ❌ | ⚠️ | ❌ | ❌ |
-| 多机协同通过仓库同步 | 🚧 | ❌ | ❌ | ❌ | ⚠️ |
-| 文件、任务、评论沉淀为长期记忆 | ✅ | ⚠️ | ⚠️ | ❌ | ⚠️ |
-| 低复杂度启动，先可用 | ✅ | ✅ | ⚠️ | ❌ | ✅ |
+| 基础能力                        | Hermit | Claude Dashboard | OpenClaw 类 Agent 框架 | Hermes 类中心网关 | Vibe Kanban / OpenHands 类产品 |
+| ------------------------------- | -----: | ---------------: | ---------------------: | ----------------: | -----------------------------: |
+| 直接复用 Claude Code Runtime    |     ✅ |               ✅ |                     ❌ |                ❌ |                             ⚠️ |
+| 面向多运行时适配                |     ⚠️ |               ❌ |                     ⚠️ |                ✅ |                             ⚠️ |
+| 多成员团队模型（负责人 + 成员） |     ✅ |               ❌ |                     ⚠️ |                ⚠️ |                             ⚠️ |
+| 成员独立 Inbox / 消息协作       |     ✅ |               ❌ |                     ⚠️ |                ⚠️ |                             ❌ |
+| 看板任务状态闭环                |     ✅ |               ⚠️ |                     ❌ |                ❌ |                             ✅ |
+| 代码审查 / diff 审批流          |     ✅ |               ⚠️ |                     ❌ |                ❌ |                             ⚠️ |
+| 本地优先，不托管核心代码        |     ✅ |               ✅ |                     ✅ |                ⚠️ |                             ⚠️ |
+| Skills / 团队模板版本化         |     🚧 |               ❌ |                     ⚠️ |                ❌ |                             ❌ |
+| 多机协同通过仓库同步            |     🚧 |               ❌ |                     ❌ |                ❌ |                             ⚠️ |
+| 文件、任务、评论沉淀为长期记忆  |     ✅ |               ⚠️ |                     ⚠️ |                ❌ |                             ⚠️ |
+| 低复杂度启动，先可用            |     ✅ |               ✅ |                     ⚠️ |                ❌ |                             ✅ |
 
 ✅ 支持；⚠️ 部分支持或需要额外工程；❌ 不是核心能力。
 
@@ -167,17 +167,17 @@ Hermit 的核心取舍是：不重新发明 Agent 大脑，而是在强运行时
 <table align="center">
 <tr>
 <td align="center">
-  <a href="https://github.com/yancyuu/Hermit/releases/latest">
+  <a href="https://github.com/yancyuu/Hermit/releases/latest/download/Hermit-arm64.dmg">
     <img src="https://img.shields.io/badge/macOS-下载最新版本-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS" />
   </a>
 </td>
 <td align="center">
-  <a href="https://github.com/yancyuu/Hermit/releases/latest">
+  <a href="https://github.com/yancyuu/Hermit/releases/latest/download/Hermit-Setup.exe">
     <img src="https://img.shields.io/badge/Windows-下载最新版本-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Windows" />
   </a>
 </td>
 <td align="center">
-  <a href="https://github.com/yancyuu/Hermit/releases/latest">
+  <a href="https://github.com/yancyuu/Hermit/releases/latest/download/Hermit.AppImage">
     <img src="https://img.shields.io/badge/Linux-下载最新版本-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux" />
   </a>
 </td>

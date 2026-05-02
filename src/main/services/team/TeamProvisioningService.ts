@@ -7071,9 +7071,9 @@ export class TeamProvisioningService {
       const inp = input as Record<string, unknown>;
 
       if (part.name === 'SendMessage') {
-        const target = (typeof inp.recipient === 'string' ? inp.recipient : '').trim();
-        const text = (typeof inp.content === 'string' ? inp.content : '').trim();
-        return target.length > 0 && text.length > 0;
+        const target = this.extractMessageToolTarget(inp, ['recipient', 'to']);
+        const text = this.extractMessageToolText(inp);
+        return target === 'user' && text.length > 0;
       }
 
       const isTeamMessageSendTool = isAgentTeamsToolUse({
@@ -7091,16 +7091,32 @@ export class TeamProvisioningService {
       if (!isTeamMessageSendTool && !isDirectCrossTeamSendTool) return false;
 
       const target = isTeamMessageSendTool
-        ? typeof inp.to === 'string'
-          ? inp.to
-          : ''
-        : typeof inp.toTeam === 'string'
-          ? inp.toTeam
-          : '';
-      const text = typeof inp.text === 'string' ? inp.text : '';
+        ? this.extractMessageToolTarget(inp, ['to'])
+        : this.extractMessageToolTarget(inp, ['toTeam']);
+      const text = this.extractMessageToolText(inp);
 
-      return target.trim().length > 0 && text.trim().length > 0;
+      return target === 'user' && text.length > 0;
     });
+  }
+
+  private extractMessageToolTarget(input: Record<string, unknown>, keys: string[]): string {
+    for (const key of keys) {
+      const value = input[key];
+      if (typeof value === 'string' && value.trim()) {
+        return value.trim();
+      }
+    }
+    return '';
+  }
+
+  private extractMessageToolText(input: Record<string, unknown>): string {
+    for (const key of ['content', 'message', 'text']) {
+      const value = input[key];
+      if (typeof value === 'string' && value.trim()) {
+        return value.trim();
+      }
+    }
+    return '';
   }
 
   private async matchCrossTeamLeadInboxMessages(
@@ -18168,21 +18184,11 @@ export class TeamProvisioningService {
       }
 
       const recipient = isNativeSendMessage
-        ? typeof inp.recipient === 'string'
-          ? inp.recipient
-          : ''
-        : typeof inp.to === 'string'
-          ? inp.to
-          : '';
+        ? this.extractMessageToolTarget(inp, ['recipient', 'to'])
+        : this.extractMessageToolTarget(inp, ['to']);
       if (!recipient.trim()) continue;
 
-      const msgContent = isNativeSendMessage
-        ? typeof inp.content === 'string'
-          ? inp.content
-          : ''
-        : typeof inp.text === 'string'
-          ? inp.text
-          : '';
+      const msgContent = this.extractMessageToolText(inp);
       if (msgContent.trim().length === 0) continue;
 
       const summary = typeof inp.summary === 'string' ? inp.summary : '';
@@ -18562,7 +18568,6 @@ export class TeamProvisioningService {
     run.pendingToolCalls = [];
     const leadMsg: InboxMessage = {
       from: leadName,
-      to: 'user',
       text: cleanText,
       timestamp,
       read: true,
@@ -18573,7 +18578,6 @@ export class TeamProvisioningService {
       toolCalls,
     };
     this.pushLiveLeadProcessMessage(run.teamName, leadMsg);
-    this.pushLeadUserMessageToRecentFeishu(run.teamName, cleanText);
 
     // Coalesced refresh: at most one event per LEAD_TEXT_EMIT_THROTTLE_MS per team.
     const now = Date.now();

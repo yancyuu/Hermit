@@ -39,7 +39,7 @@ import {
   getMembersRequiringRuntimeRestart,
 } from './editTeamRuntimeChanges';
 
-import type { ResolvedTeamMember, EffortLevel, TeamProviderId } from '@shared/types';
+import type { EffortLevel, ResolvedTeamMember, TeamProviderId } from '@shared/types';
 
 const TEAM_COLOR_NAMES = [
   'blue',
@@ -66,6 +66,7 @@ interface EditTeamDialogProps {
   projectPath?: string | null;
   onClose: () => void;
   onSaved: () => Promise<void> | void;
+  onRestartTeam?: () => Promise<void> | void;
 }
 
 function membersToDrafts(members: ResolvedTeamMember[]) {
@@ -146,6 +147,7 @@ export const EditTeamDialog = ({
   projectPath,
   onClose,
   onSaved,
+  onRestartTeam,
 }: EditTeamDialogProps): React.JSX.Element => {
   const { isLight } = useTheme();
   const [name, setName] = useState(currentName);
@@ -400,42 +402,26 @@ export const EditTeamDialog = ({
           })) as ResolvedTeamMember[],
         });
 
-        const restartFailures: string[] = [];
-        const failedRestartMembers: string[] = [];
-        for (const memberName of effectiveMembersToRestart) {
-          try {
-            await api.teams.restartMember(teamName, memberName);
-          } catch (restartError) {
-            const detail =
-              restartError instanceof Error ? restartError.message : String(restartError);
-            failedRestartMembers.push(memberName);
-            restartFailures.push(`${memberName} (${detail})`);
-          }
-        }
-
         await Promise.resolve(onSaved());
-        if (restartFailures.length === 0) {
-          setMembersPendingRestartRetry({});
+        setMembersPendingRestartRetry({});
+        if (effectiveMembersToRestart.length > 0) {
+          if (onRestartTeam) {
+            setSaveOutcomeError(
+              `团队已保存，正在重启团队以应用 ${effectiveMembersToRestart.join(', ')} 的运行时变更...`
+            );
+            await Promise.resolve(onRestartTeam());
+            onClose();
+            return;
+          }
+          setSaveOutcomeError(
+            `团队已保存。请重启团队以应用 ${effectiveMembersToRestart.join(', ')} 的运行时变更。`
+          );
+          return;
+        }
+        if (effectiveMembersToRestart.length === 0) {
           onClose();
           return;
         }
-
-        setMembersPendingRestartRetry(
-          Object.fromEntries(
-            failedRestartMembers.flatMap((memberName) => {
-              const nextMember = builtMembersByName.get(memberName.trim().toLowerCase());
-              if (!nextMember) {
-                return [];
-              }
-              return [
-                [memberName.trim().toLowerCase(), getMemberRuntimeContractKey(nextMember)] as const,
-              ];
-            })
-          )
-        );
-        setSaveOutcomeError(
-          `团队已保存，但重启${restartFailures.length === 1 ? '该成员' : '这些成员'}失败：${restartFailures.join(', ')}`
-        );
       } catch (e) {
         const message = e instanceof Error ? e.message : '保存失败';
         if (membersSaved) {
@@ -591,7 +577,7 @@ export const EditTeamDialog = ({
           ) : null}
           {isTeamAlive && hasNewLiveTeammates ? (
             <p className="text-xs text-red-300">
-              团队运行中不能从"编辑团队"新增成员，请改用"添加成员"对话框。
+              团队运行中不能从“编辑团队”新增成员，请改用“添加成员”对话框。
             </p>
           ) : null}
           {isTeamAlive && hasBlockedLiveIdentityChanges ? (

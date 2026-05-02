@@ -10,6 +10,7 @@ import type { InboxMessage } from '@shared/types';
 
 const MAX_MESSAGES = 200;
 const MAX_SENT_MESSAGES_FILE_BYTES = 2 * 1024 * 1024;
+const DUPLICATE_TEXT_WINDOW_MS = 5_000;
 const logger = createLogger('TeamSentMessagesStore');
 
 export class TeamSentMessagesStore {
@@ -162,6 +163,9 @@ export class TeamSentMessagesStore {
     // Bug #6: wrap in try/catch to prevent crash on IO errors
     try {
       const existing = await this.readMessages(teamName);
+      if (this.hasRecentDuplicate(existing, message)) {
+        return;
+      }
       existing.push(message);
 
       // Trim to MAX_MESSAGES (keep newest)
@@ -171,5 +175,41 @@ export class TeamSentMessagesStore {
     } catch (error) {
       logger.error(`Failed to append sent message for ${teamName}: ${String(error)}`);
     }
+  }
+
+  private hasRecentDuplicate(existing: readonly InboxMessage[], message: InboxMessage): boolean {
+    const messageId = message.messageId?.trim();
+    if (messageId && existing.some((item) => item.messageId?.trim() === messageId)) {
+      return true;
+    }
+
+    const messageTime = Date.parse(message.timestamp);
+    if (!Number.isFinite(messageTime)) {
+      return false;
+    }
+    const normalizedText = this.normalizeText(message.text);
+    if (!normalizedText) {
+      return false;
+    }
+
+    return existing.some((item) => {
+      if (item.from !== message.from || item.to !== message.to || item.source !== message.source) {
+        return false;
+      }
+      if (this.normalizeText(item.text) !== normalizedText) {
+        return false;
+      }
+      const itemTime = Date.parse(item.timestamp);
+      return (
+        Number.isFinite(itemTime) && Math.abs(messageTime - itemTime) <= DUPLICATE_TEXT_WINDOW_MS
+      );
+    });
+  }
+
+  private normalizeText(value: string): string {
+    return value
+      .trim()
+      .replace(/\r\n/g, '\n')
+      .replace(/[ \t]+/g, ' ');
   }
 }

@@ -1,21 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import {
-  mergeCodexProviderStatusWithSnapshot,
-  useCodexAccountSnapshot,
-} from '@features/codex-account/renderer';
 import { api } from '@renderer/api';
 import { Badge } from '@renderer/components/ui/badge';
 import { Button } from '@renderer/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@renderer/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@renderer/components/ui/tooltip';
 import { useStore } from '@renderer/store';
-import { createLoadingMultimodelCliStatus } from '@renderer/store/slices/cliInstallerSlice';
 import {
   formatSkillRootKind,
   getSkillAudience,
   getSkillAudienceLabel,
-  isCodexSkillOverlayAvailable,
 } from '@shared/utils/skillRoots';
 import {
   AlertTriangle,
@@ -132,9 +126,6 @@ export const SkillsPanel = ({
   const catalogKey = projectPath ?? USER_SKILLS_CATALOG_KEY;
   const fetchSkillsCatalog = useStore((s) => s.fetchSkillsCatalog);
   const fetchSkillDetail = useStore((s) => s.fetchSkillDetail);
-  const cliStatus = useStore((s) => s.cliStatus);
-  const cliStatusLoading = useStore((s) => s.cliStatusLoading);
-  const multimodelEnabled = useStore((s) => s.appConfig?.general?.multimodelEnabled ?? false);
   const skillsLoading = useStore((s) => s.skillsCatalogLoadingByProjectPath[catalogKey] ?? false);
   const skillsError = useStore((s) => s.skillsCatalogErrorByProjectPath[catalogKey] ?? null);
   const detailById = useStore(useShallow((s) => s.skillsDetailsById));
@@ -157,40 +148,10 @@ export const SkillsPanel = ({
   const selectedSkillIdRef = useRef<string | null>(selectedSkillId);
   const selectedSkillItemRef = useRef<SkillCatalogItem | null>(null);
   selectedSkillIdRef.current = selectedSkillId;
-  const loadingCliStatus = useMemo(
-    () =>
-      !cliStatus && cliStatusLoading && multimodelEnabled
-        ? createLoadingMultimodelCliStatus()
-        : cliStatus,
-    [cliStatus, cliStatusLoading, multimodelEnabled]
-  );
-  const codexAccount = useCodexAccountSnapshot({
-    enabled:
-      loadingCliStatus?.flavor === 'agent_teams_orchestrator' &&
-      Boolean(loadingCliStatus?.providers.some((provider) => provider.providerId === 'codex')),
-  });
-  const effectiveCliStatus = useMemo(
-    () =>
-      loadingCliStatus
-        ? {
-            ...loadingCliStatus,
-            providers: loadingCliStatus.providers.map((provider) =>
-              provider.providerId === 'codex'
-                ? mergeCodexProviderStatusWithSnapshot(provider, codexAccount.snapshot)
-                : provider
-            ),
-          }
-        : loadingCliStatus,
-    [loadingCliStatus, codexAccount.snapshot]
-  );
 
   const mergedSkills = useMemo(
     () => [...projectSkills, ...userSkills],
     [projectSkills, userSkills]
-  );
-  const codexSkillOverlayAvailable = useMemo(
-    () => isCodexSkillOverlayAvailable(effectiveCliStatus),
-    [effectiveCliStatus]
   );
   const selectedDetail = selectedSkillId ? (detailById[selectedSkillId] ?? null) : null;
   selectedSkillItemRef.current = selectedSkillId
@@ -346,12 +307,10 @@ export const SkillsPanel = ({
 
   return (
     <div className="flex flex-col gap-4">
-      {effectiveCliStatus?.flavor === 'agent_teams_orchestrator' && (
-        <div className="rounded-md border border-blue-500/30 bg-blue-500/5 px-4 py-3 text-sm text-blue-300">
-          全局技能由 `~/.hermit/skills` 管理，并在团队启动前投影到各 runtime 的全局 skills
-          目录。项目技能直接安装到你选择的项目 runtime 目录。
-        </div>
-      )}
+      <div className="rounded-md border border-blue-500/30 bg-blue-500/5 px-4 py-3 text-sm text-blue-300">
+        全局技能由 `~/.hermit/skills` 管理，并在团队启动前投影到各 runtime 的全局 skills
+        目录。项目技能直接安装到你选择的项目 runtime 目录。
+      </div>
       <div className="bg-surface-raised/20 rounded-xl border border-border p-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
           <div className="min-w-0 flex-1 space-y-1">
@@ -781,7 +740,6 @@ export const SkillsPanel = ({
         mode="create"
         projectPath={projectPath}
         projectLabel={projectLabel}
-        allowCodexRootKind={codexSkillOverlayAvailable}
         detail={null}
         onClose={() => setCreateOpen(false)}
         onSaved={(skillId) => {
@@ -797,7 +755,6 @@ export const SkillsPanel = ({
         mode="edit"
         projectPath={projectPath}
         projectLabel={projectLabel}
-        allowCodexRootKind={codexSkillOverlayAvailable}
         detail={editingDetail}
         onClose={() => {
           setEditOpen(false);
@@ -815,7 +772,6 @@ export const SkillsPanel = ({
         open={importOpen}
         projectPath={projectPath}
         projectLabel={projectLabel}
-        allowCodexRootKind={codexSkillOverlayAvailable}
         onClose={() => setImportOpen(false)}
         onImported={(skillId) => {
           setImportOpen(false);

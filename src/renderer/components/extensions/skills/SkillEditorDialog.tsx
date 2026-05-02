@@ -52,7 +52,6 @@ interface SkillEditorDialogProps {
   mode: EditorMode;
   projectPath: string | null;
   projectLabel: string | null;
-  allowCodexRootKind: boolean;
   detail: SkillDetail | null;
   onClose: () => void;
   onSaved: (skillId: string | null) => void;

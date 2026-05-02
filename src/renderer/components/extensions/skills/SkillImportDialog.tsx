@@ -56,7 +56,6 @@ interface SkillImportDialogProps {
   open: boolean;
   projectPath: string | null;
   projectLabel: string | null;
-  allowCodexRootKind: boolean;
   onClose: () => void;
   onImported: (skillId: string | null) => void;
 }

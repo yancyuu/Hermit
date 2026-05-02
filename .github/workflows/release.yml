@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v*'
+      - '[0-9]*'
   workflow_dispatch:
 
 permissions:
@@ -30,9 +31,10 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Set version from tag
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/')
         run: |
-          VERSION="${GITHUB_REF#refs/tags/v}"
+          VERSION="${GITHUB_REF#refs/tags/}"
+          VERSION="${VERSION#v}"
           pnpm pkg set version="$VERSION"
 
       - name: Build app
@@ -45,7 +47,7 @@ jobs:
         run: pnpm build
 
       - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -67,7 +69,7 @@ jobs:
 
   prepare-runtime:
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/')
 
     steps:
       - name: Checkout
@@ -192,13 +194,14 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Set version from tag
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/')
         run: |
-          VERSION="${GITHUB_REF#refs/tags/v}"
+          VERSION="${GITHUB_REF#refs/tags/}"
+          VERSION="${VERSION#v}"
           pnpm pkg set version="$VERSION"
 
       - name: Resolve runtime asset name (macOS ${{ matrix.arch }})
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/')
         id: runtime-asset
         shell: bash
         run: |
@@ -211,7 +214,7 @@ jobs:
           echo "asset_name=$(node ./scripts/runtime-lock.mjs asset-name "$platform")" >> "$GITHUB_OUTPUT"
 
       - name: Stage bundled runtime (macOS ${{ matrix.arch }})
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
@@ -239,7 +242,7 @@ jobs:
           test -f dist-electron/preload/index.js
           test -f out/renderer/index.html
           test -f mcp-server/dist/index.js
-          if [[ "${GITHUB_REF:-}" == refs/tags/v* ]]; then
+          if [[ "${GITHUB_REF:-}" == refs/tags/* ]]; then
             test -f resources/runtime/VERSION
           fi
 
@@ -254,10 +257,10 @@ jobs:
         run: ${{ matrix.dist_command }} --publish never
 
       - name: Validate packaged bundle (macOS ${{ matrix.arch }})
-        run: node ./scripts/electron-builder/verifyBundle.cjs "release/mac-${{ matrix.arch }}/Agent Teams UI.app" darwin ${{ matrix.arch }}
+        run: node ./scripts/electron-builder/verifyBundle.cjs "release/mac-${{ matrix.arch }}/Hermit.app" darwin ${{ matrix.arch }}
 
       - name: Upload assets to release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -301,21 +304,22 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Set version from tag
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/')
         shell: bash
         run: |
-          VERSION="${GITHUB_REF#refs/tags/v}"
+          VERSION="${GITHUB_REF#refs/tags/}"
+          VERSION="${VERSION#v}"
           pnpm pkg set version="$VERSION"
 
       - name: Resolve runtime asset name (Windows)
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/')
         id: runtime-asset
         shell: bash
         run: |
           echo "asset_name=$(node ./scripts/runtime-lock.mjs asset-name win32-x64)" >> "$GITHUB_OUTPUT"
 
       - name: Stage bundled runtime (Windows)
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/')
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -346,7 +350,7 @@ jobs:
           test -f dist-electron/preload/index.js
           test -f out/renderer/index.html
           test -f mcp-server/dist/index.js
-          if [[ "${GITHUB_REF:-}" == refs/tags/v* ]]; then
+          if [[ "${GITHUB_REF:-}" == refs/tags/* ]]; then
             test -f resources/runtime/VERSION
           fi
 
@@ -360,7 +364,7 @@ jobs:
         run: node ./scripts/electron-builder/verifyBundle.cjs "release/win-unpacked" win32 x64
 
       - name: Upload assets to release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/')
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -410,20 +414,21 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Set version from tag
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/')
         run: |
-          VERSION="${GITHUB_REF#refs/tags/v}"
+          VERSION="${GITHUB_REF#refs/tags/}"
+          VERSION="${VERSION#v}"
           pnpm pkg set version="$VERSION"
 
       - name: Resolve runtime asset name (Linux)
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/')
         id: runtime-asset
         shell: bash
         run: |
           echo "asset_name=$(node ./scripts/runtime-lock.mjs asset-name linux-x64)" >> "$GITHUB_OUTPUT"
 
       - name: Stage bundled runtime (Linux)
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
@@ -451,7 +456,7 @@ jobs:
           test -f dist-electron/preload/index.js
           test -f out/renderer/index.html
           test -f mcp-server/dist/index.js
-          if [[ "${GITHUB_REF:-}" == refs/tags/v* ]]; then
+          if [[ "${GITHUB_REF:-}" == refs/tags/* ]]; then
             test -f resources/runtime/VERSION
           fi
 
@@ -464,7 +469,7 @@ jobs:
         run: node ./scripts/electron-builder/verifyBundle.cjs "release/linux-unpacked" linux x64
 
       - name: Upload assets to release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -482,7 +487,7 @@ jobs:
   upload-stable-links:
     needs: [release-mac, release-win, release-linux]
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/')
 
     steps:
       - name: Upload stable-named assets for /latest/download links
@@ -490,20 +495,21 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          VERSION="${GITHUB_REF#refs/tags/v}"
+          TAG="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG#v}"
           REPO="${GITHUB_REPOSITORY}"
-          DOWNLOAD_BASE="https://github.com/${REPO}/releases/download/v${VERSION}"
+          DOWNLOAD_BASE="https://github.com/${REPO}/releases/download/${TAG}"
           TMP_DIR="$(mktemp -d)"
           trap 'rm -rf "$TMP_DIR"' EXIT
 
           declare -A FILES=(
-            ["Claude-Agent-Teams-UI-arm64.dmg"]="Claude.Agent.Teams.UI-${VERSION}-arm64.dmg"
-            ["Claude-Agent-Teams-UI-x64.dmg"]="Claude.Agent.Teams.UI-${VERSION}-x64.dmg"
-            ["Claude-Agent-Teams-UI-Setup.exe"]="Claude.Agent.Teams.UI.Setup.${VERSION}.exe"
-            ["Claude-Agent-Teams-UI.AppImage"]="Claude.Agent.Teams.UI-${VERSION}.AppImage"
-            ["Claude-Agent-Teams-UI-amd64.deb"]="claude-agent-teams-ui_${VERSION}_amd64.deb"
-            ["Claude-Agent-Teams-UI-x86_64.rpm"]="claude-agent-teams-ui-${VERSION}.x86_64.rpm"
-            ["Claude-Agent-Teams-UI.pacman"]="claude-agent-teams-ui-${VERSION}.pacman"
+            ["Hermit-arm64.dmg"]="Hermit-${VERSION}-arm64.dmg"
+            ["Hermit-x64.dmg"]="Hermit-${VERSION}-x64.dmg"
+            ["Hermit-Setup.exe"]="Hermit.Setup.${VERSION}.exe"
+            ["Hermit.AppImage"]="Hermit-${VERSION}.AppImage"
+            ["Hermit-amd64.deb"]="hermit_${VERSION}_amd64.deb"
+            ["Hermit-x86_64.rpm"]="hermit-${VERSION}.x86_64.rpm"
+            ["Hermit.pacman"]="hermit-${VERSION}.pacman"
           )
 
           # Download versioned files and re-upload with stable names
@@ -512,7 +518,7 @@ jobs:
             echo "Downloading ${VERSIONED_NAME} -> ${STABLE_NAME}"
             curl -fSL -o "${TMP_DIR}/${VERSIONED_NAME}" "${DOWNLOAD_BASE}/${VERSIONED_NAME}"
             cp "${TMP_DIR}/${VERSIONED_NAME}" "${TMP_DIR}/${STABLE_NAME}"
-            gh release upload "v${VERSION}" "${TMP_DIR}/${STABLE_NAME}" --repo "$REPO" --clobber
+            gh release upload "${TAG}" "${TMP_DIR}/${STABLE_NAME}" --repo "$REPO" --clobber
           done
 
       - name: Publish canonical updater metadata
@@ -520,8 +526,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          VERSION="${GITHUB_REF#refs/tags/v}"
-          TAG="v${VERSION}"
+          TAG="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG#v}"
           REPO="${GITHUB_REPOSITORY}"
           RELEASE_DATE="$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")"
           TMP_DIR="$(mktemp -d)"
@@ -541,31 +547,31 @@ jobs:
           }
 
           # Canonical Windows feed
-          download_asset "Claude-Agent-Teams-UI-Setup.exe"
-          WIN_SHA="$(sha512_base64 Claude-Agent-Teams-UI-Setup.exe)"
-          WIN_SIZE="$(file_size Claude-Agent-Teams-UI-Setup.exe)"
+          download_asset "Hermit-Setup.exe"
+          WIN_SHA="$(sha512_base64 Hermit-Setup.exe)"
+          WIN_SIZE="$(file_size Hermit-Setup.exe)"
           cat > latest.yml <<EOF
           version: ${VERSION}
           files:
-            - url: Claude-Agent-Teams-UI-Setup.exe
+            - url: Hermit-Setup.exe
               sha512: ${WIN_SHA}
               size: ${WIN_SIZE}
-          path: Claude-Agent-Teams-UI-Setup.exe
+          path: Hermit-Setup.exe
           sha512: ${WIN_SHA}
           releaseDate: '${RELEASE_DATE}'
           EOF
 
           # Canonical Linux feed
-          download_asset "Claude-Agent-Teams-UI.AppImage"
-          LINUX_SHA="$(sha512_base64 Claude-Agent-Teams-UI.AppImage)"
-          LINUX_SIZE="$(file_size Claude-Agent-Teams-UI.AppImage)"
+          download_asset "Hermit.AppImage"
+          LINUX_SHA="$(sha512_base64 Hermit.AppImage)"
+          LINUX_SIZE="$(file_size Hermit.AppImage)"
           cat > latest-linux.yml <<EOF
           version: ${VERSION}
           files:
-            - url: Claude-Agent-Teams-UI.AppImage
+            - url: Hermit.AppImage
               sha512: ${LINUX_SHA}
               size: ${LINUX_SIZE}
-          path: Claude-Agent-Teams-UI.AppImage
+          path: Hermit.AppImage
           sha512: ${LINUX_SHA}
           releaseDate: '${RELEASE_DATE}'
           EOF
@@ -574,22 +580,22 @@ jobs:
           # electron-updater on GitHub still consumes a single latest-mac.yml, so we
           # publish the Apple Silicon feed here and suppress Intel auto-update in-app
           # until we switch to universal packaging or an arch-aware provider.
-          download_asset "Claude.Agent.Teams.UI-${VERSION}-arm64-mac.zip"
-          download_asset "Claude.Agent.Teams.UI-${VERSION}-arm64.dmg"
-          MAC_ZIP_SHA="$(sha512_base64 Claude.Agent.Teams.UI-${VERSION}-arm64-mac.zip)"
-          MAC_ZIP_SIZE="$(file_size Claude.Agent.Teams.UI-${VERSION}-arm64-mac.zip)"
-          MAC_DMG_SHA="$(sha512_base64 Claude.Agent.Teams.UI-${VERSION}-arm64.dmg)"
-          MAC_DMG_SIZE="$(file_size Claude.Agent.Teams.UI-${VERSION}-arm64.dmg)"
+          download_asset "Hermit-${VERSION}-arm64-mac.zip"
+          download_asset "Hermit-${VERSION}-arm64.dmg"
+          MAC_ZIP_SHA="$(sha512_base64 Hermit-${VERSION}-arm64-mac.zip)"
+          MAC_ZIP_SIZE="$(file_size Hermit-${VERSION}-arm64-mac.zip)"
+          MAC_DMG_SHA="$(sha512_base64 Hermit-${VERSION}-arm64.dmg)"
+          MAC_DMG_SIZE="$(file_size Hermit-${VERSION}-arm64.dmg)"
           cat > latest-mac.yml <<EOF
           version: ${VERSION}
           files:
-            - url: Claude.Agent.Teams.UI-${VERSION}-arm64-mac.zip
+            - url: Hermit-${VERSION}-arm64-mac.zip
               sha512: ${MAC_ZIP_SHA}
               size: ${MAC_ZIP_SIZE}
-            - url: Claude.Agent.Teams.UI-${VERSION}-arm64.dmg
+            - url: Hermit-${VERSION}-arm64.dmg
               sha512: ${MAC_DMG_SHA}
               size: ${MAC_DMG_SIZE}
-          path: Claude.Agent.Teams.UI-${VERSION}-arm64-mac.zip
+          path: Hermit-${VERSION}-arm64-mac.zip
           sha512: ${MAC_ZIP_SHA}
           releaseDate: '${RELEASE_DATE}'
           EOF

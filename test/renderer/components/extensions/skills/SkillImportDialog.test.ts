@@ -132,7 +132,6 @@ describe('SkillImportDialog', () => {
           open: true,
           projectPath: null,
           projectLabel: null,
-          allowCodexRootKind: true,
           onClose: vi.fn(),
           onImported: vi.fn(),
         })
@@ -168,7 +167,6 @@ describe('SkillImportDialog', () => {
           open: true,
           projectPath: null,
           projectLabel: null,
-          allowCodexRootKind: true,
           onClose: vi.fn(),
           onImported: vi.fn(),
         })
@@ -234,7 +232,6 @@ describe('SkillImportDialog', () => {
           open: true,
           projectPath: null,
           projectLabel: null,
-          allowCodexRootKind: true,
           onClose: vi.fn(),
           onImported: vi.fn(),
         })
@@ -271,7 +268,6 @@ describe('SkillImportDialog', () => {
           open: true,
           projectPath: '/tmp/project-a',
           projectLabel: 'Project A',
-          allowCodexRootKind: true,
           onClose: vi.fn(),
           onImported: vi.fn(),
         })
@@ -288,7 +284,6 @@ describe('SkillImportDialog', () => {
           open: true,
           projectPath: null,
           projectLabel: null,
-          allowCodexRootKind: true,
           onClose: vi.fn(),
           onImported: vi.fn(),
         })
@@ -337,7 +332,6 @@ describe('SkillImportDialog', () => {
           open: true,
           projectPath: null,
           projectLabel: null,
-          allowCodexRootKind: true,
           onClose: vi.fn(),
           onImported: vi.fn(),
         })
@@ -370,7 +364,6 @@ describe('SkillImportDialog', () => {
           open: false,
           projectPath: null,
           projectLabel: null,
-          allowCodexRootKind: true,
           onClose: vi.fn(),
           onImported: vi.fn(),
         })
@@ -397,7 +390,6 @@ describe('SkillImportDialog', () => {
           open: true,
           projectPath: null,
           projectLabel: null,
-          allowCodexRootKind: true,
           onClose: vi.fn(),
           onImported: vi.fn(),
         })
@@ -446,7 +438,6 @@ describe('SkillImportDialog', () => {
           open: true,
           projectPath: null,
           projectLabel: null,
-          allowCodexRootKind: true,
           onClose: vi.fn(),
           onImported: vi.fn(),
         })
@@ -492,7 +483,6 @@ describe('SkillImportDialog', () => {
           open: true,
           projectPath: null,
           projectLabel: null,
-          allowCodexRootKind: false,
           onClose: vi.fn(),
           onImported: vi.fn(),
         })
