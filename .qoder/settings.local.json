@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(npm run:*)",
+      "Bash(pnpm build:*)",
+      "Bash(npx electron-vite:*)",
+      "Bash(npx electron-builder:*)",
+      "Bash(npx tsc:*)",
+      "Bash(ls:*)",
+      "Bash(pnpm typecheck:*)",
+      "Bash(ps aux:*)",
+      "Bash(pnpm:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git show:*)",
+      "WebFetch(github.com)",
+      "WebFetch(raw.githubusercontent.com)",
+      "Bash(git remote:*)",
+      "Bash(curl:*)",
+      "Bash(diff:*)",
+      "Bash(cat:*)",
+      "Bash(grep:*)"
+    ]
+  }
+}
