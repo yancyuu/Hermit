@@ -33,6 +33,9 @@ switch (command) {
   case 'release-repository':
     process.stdout.write(`${runtimeLock.releaseRepository}\n`);
     break;
+  case 'release-tag':
+    process.stdout.write(`${runtimeLock.releaseTag}\n`);
+    break;
   case 'asset-name': {
     const asset = runtimeLock.assets[arg];
     if (!asset) {
@@ -56,6 +59,6 @@ switch (command) {
     break;
   default:
     fail(
-      'Usage: node scripts/runtime-lock.mjs <version|source-ref|source-repository|release-repository|asset-name <platform>|binary-name <platform>|asset-list>'
+      'Usage: node scripts/runtime-lock.mjs <version|source-ref|source-repository|release-repository|release-tag|asset-name <platform>|binary-name <platform>|asset-list>'
     );
 }

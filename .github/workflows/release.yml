@@ -104,12 +104,49 @@ jobs:
           done < <(node ./scripts/runtime-lock.mjs asset-list)
           echo "missing=$missing" >> "$GITHUB_OUTPUT"
 
-      - name: Dispatch private runtime build
+      - name: Mirror locked runtime assets
+        id: mirror-runtime
         if: steps.runtime-assets.outputs.missing == '1'
         env:
-          GH_TOKEN: ${{ secrets.RUNTIME_BUILD_DISPATCH_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          TAG="${GITHUB_REF#refs/tags/}"
+          SOURCE_REPO="$(node ./scripts/runtime-lock.mjs release-repository)"
+          SOURCE_TAG="$(node ./scripts/runtime-lock.mjs release-tag)"
+          TMP_DIR="$(mktemp -d)"
+          trap 'rm -rf "$TMP_DIR"' EXIT
+
+          mirrored=1
+          while IFS= read -r asset; do
+            [ -n "$asset" ] || continue
+            if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' 2>/dev/null | grep -Fqx "$asset"; then
+              continue
+            fi
+
+            rm -f "$TMP_DIR/$asset"
+            if ! gh release download "$SOURCE_TAG" --repo "$SOURCE_REPO" --pattern "$asset" --dir "$TMP_DIR"; then
+              echo "Could not mirror runtime asset $asset from $SOURCE_REPO@$SOURCE_TAG"
+              mirrored=0
+              break
+            fi
+            gh release upload "$TAG" "$TMP_DIR/$asset" --repo "$GITHUB_REPOSITORY" --clobber
+          done < <(node ./scripts/runtime-lock.mjs asset-list)
+
+          echo "mirrored=$mirrored" >> "$GITHUB_OUTPUT"
+
+      - name: Dispatch private runtime build
+        if: steps.runtime-assets.outputs.missing == '1' && steps.mirror-runtime.outputs.mirrored != '1'
+        env:
+          RUNTIME_BUILD_DISPATCH_TOKEN: ${{ secrets.RUNTIME_BUILD_DISPATCH_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${RUNTIME_BUILD_DISPATCH_TOKEN:-}" ]; then
+            echo "Runtime assets are missing, mirroring locked assets failed, and RUNTIME_BUILD_DISPATCH_TOKEN is not configured." >&2
+            exit 1
+          fi
+
+          export GH_TOKEN="$RUNTIME_BUILD_DISPATCH_TOKEN"
           TARGET_TAG="${GITHUB_REF#refs/tags/}"
           SOURCE_REPO="$(node ./scripts/runtime-lock.mjs source-repository)"
           SOURCE_REF="$(node ./scripts/runtime-lock.mjs source-ref)"

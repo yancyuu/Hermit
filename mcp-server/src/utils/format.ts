@@ -70,6 +70,8 @@ export function slimTaskForList(full: Record<string, unknown>): Record<string, u
 
   if (Array.isArray(full.comments)) {
     slim.commentCount = full.comments.length;
+  } else if (typeof full.commentCount === 'number') {
+    slim.commentCount = full.commentCount;
   } else {
     slim.commentCount = 0;
   }
