@@ -25,6 +25,13 @@ const PROCESS_TABLE_ARGS = [
   '-Command',
   PROCESS_TABLE_SCRIPT,
 ];
+const PROCESS_TABLE_CACHE_TTL_MS = 3_000;
+
+let cachedProcessTable: {
+  expiresAtMs: number;
+  rows: WindowsProcessTableRow[];
+} | null = null;
+let inFlightProcessTable: Promise<WindowsProcessTableRow[]> | null = null;
 
 function parsePositiveInteger(value: unknown): number | null {
   const parsed =
@@ -68,7 +75,15 @@ export function parseWindowsProcessTableJson(stdout: string): WindowsProcessTabl
 export async function listWindowsProcessTable(
   timeoutMs = 4_000
 ): Promise<WindowsProcessTableRow[]> {
-  return new Promise((resolve, reject) => {
+  const now = Date.now();
+  if (cachedProcessTable && cachedProcessTable.expiresAtMs > now) {
+    return cachedProcessTable.rows;
+  }
+  if (inFlightProcessTable) {
+    return inFlightProcessTable;
+  }
+
+  const nextRead = new Promise<WindowsProcessTableRow[]>((resolve, reject) => {
     execFile(
       'powershell.exe',
       PROCESS_TABLE_ARGS,
@@ -87,13 +102,28 @@ export async function listWindowsProcessTable(
           reject(new Error(stderr.trim()));
           return;
         }
-        resolve(parseWindowsProcessTableJson(String(stdout)));
+        const rows = parseWindowsProcessTableJson(String(stdout));
+        cachedProcessTable = {
+          expiresAtMs: Date.now() + PROCESS_TABLE_CACHE_TTL_MS,
+          rows,
+        };
+        resolve(rows);
       }
     );
+  }).finally(() => {
+    inFlightProcessTable = null;
   });
+  inFlightProcessTable = nextRead;
+
+  return nextRead;
 }
 
 export function listWindowsProcessTableSync(timeoutMs = 4_000): WindowsProcessTableRow[] {
+  const now = Date.now();
+  if (cachedProcessTable && cachedProcessTable.expiresAtMs > now) {
+    return cachedProcessTable.rows;
+  }
+
   const stdout = execFileSync('powershell.exe', PROCESS_TABLE_ARGS, {
     encoding: 'utf8',
     timeout: timeoutMs,
@@ -101,5 +131,10 @@ export function listWindowsProcessTableSync(timeoutMs = 4_000): WindowsProcessTa
     maxBuffer: 8 * 1024 * 1024,
     stdio: ['ignore', 'pipe', 'pipe'],
   });
-  return parseWindowsProcessTableJson(String(stdout));
+  const rows = parseWindowsProcessTableJson(String(stdout));
+  cachedProcessTable = {
+    expiresAtMs: Date.now() + PROCESS_TABLE_CACHE_TTL_MS,
+    rows,
+  };
+  return rows;
 }
