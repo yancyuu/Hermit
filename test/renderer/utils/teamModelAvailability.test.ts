@@ -257,22 +257,19 @@ describe('teamModelAvailability', () => {
     expect(getTeamModelSelectionError('anthropic', 'opus')).toBeNull();
   });
 
-  it('keeps both Anthropic Opus 4.7 and explicit Opus 4.6 in the fallback selector options', () => {
+  it('keeps only the three Anthropic aliases in the fallback selector options', () => {
     const options = getAvailableTeamProviderModelOptions('anthropic');
-    expect(options.length).toBeGreaterThanOrEqual(4);
+    expect(options.map((option) => option.value)).toEqual(['', 'opus', 'sonnet', 'haiku']);
     expect(options.find((o) => o.value === 'opus')).toMatchObject({ availabilityStatus: 'available' });
     expect(options.find((o) => o.value === 'sonnet')).toMatchObject({ availabilityStatus: 'available' });
     expect(options.find((o) => o.value === 'haiku')).toMatchObject({ availabilityStatus: 'available' });
   });
 
-  it('keeps known Anthropic full model ids selectable without runtime verification', () => {
-    expect(normalizeTeamModelForUi('anthropic', 'claude-opus-4-7')).toBe('claude-opus-4-7');
-    expect(normalizeTeamModelForUi('anthropic', 'claude-opus-4-7[1m]')).toBe(
-      'claude-opus-4-7[1m]'
-    );
-    expect(normalizeTeamModelForUi('anthropic', 'claude-haiku-4-5-20251001')).toBe(
-      'claude-haiku-4-5-20251001'
-    );
+  it('normalizes known Anthropic full model ids to the three aliases', () => {
+    expect(normalizeTeamModelForUi('anthropic', 'claude-opus-4-7')).toBe('opus');
+    expect(normalizeTeamModelForUi('anthropic', 'claude-opus-4-7[1m]')).toBe('opus');
+    expect(normalizeTeamModelForUi('anthropic', 'claude-sonnet-4-6')).toBe('sonnet');
+    expect(normalizeTeamModelForUi('anthropic', 'claude-haiku-4-5-20251001')).toBe('haiku');
     expect(getTeamModelSelectionError('anthropic', 'claude-opus-4-7')).toBeNull();
     expect(getTeamModelSelectionError('anthropic', 'claude-haiku-4-5-20251001')).toBeNull();
   });

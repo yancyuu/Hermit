@@ -178,7 +178,7 @@ import { isAgentTeamsToolUse } from './agentTeamsToolNames';
 import { atomicWriteAsync } from './atomicWrite';
 import { peekAutoResumeService } from './AutoResumeService';
 import { ClaudeBinaryResolver } from './ClaudeBinaryResolver';
-import { getConfiguredCliCommandLabel } from './cliFlavor';
+import { getConfiguredCliCommandLabel, getConfiguredCliFlavor } from './cliFlavor';
 import { withFileLock } from './fileLock';
 import {
   type ClassifiedMainProcessIdle,
@@ -23519,6 +23519,13 @@ export class TeamProvisioningService {
     }
 
     if (resolvedProviderId === 'anthropic' || resolvedProviderId === 'codex') {
+      if (resolvedProviderId === 'anthropic' && getConfiguredCliFlavor() === 'claude') {
+        return await this.probeOfficialClaudeAuthStatus({
+          claudePath,
+          cwd,
+          env,
+        });
+      }
       return await this.probeProviderRuntimeControlPlane({
         claudePath,
         cwd,
@@ -23529,6 +23536,39 @@ export class TeamProvisioningService {
     }
 
     return {};
+  }
+
+  private async probeOfficialClaudeAuthStatus({
+    claudePath,
+    cwd,
+    env,
+  }: {
+    claudePath: string;
+    cwd: string;
+    env: NodeJS.ProcessEnv;
+  }): Promise<{ warning?: string }> {
+    try {
+      const authStatus = await execCli(claudePath, ['auth', 'status'], {
+        cwd,
+        env,
+        timeout: 8_000,
+      });
+      const parsed = extractJsonObjectFromCli<AuthStatusCommandResponse>(authStatus.stdout);
+      if (parsed.loggedIn === true) {
+        return {};
+      }
+      return {
+        warning:
+          'Claude CLI is not authenticated. Run `claude auth login` (or start `claude` and run `/login`) and retry.',
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return {
+        warning:
+          `Claude CLI auth status check did not complete. ` +
+          `Proceeding with catalog checks. Details: ${message}`,
+      };
+    }
   }
 
   private buildRuntimeProviderReadinessWarning(

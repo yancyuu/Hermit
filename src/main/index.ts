@@ -1564,18 +1564,9 @@ function createWindow(): void {
       fullscreenSyncTimer.unref?.();
       // Start file watchers now that the window is visible and responsive.
       // Deferred from initializeServices() to avoid blocking window creation
-      // with fs.watch() setup (especially slow on Windows with recursive watchers).
+      // with fs.watch() setup and the renderer's initial IPC burst.
       const activeContext = contextRegistry.getActive();
-      if (process.platform === 'win32') {
-        // On Windows, delay FileWatcher startup to let the renderer complete
-        // its initial IPC calls without UV thread pool contention. Recursive
-        // fs.watch() on NTFS saturates all 4 default UV threads.
-        scheduleStartupTask(() => activeContext.startFileWatcher(), 1500);
-      } else {
-        if (!isShutdownStarted()) {
-          activeContext.startFileWatcher();
-        }
-      }
+      scheduleStartupTask(() => activeContext.startFileWatcher(), 1500);
 
       if (!isShutdownStarted()) {
         scheduleStartupTask(() => void updaterService.checkForUpdates(), 3000);

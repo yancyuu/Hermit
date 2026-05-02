@@ -3,6 +3,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const { realpathMock } = vi.hoisted(() => ({
   realpathMock: vi.fn(async (value: string) => value),
 }));
+const { spawnCliMock } = vi.hoisted(() => ({
+  spawnCliMock: vi.fn(),
+}));
 
 // Mock dependencies before importing service
 vi.mock('@main/utils/childProcess', async (importOriginal) => {
@@ -10,6 +13,8 @@ vi.mock('@main/utils/childProcess', async (importOriginal) => {
   return {
     ...actual,
     execCli: vi.fn().mockRejectedValue(new Error('execCli not configured')),
+    spawnCli: spawnCliMock,
+    killProcessTree: vi.fn(),
   };
 });
 
@@ -88,6 +93,7 @@ import { ClaudeMultimodelBridgeService } from '@main/services/runtime/ClaudeMult
 import { ClaudeBinaryResolver } from '@main/services/team/ClaudeBinaryResolver';
 import { getCliFlavorUiOptions, getConfiguredCliFlavor } from '@main/services/team/cliFlavor';
 import { execCli } from '@main/utils/childProcess';
+import { EventEmitter } from 'events';
 
 /**
  * Helper: allow expected console.error/warn calls in tests where service logs errors.
@@ -112,7 +118,48 @@ describe('CliInstallerService', () => {
       showVersionDetails: true,
       showBinaryPath: true,
     });
+    vi.spyOn(CliInstallerService.prototype as never, 'resolveNpmBinary').mockResolvedValue(null);
     service = new CliInstallerService();
+  });
+
+  it('installs Claude Code through npm into the managed local prefix', async () => {
+    allowConsoleLogs();
+    const npmPath = '/usr/local/bin/npm';
+    const child = new EventEmitter() as EventEmitter & {
+      stdout: EventEmitter;
+      stderr: EventEmitter;
+    };
+    child.stdout = new EventEmitter();
+    child.stderr = new EventEmitter();
+    spawnCliMock.mockImplementation(() => {
+      queueMicrotask(() => child.emit('close', 0));
+      return child;
+    });
+    vi.mocked(ClaudeBinaryResolver.resolve).mockResolvedValue('/Users/tester/.claude/local/bin/claude');
+    vi.mocked(execCli)
+      .mockResolvedValueOnce({ stdout: '2.1.121', stderr: '' })
+      .mockResolvedValueOnce({
+        stdout: '{"loggedIn":true,"authMethod":"oauth_token"}',
+        stderr: '',
+      });
+    vi.spyOn(service as never, 'resolveNpmBinary').mockResolvedValue(npmPath);
+
+    await service.install();
+
+    expect(spawnCliMock).toHaveBeenCalledTimes(1);
+    const [command, args, options] = spawnCliMock.mock.calls[0] ?? [];
+    expect(command).toBe(npmPath);
+    expect(args?.[0]).toBe('install');
+    expect(args?.[1]).toBe('--prefix');
+    expect(String(args?.[2]).replace(/\\/g, '/')).toMatch(/\/\.claude\/local$/);
+    expect(args?.[3]).toBe('@anthropic-ai/claude-code@latest');
+    expect(options).toMatchObject({
+      env: expect.objectContaining({
+        npm_config_audit: 'false',
+        npm_config_fund: 'false',
+      }),
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
   });
 
   describe('getStatus', () => {

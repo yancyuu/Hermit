@@ -67,131 +67,8 @@ jobs:
             dist-electron
           retention-days: 1
 
-  prepare-runtime:
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Create GitHub Release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          TAG="${GITHUB_REF#refs/tags/}"
-          gh release create "$TAG" \
-            --repo "$GITHUB_REPOSITORY" \
-            --title "$TAG" \
-            --generate-notes \
-            --draft=false 2>/dev/null || echo "Release $TAG already exists, skipping creation"
-
-      - name: Check runtime assets
-        id: runtime-assets
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          TAG="${GITHUB_REF#refs/tags/}"
-          existing="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' 2>/dev/null || true)"
-          missing=0
-          while IFS= read -r asset; do
-            [ -n "$asset" ] || continue
-            if ! grep -Fqx "$asset" <<<"$existing"; then
-              echo "Missing runtime asset: $asset"
-              missing=1
-            fi
-          done < <(node ./scripts/runtime-lock.mjs asset-list)
-          echo "missing=$missing" >> "$GITHUB_OUTPUT"
-
-      - name: Mirror locked runtime assets
-        id: mirror-runtime
-        if: steps.runtime-assets.outputs.missing == '1'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          TAG="${GITHUB_REF#refs/tags/}"
-          SOURCE_REPO="$(node ./scripts/runtime-lock.mjs release-repository)"
-          SOURCE_TAG="$(node ./scripts/runtime-lock.mjs release-tag)"
-          TMP_DIR="$(mktemp -d)"
-          trap 'rm -rf "$TMP_DIR"' EXIT
-
-          mirrored=1
-          while IFS= read -r asset; do
-            [ -n "$asset" ] || continue
-            if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' 2>/dev/null | grep -Fqx "$asset"; then
-              continue
-            fi
-
-            rm -f "$TMP_DIR/$asset"
-            if ! gh release download "$SOURCE_TAG" --repo "$SOURCE_REPO" --pattern "$asset" --dir "$TMP_DIR"; then
-              echo "Could not mirror runtime asset $asset from $SOURCE_REPO@$SOURCE_TAG"
-              mirrored=0
-              break
-            fi
-            gh release upload "$TAG" "$TMP_DIR/$asset" --repo "$GITHUB_REPOSITORY" --clobber
-          done < <(node ./scripts/runtime-lock.mjs asset-list)
-
-          echo "mirrored=$mirrored" >> "$GITHUB_OUTPUT"
-
-      - name: Dispatch private runtime build
-        if: steps.runtime-assets.outputs.missing == '1' && steps.mirror-runtime.outputs.mirrored != '1'
-        env:
-          RUNTIME_BUILD_DISPATCH_TOKEN: ${{ secrets.RUNTIME_BUILD_DISPATCH_TOKEN }}
-        run: |
-          set -euo pipefail
-          if [ -z "${RUNTIME_BUILD_DISPATCH_TOKEN:-}" ]; then
-            echo "Runtime assets are missing, mirroring locked assets failed, and RUNTIME_BUILD_DISPATCH_TOKEN is not configured." >&2
-            exit 1
-          fi
-
-          export GH_TOKEN="$RUNTIME_BUILD_DISPATCH_TOKEN"
-          TARGET_TAG="${GITHUB_REF#refs/tags/}"
-          SOURCE_REPO="$(node ./scripts/runtime-lock.mjs source-repository)"
-          SOURCE_REF="$(node ./scripts/runtime-lock.mjs source-ref)"
-          RUNTIME_VERSION="$(node ./scripts/runtime-lock.mjs version)"
-          gh api \
-            --method POST \
-            "repos/${SOURCE_REPO}/actions/workflows/release-runtime.yml/dispatches" \
-            -f ref=main \
-            -f inputs[source_ref]="$SOURCE_REF" \
-            -f inputs[runtime_version]="$RUNTIME_VERSION" \
-            -f inputs[target_release_repo]="$GITHUB_REPOSITORY" \
-            -f inputs[target_release_tag]="$TARGET_TAG"
-
-      - name: Wait for runtime assets
-        if: steps.runtime-assets.outputs.missing == '1'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          TAG="${GITHUB_REF#refs/tags/}"
-          for attempt in $(seq 1 60); do
-            existing="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' 2>/dev/null || true)"
-            all_found=1
-            while IFS= read -r asset; do
-              [ -n "$asset" ] || continue
-              if ! grep -Fqx "$asset" <<<"$existing"; then
-                all_found=0
-                break
-              fi
-            done < <(node ./scripts/runtime-lock.mjs asset-list)
-
-            if [ "$all_found" -eq 1 ]; then
-              echo "Runtime assets are ready"
-              exit 0
-            fi
-
-            echo "Waiting for runtime assets - attempt $attempt/60"
-            sleep 10
-          done
-
-          echo "Timed out waiting for runtime assets in release $TAG" >&2
-          exit 1
-
   release-mac:
-    needs: [build, prepare-runtime]
+    needs: [build]
     strategy:
       fail-fast: false
       matrix:
@@ -237,33 +114,6 @@ jobs:
           VERSION="${VERSION#v}"
           pnpm pkg set version="$VERSION"
 
-      - name: Resolve runtime asset name (macOS ${{ matrix.arch }})
-        if: startsWith(github.ref, 'refs/tags/')
-        id: runtime-asset
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [[ "${{ matrix.arch }}" == "arm64" ]]; then
-            platform="darwin-arm64"
-          else
-            platform="darwin-x64"
-          fi
-          echo "asset_name=$(node ./scripts/runtime-lock.mjs asset-name "$platform")" >> "$GITHUB_OUTPUT"
-
-      - name: Stage bundled runtime (macOS ${{ matrix.arch }})
-        if: startsWith(github.ref, 'refs/tags/')
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          TAG="${GITHUB_REF#refs/tags/}"
-          rm -rf .runtime-download resources/runtime
-          mkdir -p .runtime-download resources/runtime
-          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern "${{ steps.runtime-asset.outputs.asset_name }}" --dir .runtime-download
-          tar -xzf ".runtime-download/${{ steps.runtime-asset.outputs.asset_name }}" -C .runtime-download
-          cp -R .runtime-download/runtime/. resources/runtime/
-
       - name: Build app (macOS ${{ matrix.arch }})
         env:
           NODE_OPTIONS: '--max-old-space-size=8192'
@@ -279,9 +129,6 @@ jobs:
           test -f dist-electron/preload/index.js
           test -f out/renderer/index.html
           test -f mcp-server/dist/index.js
-          if [[ "${GITHUB_REF:-}" == refs/tags/* ]]; then
-            test -f resources/runtime/VERSION
-          fi
 
       - name: Package (macOS ${{ matrix.arch }})
         env:
@@ -307,7 +154,7 @@ jobs:
           done
 
   release-win:
-    needs: [build, prepare-runtime]
+    needs: [build]
     runs-on: windows-latest
 
     steps:
@@ -344,29 +191,6 @@ jobs:
           VERSION="${VERSION#v}"
           pnpm pkg set version="$VERSION"
 
-      - name: Resolve runtime asset name (Windows)
-        if: startsWith(github.ref, 'refs/tags/')
-        id: runtime-asset
-        shell: bash
-        run: |
-          echo "asset_name=$(node ./scripts/runtime-lock.mjs asset-name win32-x64)" >> "$GITHUB_OUTPUT"
-
-      - name: Stage bundled runtime (Windows)
-        if: startsWith(github.ref, 'refs/tags/')
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          $ErrorActionPreference = "Stop"
-          $tag = $env:GITHUB_REF.Replace('refs/tags/', '')
-          Remove-Item .runtime-download -Recurse -Force -ErrorAction SilentlyContinue
-          Remove-Item resources/runtime/* -Recurse -Force -ErrorAction SilentlyContinue
-          New-Item -ItemType Directory -Force -Path .runtime-download | Out-Null
-          New-Item -ItemType Directory -Force -Path resources/runtime | Out-Null
-          gh release download $tag --repo $env:GITHUB_REPOSITORY --pattern "${{ steps.runtime-asset.outputs.asset_name }}" --dir .runtime-download
-          Expand-Archive -Path ".runtime-download/${{ steps.runtime-asset.outputs.asset_name }}" -DestinationPath .runtime-download/unpacked -Force
-          Copy-Item .runtime-download/unpacked/runtime/* resources/runtime -Recurse -Force
-
       - name: Build app (Windows)
         env:
           NODE_OPTIONS: '--max-old-space-size=8192'
@@ -383,9 +207,6 @@ jobs:
           test -f dist-electron/preload/index.js
           test -f out/renderer/index.html
           test -f mcp-server/dist/index.js
-          if [[ "${GITHUB_REF:-}" == refs/tags/* ]]; then
-            test -f resources/runtime/VERSION
-          fi
 
       - name: Package (Windows)
         env:
@@ -412,7 +233,7 @@ jobs:
           done
 
   release-linux:
-    needs: [build, prepare-runtime]
+    needs: [build]
     runs-on: ubuntu-latest
 
     steps:
@@ -453,27 +274,6 @@ jobs:
           VERSION="${VERSION#v}"
           pnpm pkg set version="$VERSION"
 
-      - name: Resolve runtime asset name (Linux)
-        if: startsWith(github.ref, 'refs/tags/')
-        id: runtime-asset
-        shell: bash
-        run: |
-          echo "asset_name=$(node ./scripts/runtime-lock.mjs asset-name linux-x64)" >> "$GITHUB_OUTPUT"
-
-      - name: Stage bundled runtime (Linux)
-        if: startsWith(github.ref, 'refs/tags/')
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          TAG="${GITHUB_REF#refs/tags/}"
-          rm -rf .runtime-download resources/runtime
-          mkdir -p .runtime-download resources/runtime
-          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern "${{ steps.runtime-asset.outputs.asset_name }}" --dir .runtime-download
-          tar -xzf ".runtime-download/${{ steps.runtime-asset.outputs.asset_name }}" -C .runtime-download
-          cp -R .runtime-download/runtime/. resources/runtime/
-
       - name: Build app (Linux)
         env:
           NODE_OPTIONS: '--max-old-space-size=8192'
@@ -489,9 +289,6 @@ jobs:
           test -f dist-electron/preload/index.js
           test -f out/renderer/index.html
           test -f mcp-server/dist/index.js
-          if [[ "${GITHUB_REF:-}" == refs/tags/* ]]; then
-            test -f resources/runtime/VERSION
-          fi
 
       - name: Package (Linux)
         env:
@@ -656,12 +453,5 @@ jobs:
             case "$name" in
               agent-teams-runtime-*) delete_asset "$name" ;;
               *.blockmap) delete_asset "$name" ;;
-              Hermit-${VERSION}-*.dmg) delete_asset "$name" ;;
-              Hermit-${VERSION}-*-mac.zip) delete_asset "$name" ;;
-              Hermit-${VERSION}.AppImage) delete_asset "$name" ;;
-              Hermit.Setup.${VERSION}.exe) delete_asset "$name" ;;
-              hermit_${VERSION}_amd64.deb) delete_asset "$name" ;;
-              hermit-${VERSION}.x86_64.rpm) delete_asset "$name" ;;
-              hermit-${VERSION}.pacman) delete_asset "$name" ;;
             esac
           done < <(gh release view "${TAG}" --repo "${REPO}" --json assets --jq '.assets[].name')

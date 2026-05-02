@@ -309,6 +309,11 @@ export class ClaudeBinaryResolver {
         ? [
             // Windows: Claude npm-local vendor install
             vendorBinDir,
+            path.join(getClaudeBasePath(), 'local'),
+            path.join(getClaudeBasePath(), 'local', 'bin'),
+            path.join(home, '.claude', 'local'),
+            path.join(home, '.claude', 'local', 'bin'),
+            path.join(home, '.local', 'bin'),
             // Windows: npm global install
             path.join(home, 'AppData', 'Roaming', 'npm'),
             // Windows: scoop, chocolatey, and other package managers

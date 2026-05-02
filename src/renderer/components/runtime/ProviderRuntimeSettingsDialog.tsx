@@ -733,7 +733,9 @@ export const ProviderRuntimeSettingsDialog = ({
     activeApiKeyFormProviderId === selectedProvider.providerId;
   const showApiKeySection = Boolean(
     apiKeyConfig &&
-    (selectedProvider?.providerId !== 'codex' || !selectedProvider.connection?.supportsOAuth)
+    (selectedProvider?.providerId === 'anthropic'
+      ? configuredAuthMode === 'api_key' || selectedProvider.connection?.apiKeyConfigured
+      : selectedProvider?.providerId !== 'codex' || !selectedProvider.connection?.supportsOAuth)
   );
   const connectionAlert = selectedProvider ? getConnectionAlert(selectedProvider) : null;
   const connectionLoading =

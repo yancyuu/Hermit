@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { getVisibleTeamProviderModels } from '@renderer/utils/teamModelCatalog';
+import { getVisibleTeamProviderModels, normalizeTeamModelForUi } from '@renderer/utils/teamModelCatalog';
 
 describe('teamModelCatalog', () => {
   it('filters UI-disabled Codex models from provider badge lists', () => {
@@ -24,7 +24,7 @@ describe('teamModelCatalog', () => {
     ]);
   });
 
-  it('adds curated Anthropic Opus 4.7 badges when the runtime list only reports legacy Opus variants', () => {
+  it('keeps only the three Anthropic team aliases visible', () => {
     expect(
       getVisibleTeamProviderModels('anthropic', [
         'claude-haiku-4-5-20251001',
@@ -33,14 +33,13 @@ describe('teamModelCatalog', () => {
         'claude-sonnet-4-6',
         'claude-sonnet-4-6[1m]',
       ])
-    ).toEqual([
-      'claude-haiku-4-5-20251001',
-      'claude-opus-4-7',
-      'claude-opus-4-7[1m]',
-      'claude-opus-4-6',
-      'claude-opus-4-6[1m]',
-      'claude-sonnet-4-6',
-      'claude-sonnet-4-6[1m]',
-    ]);
+    ).toEqual(['haiku', 'opus', 'sonnet']);
+  });
+
+  it('normalizes legacy Anthropic model ids to the three team aliases', () => {
+    expect(normalizeTeamModelForUi('anthropic', 'claude-opus-4-6')).toBe('opus');
+    expect(normalizeTeamModelForUi('anthropic', 'claude-opus-4-6[1m]')).toBe('opus');
+    expect(normalizeTeamModelForUi('anthropic', 'claude-sonnet-4-6')).toBe('sonnet');
+    expect(normalizeTeamModelForUi('anthropic', 'claude-haiku-4-5-20251001')).toBe('haiku');
   });
 });

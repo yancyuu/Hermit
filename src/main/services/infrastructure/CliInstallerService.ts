@@ -2,8 +2,9 @@
  * CliInstallerService — detects, downloads, verifies, and installs Claude Code CLI.
  *
  * Architecture mirrors UpdaterService: instance with setMainWindow(), progress events
- * via webContents.send(). Downloads the native binary from GCS, verifies SHA256,
- * then delegates `claude install` for shell integration (symlink, PATH setup).
+ * via webContents.send(). Installs Claude Code through npm into the managed
+ * ~/.claude/local prefix, falling back to the direct GCS binary installer if npm
+ * is unavailable.
  *
  * Edge cases handled:
  * - HTTP redirects (GCS 302) — manual redirect following
@@ -36,7 +37,7 @@ import { createWriteStream, existsSync, promises as fsp } from 'fs';
 import http from 'http';
 import https from 'https';
 import { tmpdir } from 'os';
-import { join, posix as pathPosix, win32 as pathWin32 } from 'path';
+import { extname, join, posix as pathPosix, win32 as pathWin32 } from 'path';
 
 import { ClaudeMultimodelBridgeService } from '../runtime/ClaudeMultimodelBridgeService';
 import {
@@ -68,6 +69,7 @@ const GCS_BASE =
   'https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases';
 
 const CLI_INSTALLER_PROGRESS_CHANNEL = 'cliInstaller:progress';
+const CLAUDE_CODE_NPM_PACKAGE = '@anthropic-ai/claude-code@latest';
 
 /** Timeout for `claude --version` (ms) */
 const VERSION_TIMEOUT_MS = 10_000;
@@ -77,6 +79,7 @@ const HEALTHY_STATUS_FALLBACK_TTL_MS = 60_000;
 
 /** Timeout for `claude install` (ms) — can take a while on slow disks */
 const INSTALL_TIMEOUT_MS = 120_000;
+const NPM_INSTALL_TIMEOUT_MS = 180_000;
 
 /** Max redirects to follow when fetching from GCS */
 const MAX_REDIRECTS = 5;
@@ -1107,6 +1110,11 @@ export class CliInstallerService {
     let tmpFilePath: string | null = null;
 
     try {
+      const npmInstalled = await this.installWithNpm();
+      if (npmInstalled) {
+        return;
+      }
+
       // --- Phase 1: Check ---
       this.sendProgress({ type: 'checking', detail: 'Detecting platform...' });
       const platform = this.detectPlatform();
@@ -1145,7 +1153,8 @@ export class CliInstallerService {
 
       // --- Phase 2: Download ---
       const downloadUrl = `${GCS_BASE}/${version}/${platform}/${binaryName}`;
-      tmpFilePath = join(tmpdir(), `claude-cli-${version}-${Date.now()}`);
+      const binaryExtension = process.platform === 'win32' ? extname(binaryName) || '.exe' : '';
+      tmpFilePath = join(tmpdir(), `claude-cli-${version}-${Date.now()}${binaryExtension}`);
       logger.info(`Downloading ${downloadUrl} → ${tmpFilePath}`);
       this.sendProgress({ type: 'downloading', percent: 0, transferred: 0, total: expectedSize });
 
@@ -1214,6 +1223,81 @@ export class CliInstallerService {
         await this.removeTmpFile(tmpFilePath);
       }
     }
+  }
+
+  private async installWithNpm(): Promise<boolean> {
+    const npmPath = await this.resolveNpmBinary();
+    if (!npmPath) {
+      logger.warn('npm was not found; falling back to direct Claude Code binary installer.');
+      return false;
+    }
+
+    const prefix = join(getClaudeBasePath(), 'local');
+    await fsp.mkdir(prefix, { recursive: true });
+    this.sendProgress({
+      type: 'installing',
+      detail: `Installing ${CLAUDE_CODE_NPM_PACKAGE} with npm...`,
+      rawChunk: `Installing ${CLAUDE_CODE_NPM_PACKAGE} with npm...\r\n`,
+    });
+    logger.info(`Installing Claude Code via npm at prefix ${prefix}`);
+
+    try {
+      await this.runNpmInstallWithStreaming(npmPath, prefix);
+      ClaudeBinaryResolver.clearCache();
+      this.invalidateStatusCache();
+      const freshStatus = await this.getStatus();
+      this.sendProgress({ type: 'status', status: freshStatus });
+      const version = freshStatus.installedVersion ?? 'latest';
+      logger.info(`Claude Code installed via npm successfully (${version})`);
+      this.sendProgress({ type: 'completed', version });
+      return true;
+    } catch (error) {
+      logger.warn(
+        `npm Claude Code install failed, falling back to direct binary installer: ${getErrorMessage(error)}`
+      );
+      this.sendProgress({
+        type: 'installing',
+        rawChunk: `\r\nnpm install failed; falling back to direct binary installer: ${getErrorMessage(error)}\r\n`,
+      });
+      return false;
+    }
+  }
+
+  private async resolveNpmBinary(): Promise<string | null> {
+    const shellEnv = await resolveInteractiveShellEnv();
+    const mergedPath = buildMergedCliPath(null);
+    const pathSep = process.platform === 'win32' ? pathWin32.delimiter : pathPosix.delimiter;
+    const binaryNames = process.platform === 'win32' ? ['npm.cmd', 'npm.exe', 'npm'] : ['npm'];
+    for (const dir of mergedPath.split(pathSep)) {
+      if (!dir) {
+        continue;
+      }
+      for (const binaryName of binaryNames) {
+        const candidate = join(dir, binaryName);
+        try {
+          await fsp.access(candidate);
+          return candidate;
+        } catch {
+          // try next candidate
+        }
+      }
+    }
+    const envPath = shellEnv.PATH ?? process.env.PATH ?? '';
+    for (const dir of envPath.split(pathSep)) {
+      if (!dir) {
+        continue;
+      }
+      for (const binaryName of binaryNames) {
+        const candidate = join(dir, binaryName);
+        try {
+          await fsp.access(candidate);
+          return candidate;
+        } catch {
+          // try next candidate
+        }
+      }
+    }
+    return null;
   }
 
   // ---------------------------------------------------------------------------
@@ -1366,6 +1450,56 @@ export class CliInstallerService {
         }
 
         reject(err);
+      });
+    });
+  }
+
+  private async runNpmInstallWithStreaming(npmPath: string, prefix: string): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      const child = spawnCli(npmPath, ['install', '--prefix', prefix, CLAUDE_CODE_NPM_PACKAGE], {
+        env: {
+          ...this.envForCli(npmPath),
+          npm_config_audit: 'false',
+          npm_config_fund: 'false',
+        },
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+
+      const timeout = setTimeout(() => {
+        killProcessTree(child);
+        reject(new Error(`npm install timed out after ${NPM_INSTALL_TIMEOUT_MS / 1000}s.`));
+      }, NPM_INSTALL_TIMEOUT_MS);
+
+      const outputLines: string[] = [];
+      const handleOutput = (chunk: Buffer): void => {
+        const raw = chunk.toString('utf-8');
+        if (!raw.trim()) return;
+        this.sendProgress({ type: 'installing', rawChunk: raw });
+        for (const line of raw.split('\n')) {
+          // eslint-disable-next-line no-control-regex, sonarjs/no-control-regex -- ANSI escape sequences stripped for clean logs
+          const clean = line.replace(/\x1b\[[0-9;?]*[A-Za-z]/g, '').trim();
+          if (clean) {
+            outputLines.push(clean);
+            logger.info(`[npm install claude-code] ${clean}`);
+          }
+        }
+      };
+
+      child.stdout?.on('data', handleOutput);
+      child.stderr?.on('data', handleOutput);
+      child.on('close', (code) => {
+        clearTimeout(timeout);
+        if (code === 0) {
+          resolve();
+          return;
+        }
+        const context =
+          outputLines.length > 0 ? `\n\nOutput:\n${outputLines.slice(-10).join('\n')}` : '';
+        reject(new Error(`npm install exited with code ${code ?? 'unknown'}${context}`));
+      });
+      child.on('error', (error) => {
+        clearTimeout(timeout);
+        reject(error);
       });
     });
   }

@@ -1,7 +1,7 @@
 {
   "name": "hermit",
   "type": "module",
-  "version": "1.4.9",
+  "version": "1.4.13",
   "description": "Enterprise-grade AI agent team collaboration and management workbench",
   "license": "AGPL-3.0",
   "author": {
@@ -244,10 +244,6 @@
       {
         "from": "resources/pricing.json",
         "to": "pricing.json"
-      },
-      {
-        "from": "resources/runtime",
-        "to": "runtime"
       },
       {
         "from": "mcp-server/dist/index.js",

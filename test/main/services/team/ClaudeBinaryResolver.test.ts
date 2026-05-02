@@ -243,6 +243,36 @@ describe('ClaudeBinaryResolver', () => {
     expect(accessMock).toHaveBeenCalledWith(expectedBinary, 1);
   });
 
+  it('finds Windows Claude install in the native local bin directory', async () => {
+    Object.defineProperty(process, 'platform', {
+      value: 'win32',
+      configurable: true,
+      writable: true,
+    });
+    mockGetConfiguredCliFlavor.mockReturnValue('claude');
+    mockGetShellPreferredHome.mockReturnValue('C:\\Users\\tester');
+    mockGetClaudeBasePath.mockReturnValue('C:\\Users\\tester\\.claude');
+    process.env.PATHEXT = '.EXE;.CMD';
+    const expectedBinary = 'C:\\Users\\tester\\.claude\\local\\bin\\claude.exe';
+    const normalizeWindowsTestPath = (value: PathLike): string => String(value).replace(/\//g, '\\');
+
+    statMock.mockImplementation((filePath) => {
+      if (normalizeWindowsTestPath(filePath) === expectedBinary) {
+        return Promise.resolve({ isFile: () => true });
+      }
+      return Promise.reject(Object.assign(new Error('ENOENT'), { code: 'ENOENT' }));
+    });
+
+    const { ClaudeBinaryResolver } = await import('@main/services/team/ClaudeBinaryResolver');
+    ClaudeBinaryResolver.clearCache();
+
+    const resolved = await ClaudeBinaryResolver.resolve();
+    expect(normalizeWindowsTestPath(resolved ?? '')).toBe(expectedBinary);
+    expect(statMock.mock.calls.some(([filePath]) => normalizeWindowsTestPath(filePath) === expectedBinary)).toBe(
+      true
+    );
+  });
+
   it('falls back to the doctor Invoked path when normal resolution misses the CLI', async () => {
     mockGetConfiguredCliFlavor.mockReturnValue('claude');
     mockGetDoctorInvokedCandidates.mockResolvedValue([

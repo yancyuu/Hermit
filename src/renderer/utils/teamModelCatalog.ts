@@ -58,6 +58,20 @@ const ANTHROPIC_VISIBLE_MODEL_FALLBACKS = ['opus', 'sonnet', 'haiku'] as const;
 
 const ANTHROPIC_MODEL_ORDER = ['haiku', 'opus', 'sonnet'] as const;
 
+function normalizeAnthropicModelAlias(model: string): string {
+  const normalized = splitOneMillionContextSuffix(model.trim().toLowerCase()).baseModel;
+  if (normalized === 'opus' || normalized.startsWith('claude-opus-')) {
+    return 'opus';
+  }
+  if (normalized === 'sonnet' || normalized.startsWith('claude-sonnet-')) {
+    return 'sonnet';
+  }
+  if (normalized === 'haiku' || normalized.startsWith('claude-haiku-')) {
+    return 'haiku';
+  }
+  return model;
+}
+
 const TEAM_MODEL_LABEL_OVERRIDES: Record<string, string> = {
   default: '默认',
   ...ANTHROPIC_ALIAS_LABELS,
@@ -187,7 +201,7 @@ export function isSupportedAnthropicTeamModel(model: string | undefined): boolea
     return false;
   }
 
-  return SUPPORTED_ANTHROPIC_TEAM_MODELS.has(trimmed);
+  return SUPPORTED_ANTHROPIC_TEAM_MODELS.has(normalizeAnthropicModelAlias(trimmed));
 }
 
 export function isAnthropicHaikuTeamModel(model: string | undefined): boolean {
@@ -196,7 +210,7 @@ export function isAnthropicHaikuTeamModel(model: string | undefined): boolean {
     return false;
   }
 
-  return trimmed === 'haiku';
+  return normalizeAnthropicModelAlias(trimmed) === 'haiku';
 }
 
 export function getTeamProviderLabel(
@@ -388,7 +402,7 @@ function getSupplementalVisibleModels(
     return models;
   }
 
-  return [...models, ...ANTHROPIC_VISIBLE_MODEL_FALLBACKS];
+  return ANTHROPIC_VISIBLE_MODEL_FALLBACKS;
 }
 
 export function getVisibleTeamProviderModels(
@@ -440,7 +454,9 @@ export function normalizeTeamModelForUi(
   providerId: SupportedProviderId | undefined,
   model: string | undefined
 ): string {
-  return isTeamModelUiDisabled(providerId, model) ? '' : (model ?? '');
+  const normalizedModel =
+    providerId === 'anthropic' && model ? normalizeAnthropicModelAlias(model) : (model ?? '');
+  return isTeamModelUiDisabled(providerId, normalizedModel) ? '' : normalizedModel;
 }
 
 export function doesTeamModelCarryProviderBrand(

@@ -51,10 +51,14 @@ describe('buildMergedCliPath', () => {
   it('on win32 with cold shell cache uses semicolon and npm-style dirs', () => {
     Object.defineProperty(process, 'platform', { value: 'win32', configurable: true });
     mockGetShellPreferredHome.mockReturnValue('C:\\Users\\testuser');
+    mockGetClaudeBasePath.mockReturnValue('C:\\Users\\testuser\\.claude');
     process.env.LOCALAPPDATA = 'C:\\Users\\testuser\\AppData\\Local';
     process.env.ProgramFiles = 'C:\\Program Files';
     const p = buildMergedCliPath(null);
     const parts = p.split(';');
+    expect(parts.some((x) => /[.]claude[/\\]local$/i.test(x))).toBe(true);
+    expect(parts.some((x) => /[.]claude[/\\]local[/\\]bin$/i.test(x))).toBe(true);
+    expect(parts.some((x) => /[.]local[/\\]bin$/i.test(x))).toBe(true);
     expect(parts.some((x) => /Roaming[/\\]npm/i.test(x))).toBe(true);
     expect(parts.some((x) => /Programs[/\\]claude/i.test(x))).toBe(true);
     expect(parts[parts.length - 1]).toBe('/usr/bin');

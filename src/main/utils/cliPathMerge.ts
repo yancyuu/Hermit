@@ -44,6 +44,11 @@ export function buildMergedCliPath(binaryPath?: string | null): string {
   } else if (process.platform === 'win32') {
     extraDirs.push(
       vendorBinDir,
+      pathJoin(getClaudeBasePath(), 'local'),
+      pathJoin(getClaudeBasePath(), 'local', 'bin'),
+      pathJoin(home, '.claude', 'local'),
+      pathJoin(home, '.claude', 'local', 'bin'),
+      pathJoin(home, '.local', 'bin'),
       pathJoin(home, 'AppData', 'Roaming', 'npm'),
       pathJoin(home, 'scoop', 'shims')
     );

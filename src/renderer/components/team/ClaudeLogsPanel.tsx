@@ -29,7 +29,6 @@ interface ClaudeLogsPanelProps {
   /** Extra className for the panel wrapper. */
   className?: string;
   compactMetaInTooltip?: boolean;
-  lightweight?: boolean;
 }
 
 // =============================================================================
@@ -42,7 +41,6 @@ export const ClaudeLogsPanel = ({
   viewerMaxHeight,
   className,
   compactMetaInTooltip = false,
-  lightweight = false,
 }: ClaudeLogsPanelProps): React.JSX.Element => {
   const {
     data,
@@ -129,28 +127,7 @@ export const ClaudeLogsPanel = ({
       {/* Log viewer */}
       <div className={cn('rounded', loading && 'opacity-80')}>
         {error ? <p className="p-2 text-xs text-red-300">{error}</p> : null}
-        {!error && filteredText.trim().length > 0 && lightweight ? (
-          <div
-            ref={containerRefCallback}
-            className={cn(
-              'max-h-[400px] overflow-y-auto rounded bg-[var(--color-surface)]',
-              viewerClassName
-            )}
-            style={viewerMaxHeight ? { maxHeight: `${viewerMaxHeight}px` } : undefined}
-            onScroll={(event) =>
-              handleScroll({
-                scrollTop: event.currentTarget.scrollTop,
-                scrollHeight: event.currentTarget.scrollHeight,
-                clientHeight: event.currentTarget.clientHeight,
-              })
-            }
-          >
-            <pre className="whitespace-pre-wrap break-words p-2 font-mono text-[10px] leading-relaxed text-[var(--color-text-secondary)]">
-              {filteredText}
-            </pre>
-          </div>
-        ) : null}
-        {!error && filteredText.trim().length > 0 && !lightweight ? (
+        {!error && filteredText.trim().length > 0 ? (
           <CliLogsRichView
             cliLogsTail={filteredText}
             order="newest-first"

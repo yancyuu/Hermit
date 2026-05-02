@@ -58,6 +58,7 @@ const sentryPlugins = process.env.SENTRY_AUTH_TOKEN
       }),
     ]
   : []
+const shouldGenerateSourcemaps = Boolean(process.env.SENTRY_AUTH_TOKEN)
 
 export default defineConfig({
   main: {
@@ -86,7 +87,7 @@ export default defineConfig({
       commonjsOptions: {
         strictRequires: [/node_modules\/.*ssh2\//],
       },
-      sourcemap: 'hidden',
+      sourcemap: shouldGenerateSourcemaps ? 'hidden' : false,
       outDir: 'dist-electron/main',
       rollupOptions: {
         input: {
@@ -152,7 +153,7 @@ export default defineConfig({
     },
     plugins: [react(), ...sentryPlugins],
     build: {
-      sourcemap: 'hidden',
+      sourcemap: shouldGenerateSourcemaps ? 'hidden' : false,
       rollupOptions: {
         input: {
           index: resolve(__dirname, 'src/renderer/index.html')
