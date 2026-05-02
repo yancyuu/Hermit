@@ -2,7 +2,7 @@
   "name": "hermit",
   "type": "module",
   "version": "1.4.9",
-  "description": "Claude Code powered multi-agent workbench for engineering teams",
+  "description": "Enterprise-grade AI agent team collaboration and management workbench",
   "license": "AGPL-3.0",
   "author": {
     "name": "yancyyu",

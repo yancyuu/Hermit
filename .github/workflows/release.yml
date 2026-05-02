@@ -537,6 +537,7 @@ jobs:
 
           declare -A FILES=(
             ["Hermit-arm64.dmg"]="Hermit-${VERSION}-arm64.dmg"
+            ["Hermit-arm64-mac.zip"]="Hermit-${VERSION}-arm64-mac.zip"
             ["Hermit-x64.dmg"]="Hermit-${VERSION}-x64.dmg"
             ["Hermit-Setup.exe"]="Hermit.Setup.${VERSION}.exe"
             ["Hermit.AppImage"]="Hermit-${VERSION}.AppImage"
@@ -613,24 +614,54 @@ jobs:
           # electron-updater on GitHub still consumes a single latest-mac.yml, so we
           # publish the Apple Silicon feed here and suppress Intel auto-update in-app
           # until we switch to universal packaging or an arch-aware provider.
-          download_asset "Hermit-${VERSION}-arm64-mac.zip"
-          download_asset "Hermit-${VERSION}-arm64.dmg"
-          MAC_ZIP_SHA="$(sha512_base64 Hermit-${VERSION}-arm64-mac.zip)"
-          MAC_ZIP_SIZE="$(file_size Hermit-${VERSION}-arm64-mac.zip)"
-          MAC_DMG_SHA="$(sha512_base64 Hermit-${VERSION}-arm64.dmg)"
-          MAC_DMG_SIZE="$(file_size Hermit-${VERSION}-arm64.dmg)"
+          download_asset "Hermit-arm64-mac.zip"
+          download_asset "Hermit-arm64.dmg"
+          MAC_ZIP_SHA="$(sha512_base64 Hermit-arm64-mac.zip)"
+          MAC_ZIP_SIZE="$(file_size Hermit-arm64-mac.zip)"
+          MAC_DMG_SHA="$(sha512_base64 Hermit-arm64.dmg)"
+          MAC_DMG_SIZE="$(file_size Hermit-arm64.dmg)"
           cat > latest-mac.yml <<EOF
           version: ${VERSION}
           files:
-            - url: Hermit-${VERSION}-arm64-mac.zip
+            - url: Hermit-arm64-mac.zip
               sha512: ${MAC_ZIP_SHA}
               size: ${MAC_ZIP_SIZE}
-            - url: Hermit-${VERSION}-arm64.dmg
+            - url: Hermit-arm64.dmg
               sha512: ${MAC_DMG_SHA}
               size: ${MAC_DMG_SIZE}
-          path: Hermit-${VERSION}-arm64-mac.zip
+          path: Hermit-arm64-mac.zip
           sha512: ${MAC_ZIP_SHA}
           releaseDate: '${RELEASE_DATE}'
           EOF
 
           gh release upload "${TAG}" latest.yml latest-linux.yml latest-mac.yml --repo "${REPO}" --clobber
+
+      - name: Remove intermediate release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG#v}"
+          REPO="${GITHUB_REPOSITORY}"
+
+          delete_asset() {
+            local name="$1"
+            echo "Deleting intermediate asset: ${name}"
+            gh release delete-asset "${TAG}" "${name}" --repo "${REPO}" --yes 2>/dev/null || true
+          }
+
+          while IFS= read -r name; do
+            [ -n "$name" ] || continue
+            case "$name" in
+              agent-teams-runtime-*) delete_asset "$name" ;;
+              *.blockmap) delete_asset "$name" ;;
+              Hermit-${VERSION}-*.dmg) delete_asset "$name" ;;
+              Hermit-${VERSION}-*-mac.zip) delete_asset "$name" ;;
+              Hermit-${VERSION}.AppImage) delete_asset "$name" ;;
+              Hermit.Setup.${VERSION}.exe) delete_asset "$name" ;;
+              hermit_${VERSION}_amd64.deb) delete_asset "$name" ;;
+              hermit-${VERSION}.x86_64.rpm) delete_asset "$name" ;;
+              hermit-${VERSION}.pacman) delete_asset "$name" ;;
+            esac
+          done < <(gh release view "${TAG}" --repo "${REPO}" --json assets --jq '.assets[].name')

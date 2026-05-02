@@ -13,8 +13,8 @@
 <h1 align="center"><a href="https://github.com/yancyuu/Hermit">Hermit</a></h1>
 
 <p align="center">
-  <strong>本地优先的 AI 工程团队工作台。</strong><br />
-  把 Claude Code 等编程 Agent 组织成能接任务、协作、审查、复盘和复用的数字工程团队。
+  <strong>企业级 AI Agent 团队协作与管理工作台。</strong><br />
+  像管理真实工程组织一样管理数字员工：团队、角色、任务、消息、审查、日志和知识资产都在同一个本地优先控制面里。
 </p>
 
 <p align="center">

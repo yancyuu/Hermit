@@ -1,7 +1,7 @@
 {
   "hero": {
     "title": "Hermit",
-    "subtitle": "A local-first workbench for managing AI engineering teams. Leads split work, agents collaborate, kanban tracks state, code review anchors diffs, and logs preserve evidence."
+    "subtitle": "An enterprise-grade workbench for AI agent team collaboration and management. Manage digital employees like a real engineering organization: teams, roles, tasks, messages, reviews, logs, and knowledge assets in one local-first control plane."
   },
   "features": [
     {
